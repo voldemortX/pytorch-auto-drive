@@ -1,11 +1,11 @@
 import torch
 import torchvision
-import copy
 import time
-from tqdm import tqdm
-from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
+from PIL import Image
+from apex import amp
 from data_processing import StandardSegmentationDataset, MaskToTensor, colors, mean, std
 # Input_size = (513, 513)
 Input_size = (128, 128)  # In order to test it on GTX-960M(2G memory)
@@ -72,6 +72,29 @@ def visualize(loader, categories):
     show(images=labels, is_label=True)
 
 
+# Save model checkpoints(supports amp)
+def save_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename='temp.pt'):
+    checkpoint = {
+        'model': net.state_dict(),
+        'optimizer': optimizer.state_dict(),
+        'lr_scheduler': lr_scheduler.state_dict(),
+        'amp': amp.state_dict() if is_mixed_precision else None
+    }
+    torch.save(checkpoint, filename)
+
+
+# Load model checkpoints(supports amp)
+def load_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename):
+    checkpoint = torch.load(filename)
+    net.load_state_dict(checkpoint['net'])
+    if optimizer is not None:
+        optimizer.load_state_dict(checkpoint['optimizer'])
+    if lr_scheduler is not None:
+        lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+    if is_mixed_precision:
+        amp.load_state_dict(checkpoint['amp'])
+
+
 def init(batch_size, state):
     # Return data_loaders/data_loader
     # depending on whether this is
@@ -131,21 +154,19 @@ def init(batch_size, state):
         return train_loader, val_loader, categories
 
 
-def train_schedule(writer, loader, with_validation, validation_loader, device, criterion, net, num_epochs, initial_lr, power=0.9):
+def train_schedule(writer, loader, with_validation, validation_loader, device, criterion, net, optimizer, lr_scheduler,
+                   num_epochs, is_mixed_precision):
     # Poly training schedule
     # Validate and find the best snapshot
     if with_validation:
         best_mIoU = 0
-        best_model = copy.deepcopy(net.state_dict())
 
     net.train()
     epoch = 0
-    optimizer = torch.optim.SGD(net.parameters(), lr=initial_lr, momentum=0.9, weight_decay=0.0001)
-    lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
-                   lambda x: (1 - x / (len(loader) * num_epochs)) ** power)  # "poly", variable names are confusing
 
     # Training
     while epoch < num_epochs:
+        net.train()
         running_loss = 0.0
         time_now = time.time()
         for i, data in enumerate(loader, 0):
@@ -154,7 +175,12 @@ def train_schedule(writer, loader, with_validation, validation_loader, device, c
             optimizer.zero_grad()
             outputs = net(inputs)['out']
             loss = criterion(outputs, labels)
-            loss.backward()
+            if is_mixed_precision:
+                # 2/3 & 3/3 of mixed precision training with amp
+                with amp.scale_loss(loss, optimizer) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                loss.backward()
             optimizer.step()
             lr_scheduler.step()
             running_loss += loss.item()
@@ -185,16 +211,18 @@ def train_schedule(writer, loader, with_validation, validation_loader, device, c
                               test_mIoU,
                               epoch + 1)
 
-            # Record best model(! extra memory usage)
+            # Record best model(Straight to disk)
             if test_mIoU > best_mIoU:
-                best_model = copy.deepcopy(net.state_dict())
                 best_mIoU = test_mIoU
+                save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                                is_mixed_precision=is_mixed_precision)
 
         epoch += 1
 
-    # Validate and find the best snapshot
-    if with_validation:
-        net.load_state_dict(best_model)
+    # Save just the last states
+    if not with_validation:
+        save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                        is_mixed_precision=is_mixed_precision)
 
 
 # Copied and modified from torch/vision/references/segmentation
@@ -218,5 +246,5 @@ def test_one_set(loader, device, net):
                 ['{:.1f}'.format(i) for i in (acc * 100).tolist()],
                 ['{:.1f}'.format(i) for i in (iu * 100).tolist()],
                 iu.mean().item() * 100))
-    net.train()
+
     return acc_global.item() * 100, iu.mean().item() * 100

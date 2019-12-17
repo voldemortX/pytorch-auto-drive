@@ -1,9 +1,23 @@
 from torchsummary import summary
+import os
 import time
 import torch
-from torch.utils.tensorboard import SummaryWriter
 import argparse
-from deeplab import visualize, init, deeplab_v3, train_schedule, test_one_set
+from torch.utils.tensorboard import SummaryWriter
+from apex import amp
+from deeplab import visualize, init, deeplab_v3, train_schedule, test_one_set, load_checkpoint
+
+
+def after_loading():
+    global lr_scheduler
+    # The "poly" policy, variable names are confusing(May need reimplementation)
+    lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
+                                                     lambda x: (1 - x / (len(train_loader) * args.epochs)) ** 0.9)
+    # Resume training?
+    if args.continue_from is not None:
+        load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                        is_mixed_precision=args.mixed_precision, filename=args.continue_from)
+    visualize(train_loader, categories)
 
 
 if __name__ == '__main__':
@@ -17,6 +31,8 @@ if __name__ == '__main__':
                         help='input batch size (default: 4)')
     parser.add_argument('--do-not-save', action='store_false', default=True,
                         help='save model (default: True)')
+    parser.add_argument('--mixed-precision', action='store_true', default=False,
+                        help='Enable mixed precision training (default: False)')
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
     parser.add_argument('--state', type=int, default=0,
@@ -28,28 +44,29 @@ if __name__ == '__main__':
     net = deeplab_v3()
     print(device)
     net.to(device)
+    optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0001)
+    if args.mixed_precision:
+        net, optimizer = amp.initialize(net, optimizer, opt_level='O1')
 
     # Testing
     if args.state == 2:
         test_loader, categories = init(batch_size=args.batch_size, state=args.state)
-        net.load_state_dict(torch.load(args.continue_from))
+        load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
+                        is_mixed_precision=args.mixed_precision, filename=args.continue_from)
         test_one_set(loader=test_loader, device=device, net=net)
-
     else:
         #summary(net, (3, 513, 513))  # Seems not working with a loaded model
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255)
         writer = SummaryWriter('runs/experiment_' + str(int(time.time())))
-        # Resume training?
-        if args.continue_from is not None:
-            net.load_state_dict(torch.load(args.continue_from))
 
         # Final training
         if args.state == 1:
             train_loader, categories = init(batch_size=args.batch_size, state=args.state)
-            visualize(train_loader, categories)
+            after_loading()
 
             # Train
-            train_schedule(writer=writer, loader=train_loader, initial_lr=args.lr, num_epochs=args.epochs, net=net,
+            train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                           num_epochs=args.epochs, is_mixed_precision=args.mixed_precision,
                            with_validation=False, validation_loader=None, device=device, criterion=criterion)
 
             # Final evaluations
@@ -58,18 +75,21 @@ if __name__ == '__main__':
         # Normal training
         elif args.state == 0:
             train_loader, val_loader, categories = init(batch_size=args.batch_size, state=args.state)
-            visualize(train_loader, categories)
+            after_loading()
 
             # Train
-            train_schedule(writer=writer, loader=train_loader, initial_lr=args.lr, num_epochs=args.epochs, net=net,
+            train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                           num_epochs=args.epochs, is_mixed_precision=args.mixed_precision,
                            with_validation=True, validation_loader=val_loader, device=device, criterion=criterion)
 
             # Final evaluations
             train_acc = test_one_set(loader=train_loader, device=device, net=net)
             val_acc = test_one_set(loader=val_loader, device=device, net=net)
 
-        # Save parameters(#epoch is not saved)
-        if args.do_not_save:  # --do-not-save => args.do_not_save = False
-            torch.save(net.state_dict(), str(time.time()) + '.pth')
+        # --do-not-save => args.do_not_save = False
+        if args.do_not_save:  # Since the checkpoint is already saved, it should be deleted
+            os.remove('temp.pt')
+        else:  # Rename the checkpoint with timestamp
+            os.rename('temp.pt', str(time.time()) + '.pt')
 
         writer.close()
