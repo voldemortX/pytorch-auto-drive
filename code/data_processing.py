@@ -1,7 +1,5 @@
 import torchvision
-import torch
 import os
-import numpy as np
 from PIL import Image
 
 mean = [0.485, 0.456, 0.406]
@@ -13,14 +11,6 @@ colors = [[0, 0, 0],
           [192, 0, 128], [64, 128, 128], [192, 128, 128], [0, 64, 0],
           [128, 64, 0], [0, 192, 0], [128, 192, 0], [0, 64, 128],
           [255, 255, 255]]
-
-
-class MaskToTensor(object):
-    #  For {0~20, 255} style masks(! do not use ToTensor) => H x W tensor
-    def __call__(self, mask):
-        target = np.array(mask, copy=False)
-        target = torch.from_numpy(target.reshape(target.shape[0], target.shape[1])).long()
-        return target
 
 
 # Reimplemented and simplified based on torchvision.datasets.VOCSegmentation

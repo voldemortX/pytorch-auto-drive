@@ -3,9 +3,13 @@ import os
 import time
 import torch
 import argparse
+import random
 from torch.utils.tensorboard import SummaryWriter
 from apex import amp
 from deeplab import visualize, init, deeplab_v3, train_schedule, test_one_set, load_checkpoint
+
+torch.manual_seed(4396)
+random.seed(7777)
 
 
 def after_loading():
@@ -37,10 +41,14 @@ if __name__ == '__main__':
                         help='Continue training from a previous checkpoint')
     parser.add_argument('--state', type=int, default=0,
                         help='Conduct final test(2)/final training(1)/normal training(0) (default: 0)')
+    parser.add_argument('--gpu-id', type=str, default='0',
+                        help='Specify which GPU is to be used (default: 0)')
     args = parser.parse_args()
 
     # Basic configurations
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cpu')
+    if torch.cuda.is_available():
+        device = torch.device('cuda:' + args.gpu_id)
     net = deeplab_v3()
     print(device)
     net.to(device)

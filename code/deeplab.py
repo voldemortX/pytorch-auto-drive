@@ -4,11 +4,11 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
-from PIL import Image
 from apex import amp
-from data_processing import StandardSegmentationDataset, MaskToTensor, colors, mean, std
-# Input_size = (513, 513)
-Input_size = (128, 128)  # In order to test it on GTX-960M(2G memory)
+from data_processing import StandardSegmentationDataset, colors, mean, std
+from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, Compose
+Input_size = 321
+#Input_size = (128, 128)  # In order to test it on GTX-960M(2G memory)
 N_classes = 21
 
 
@@ -102,53 +102,41 @@ def init(batch_size, state):
     # 1: last training(trainval)
     # 2: final test("test", which is not available)
     #base = '../data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
-    base = '../data_test/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
+    base = '../data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
     categories = []
 
     # Transformations
-    # Statistics for ImageNet pretrained models
-    normalization_pretrained = torchvision.transforms.Normalize(mean=mean, std=std)
-    transform_train_target = torchvision.transforms.Compose(
-        [torchvision.transforms.Resize(size=Input_size, interpolation=Image.NEAREST),
-         MaskToTensor()
-         ])
-    transform_test_target = torchvision.transforms.Compose(
-        [torchvision.transforms.Resize(size=Input_size, interpolation=Image.NEAREST),
-         MaskToTensor()
-         ])
-    transform_train = torchvision.transforms.Compose(
-        [torchvision.transforms.Resize(size=Input_size, interpolation=Image.BILINEAR),
-         torchvision.transforms.ToTensor(),
-         normalization_pretrained])
-    transform_test = torchvision.transforms.Compose(
-        [torchvision.transforms.Resize(size=Input_size, interpolation=Image.BILINEAR),
-         torchvision.transforms.ToTensor(),
-         normalization_pretrained])
+    # ! Can't use torchvision.Transforms.Compose
+    transform_train = Compose(
+        [Resize(h=Input_size, w=Input_size),
+         RandomHorizontalFlip(flip_prob=0.5),
+         ToTensor(),
+         Normalize(mean=mean, std=std)])
+    transform_test = Compose(
+        [Resize(h=Input_size, w=Input_size),
+         ToTensor(),
+         Normalize(mean=mean, std=std)])
 
     # Not the actual test set(i.e. validation set)
     if state == 2:
-        test_set = StandardSegmentationDataset(root=base, image_set='val', transform=transform_test,
-                                               target_transform=transform_test_target)
+        test_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test)
         test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=batch_size,
                                                   num_workers=4, shuffle=False)
         return test_loader, categories
 
     # trainval
     elif state == 1:
-        train_set = StandardSegmentationDataset(root=base, image_set='trainval', transform=transform_train,
-                                                target_transform=transform_train_target)
+        train_set = StandardSegmentationDataset(root=base, image_set='trainval', transforms=transform_train)
         train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=batch_size,
                                                    num_workers=4, shuffle=True)
         return train_loader, categories
 
     # train, val
     elif state == 0:
-        train_set = StandardSegmentationDataset(root=base, image_set='trainaug', transform=transform_train,
-                                                target_transform=transform_train_target)
+        train_set = StandardSegmentationDataset(root=base, image_set='trainaug', transforms=transform_train)
         train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=batch_size,
                                                    num_workers=4, shuffle=True)
-        val_set = StandardSegmentationDataset(root=base, image_set='val', transform=transform_test,
-                                              target_transform=transform_test_target)
+        val_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test)
         val_loader = torch.utils.data.DataLoader(dataset=val_set, batch_size=batch_size,
                                                  num_workers=4, shuffle=False)
         return train_loader, val_loader, categories
@@ -167,6 +155,7 @@ def train_schedule(writer, loader, with_validation, validation_loader, device, c
     # Training
     while epoch < num_epochs:
         net.train()
+        conf_mat = ConfusionMatrix(N_classes)
         running_loss = 0.0
         time_now = time.time()
         for i, data in enumerate(loader, 0):
@@ -174,6 +163,7 @@ def train_schedule(writer, loader, with_validation, validation_loader, device, c
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = net(inputs)['out']
+            conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
             loss = criterion(outputs, labels)
             if is_mixed_precision:
                 # 2/3 & 3/3 of mixed precision training with amp
@@ -191,15 +181,26 @@ def train_schedule(writer, loader, with_validation, validation_loader, device, c
                                   epoch * len(loader) + i + 1)
                 running_loss = 0.0
 
-        # Evaluate training accuracies(same metric as validation)
-        train_pixel_acc, train_mIoU = test_one_set(loader=loader, device=device, net=net)
+        # Evaluate training accuracies(same metric as validation, but must be on-the-fly to save time)
+        acc_global, acc, iu = conf_mat.compute()
+        print((
+            'global correct: {:.1f}\n'
+            'average row correct: {}\n'
+            'IoU: {}\n'
+            'mean IoU: {:.1f}').format(
+            acc_global.item() * 100,
+            ['{:.1f}'.format(i) for i in (acc * 100).tolist()],
+            ['{:.1f}'.format(i) for i in (iu * 100).tolist()],
+            iu.mean().item() * 100))
+
+        train_pixel_acc = acc_global.item() * 100
+        train_mIoU = iu.mean().item() * 100
         writer.add_scalar('train pixel accuracy',
                           train_pixel_acc,
                           epoch + 1)
         writer.add_scalar('train mIoU',
                           train_mIoU,
                           epoch + 1)
-        print('Epoch time: %.2fs' % (time.time() - time_now))
     
         # Validate and find the best snapshot
         if with_validation:
@@ -218,6 +219,7 @@ def train_schedule(writer, loader, with_validation, validation_loader, device, c
                                 is_mixed_precision=is_mixed_precision)
 
         epoch += 1
+        print('Epoch time: %.2fs' % (time.time() - time_now))
 
     # Save just the last states
     if not with_validation:
