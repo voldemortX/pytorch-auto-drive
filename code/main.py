@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     # Testing
     if args.state == 2:
-        test_loader, categories = init(batch_size=args.batch_size, state=args.state)
+        test_loader = init(batch_size=args.batch_size, state=args.state)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
                         is_mixed_precision=args.mixed_precision, filename=args.continue_from)
         test_one_set(loader=test_loader, device=device, net=net)
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
         # Final training
         if args.state == 1:
-            train_loader, categories = init(batch_size=args.batch_size, state=args.state)
+            train_loader = init(batch_size=args.batch_size, state=args.state)
             after_loading()
 
             # Train
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
         # Normal training
         elif args.state == 0:
-            train_loader, val_loader, categories = init(batch_size=args.batch_size, state=args.state)
+            train_loader, val_loader = init(batch_size=args.batch_size, state=args.state)
             after_loading()
 
             # Train

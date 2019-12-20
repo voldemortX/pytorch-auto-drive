@@ -2,6 +2,7 @@ import torchvision
 import os
 from PIL import Image
 
+# For PASCAL VOC 2012
 mean = [0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
 colors = [[0, 0, 0],
@@ -11,6 +12,12 @@ colors = [[0, 0, 0],
           [192, 0, 128], [64, 128, 128], [192, 128, 128], [0, 64, 0],
           [128, 64, 0], [0, 192, 0], [128, 192, 0], [0, 64, 128],
           [255, 255, 255]]
+categories = ['Background',
+              'Aeroplane', 'Bicycle', 'Bird', 'Boat',
+              'Bottle', 'Bus', 'Car', 'Cat',
+              'Chair', 'Cow', 'Diningtable', 'Dog',
+              'Horse', 'Motorbike', 'Person', 'Pottedplant',
+              'Sheep', 'Sofa', 'Train', 'Tvmonitor']
 
 
 # Reimplemented and simplified based on torchvision.datasets.VOCSegmentation

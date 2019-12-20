@@ -5,10 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 from apex import amp
-from data_processing import StandardSegmentationDataset, colors, mean, std
+from data_processing import StandardSegmentationDataset, colors, categories, mean, std
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, Compose
 Input_size = 321
-#Input_size = (128, 128)  # In order to test it on GTX-960M(2G memory)
 N_classes = 21
 
 
@@ -64,7 +63,7 @@ def show(images, is_label):
     plt.show()
 
 
-def visualize(loader, categories):
+def visualize(loader):
     # Visualize a whole batch
     temp = iter(loader)
     images, labels = temp.next()
@@ -102,8 +101,7 @@ def init(batch_size, state):
     # 1: last training(trainval)
     # 2: final test("test", which is not available)
     #base = '../data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
-    base = '../data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
-    categories = []
+    base = '../data_test/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
 
     # Transformations
     # ! Can't use torchvision.Transforms.Compose
@@ -122,14 +120,14 @@ def init(batch_size, state):
         test_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test)
         test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=batch_size,
                                                   num_workers=4, shuffle=False)
-        return test_loader, categories
+        return test_loader
 
     # trainval
     elif state == 1:
         train_set = StandardSegmentationDataset(root=base, image_set='trainval', transforms=transform_train)
         train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=batch_size,
                                                    num_workers=4, shuffle=True)
-        return train_loader, categories
+        return train_loader
 
     # train, val
     elif state == 0:
@@ -139,7 +137,7 @@ def init(batch_size, state):
         val_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test)
         val_loader = torch.utils.data.DataLoader(dataset=val_set, batch_size=batch_size,
                                                  num_workers=4, shuffle=False)
-        return train_loader, val_loader, categories
+        return train_loader, val_loader
 
 
 def train_schedule(writer, loader, with_validation, validation_loader, device, criterion, net, optimizer, lr_scheduler,
@@ -183,14 +181,15 @@ def train_schedule(writer, loader, with_validation, validation_loader, device, c
 
         # Evaluate training accuracies(same metric as validation, but must be on-the-fly to save time)
         acc_global, acc, iu = conf_mat.compute()
+        print(categories)
         print((
-            'global correct: {:.1f}\n'
+            'global correct: {:.2f}\n'
             'average row correct: {}\n'
             'IoU: {}\n'
-            'mean IoU: {:.1f}').format(
+            'mean IoU: {:.2f}').format(
             acc_global.item() * 100,
-            ['{:.1f}'.format(i) for i in (acc * 100).tolist()],
-            ['{:.1f}'.format(i) for i in (iu * 100).tolist()],
+            ['{:.2f}'.format(i) for i in (acc * 100).tolist()],
+            ['{:.2f}'.format(i) for i in (iu * 100).tolist()],
             iu.mean().item() * 100))
 
         train_pixel_acc = acc_global.item() * 100
@@ -239,14 +238,15 @@ def test_one_set(loader, device, net):
             conf_mat.update(target.flatten(), output.argmax(1).flatten())
 
     acc_global, acc, iu = conf_mat.compute()
+    print(categories)
     print((
-            'global correct: {:.1f}\n'
+            'global correct: {:.2f}\n'
             'average row correct: {}\n'
             'IoU: {}\n'
-            'mean IoU: {:.1f}').format(
+            'mean IoU: {:.2f}').format(
                 acc_global.item() * 100,
-                ['{:.1f}'.format(i) for i in (acc * 100).tolist()],
-                ['{:.1f}'.format(i) for i in (iu * 100).tolist()],
+                ['{:.2f}'.format(i) for i in (acc * 100).tolist()],
+                ['{:.2f}'.format(i) for i in (iu * 100).tolist()],
                 iu.mean().item() * 100))
 
     return acc_global.item() * 100, iu.mean().item() * 100
