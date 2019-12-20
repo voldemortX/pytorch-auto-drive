@@ -21,7 +21,7 @@ def after_loading():
     if args.continue_from is not None:
         load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
                         is_mixed_precision=args.mixed_precision, filename=args.continue_from)
-    visualize(train_loader, categories)
+    visualize(train_loader)
 
 
 if __name__ == '__main__':
