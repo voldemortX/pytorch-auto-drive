@@ -101,7 +101,7 @@ def init(batch_size, state):
     # 1: last training(trainval)
     # 2: final test("test", which is not available)
     #base = '../data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
-    base = '../data_test/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
+    base = '../data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
 
     # Transformations
     # ! Can't use torchvision.Transforms.Compose
