@@ -1,5 +1,5 @@
 # My segmentation codebase(beta version, untested)
-Segmentation models(Start with DeeplabV3) based on PyTorch 1.3 with tensorboard
+Segmentation models(Start with DeeplabV3) based on PyTorch 1.3 with tensorboard/Pytorch 1.2 with mixed precision training
 
 Including modulated(borrowed) mIOU&pixel acc calculation, "poly" learning rate schedule, basic input transformations and visulizations
 
