@@ -82,10 +82,10 @@ def save_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename='
     torch.save(checkpoint, filename)
 
 
-# Load model checkpoints(supports amp)
+# Load model checkpoints(supports amp, necessary?)
 def load_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename):
     checkpoint = torch.load(filename)
-    net.load_state_dict(checkpoint['net'])
+    net.load_state_dict(checkpoint['model'])
     if optimizer is not None:
         optimizer.load_state_dict(checkpoint['optimizer'])
     if lr_scheduler is not None:

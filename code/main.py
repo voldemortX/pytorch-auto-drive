@@ -13,8 +13,8 @@ from deeplab import visualize, init, deeplab_v3, train_schedule, test_one_set, l
 torch.manual_seed(4396)
 random.seed(7777)
 np.random.seed(7777)
-torch.backends.cudnn.deterministic = True  # Might hurt performance
-torch.backends.cudnn.benchmark = False  # Might hurt performance
+#torch.backends.cudnn.deterministic = True  # Might hurt performance
+#torch.backends.cudnn.benchmark = False  # Might hurt performance
 
 
 def after_loading():
@@ -26,7 +26,7 @@ def after_loading():
     if args.continue_from is not None:
         load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
                         is_mixed_precision=args.mixed_precision, filename=args.continue_from)
-    visualize(train_loader)
+    #visualize(train_loader)
 
 
 if __name__ == '__main__':
@@ -95,7 +95,9 @@ if __name__ == '__main__':
                            num_epochs=args.epochs, is_mixed_precision=args.mixed_precision,
                            with_validation=True, validation_loader=val_loader, device=device, criterion=criterion)
 
-            # Final evaluations(not necessary)
+            # Final evaluations
+            load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
+                            is_mixed_precision=args.mixed_precision, filename='temp.pt')
             train_acc = test_one_set(loader=train_loader, device=device, net=net)
             val_acc = test_one_set(loader=val_loader, device=device, net=net)
 
