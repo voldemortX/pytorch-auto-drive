@@ -5,11 +5,11 @@ PyTorch 1.3.1 / Pytorch 1.2.0(cuda 10.0)&torchvision 0.4.0 with mixed precision 
 
 Including modulated(borrowed) mIOU&pixel acc calculation, "poly" learning rate schedule, basic input transformations and visulizations, also tests of mixed precision training
 
-Currently supported datasets: 
+### Currently supported datasets: 
 
 PASCAL VOC 2012(Deeplab 10582 trainaug version, I don't think I have the right to distribute this dataset, so just get the images yourself)
 
-Currently supported models:
+### Currently supported models:
 
 DeeplabV3(ImageNet pretrained ResNet 101) from torchvision
 
@@ -51,6 +51,6 @@ python main.py --epochs=30 --lr=0.002 --batch-size=8 --mixed-precision
 
 ## Notes:
 
-Experiments used same random seeds.However it is still not deterministic due to parallel computing and other things.
+Experiments used same random seeds. However, it is still not deterministic due to parallel computing and other unknown factors.
 
-On a single RTX 2080Ti, training(30 epochs at 321x321 resolution) takes **~9h15m** and **~8.5G** GPU memory(or **~6h35m** and **~5.5G** GPU memory with mixed precision training)
+On **a single RTX 2080Ti**, training(30 epochs at 321x321 resolution) takes **~9h15m** and **~8.5G** GPU memory(or **~6h35m** and **~5.5G** GPU memory with mixed precision training)
