@@ -27,7 +27,7 @@ pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cud
 Download the code:
 
 ```
-git clone https://github.com/voldemortX/DeeplabV3_PyTorch1.3_Codebase
+git clone https://github.com/voldemortX/DeeplabV3_PyTorch1.3_Codebase.git
 cd code
 ```
 
