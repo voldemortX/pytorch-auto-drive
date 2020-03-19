@@ -1,5 +1,5 @@
 # My segmentation codebase
-Segmentation models (DeeplabV3, DeeplabV2) based on Python 3.6.8 and 
+Segmentation models (DeeplabV3, DeeplabV2, etc.) based on Python 3.6.8 and 
 
 PyTorch Pytorch 1.2.0 (cuda 10.0) & torchvision 0.4.0 with mixed precision training, since 1.2.0 is 100% compatible with apex
 
@@ -11,7 +11,7 @@ PASCAL VOC 2012 (Deeplab 10582 trainaug version, I don't think I have the right 
 
 ### Currently supported models:
 
-DeeplabV3, DeeplabV2
+DeeplabV3, DeeplabV2, Also you can use PSPNet and FCN models in torchvision
 
 ## Usage(Linux):
 
@@ -34,7 +34,7 @@ cd code
 Prepare the code:
 
 1. Change the 2 base directories in code/data_processing.py
-2. run cityscapes_data_list.py
+2. Run cityscapes_data_list.py
 
 Enable tensorboard:
 
