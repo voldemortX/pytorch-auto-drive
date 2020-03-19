@@ -31,6 +31,11 @@ git clone https://github.com/voldemortX/pytorch-segmentation.git
 cd code
 ```
 
+Prepare the code:
+
+1. Change the 2 base directories in code/data_processing.py
+2. run cityscapes_data_list.py
+
 Enable tensorboard:
 
 ```
