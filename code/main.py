@@ -1,4 +1,3 @@
-from torchsummary import summary
 import os
 import time
 import torch
@@ -7,7 +6,9 @@ import random
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from apex import amp
-from deeplab import visualize, init, deeplab_v3, train_schedule, test_one_set, load_checkpoint
+from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, \
+                            num_classes_voc, num_classes_city, categories_voc, categories_city
+from deeplab import visualize, init, deeplab_v3, deeplab_v2, train_schedule, test_one_set, load_checkpoint
 
 # All hail Clearlove, 7th of his name!
 torch.manual_seed(4396)
@@ -17,27 +18,19 @@ np.random.seed(7777)
 #torch.backends.cudnn.benchmark = False  # Might hurt performance
 
 
-def after_loading():
-    global lr_scheduler
-    # The "poly" policy, variable names are confusing(May need reimplementation)
-    lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
-                                                     lambda x: (1 - x / (len(train_loader) * args.epochs)) ** 0.9)
-    # Resume training?
-    if args.continue_from is not None:
-        load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                        is_mixed_precision=args.mixed_precision, filename=args.continue_from)
-    #visualize(train_loader)
-
-
 if __name__ == '__main__':
     # Settings
-    parser = argparse.ArgumentParser(description='PyTorch 1.3')
-    parser.add_argument('--lr', type=float, default=0.001,
+    parser = argparse.ArgumentParser(description='PyTorch 1.2.0')
+    parser.add_argument('--lr', type=float, default=0.002,
                         help='Initial learning rate (default: 0.001)')
     parser.add_argument('--epochs', type=int, default=30,
                         help='Number of epochs (default: 30)')
-    parser.add_argument('--batch-size', type=int, default=4,
-                        help='input batch size (default: 4)')
+    parser.add_argument('--dataset', type=str, default='voc',
+                        help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city) (default: voc)')
+    parser.add_argument('--model', type=str, default='deeplabv3',
+                        help='Model selection (deeplabv2/deeplabv3) (default: deeplabv3)')
+    parser.add_argument('--batch-size', type=int, default=8,
+                        help='input batch size (default: 8)')
     parser.add_argument('--do-not-save', action='store_false', default=True,
                         help='save model (default: True)')
     parser.add_argument('--mixed-precision', action='store_true', default=False,
@@ -45,61 +38,73 @@ if __name__ == '__main__':
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
     parser.add_argument('--state', type=int, default=0,
-                        help='Conduct final test(2)/final training(1)/normal training(0) (default: 0)')
-    parser.add_argument('--gpu-id', type=str, default='0',
-                        help='Specify which GPU is to be used (default: 0)')
+                        help='Conduct final test(1)/normal training(0) (default: 0)')
     args = parser.parse_args()
 
     # Basic configurations
+    if args.dataset == 'voc':
+        num_classes = num_classes_voc
+        input_sizes = sizes_voc
+        categories = categories_voc
+        colors = colors_voc
+    elif args.dataset == 'city':
+        num_classes = num_classes_city
+        input_sizes = sizes_city
+        categories = categories_city
+        colors = colors_city
+    else:
+        raise ValueError
     device = torch.device('cpu')
     if torch.cuda.is_available():
-        device = torch.device('cuda:' + args.gpu_id)
-    net = deeplab_v3()
+        device = torch.device('cuda:0')
+    if args.model == 'deeplabv3':
+        net = deeplab_v3(num_classes=num_classes)
+    elif args.model == 'deeplabv2':
+        net = deeplab_v2(num_classes=num_classes)
+    else:
+        raise ValueError
     print(device)
     net.to(device)
-    optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0001)
+    optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0005)
     if args.mixed_precision:
         net, optimizer = amp.initialize(net, optimizer, opt_level='O1')
 
     # Testing
-    if args.state == 2:
-        test_loader = init(batch_size=args.batch_size, state=args.state)
+    if args.state == 1:
+        test_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
+                           mean=mean, std=std)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
                         is_mixed_precision=args.mixed_precision, filename=args.continue_from)
-        test_one_set(loader=test_loader, device=device, net=net)
+        test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes)
     else:
-        #summary(net, (3, 513, 513))  # Seems not working with a loaded model
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255)
         writer = SummaryWriter('runs/experiment_' + str(int(time.time())))
 
         # Final training
         if args.state == 1:
-            train_loader = init(batch_size=args.batch_size, state=args.state)
-            after_loading()
+            train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
+                                            input_sizes=input_sizes, mean=mean, std=std)
+            # The "poly" policy, variable names are confusing(May need reimplementation)
+            lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
+                                                             lambda x: (1 - x / (len(train_loader) * args.epochs))
+                                                             ** 0.9)
+            # Resume training?
+            if args.continue_from is not None:
+                load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                                is_mixed_precision=args.mixed_precision, filename=args.continue_from)
+            visualize(train_loader, colors=colors, mean=mean, std=std)
 
             # Train
             train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                           num_epochs=args.epochs, is_mixed_precision=args.mixed_precision,
-                           with_validation=False, validation_loader=None, device=device, criterion=criterion)
-
-            # Final evaluations
-            train_acc = test_one_set(loader=train_loader, device=device, net=net)
-
-        # Normal training
-        elif args.state == 0:
-            train_loader, val_loader = init(batch_size=args.batch_size, state=args.state)
-            after_loading()
-
-            # Train
-            train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                           num_epochs=args.epochs, is_mixed_precision=args.mixed_precision,
-                           with_validation=True, validation_loader=val_loader, device=device, criterion=criterion)
+                           num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, val_num_steps=1000,
+                           validation_loader=val_loader, device=device, criterion=criterion, categories=categories,
+                           num_classes=num_classes)
 
             # Final evaluations
             load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
                             is_mixed_precision=args.mixed_precision, filename='temp.pt')
-            train_acc = test_one_set(loader=train_loader, device=device, net=net)
-            val_acc = test_one_set(loader=val_loader, device=device, net=net)
+            _, _ = test_one_set(loader=val_loader, device=device, net=net,
+                                categories=categories, num_classes=num_classes)
 
         # --do-not-save => args.do_not_save = False
         if args.do_not_save:  # Rename the checkpoint with timestamp

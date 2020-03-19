@@ -1,19 +1,23 @@
 import torch
-import torchvision
 import time
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 from apex import amp
-from data_processing import StandardSegmentationDataset, colors, categories, mean, std
-from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, Compose
-Input_size = 321
-N_classes = 21
+from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101
+from data_processing import StandardSegmentationDataset, base_city, base_voc, label_id_map_city
+from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, ZeroPad,\
+                       LabelMap, Compose
 
 
-def deeplab_v3():
-    # Define deeplabV3 with ResNet101(With only ImageNet pretraining)
-    return torchvision.models.segmentation.deeplabv3_resnet101(pretrained=False, num_classes=N_classes)
+def deeplab_v3(num_classes):
+    # Define deeplabV3 with ResNet101 (With only ImageNet pretraining)
+    return deeplabv3_resnet101(pretrained=False, num_classes=num_classes)
+
+
+def deeplab_v2(num_classes):
+    # Define deeplabV3 with ResNet101 (With only ImageNet pretraining)
+    return deeplabv2_resnet101(pretrained=False, num_classes=num_classes)
 
 
 # Copied and simplified from torch/vision/references/segmentation
@@ -42,7 +46,7 @@ class ConfusionMatrix(object):
         return acc_global, acc, iu
 
 
-def show(images, is_label):
+def show(images, is_label, colors, std, mean):
     # Draw images/labels from tensors
     np_images = images.numpy()
     if is_label:
@@ -63,26 +67,26 @@ def show(images, is_label):
     plt.show()
 
 
-def visualize(loader):
+def visualize(loader, colors, std, mean):
     # Visualize a whole batch
     temp = iter(loader)
     images, labels = temp.next()
-    show(images=images, is_label=False)
-    show(images=labels, is_label=True)
+    show(images=images, is_label=False, colors=colors, std=std, mean=mean)
+    show(images=labels, is_label=True, colors=colors, std=std, mean=mean)
 
 
-# Save model checkpoints(supports amp)
+# Save model checkpoints (supports amp)
 def save_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename='temp.pt'):
     checkpoint = {
         'model': net.state_dict(),
-        'optimizer': optimizer.state_dict(),
-        'lr_scheduler': lr_scheduler.state_dict(),
+        'optimizer': optimizer.state_dict() if optimizer is not None else None,
+        'lr_scheduler': lr_scheduler.state_dict() if lr_scheduler is not None else None,
         'amp': amp.state_dict() if is_mixed_precision else None
     }
     torch.save(checkpoint, filename)
 
 
-# Load model checkpoints(supports amp, necessary?)
+# Load model checkpoints (supports amp)
 def load_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename):
     checkpoint = torch.load(filename)
     net.load_state_dict(checkpoint['model'])
@@ -90,70 +94,78 @@ def load_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename):
         optimizer.load_state_dict(checkpoint['optimizer'])
     if lr_scheduler is not None:
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
-    if is_mixed_precision:
+    if is_mixed_precision and checkpoint['amp'] is not None:
         amp.load_state_dict(checkpoint['amp'])
 
 
-def init(batch_size, state):
-    # Return data_loaders/data_loader
-    # depending on whether this is
-    # 0: initial training(trainaug, val)
-    # 1: last training(trainval)
-    # 2: final test("test", which is not available)
-    #base = '../data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
-    base = '../data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
+def init(batch_size, state, input_sizes, std, mean, dataset):
+    # Return data_loaders
+    # depending on whether the state is
+    # 1: training
+    # 2: just testing
 
     # Transformations
     # ! Can't use torchvision.Transforms.Compose
-    transform_train = Compose(
-        [Resize(h=Input_size, w=Input_size),
-         RandomHorizontalFlip(flip_prob=0.5),
-         ToTensor(),
-         Normalize(mean=mean, std=std)])
-    transform_test = Compose(
-        [Resize(h=Input_size, w=Input_size),
-         ToTensor(),
-         Normalize(mean=mean, std=std)])
+    if dataset == 'voc':
+        base = base_voc
+        workers = 4
+        transform_train = Compose(
+            [ToTensor(),
+             RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),
+             RandomCrop(size=input_sizes[0]),
+             RandomHorizontalFlip(flip_prob=0.5),
+             Normalize(mean=mean, std=std)])
+        transform_test = Compose(
+            [ToTensor(),
+             ZeroPad(size=input_sizes[2]),
+             Normalize(mean=mean, std=std)])
+    elif dataset == 'city':  # All the same size (whole set is down-sampled by 2)
+        base = base_city
+        workers = 8
+        transform_train = Compose(
+            [ToTensor(),
+             RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),
+             RandomCrop(size=input_sizes[0]),
+             RandomHorizontalFlip(flip_prob=0.5),
+             Normalize(mean=mean, std=std),
+             LabelMap(label_id_map_city)])
+        transform_test = Compose(
+            [ToTensor(),
+             Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
+             Normalize(mean=mean, std=std),
+             LabelMap(label_id_map_city)])
+    else:
+        raise ValueError
 
-    # Not the actual test set(i.e. validation set)
-    if state == 2:
-        test_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test)
-        test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=batch_size,
-                                                  num_workers=4, shuffle=False)
-        return test_loader
+    # Not the actual test set (i.e. validation set)
+    test_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test, data_set=dataset)
+    val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=1, num_workers=workers, shuffle=False)
 
-    # trainval
-    elif state == 1:
-        train_set = StandardSegmentationDataset(root=base, image_set='trainval', transforms=transform_train)
+    # Testing
+    if state == 1:
+        return val_loader
+    else:
+        # Training
+        train_set = StandardSegmentationDataset(root=base, image_set='train',
+                                                transforms=transform_train, data_set=dataset)
         train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=batch_size,
-                                                   num_workers=4, shuffle=True)
-        return train_loader
-
-    # train, val
-    elif state == 0:
-        train_set = StandardSegmentationDataset(root=base, image_set='trainaug', transforms=transform_train)
-        train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=batch_size,
-                                                   num_workers=4, shuffle=True)
-        val_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test)
-        val_loader = torch.utils.data.DataLoader(dataset=val_set, batch_size=batch_size,
-                                                 num_workers=4, shuffle=False)
+                                                   num_workers=workers, shuffle=True)
         return train_loader, val_loader
 
 
-def train_schedule(writer, loader, with_validation, validation_loader, device, criterion, net, optimizer, lr_scheduler,
-                   num_epochs, is_mixed_precision):
+def train_schedule(writer, loader, val_num_steps, validation_loader, device, criterion, net, optimizer, lr_scheduler,
+                   num_epochs, is_mixed_precision, num_classes, categories):
     # Poly training schedule
     # Validate and find the best snapshot
-    if with_validation:
-        best_mIoU = 0
-
+    best_mIoU = 0
     net.train()
     epoch = 0
+    loss_num_steps = int(len(loader) / 10)
 
     # Training
     while epoch < num_epochs:
         net.train()
-        conf_mat = ConfusionMatrix(N_classes)
+        conf_mat = ConfusionMatrix(num_classes)
         running_loss = 0.0
         time_now = time.time()
         for i, data in enumerate(loader, 0):
@@ -172,14 +184,36 @@ def train_schedule(writer, loader, with_validation, validation_loader, device, c
             optimizer.step()
             lr_scheduler.step()
             running_loss += loss.item()
-            if i % 100 == 99:
+            current_step_num = int(epoch * len(loader) + i + 1)
+
+            # Record losses
+            if current_step_num % loss_num_steps == (loss_num_steps - 1):
                 print('[%d, %d] loss: %.4f' % (epoch + 1, i + 1, running_loss / 100))
                 writer.add_scalar('training loss',
                                   running_loss / 100,
                                   epoch * len(loader) + i + 1)
                 running_loss = 0.0
 
-        # Evaluate training accuracies(same metric as validation, but must be on-the-fly to save time)
+            # Validate and find the best snapshot
+            if current_step_num % val_num_steps == (val_num_steps - 1) or \
+               current_step_num == num_epochs * len(loader) - 1:
+                # A bug in Apex? https://github.com/NVIDIA/apex/issues/706
+                test_pixel_accuracy, test_mIoU = test_one_set(loader=validation_loader, device=device, net=net,
+                                                              num_classes=num_classes, categories=categories)
+                writer.add_scalar('test pixel accuracy',
+                                  test_pixel_accuracy,
+                                  epoch + 1)
+                writer.add_scalar('test mIoU',
+                                  test_mIoU,
+                                  epoch + 1)
+
+                # Record best model (straight to disk)
+                if test_mIoU > best_mIoU:
+                    best_mIoU = test_mIoU
+                    save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                                    is_mixed_precision=is_mixed_precision)
+
+        # Evaluate training accuracies (same metric as validation, but must be on-the-fly to save time)
         acc_global, acc, iu = conf_mat.compute()
         print(categories)
         print((
@@ -200,37 +234,16 @@ def train_schedule(writer, loader, with_validation, validation_loader, device, c
         writer.add_scalar('train mIoU',
                           train_mIoU,
                           epoch + 1)
-    
-        # Validate and find the best snapshot
-        if with_validation:
-            test_pixel_accuracy, test_mIoU = test_one_set(loader=validation_loader, device=device, net=net)
-            writer.add_scalar('test pixel accuracy',
-                              test_pixel_accuracy,
-                              epoch + 1)
-            writer.add_scalar('test mIoU',
-                              test_mIoU,
-                              epoch + 1)
-
-            # Record best model(Straight to disk)
-            if test_mIoU > best_mIoU:
-                best_mIoU = test_mIoU
-                save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                                is_mixed_precision=is_mixed_precision)
 
         epoch += 1
         print('Epoch time: %.2fs' % (time.time() - time_now))
 
-    # Save just the last states
-    if not with_validation:
-        save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                        is_mixed_precision=is_mixed_precision)
-
 
 # Copied and modified from torch/vision/references/segmentation
-def test_one_set(loader, device, net):
+def test_one_set(loader, device, net, num_classes, categories):
     # Evaluate on 1 data_loader
     net.eval()
-    conf_mat = ConfusionMatrix(N_classes)
+    conf_mat = ConfusionMatrix(num_classes)
     with torch.no_grad():
         for image, target in tqdm(loader):
             image, target = image.to(device), target.to(device)
