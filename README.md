@@ -37,20 +37,22 @@ Enable tensorboard:
 tensorboard --logdir=runs
 ```
 
-Run normal training on PASCAL VOC (76.47% mIOU, averaged across 3 runs, see tensorboard logs in code/runs/):
+Run mixed-precision training on PASCAL VOC 2012 with DeeplabV2 (73.5% mIOU, averaged across 3 runs, see tensorboard logs in code/runs/):
 
 ```
-python main.py --epochs=30 --lr=0.002 --batch-size=8
+python main.py --epochs=30 --lr=0.002 --batch-size=8 --dataset=voc --model=deeplabv2 --mixed-precision
 ```
 
-Run mixed precision training on PASCAL VOC(76.45% mIOU, averaged across 3 runs, see tensorboard logs in code/runs/):
+Other commands, e.g. run full-precision training on Cityscapes with DeeplabV3:
 
 ```
-python main.py --epochs=30 --lr=0.002 --batch-size=8 --mixed-precision
+python main.py --epochs=60 --lr=0.002 --batch-size=8 --dataset=city --model=deeplabv3
 ```
 
 ## Notes:
 
 Experiments used same random seeds. However, it is still not deterministic due to parallel computing and other unknown factors.
+
+Cityscapes dataset is down-sampled by 2, to specify different sizes, modify this [line](code/data_processing.py#L32); similar changes can be down with PASCAL VOC 2012.
 
 On **a single RTX 2080Ti**, training DeeplabV3 (30 epochs at 321x321 resolution) takes **~9h15m** and **~8.5G** GPU memory (or **~6h35m** and **~5.5G** GPU memory with mixed precision training)
