@@ -1,7 +1,7 @@
 # My segmentation codebase
 Segmentation models (DeeplabV3, DeeplabV2, etc.) based on Python 3.6.8 and 
 
-PyTorch Pytorch 1.2.0 (cuda 10.0) & torchvision 0.4.0 with mixed precision training, since 1.2.0 is 100% compatible with apex.
+Pytorch 1.2.0 (cuda 10.0) & torchvision 0.4.0 with mixed precision training, since 1.2.0 is 100% compatible with apex.
 
 Including modulated (borrowed) mIOU & pixel acc calculation, "poly" learning rate schedule, basic input transformations and visulizations, also tests of mixed precision training.
 
