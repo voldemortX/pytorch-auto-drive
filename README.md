@@ -56,7 +56,7 @@ Enable tensorboard:
 tensorboard --logdir=runs
 ```
 
-Run mixed-precision training on PASCAL VOC 2012 with DeeplabV2 (73.5% mIOU, averaged across 3 runs, see tensorboard logs in code/runs/):
+Run mixed-precision training on PASCAL VOC 2012 with DeeplabV2:
 
 ```
 python main.py --epochs=30 --lr=0.002 --batch-size=8 --dataset=voc --model=deeplabv2 --mixed-precision
