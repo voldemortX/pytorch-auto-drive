@@ -10,7 +10,7 @@ std = [0.229, 0.224, 0.225]
 
 # Here 'training resize min' is also the final training crop size as RandomResize & RandomCrop are used together
 # For PASCAL VOC 2012
-base_voc = '../voc_seg_deeplab/data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
+base_voc = '../data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
 sizes_voc = [(321, 321), (505, 505), (505, 505)]  # training resize min/training resize max/testing label size
 num_classes_voc = 21
 colors_voc = [[0, 0, 0],
@@ -28,7 +28,7 @@ categories_voc = ['Background',
                   'Sheep', 'Sofa', 'Train', 'Tvmonitor']
 
 # For cityscapes (19 classes, ignore as black, no such thing as background)
-base_city = '../../dataset/cityscapes'
+base_city = '../../../dataset/cityscapes'
 sizes_city = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/training resize max/testing label size
 num_classes_city = 19
 colors_city = [

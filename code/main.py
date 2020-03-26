@@ -75,36 +75,34 @@ if __name__ == '__main__':
                            mean=mean, std=std)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
                         is_mixed_precision=args.mixed_precision, filename=args.continue_from)
-        test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes)
+        test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
+                     output_size=input_sizes[2])
     else:
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255)
         writer = SummaryWriter('runs/experiment_' + str(int(time.time())))
+        train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
+                                        input_sizes=input_sizes, mean=mean, std=std)
+        # The "poly" policy, variable names are confusing(May need reimplementation)
+        lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
+                                                         lambda x: (1 - x / (len(train_loader) * args.epochs))
+                                                         ** 0.9)
+        # Resume training?
+        if args.continue_from is not None:
+            load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                            is_mixed_precision=args.mixed_precision, filename=args.continue_from)
+        # visualize(train_loader, colors=colors, mean=mean, std=std)
 
-        # Final training
-        if args.state == 1:
-            train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
-                                            input_sizes=input_sizes, mean=mean, std=std)
-            # The "poly" policy, variable names are confusing(May need reimplementation)
-            lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
-                                                             lambda x: (1 - x / (len(train_loader) * args.epochs))
-                                                             ** 0.9)
-            # Resume training?
-            if args.continue_from is not None:
-                load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                                is_mixed_precision=args.mixed_precision, filename=args.continue_from)
-            visualize(train_loader, colors=colors, mean=mean, std=std)
+        # Train
+        train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                       num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, val_num_steps=1000,
+                       validation_loader=val_loader, device=device, criterion=criterion, categories=categories,
+                       num_classes=num_classes, input_sizes=input_sizes)
 
-            # Train
-            train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                           num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, val_num_steps=1000,
-                           validation_loader=val_loader, device=device, criterion=criterion, categories=categories,
-                           num_classes=num_classes)
-
-            # Final evaluations
-            load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
-                            is_mixed_precision=args.mixed_precision, filename='temp.pt')
-            _, _ = test_one_set(loader=val_loader, device=device, net=net,
-                                categories=categories, num_classes=num_classes)
+        # Final evaluations
+        load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
+                        is_mixed_precision=args.mixed_precision, filename='temp.pt')
+        _, _ = test_one_set(loader=val_loader, device=device, net=net,
+                            categories=categories, num_classes=num_classes, output_size=input_sizes[2])
 
         # --do-not-save => args.do_not_save = False
         if args.do_not_save:  # Rename the checkpoint with timestamp

@@ -139,14 +139,14 @@ def init(batch_size, state, input_sizes, std, mean, dataset):
 
     # Not the actual test set (i.e. validation set)
     test_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test, data_set=dataset)
-    val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=1, num_workers=workers, shuffle=False)
+    val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=batch_size, num_workers=workers, shuffle=False)
 
     # Testing
     if state == 1:
         return val_loader
     else:
         # Training
-        train_set = StandardSegmentationDataset(root=base, image_set='train',
+        train_set = StandardSegmentationDataset(root=base, image_set='train' if dataset == 'city' else 'trainaug',
                                                 transforms=transform_train, data_set=dataset)
         train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=batch_size,
                                                    num_workers=workers, shuffle=True)
@@ -154,7 +154,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset):
 
 
 def train_schedule(writer, loader, val_num_steps, validation_loader, device, criterion, net, optimizer, lr_scheduler,
-                   num_epochs, is_mixed_precision, num_classes, categories):
+                   num_epochs, is_mixed_precision, num_classes, categories, input_sizes):
     # Poly training schedule
     # Validate and find the best snapshot
     best_mIoU = 0
@@ -173,6 +173,7 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = net(inputs)['out']
+            outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear', align_corners=True)
             conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
             loss = criterion(outputs, labels)
             if is_mixed_precision:
@@ -191,7 +192,7 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
                 print('[%d, %d] loss: %.4f' % (epoch + 1, i + 1, running_loss / 100))
                 writer.add_scalar('training loss',
                                   running_loss / 100,
-                                  epoch * len(loader) + i + 1)
+                                  current_step_num)
                 running_loss = 0.0
 
             # Validate and find the best snapshot
@@ -199,13 +200,15 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
                current_step_num == num_epochs * len(loader) - 1:
                 # A bug in Apex? https://github.com/NVIDIA/apex/issues/706
                 test_pixel_accuracy, test_mIoU = test_one_set(loader=validation_loader, device=device, net=net,
-                                                              num_classes=num_classes, categories=categories)
+                                                              num_classes=num_classes, categories=categories,
+                                                              output_size=input_sizes[2])
                 writer.add_scalar('test pixel accuracy',
                                   test_pixel_accuracy,
-                                  epoch + 1)
+                                  current_step_num)
                 writer.add_scalar('test mIoU',
                                   test_mIoU,
-                                  epoch + 1)
+                                  current_step_num)
+                net.train()
 
                 # Record best model (straight to disk)
                 if test_mIoU > best_mIoU:
@@ -240,7 +243,7 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
 
 
 # Copied and modified from torch/vision/references/segmentation
-def test_one_set(loader, device, net, num_classes, categories):
+def test_one_set(loader, device, net, num_classes, categories, output_size):
     # Evaluate on 1 data_loader
     net.eval()
     conf_mat = ConfusionMatrix(num_classes)
@@ -248,6 +251,7 @@ def test_one_set(loader, device, net, num_classes, categories):
         for image, target in tqdm(loader):
             image, target = image.to(device), target.to(device)
             output = net(image)['out']
+            output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
             conf_mat.update(target.flatten(), output.argmax(1).flatten())
 
     acc_global, acc, iu = conf_mat.compute()
