@@ -1,17 +1,31 @@
 # My segmentation codebase
-Segmentation models (DeeplabV3, DeeplabV2) based on Python 3.6.8 and 
+Segmentation models (DeeplabV3, DeeplabV2, etc.) based on Python 3.6.8 and 
 
-PyTorch Pytorch 1.2.0 (cuda 10.0) & torchvision 0.4.0 with mixed precision training, since 1.2.0 is 100% compatible with apex
+PyTorch Pytorch 1.2.0 (cuda 10.0) & torchvision 0.4.0 with mixed precision training, since 1.2.0 is 100% compatible with apex.
 
-Including modulated (borrowed) mIOU & pixel acc calculation, "poly" learning rate schedule, basic input transformations and visulizations, also tests of mixed precision training
+Including modulated (borrowed) mIOU & pixel acc calculation, "poly" learning rate schedule, basic input transformations and visulizations, also tests of mixed precision training.
 
 ### Currently supported datasets: 
 
-PASCAL VOC 2012 (Deeplab 10582 trainaug version, I don't think I have the right to distribute this dataset, so just get the images yourself); Cityscapes
+PASCAL VOC 2012 (Deeplab 10582 trainaug version, I don't think I have the right to distribute this dataset, so just get the images yourself); Cityscapes.
 
 ### Currently supported models:
 
-DeeplabV3, DeeplabV2
+ResNet-101 backbone:
+
+DeeplabV3, DeeplabV2, PSPNet, FCN
+
+(You can of course also use the ResNet-50 backbone in torchvision by simply calling a different function)
+
+### Performance (single random run)
+
+| model | mixed precision? | Dataset | mIoU (%) |
+| :---: | :---: | :---: | :---: |
+| DeepLabV2 | *yes* | PASCAL VOC 2012 | 72.72 |
+| DeepLabV3 | *yes* | PASCAL VOC 2012 | 77.18 |
+| DeepLabV2 | *yes* | Cityscapes | 66.72 |
+| DeepLabV3 | *yes* | Cityscapes | 67.87 |
+| DeepLabV3 | *no* | Cityscapes | 67.68 |
 
 ## Usage(Linux):
 
@@ -31,26 +45,33 @@ git clone https://github.com/voldemortX/pytorch-segmentation.git
 cd code
 ```
 
+Prepare the code:
+
+1. Change the 2 base directories in code/data_processing.py
+2. Run cityscapes_data_list.py
+
 Enable tensorboard:
 
 ```
 tensorboard --logdir=runs
 ```
 
-Run normal training on PASCAL VOC (76.47% mIOU, averaged across 3 runs, see tensorboard logs in code/runs/):
+Run mixed-precision training on PASCAL VOC 2012 with DeeplabV2:
 
 ```
-python main.py --epochs=30 --lr=0.002 --batch-size=8
+python main.py --epochs=30 --lr=0.002 --batch-size=8 --dataset=voc --model=deeplabv2 --mixed-precision
 ```
 
-Run mixed precision training on PASCAL VOC(76.45% mIOU, averaged across 3 runs, see tensorboard logs in code/runs/):
+Other commands, e.g. run full-precision training on Cityscapes with DeeplabV3:
 
 ```
-python main.py --epochs=30 --lr=0.002 --batch-size=8 --mixed-precision
+python main.py --epochs=60 --lr=0.002 --batch-size=8 --dataset=city --model=deeplabv3
 ```
 
 ## Notes:
 
 Experiments used same random seeds. However, it is still not deterministic due to parallel computing and other unknown factors.
 
-On **a single RTX 2080Ti**, training DeeplabV3 (30 epochs at 321x321 resolution) takes **~9h15m** and **~8.5G** GPU memory (or **~6h35m** and **~5.5G** GPU memory with mixed precision training)
+Cityscapes dataset is down-sampled by 2, to specify different sizes, modify this [line](code/data_processing.py#L32); similar changes can be down with PASCAL VOC 2012.
+
+On **a single RTX 2080Ti**, training DeeplabV3 (30 epochs at 321x321 resolution) takes **~9h15m** and **~8.5G** GPU memory (or **~6h35m** and **~5.5G** GPU memory with mixed precision training).
