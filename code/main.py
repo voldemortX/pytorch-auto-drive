@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 from apex import amp
 from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, \
                             num_classes_voc, num_classes_city, categories_voc, categories_city
-from deeplab import visualize, init, deeplab_v3, deeplab_v2, train_schedule, test_one_set, load_checkpoint
+from deeplab import visualize, init, deeplab_v3, deeplab_v2, fcn, train_schedule, test_one_set, load_checkpoint
 
 # All hail Clearlove, 7th of his name!
 torch.manual_seed(4396)
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='voc',
                         help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city) (default: voc)')
     parser.add_argument('--model', type=str, default='deeplabv3',
-                        help='Model selection (deeplabv2/deeplabv3) (default: deeplabv3)')
+                        help='Model selection (fcn/pspnet/deeplabv2/deeplabv3) (default: deeplabv3)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size (default: 8)')
     parser.add_argument('--do-not-save', action='store_false', default=True,
@@ -61,6 +61,8 @@ if __name__ == '__main__':
         net = deeplab_v3(num_classes=num_classes)
     elif args.model == 'deeplabv2':
         net = deeplab_v2(num_classes=num_classes)
+    elif args.model == 'fcn':
+        net = fcn(num_classes)
     else:
         raise ValueError
     print(device)
@@ -90,7 +92,7 @@ if __name__ == '__main__':
         if args.continue_from is not None:
             load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
                             is_mixed_precision=args.mixed_precision, filename=args.continue_from)
-        # visualize(train_loader, colors=colors, mean=mean, std=std)
+        visualize(train_loader, colors=colors, mean=mean, std=std)
 
         # Train
         train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,

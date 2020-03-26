@@ -13,9 +13,9 @@ PASCAL VOC 2012 (Deeplab 10582 trainaug version, I don't think I have the right 
 
 ResNet-101 backbone:
 
-DeeplabV3, DeeplabV2, PSPNet, FCN
+DeeplabV3, DeeplabV2, FCN
 
-(You can of course also use the ResNet-50 backbone in torchvision by simply calling a different function)
+(You can of course also use the ResNet-50 backbone in torchvision by simply calling a different function or other models by using the most recent torchvision implementation)
 
 ### Performance (single random run)
 

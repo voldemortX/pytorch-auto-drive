@@ -4,11 +4,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 from apex import amp
-from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101
+from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101
 from data_processing import StandardSegmentationDataset, base_city, base_voc, label_id_map_city
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, ZeroPad,\
                        LabelMap, Compose
 
+
+def fcn(num_classes):
+    # Define FCN with ResNet101 (With only ImageNet pretraining)
+    return fcn_resnet101(pretrained=False, num_classes=num_classes)
 
 def deeplab_v3(num_classes):
     # Define deeplabV3 with ResNet101 (With only ImageNet pretraining)
@@ -16,7 +20,7 @@ def deeplab_v3(num_classes):
 
 
 def deeplab_v2(num_classes):
-    # Define deeplabV3 with ResNet101 (With only ImageNet pretraining)
+    # Define deeplabV2 with ResNet101 (With only ImageNet pretraining)
     return deeplabv2_resnet101(pretrained=False, num_classes=num_classes)
 
 
