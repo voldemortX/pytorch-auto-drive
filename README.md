@@ -11,7 +11,21 @@ PASCAL VOC 2012 (Deeplab 10582 trainaug version, I don't think I have the right 
 
 ### Currently supported models:
 
-DeeplabV3, DeeplabV2, Also you can use PSPNet and FCN models in torchvision.
+ResNet-101 backbone:
+
+DeeplabV3, DeeplabV2, PSPNet, FCN
+
+(You can of course also use the ResNet-50 backbone in torchvision by simply calling a different function)
+
+### Performance (single random run)
+
+| model | mixed precision? | Dataset | mIoU (%) |
+| :---: | :---: | :---: | :---: |
+| DeepLabV2 | *yes* | PASCAL VOC 2012 | 72.72 |
+| DeepLabV3 | *yes* | PASCAL VOC 2012 | 77.18 |
+| DeepLabV2 | *yes* | Cityscapes | 66.72 |
+| DeepLabV3 | *yes* | Cityscapes | 67.87 |
+| DeepLabV3 | *no* | Cityscapes | 67.68 |
 
 ## Usage(Linux):
 
