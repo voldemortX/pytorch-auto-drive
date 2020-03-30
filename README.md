@@ -17,15 +17,15 @@ DeeplabV3, DeeplabV2, FCN
 
 (You can of course also use the ResNet-50 backbone in torchvision by simply calling a different function or other models by using the most recent torchvision implementation)
 
-### Performance (single random run)
+### Performance (averaged)
 
 | model | mixed precision? | Dataset | mIoU (%) |
 | :---: | :---: | :---: | :---: |
-| DeepLabV2 | *yes* | PASCAL VOC 2012 | 72.72 |
-| DeepLabV3 | *yes* | PASCAL VOC 2012 | 77.18 |
+| DeepLabV2 | *yes* | PASCAL VOC 2012 | 72.88 |
+| DeepLabV3 | *yes* | PASCAL VOC 2012 | 76.70 |
 | DeepLabV2 | *yes* | Cityscapes | 66.72 |
-| DeepLabV3 | *yes* | Cityscapes | 67.87 |
-| DeepLabV3 | *no* | Cityscapes | 67.68 |
+| DeepLabV3 | *yes* | Cityscapes | 67.84 |
+| DeepLabV3 | *no* | Cityscapes | 67.76 |
 
 ## Usage(Linux):
 
