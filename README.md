@@ -1,7 +1,7 @@
 # My segmentation codebase
 Segmentation models (DeeplabV3, DeeplabV2, etc.) based on Python 3.6.8 and 
 
-PyTorch Pytorch 1.2.0 (cuda 10.0) & torchvision 0.4.0 with mixed precision training, since 1.2.0 is 100% compatible with apex.
+Pytorch 1.2.0 (cuda 10.0) & torchvision 0.4.0 with mixed precision training, since 1.2.0 is 100% compatible with apex.
 
 Including modulated (borrowed) mIOU & pixel acc calculation, "poly" learning rate schedule, basic input transformations and visulizations, also tests of mixed precision training.
 
@@ -17,17 +17,17 @@ DeeplabV3, DeeplabV2, FCN
 
 (You can of course also use the ResNet-50 backbone in torchvision by simply calling a different function or other models by using the most recent torchvision implementation)
 
-### Performance (single random run)
+### Performance (averaged)
 
 | model | mixed precision? | Dataset | mIoU (%) |
 | :---: | :---: | :---: | :---: |
 | FCN | *yes* | PASCAL VOC 2012 | 69.09 |
 | FCN | *no* | PASCAL VOC 2012 | 69.16 |
-| DeepLabV2 | *yes* | PASCAL VOC 2012 | 72.72 |
-| DeepLabV3 | *yes* | PASCAL VOC 2012 | 77.18 |
+| DeepLabV2 | *yes* | PASCAL VOC 2012 | 72.88 |
+| DeepLabV3 | *yes* | PASCAL VOC 2012 | 76.70 |
 | DeepLabV2 | *yes* | Cityscapes | 66.72 |
-| DeepLabV3 | *yes* | Cityscapes | 67.87 |
-| DeepLabV3 | *no* | Cityscapes | 67.68 |
+| DeepLabV3 | *yes* | Cityscapes | 67.84 |
+| DeepLabV3 | *no* | Cityscapes | 67.76 |
 
 ## Usage(Linux):
 
