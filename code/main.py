@@ -92,7 +92,7 @@ if __name__ == '__main__':
         if args.continue_from is not None:
             load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
                             is_mixed_precision=args.mixed_precision, filename=args.continue_from)
-        visualize(train_loader, colors=colors, mean=mean, std=std)
+        # visualize(train_loader, colors=colors, mean=mean, std=std)
 
         # Train
         train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,

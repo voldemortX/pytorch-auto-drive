@@ -21,6 +21,8 @@ DeeplabV3, DeeplabV2, FCN
 
 | model | mixed precision? | Dataset | mIoU (%) |
 | :---: | :---: | :---: | :---: |
+| FCN | *yes* | PASCAL VOC 2012 | 69.09 |
+| FCN | *no* | PASCAL VOC 2012 | 69.16 |
 | DeepLabV2 | *yes* | PASCAL VOC 2012 | 72.72 |
 | DeepLabV3 | *yes* | PASCAL VOC 2012 | 77.18 |
 | DeepLabV2 | *yes* | Cityscapes | 66.72 |
