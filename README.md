@@ -25,6 +25,7 @@ DeeplabV3, DeeplabV2, FCN
 | FCN | *no* | PASCAL VOC 2012 | 69.16 |
 | DeepLabV2 | *yes* | PASCAL VOC 2012 | 72.88 |
 | DeepLabV3 | *yes* | PASCAL VOC 2012 | 76.70 |
+| FCN | *yes* | Cityscapes | 65.57 |
 | DeepLabV2 | *yes* | Cityscapes | 66.72 |
 | DeepLabV3 | *yes* | Cityscapes | 67.84 |
 | DeepLabV3 | *no* | Cityscapes | 67.76 |
