@@ -6,9 +6,9 @@ import random
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from apex import amp
-from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, \
+from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, \
                             num_classes_voc, num_classes_city, categories_voc, categories_city
-from deeplab import visualize, init, deeplab_v3, deeplab_v2, fcn, train_schedule, test_one_set, load_checkpoint
+from deeplab import visualize, init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set, load_checkpoint
 
 # All hail Clearlove, 7th of his name!
 torch.manual_seed(4396)
@@ -63,11 +63,17 @@ if __name__ == '__main__':
         net = deeplab_v2(num_classes=num_classes)
     elif args.model == 'fcn':
         net = fcn(num_classes)
+    elif args.model == 'erfnet':
+        net = erfnet(num_classes=num_classes)
+        input_sizes = sizes_city_erfnet
     else:
         raise ValueError
     print(device)
     net.to(device)
-    optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0005)
+    if args.model == 'erfnet':
+        optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999),  eps=1e-08, weight_decay=1e-4)
+    else:
+        optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0005)
     if args.mixed_precision:
         net, optimizer = amp.initialize(net, optimizer, opt_level='O1')
 

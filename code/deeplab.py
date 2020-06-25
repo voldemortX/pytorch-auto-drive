@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 from apex import amp
-from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101
+from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet
 from data_processing import StandardSegmentationDataset, base_city, base_voc, label_id_map_city
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, ZeroPad,\
                        LabelMap, Compose
@@ -14,6 +14,7 @@ def fcn(num_classes):
     # Define FCN with ResNet101 (With only ImageNet pretraining)
     return fcn_resnet101(pretrained=False, num_classes=num_classes)
 
+
 def deeplab_v3(num_classes):
     # Define deeplabV3 with ResNet101 (With only ImageNet pretraining)
     return deeplabv3_resnet101(pretrained=False, num_classes=num_classes)
@@ -22,6 +23,11 @@ def deeplab_v3(num_classes):
 def deeplab_v2(num_classes):
     # Define deeplabV2 with ResNet101 (With only ImageNet pretraining)
     return deeplabv2_resnet101(pretrained=False, num_classes=num_classes)
+
+
+def erfnet(num_classes, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
+    # Define ERFNet (With only ImageNet pretraining)
+    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes)
 
 
 # Copied and simplified from torch/vision/references/segmentation
@@ -125,7 +131,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset):
              Normalize(mean=mean, std=std)])
     elif dataset == 'city':  # All the same size (whole set is down-sampled by 2)
         base = base_city
-        workers = 8
+        workers = 12
         transform_train = Compose(
             [ToTensor(),
              RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),

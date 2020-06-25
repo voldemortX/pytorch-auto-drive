@@ -3,9 +3,12 @@ from ..utils import load_state_dict_from_url
 from .. import resnet
 from .deeplab import DeepLabV3Head, DeepLabV2Head, DeepLab, ReconHead
 from .fcn import FCN, FCNHead
+from .erfnet import ERFNet
+from torch import load
 
 
-__all__ = ['fcn_resnet50', 'fcn_resnet101', 'deeplabv2_resnet101', 'deeplabv3_resnet50', 'deeplabv3_resnet101']
+__all__ = ['fcn_resnet50', 'fcn_resnet101', 'deeplabv2_resnet101', 'deeplabv3_resnet50', 'deeplabv3_resnet101',
+           'erfnet_resnet']
 
 
 model_urls = {
@@ -126,3 +129,22 @@ def deeplabv3_resnet101(pretrained=False, progress=True,
     """
     return _load_model('deeplabv3', 'resnet101', pretrained, progress, num_classes, aux_loss,
                        recon_loss, **kwargs)
+
+
+def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_classes=19):
+    """Different from others.
+
+    Args:
+        pretrained_weights (str): If not None, load ImageNet pre-trained weights from this filename
+    """
+    net = ERFNet(num_classes=num_classes, encoder=None)
+    if pretrained_weights is not None:  # Load ImageNet pre-trained weights
+        saved_weights = load(pretrained_weights)
+        original_weights = net.state_dict()
+        for key in saved_weights.keys():
+            my_key = key.replace('.features', '')
+            if my_key in original_weights.keys():
+                original_weights[my_key] = saved_weights[key]
+        net.load_state_dict(original_weights)
+
+    return net

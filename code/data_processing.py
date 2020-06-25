@@ -30,6 +30,7 @@ categories_voc = ['Background',
 # For cityscapes (19 classes, ignore as black, no such thing as background)
 base_city = '../../../dataset/cityscapes'
 sizes_city = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/training resize max/testing label size
+sizes_city_erfnet = [(512, 1024), (1024, 2048), (1024, 2048)]  # Typical sizes
 num_classes_city = 19
 colors_city = [
                [128, 64, 128], [244, 35, 232], [70, 70, 70], [102, 102, 156],
