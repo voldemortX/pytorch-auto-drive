@@ -41,8 +41,20 @@ class Resize(object):
         return image, target
 
 
-# Pad image with zeros, yet pad target with 255(ignore label) on bottom & right if
-# given a bigger desired size(or else nothing is done at all)
+# Crop from up-left corner
+class Crop(object):
+    def __init__(self, size):
+        self.h, self.w = size
+
+    def __call__(self, image, target):
+        image = F.crop(image, 0, 0, self.h, self.w)
+        target = F.crop(target, 0, 0, self.h, self.w)
+
+        return image, target
+
+
+# Pad image with zeros, yet pad target with 255 (ignore label) on bottom & right if
+# given a bigger desired size (or else nothing is done at all)
 class ZeroPad(object):
     def __init__(self, size):
         self.h, self.w = size
@@ -59,6 +71,27 @@ class ZeroPad(object):
 
     def __call__(self, image, target):
         return self.zero_pad(image, target, self.h, self.w)
+
+
+class RandomZeroPad(object):
+    def __init__(self, pad_h, pad_w):
+        self.pad_h = pad_h
+        self.pad_w = pad_w
+
+    def __call__(self, image, target):
+        r = random.randint(-self.pad_w, self.pad_w)
+        b = random.randint(-self.pad_h, self.pad_h)
+        if r < 0:
+            l = -r
+            r = 0
+        if b < 0:
+            t = -b
+            b = 0
+
+        image = F.pad(image, (l, t, r, b), fill=0)
+        target = F.pad(target, (l, t, r, b), fill=255)
+
+        return image, target
 
 
 class RandomResize(object):

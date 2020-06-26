@@ -7,7 +7,7 @@ from apex import amp
 from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet
 from data_processing import StandardSegmentationDataset, base_city, base_voc, label_id_map_city
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, ZeroPad,\
-                       LabelMap, Compose
+                       LabelMap, RandomZeroPad, Crop, Compose
 
 
 def fcn(num_classes):
@@ -108,7 +108,7 @@ def load_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename):
         amp.load_state_dict(checkpoint['amp'])
 
 
-def init(batch_size, state, input_sizes, std, mean, dataset):
+def init(batch_size, state, input_sizes, std, mean, dataset, erfnet=False):
     # Return data_loaders
     # depending on whether the state is
     # 1: training
@@ -132,18 +132,33 @@ def init(batch_size, state, input_sizes, std, mean, dataset):
     elif dataset == 'city':  # All the same size (whole set is down-sampled by 2)
         base = base_city
         workers = 12
-        transform_train = Compose(
-            [ToTensor(),
-             RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),
-             RandomCrop(size=input_sizes[0]),
-             RandomHorizontalFlip(flip_prob=0.5),
-             Normalize(mean=mean, std=std),
-             LabelMap(label_id_map_city)])
-        transform_test = Compose(
-            [ToTensor(),
-             Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
-             Normalize(mean=mean, std=std),
-             LabelMap(label_id_map_city)])
+        if erfnet:
+            transform_train = Compose(
+                [ToTensor(),
+                 Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
+                 RandomZeroPad(pad_h=2, pad_w=2),
+                 Crop(size=input_sizes[0]),
+                 RandomHorizontalFlip(flip_prob=0.5),
+                 Normalize(mean=mean, std=std),
+                 LabelMap(label_id_map_city)])
+            transform_test = Compose(
+                [ToTensor(),
+                 Resize(size_image=input_sizes[0], size_label=input_sizes[2]),
+                 Normalize(mean=mean, std=std),
+                 LabelMap(label_id_map_city)])
+        else:
+            transform_train = Compose(
+                [ToTensor(),
+                 RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),
+                 RandomCrop(size=input_sizes[0]),
+                 RandomHorizontalFlip(flip_prob=0.5),
+                 Normalize(mean=mean, std=std),
+                 LabelMap(label_id_map_city)])
+            transform_test = Compose(
+                [ToTensor(),
+                 Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
+                 Normalize(mean=mean, std=std),
+                 LabelMap(label_id_map_city)])
     else:
         raise ValueError
 

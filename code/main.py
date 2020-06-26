@@ -57,6 +57,7 @@ if __name__ == '__main__':
         raise ValueError
     device = torch.device('cpu')
     weights = None
+    is_erfnet = False
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     if args.model == 'deeplabv3':
@@ -69,6 +70,7 @@ if __name__ == '__main__':
         net = erfnet(num_classes=num_classes)
         weights = torch.tensor(weights_city_erfnet).to(device)
         input_sizes = sizes_city_erfnet
+        is_erfnet = True
     else:
         raise ValueError
     print(device)
@@ -85,7 +87,7 @@ if __name__ == '__main__':
     # Testing
     if args.state == 1:
         test_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
-                           mean=mean, std=std)
+                           mean=mean, std=std, erfnet=is_erfnet)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
                         is_mixed_precision=args.mixed_precision, filename=args.continue_from)
         test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
@@ -94,7 +96,7 @@ if __name__ == '__main__':
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255, weight=weights)
         writer = SummaryWriter('runs/experiment_' + str(int(time.time())))
         train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
-                                        input_sizes=input_sizes, mean=mean, std=std)
+                                        input_sizes=input_sizes, mean=mean, std=std, erfnet=is_erfnet)
 
         # The "poly" policy, variable names are confusing (May need reimplementation)
         if args.model == 'erfnet':
