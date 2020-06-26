@@ -3,11 +3,12 @@ import time
 import torch
 import argparse
 import random
+import math
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from apex import amp
 from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, \
-                            num_classes_voc, num_classes_city, categories_voc, categories_city
+                            num_classes_voc, num_classes_city, categories_voc, categories_city, weights_city_erfnet
 from deeplab import visualize, init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set, load_checkpoint
 
 # All hail Clearlove, 7th of his name!
@@ -55,6 +56,7 @@ if __name__ == '__main__':
     else:
         raise ValueError
     device = torch.device('cpu')
+    weights = None
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     if args.model == 'deeplabv3':
@@ -65,15 +67,18 @@ if __name__ == '__main__':
         net = fcn(num_classes)
     elif args.model == 'erfnet':
         net = erfnet(num_classes=num_classes)
+        weights = torch.tensor(weights_city_erfnet).to(device)
         input_sizes = sizes_city_erfnet
     else:
         raise ValueError
     print(device)
     net.to(device)
+
     if args.model == 'erfnet':
         optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999),  eps=1e-08, weight_decay=1e-4)
     else:
         optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0005)
+
     if args.mixed_precision:
         net, optimizer = amp.initialize(net, optimizer, opt_level='O1')
 
@@ -86,14 +91,22 @@ if __name__ == '__main__':
         test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
                      output_size=input_sizes[2])
     else:
-        criterion = torch.nn.CrossEntropyLoss(ignore_index=255)
+        criterion = torch.nn.CrossEntropyLoss(ignore_index=255, weight=weights)
         writer = SummaryWriter('runs/experiment_' + str(int(time.time())))
         train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
                                         input_sizes=input_sizes, mean=mean, std=std)
-        # The "poly" policy, variable names are confusing(May need reimplementation)
-        lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
-                                                         lambda x: (1 - x / (len(train_loader) * args.epochs))
-                                                         ** 0.9)
+
+        # The "poly" policy, variable names are confusing (May need reimplementation)
+        if args.model == 'erfnet':
+            # Epoch-wise
+            lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
+                                                             lambda x: (1 - math.floor(x / len(train_loader))
+                                                                        / args.epochs) ** 0.9)
+        else:
+            # Step-wise
+            lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
+                                                             lambda x: (1 - x / (len(train_loader) * args.epochs))
+                                                             ** 0.9)
         # Resume training?
         if args.continue_from is not None:
             load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
