@@ -81,6 +81,8 @@ class RandomZeroPad(object):
     def __call__(self, image, target):
         r = random.randint(-self.pad_w, self.pad_w)
         b = random.randint(-self.pad_h, self.pad_h)
+        l = 0
+        t = 0
         if r < 0:
             l = -r
             r = 0

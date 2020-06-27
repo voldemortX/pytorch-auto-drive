@@ -136,11 +136,11 @@ def init(batch_size, state, input_sizes, std, mean, dataset, erfnet=False):
             transform_train = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
+                 LabelMap(label_id_map_city),
                  RandomZeroPad(pad_h=2, pad_w=2),
                  Crop(size=input_sizes[0]),  # Random translation = Random zero pad + Crop
                  RandomHorizontalFlip(flip_prob=0.5),
-                 Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map_city)])
+                 Normalize(mean=mean, std=std)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[2]),
