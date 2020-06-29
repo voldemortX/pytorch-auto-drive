@@ -12,9 +12,9 @@ from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes
 from deeplab import visualize, init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set, load_checkpoint
 
 # All hail Clearlove, 7th of his name!
-torch.manual_seed(4396)
-random.seed(7777)
-np.random.seed(7777)
+# torch.manual_seed(4396)
+# random.seed(7777)
+# np.random.seed(7777)
 #torch.backends.cudnn.deterministic = True  # Might hurt performance
 #torch.backends.cudnn.benchmark = False  # Might hurt performance
 
@@ -104,6 +104,10 @@ if __name__ == '__main__':
             lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
                                                              lambda x: (1 - math.floor(x / len(train_loader))
                                                                         / args.epochs) ** 0.9)
+            # # Original in the paper
+            # lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5)
+            # # Step lr
+            # lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.5)
         else:
             # Step-wise
             lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,

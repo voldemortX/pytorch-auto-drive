@@ -6,8 +6,8 @@ from tqdm import tqdm
 from apex import amp
 from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet
 from data_processing import StandardSegmentationDataset, base_city, base_voc, label_id_map_city
-from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, ZeroPad,\
-                       LabelMap, RandomZeroPad, Crop, Compose
+from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, RandomTranslation,\
+                       ZeroPad, LabelMap, Compose
 
 
 def fcn(num_classes):
@@ -137,14 +137,11 @@ def init(batch_size, state, input_sizes, std, mean, dataset, erfnet=False):
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
                  LabelMap(label_id_map_city),
-                 RandomZeroPad(pad_h=2, pad_w=2),
-                 Crop(size=input_sizes[0]),  # Random translation = Random zero pad + Crop
-                 RandomHorizontalFlip(flip_prob=0.5),
-                 Normalize(mean=mean, std=std)])
+                 RandomTranslation(trans_h=2, trans_w=2),
+                 RandomHorizontalFlip(flip_prob=0.5)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[2]),
-                 Normalize(mean=mean, std=std),
                  LabelMap(label_id_map_city)])
         else:
             transform_train = Compose(
