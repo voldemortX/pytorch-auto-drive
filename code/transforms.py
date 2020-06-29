@@ -73,6 +73,24 @@ class ZeroPad(object):
         return self.zero_pad(image, target, self.h, self.w)
 
 
+# Random translation in pixels
+# Random translation = Zero pad + Random crop
+class RandomTranslation(object):
+    def __init__(self, trans_h, trans_w):
+        self.trans_h = trans_h
+        self.trans_w = trans_w
+
+    def __call__(self, image, target):
+        th, tw = get_tensor_image_size(image)
+        image = F.pad(image, (self.trans_w, self.trans_h, self.trans_w, self.trans_h), fill=0)
+        target = F.pad(target, (self.trans_w, self.trans_h, self.trans_w, self.trans_h), fill=255)
+        i, j, h, w = RandomCrop.get_params(image, (th, tw))
+        image = F.crop(image, i, j, h, w)
+        target = F.crop(target, i, j, h, w)
+
+        return image, target
+
+
 class RandomZeroPad(object):
     def __init__(self, pad_h, pad_w):
         self.pad_h = pad_h
