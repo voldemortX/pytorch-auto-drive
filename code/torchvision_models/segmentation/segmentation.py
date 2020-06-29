@@ -139,12 +139,11 @@ def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_cl
     """
     net = ERFNet(num_classes=num_classes, encoder=None)
     if pretrained_weights is not None:  # Load ImageNet pre-trained weights
-        saved_weights = load(pretrained_weights)
+        saved_weights = load(pretrained_weights)['state_dict']
         original_weights = net.state_dict()
         for key in saved_weights.keys():
-            my_key = key.replace('.features', '')
+            my_key = key.replace('module.features.', '')
             if my_key in original_weights.keys():
                 original_weights[my_key] = saved_weights[key]
         net.load_state_dict(original_weights)
-
     return net

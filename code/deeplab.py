@@ -100,6 +100,14 @@ def save_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename='
 def load_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename):
     checkpoint = torch.load(filename)
     net.load_state_dict(checkpoint['model'])
+
+    # print(len(net.state_dict().keys()))
+    # print(len(checkpoint.keys()))
+    # ori_state_dict = net.state_dict()
+    # for key in checkpoint.keys():
+    #     ori_state_dict[key[7:]] = checkpoint[key]
+    # net.load_state_dict(ori_state_dict)
+
     if optimizer is not None:
         optimizer.load_state_dict(checkpoint['optimizer'])
     if lr_scheduler is not None:
