@@ -26,6 +26,8 @@ if __name__ == '__main__':
                         help='Initial learning rate (default: 0.001)')
     parser.add_argument('--epochs', type=int, default=30,
                         help='Number of epochs (default: 30)')
+    parser.add_argument('--val-num-steps', type=int, default=1000,
+                        help='Validation frequency (default: 1000)')
     parser.add_argument('--dataset', type=str, default='voc',
                         help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city) (default: voc)')
     parser.add_argument('--model', type=str, default='deeplabv3',
@@ -121,9 +123,9 @@ if __name__ == '__main__':
 
         # Train
         train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                       num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, val_num_steps=1000,
+                       num_epochs=args.epochs, is_mixed_precision=args.mixed_precision,
                        validation_loader=val_loader, device=device, criterion=criterion, categories=categories,
-                       num_classes=num_classes, input_sizes=input_sizes)
+                       num_classes=num_classes, input_sizes=input_sizes, val_num_steps=args.val_num_steps)
 
         # Final evaluations
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
