@@ -23,7 +23,7 @@ Specialized real-time backbone: ERFNet
 
 (You can of course also use other backbones in torchvision by simply calling a different function or other models by using the most recent torchvision implementation)
 
-### Performance (ImageNet pre-training, averaged across 3 runs)
+### Performance (ImageNet pre-training, val accuracy averaged across 3 runs)
 
 | model | mixed precision? | Dataset | mIoU (%) |
 | :---: | :---: | :---: | :---: |
@@ -37,7 +37,7 @@ Specialized real-time backbone: ERFNet
 | DeepLabV3 | *no* | Cityscapes | 67.76 |
 | ERFNet| *no* | Cityscapes | |
 
-*Note that the best run from ERFNet is 72.1% in mIoU, same as the original implementation by the authors.*
+*Note that the best run from ERFNet on Cityscapes val is 72.1% in mIoU, same as the original implementation by the authors.*
 
 ## Usage(Linux):
 
