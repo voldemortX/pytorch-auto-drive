@@ -11,6 +11,10 @@ PASCAL VOC 2012 (Deeplab 10582 *trainaug* version, I don't think I have the righ
 
 Cityscapes.
 
+TuSimple (in progress).
+
+CULane (in progress).
+
 ### Currently supported models:
 
 ResNet-101 backbone: DeeplabV3, DeeplabV2, FCN
@@ -31,6 +35,9 @@ Specialized real-time backbone: ERFNet
 | DeepLabV2 | *yes* | Cityscapes | 66.72 |
 | DeepLabV3 | *yes* | Cityscapes | 67.84 |
 | DeepLabV3 | *no* | Cityscapes | 67.76 |
+| ERFNet| *no* | Cityscapes | |
+
+*Note that the best run from ERFNet is 72.1% in mIoU, same as the original implementation by the authors.*
 
 ## Usage(Linux):
 
