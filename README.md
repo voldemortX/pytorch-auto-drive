@@ -1,5 +1,5 @@
 # My segmentation codebase
-Segmentation models (DeeplabV3, DeeplabV2, etc.) based on Python 3.6.8 and 
+Segmentation models (Deeplab, FCN, ERFNet) based on Python 3.6.8 and 
 
 Pytorch 1.2.0 (cuda 10.0) & torchvision 0.4.0 with mixed precision training, since 1.2.0 is 100% compatible with apex.
 
@@ -7,17 +7,19 @@ Including modulated (borrowed) mIOU & pixel acc calculation, "poly" learning rat
 
 ### Currently supported datasets: 
 
-PASCAL VOC 2012 (Deeplab 10582 trainaug version, I don't think I have the right to distribute this dataset, so just get the images yourself); Cityscapes.
+PASCAL VOC 2012 (Deeplab 10582 *trainaug* version, I don't think I have the right to distribute this dataset, so just get the images yourself).
+
+Cityscapes.
 
 ### Currently supported models:
 
-ResNet-101 backbone:
+ResNet-101 backbone: DeeplabV3, DeeplabV2, FCN
 
-DeeplabV3, DeeplabV2, FCN
+Specialized real-time backbone: ERFNet
 
-(You can of course also use the ResNet-50 backbone in torchvision by simply calling a different function or other models by using the most recent torchvision implementation)
+(You can of course also use other backbones in torchvision by simply calling a different function or other models by using the most recent torchvision implementation)
 
-### Performance (averaged)
+### Performance (ImageNet pre-training, averaged across 3 runs)
 
 | model | mixed precision? | Dataset | mIoU (%) |
 | :---: | :---: | :---: | :---: |
@@ -54,6 +56,7 @@ Prepare the code:
 
 1. Change the 2 base directories in code/data_processing.py
 2. Run cityscapes_data_list.py
+3. If you are using ERFNet, remember to download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models), and put it in the **code** folder
 
 Enable tensorboard:
 
@@ -73,9 +76,17 @@ Other commands, e.g. run full-precision training on Cityscapes with DeeplabV3:
 python main.py --epochs=60 --lr=0.002 --batch-size=8 --dataset=city --model=deeplabv3
 ```
 
+Or run full-precision training on Cityscapes with ERFNet:
+
+```
+python main.py --epochs=150 --lr=0.0005 --batch-size=6 --dataset=city --model=ERFNet --val-num-steps=500
+```
+
 ## Notes:
 
-Experiments used same random seeds. However, it is still not deterministic due to parallel computing and other unknown factors.
+Note that ERFNet currently does not support mixed precision training, due to a bug in PyTorch 1.2.0. It will be supported when this repo is updated to PyTorch 1.6, which will happen soon.
+
+Most experiments used same random seeds. However, it is still not deterministic due to parallel computing and other unknown factors.
 
 Cityscapes dataset is down-sampled by 2, to specify different sizes, modify this [line](code/data_processing.py#L32); similar changes can be down with PASCAL VOC 2012.
 
