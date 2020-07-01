@@ -37,7 +37,7 @@ Specialized real-time backbone: ERFNet
 | DeepLabV3 | 257 x 513 | *no* | Cityscapes | 67.76 |
 | ERFNet| 512 x 1024 | *no* | Cityscapes | 71.68 |
 
-*Note that the best run from ERFNet on Cityscapes val is 72.2% in mIoU, same as the original implementation by the authors.*
+*\*Note that the best run from ERFNet on Cityscapes val is 72.2% in mIoU, same as the original implementation by the authors.*
 
 ## Usage(Linux):
 
