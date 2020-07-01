@@ -25,19 +25,19 @@ Specialized real-time backbone: ERFNet
 
 ### Performance (ImageNet pre-training, val accuracy averaged across 3 runs)
 
-| model | mixed precision? | Dataset | mIoU (%) |
-| :---: | :---: | :---: | :---: |
-| FCN | *yes* | PASCAL VOC 2012 | 69.09 |
-| FCN | *no* | PASCAL VOC 2012 | 69.16 |
-| DeepLabV2 | *yes* | PASCAL VOC 2012 | 72.88 |
-| DeepLabV3 | *yes* | PASCAL VOC 2012 | 76.70 |
-| FCN | *yes* | Cityscapes | 65.57 |
-| DeepLabV2 | *yes* | Cityscapes | 66.72 |
-| DeepLabV3 | *yes* | Cityscapes | 67.84 |
-| DeepLabV3 | *no* | Cityscapes | 67.76 |
-| ERFNet| *no* | Cityscapes | |
+| model | resolution | mixed precision? | Dataset | mIoU (%) |
+| :---: | :---: | :---: | :---: | :---: |
+| FCN | 321 x 321 | *yes* | PASCAL VOC 2012 | 69.09 |
+| FCN | 321 x 321 | *no* | PASCAL VOC 2012 | 69.16 |
+| DeepLabV2 | 321 x 321 | *yes* | PASCAL VOC 2012 | 72.88 |
+| DeepLabV3 | 321 x 321 | *yes* | PASCAL VOC 2012 | 76.70 |
+| FCN | 257 x 513 | *yes* | Cityscapes | 65.57 |
+| DeepLabV2 | 257 x 513 | *yes* | Cityscapes | 66.72 |
+| DeepLabV3 | 257 x 513 | *yes* | Cityscapes | 67.84 |
+| DeepLabV3 | 257 x 513 | *no* | Cityscapes | 67.76 |
+| ERFNet| 512 x 1024 | *no* | Cityscapes | 71.68 |
 
-*Note that the best run from ERFNet on Cityscapes val is 72.1% in mIoU, same as the original implementation by the authors.*
+*Note that the best run from ERFNet on Cityscapes val is 72.2% in mIoU, same as the original implementation by the authors.*
 
 ## Usage(Linux):
 
