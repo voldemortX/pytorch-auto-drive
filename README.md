@@ -74,19 +74,19 @@ tensorboard --logdir=runs
 Run mixed-precision training on PASCAL VOC 2012 with DeeplabV2:
 
 ```
-python main.py --epochs=30 --lr=0.002 --batch-size=8 --dataset=voc --model=deeplabv2 --mixed-precision
+python main_semseg.py --epochs=30 --lr=0.002 --batch-size=8 --dataset=voc --model=deeplabv2 --mixed-precision
 ```
 
 Other commands, e.g. run full-precision training on Cityscapes with DeeplabV3:
 
 ```
-python main.py --epochs=60 --lr=0.002 --batch-size=8 --dataset=city --model=deeplabv3
+python main_semseg.py --epochs=60 --lr=0.002 --batch-size=8 --dataset=city --model=deeplabv3
 ```
 
 Or run full-precision training on Cityscapes with ERFNet:
 
 ```
-python main.py --epochs=150 --lr=0.0005 --batch-size=6 --dataset=city --model=ERFNet --val-num-steps=500
+python main_semseg.py --epochs=150 --lr=0.0005 --batch-size=6 --dataset=city --model=ERFNet --val-num-steps=500
 ```
 
 ## Notes:

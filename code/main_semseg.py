@@ -9,7 +9,8 @@ from torch.utils.tensorboard import SummaryWriter
 from apex import amp
 from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, \
                             num_classes_voc, num_classes_city, categories_voc, categories_city, weights_city_erfnet
-from deeplab import visualize, init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set, load_checkpoint
+from all_utils_semseg import visualize, init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set,\
+                             load_checkpoint
 
 # All hail Clearlove, 7th of his name!
 # torch.manual_seed(4396)
