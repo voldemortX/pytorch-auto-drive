@@ -121,3 +121,57 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
 
         self.images = [os.path.join(image_dir, x + "_leftImg8bit.png") for x in file_names]
         self.masks = [os.path.join(mask_dir, x + "_gtFine_labelIds" + self.mask_type) for x in file_names]
+
+
+class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
+    def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None, data_set='tusimple'):
+        super().__init__(root, transforms, transform, target_transform)
+        self.is_test = (image_set == 'test')
+        if data_set == 'tusimple':
+            self._tusimple_init(root, image_set)
+        elif data_set == 'culane':
+            self._culane_init(root, image_set)
+        else:
+            raise ValueError
+
+        assert (len(self.images) == len(self.masks))
+
+    def __getitem__(self, index):
+        # Return x (input image) & y (mask image, i.e. pixel-wise supervision) & lane existence (a list),
+        # if not just testing,
+        # else just return input image.
+        img = Image.open(self.images[index]).convert('RGB')
+        if self.is_test:
+            target = ''  # To accommodate transforms
+        else:
+            target = Image.open(self.masks[index])
+            lane_existence = self.lane_existences[index]
+
+        # Transforms
+        if self.transforms is not None:
+            img, target = self.transforms(img, target)
+
+        if self.is_test:
+            return img
+        else:
+            return img, target, lane_existence
+
+    def __len__(self):
+        return len(self.images)
+
+    def _tusimple_init(self, root, image_set):
+        image_dir = os.path.join(root, 'clips')
+        splits_dir = os.path.join(root, 'lists')
+        split_f = os.path.join(splits_dir, image_set + '.txt')
+        with open(os.path.join(split_f), "r") as f:
+            contents = [x.strip() for x in f.readlines()]
+
+        self.images = [os.path.join(image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
+
+        if not self.is_test:
+            mask_dir = os.path.join(root, 'segGT6')
+            self.masks = [os.path.join(mask_dir, x[:x.find(' ')] + '.png') for x in contents]
+            self.lane_existences = [list(map(int, x[x.find(' '):].split())) for x in contents]
+
+    def _culane_init(self, root, image_set):
+        pass
