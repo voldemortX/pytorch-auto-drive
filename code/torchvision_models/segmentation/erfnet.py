@@ -1,4 +1,5 @@
-# Copied and rectified from Eromera/erfnet_pytorch
+# Copied and modified from Eromera/erfnet_pytorch and
+# cardwing/Codes-for-Lane-Detection
 
 import torch
 import torch.nn as nn
@@ -51,24 +52,24 @@ class non_bottleneck_1d (nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, dropout_1=0.03, dropout_2=0.3):
         super().__init__()
-        self.initial_block = DownsamplerBlock(3,16)
+        self.initial_block = DownsamplerBlock(3, 16)
 
         self.layers = nn.ModuleList()
 
-        self.layers.append(DownsamplerBlock(16,64))
+        self.layers.append(DownsamplerBlock(16, 64))
 
         for x in range(0, 5):  # 5 times
-            self.layers.append(non_bottleneck_1d(64, 0.03, 1))
+            self.layers.append(non_bottleneck_1d(64, dropout_1, 1))
 
         self.layers.append(DownsamplerBlock(64, 128))
 
         for x in range(0, 2):  # 2 times
-            self.layers.append(non_bottleneck_1d(128, 0.3, 2))
-            self.layers.append(non_bottleneck_1d(128, 0.3, 4))
-            self.layers.append(non_bottleneck_1d(128, 0.3, 8))
-            self.layers.append(non_bottleneck_1d(128, 0.3, 16))
+            self.layers.append(non_bottleneck_1d(128, dropout_2, 2))
+            self.layers.append(non_bottleneck_1d(128, dropout_2, 4))
+            self.layers.append(non_bottleneck_1d(128, dropout_2, 8))
+            self.layers.append(non_bottleneck_1d(128, dropout_2, 16))
 
         # Only in encoder mode:
         self.output_conv = nn.Conv2d(128, num_classes, 1, stride=1, padding=0, bias=True)
@@ -85,7 +86,7 @@ class Encoder(nn.Module):
         return output
 
 
-class UpsamplerBlock (nn.Module):
+class UpsamplerBlock(nn.Module):
     def __init__(self, ninput, noutput):
         super().__init__()
         self.conv = nn.ConvTranspose2d(ninput, noutput, 3, stride=2, padding=1, output_padding=1, bias=True)
@@ -97,7 +98,7 @@ class UpsamplerBlock (nn.Module):
         return F.relu(output)
 
 
-class Decoder (nn.Module):
+class Decoder(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
         self.layers = nn.ModuleList()
@@ -120,15 +121,61 @@ class Decoder (nn.Module):
         return output
 
 
+# Really tricky without global pooling
+class LaneExist(nn.Module):
+    def __init__(self, num_output, flattened_size=3965):
+        super().__init__()
+
+        self.layers = nn.ModuleList()
+
+        self.layers.append(nn.Conv2d(128, 32, (3, 3), stride=1, padding=(4, 4), bias=False, dilation=(4, 4)))
+        self.layers.append(nn.BatchNorm2d(32, eps=1e-03))
+
+        self.layers_final = nn.ModuleList()
+
+        self.layers_final.append(nn.Dropout2d(0.1))
+        self.layers_final.append(nn.Conv2d(32, 5, (1, 1), stride=1, padding=(0, 0), bias=True))
+
+        self.maxpool = nn.MaxPool2d(2, stride=2)
+        self.linear1 = nn.Linear(flattened_size, 128)
+        self.linear2 = nn.Linear(128, num_output)
+
+    def forward(self, input):
+        output = input
+
+        for layer in self.layers:
+            output = layer(output)
+
+        output = F.relu(output)
+
+        for layer in self.layers_final:
+            output = layer(output)
+
+        output = F.softmax(output, dim=1)
+        output = self.maxpool(output)
+        # print(output.shape)
+        output = output.flatten()
+        output = self.linear1(output)
+        output = F.relu(output)
+        output = self.linear2(output)
+        output = F.sigmoid(output)
+
+        return output
+
+
 # ERFNet
 class ERFNet(nn.Module):
-    def __init__(self, num_classes, encoder=None):  # Use encoder to pass pre-trained encoder
+    def __init__(self, num_classes, encoder=None, aux=0, dropout_1=0.03, dropout_2=0.3, flattened_size=3965):
         super().__init__()
         if encoder is None:
-            self.encoder = Encoder(num_classes)
+            self.encoder = Encoder(num_classes=num_classes, dropout_1=dropout_1, dropout_2=dropout_2)
         else:
             self.encoder = encoder
         self.decoder = Decoder(num_classes)
+        if aux > 0:
+            self.aux_head = LaneExist(num_output=aux, flattened_size=3965)
+        else:
+            self.aux_head = None
 
     def forward(self, input, only_encode=False):
         out = OrderedDict()
@@ -137,4 +184,6 @@ class ERFNet(nn.Module):
         else:
             output = self.encoder(input)    # predict=False by default
             out['out'] = self.decoder.forward(output)
+            if self.aux_head is not None:
+                out['aux'] = self.aux_head(output)
             return out
