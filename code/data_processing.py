@@ -127,12 +127,8 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None, data_set='tusimple'):
         super().__init__(root, transforms, transform, target_transform)
         self.is_test = (image_set == 'test')
-        if data_set == 'tusimple':
-            self._tusimple_init(root, image_set)
-        elif data_set == 'culane':
-            self._culane_init(root, image_set)
-        else:
-            raise ValueError
+        image_dir, splits_dir, mask_dir = self.get_init_parameters(root=root, data_set=data_set)
+        self._init_all(image_dir=image_dir, splits_dir=splits_dir, mask_dir=mask_dir, image_set=image_set)
 
         assert (len(self.images) == len(self.masks))
 
@@ -159,19 +155,28 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
     def __len__(self):
         return len(self.images)
 
-    def _tusimple_init(self, root, image_set):
-        image_dir = os.path.join(root, 'clips')
+    @staticmethod
+    def get_init_parameters(root, data_set):
+        if data_set == 'tusimple':
+            image_dir = os.path.join(root, 'clips')
+            mask_dir = os.path.join(root, 'segGT6')
+        elif data_set == 'culane':
+            image_dir = root
+            mask_dir = os.path.join(root, 'laneseg_label_w16')
+        else:
+            raise ValueError
+
         splits_dir = os.path.join(root, 'lists')
+
+        return image_dir, splits_dir, mask_dir
+
+    def _init_all(self, image_dir, splits_dir, mask_dir, image_set):
+        # Got the lists from 2 datasets to be in the same format
         split_f = os.path.join(splits_dir, image_set + '.txt')
         with open(os.path.join(split_f), "r") as f:
             contents = [x.strip() for x in f.readlines()]
 
         self.images = [os.path.join(image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
-
         if not self.is_test:
-            mask_dir = os.path.join(root, 'segGT6')
             self.masks = [os.path.join(mask_dir, x[:x.find(' ')] + '.png') for x in contents]
             self.lane_existences = [list(map(int, x[x.find(' '):].split())) for x in contents]
-
-    def _culane_init(self, root, image_set):
-        pass
