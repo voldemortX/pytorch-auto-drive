@@ -3,7 +3,8 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
-from apex import amp
+from torch.cuda.amp import autocast, GradScaler
+
 from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet
 from data_processing import StandardSegmentationDataset, base_city, base_voc, label_id_map_city
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, RandomTranslation,\
@@ -86,18 +87,17 @@ def visualize(loader, colors, std, mean):
 
 
 # Save model checkpoints (supports amp)
-def save_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename='temp.pt'):
+def save_checkpoint(net, optimizer, lr_scheduler, filename='temp.pt'):
     checkpoint = {
         'model': net.state_dict(),
         'optimizer': optimizer.state_dict() if optimizer is not None else None,
-        'lr_scheduler': lr_scheduler.state_dict() if lr_scheduler is not None else None,
-        'amp': amp.state_dict() if is_mixed_precision else None
+        'lr_scheduler': lr_scheduler.state_dict() if lr_scheduler is not None else None
     }
     torch.save(checkpoint, filename)
 
 
 # Load model checkpoints (supports amp)
-def load_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename):
+def load_checkpoint(net, optimizer, lr_scheduler, filename):
     checkpoint = torch.load(filename)
     net.load_state_dict(checkpoint['model'])
 
@@ -112,8 +112,6 @@ def load_checkpoint(net, optimizer, lr_scheduler, is_mixed_precision, filename):
         optimizer.load_state_dict(checkpoint['optimizer'])
     if lr_scheduler is not None:
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
-    if is_mixed_precision and checkpoint['amp'] is not None:
-        amp.load_state_dict(checkpoint['amp'])
 
 
 def init(batch_size, state, input_sizes, std, mean, dataset, erfnet=False):
@@ -191,6 +189,8 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
     net.train()
     epoch = 0
     loss_num_steps = int(len(loader) / 10)
+    if is_mixed_precision:
+        scaler = GradScaler()
 
     # Training
     while epoch < num_epochs:
@@ -202,17 +202,21 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
             inputs, labels = data
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
-            outputs = net(inputs)['out']
-            outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear', align_corners=True)
-            conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
-            loss = criterion(outputs, labels)
+
+            with autocast(is_mixed_precision):
+                outputs = net(inputs)['out']
+                outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear', align_corners=True)
+                conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
+                loss = criterion(outputs, labels)
+
             if is_mixed_precision:
-                # 2/3 & 3/3 of mixed precision training with amp
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
             else:
                 loss.backward()
-            optimizer.step()
+                optimizer.step()
+
             lr_scheduler.step()
             running_loss += loss.item()
             current_step_num = int(epoch * len(loader) + i + 1)
@@ -226,12 +230,11 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
                 running_loss = 0.0
 
             # Validate and find the best snapshot
-            if current_step_num % val_num_steps == (val_num_steps - 1) or \
-               current_step_num == num_epochs * len(loader) - 1:
-                # A bug in Apex? https://github.com/NVIDIA/apex/issues/706
+            if current_step_num % val_num_steps == (val_num_steps - 1):
                 test_pixel_accuracy, test_mIoU = test_one_set(loader=validation_loader, device=device, net=net,
                                                               num_classes=num_classes, categories=categories,
-                                                              output_size=input_sizes[2])
+                                                              output_size=input_sizes[2],
+                                                              is_mixed_precision=is_mixed_precision)
                 writer.add_scalar('test pixel accuracy',
                                   test_pixel_accuracy,
                                   current_step_num)
@@ -243,11 +246,11 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
                 # Record best model (straight to disk)
                 if test_mIoU > best_mIoU:
                     best_mIoU = test_mIoU
-                    save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                                    is_mixed_precision=is_mixed_precision)
+                    save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
         # Evaluate training accuracies (same metric as validation, but must be on-the-fly to save time)
-        acc_global, acc, iu = conf_mat.compute()
+        with autocast(is_mixed_precision):
+            acc_global, acc, iu = conf_mat.compute()
         print(categories)
         print((
             'global correct: {:.2f}\n'
@@ -273,18 +276,20 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
 
 
 # Copied and modified from torch/vision/references/segmentation
-def test_one_set(loader, device, net, num_classes, categories, output_size):
+def test_one_set(loader, device, net, num_classes, categories, output_size, is_mixed_precision):
     # Evaluate on 1 data_loader
     net.eval()
     conf_mat = ConfusionMatrix(num_classes)
     with torch.no_grad():
         for image, target in tqdm(loader):
             image, target = image.to(device), target.to(device)
-            output = net(image)['out']
-            output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
-            conf_mat.update(target.flatten(), output.argmax(1).flatten())
+            with autocast(is_mixed_precision):
+                output = net(image)['out']
+                output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
+                conf_mat.update(target.flatten(), output.argmax(1).flatten())
 
-    acc_global, acc, iu = conf_mat.compute()
+    with autocast(is_mixed_precision):
+        acc_global, acc, iu = conf_mat.compute()
     print(categories)
     print((
             'global correct: {:.2f}\n'

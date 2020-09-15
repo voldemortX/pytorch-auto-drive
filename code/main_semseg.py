@@ -6,7 +6,6 @@ import random
 import math
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from apex import amp
 from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, \
                             num_classes_voc, num_classes_city, categories_voc, categories_city, weights_city_erfnet
 from all_utils_semseg import visualize, init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set,\
@@ -22,7 +21,7 @@ from all_utils_semseg import visualize, init, deeplab_v3, deeplab_v2, fcn, erfne
 
 if __name__ == '__main__':
     # Settings
-    parser = argparse.ArgumentParser(description='PyTorch 1.2.0')
+    parser = argparse.ArgumentParser(description='PyTorch 1.6.0')
     parser.add_argument('--lr', type=float, default=0.002,
                         help='Initial learning rate (default: 0.001)')
     parser.add_argument('--epochs', type=int, default=30,
@@ -84,17 +83,13 @@ if __name__ == '__main__':
     else:
         optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0005)
 
-    if args.mixed_precision:
-        net, optimizer = amp.initialize(net, optimizer, opt_level='O1')
-
     # Testing
     if args.state == 1:
         test_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
                            mean=mean, std=std, erfnet=is_erfnet)
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
-                        is_mixed_precision=args.mixed_precision, filename=args.continue_from)
+        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
         test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
-                     output_size=input_sizes[2])
+                     output_size=input_sizes[2], is_mixed_precision=args.mixed_precision)
     else:
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255, weight=weights)
         writer = SummaryWriter('runs/experiment_' + str(int(time.time())))
@@ -118,8 +113,7 @@ if __name__ == '__main__':
                                                              ** 0.9)
         # Resume training?
         if args.continue_from is not None:
-            load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                            is_mixed_precision=args.mixed_precision, filename=args.continue_from)
+            load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=args.continue_from)
         # visualize(train_loader, colors=colors, mean=mean, std=std)
 
         # Train
@@ -129,9 +123,8 @@ if __name__ == '__main__':
                        num_classes=num_classes, input_sizes=input_sizes, val_num_steps=args.val_num_steps)
 
         # Final evaluations
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
-                        is_mixed_precision=args.mixed_precision, filename='temp.pt')
-        _, _ = test_one_set(loader=val_loader, device=device, net=net,
+        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename='temp.pt')
+        _, _ = test_one_set(loader=val_loader, device=device, net=net, is_mixed_precision=args.mixed_precision,
                             categories=categories, num_classes=num_classes, output_size=input_sizes[2])
 
         # --do-not-save => args.do_not_save = False
