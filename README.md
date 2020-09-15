@@ -1,7 +1,7 @@
 # My segmentation codebase
 Segmentation models (Deeplab, FCN, ERFNet) based on Python 3.6.8 and 
 
-Pytorch 1.2.0 (cuda 10.0) & torchvision 0.4.0 with mixed precision training, since 1.2.0 is 100% compatible with apex.
+Pytorch 1.6.0 (cuda 10.0) & torchvision 0.7.0 with mixed precision training.
 
 Including modulated (borrowed) mIOU & pixel acc calculation, "poly" learning rate schedule, basic input transformations and visulizations, also tests of mixed precision training.
 
@@ -41,16 +41,7 @@ Specialized real-time backbone: ERFNet
 
 ## Usage(Linux):
 
-Setup apex with a python3 enviroment (cuda 10):
-
-```
-pip install https://download.pytorch.org/whl/cu100/torch-1.2.0-cp36-cp36m-manylinux1_x86_64.whl && pip install https://download.pytorch.org/whl/cu100/torchvision-0.4.0-cp36-cp36m-manylinux1_x86_64.whl
-git clone https://github.com/NVIDIA/apex
-cd apex
-pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
-```
-
-!There seems to be an issue of apex installations from the official repo sometimes. If you encounter errors, we suggest you use our stored older apex [codes](https://drive.google.com/open?id=1x8enpvdTTZ3RChf17XvcLdSYulUPg3sR).
+Setup apex with a python3 enviroment (cuda 10).
 
 Download the code:
 
