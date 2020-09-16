@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
         # Final evaluations
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename='temp.pt')
-        _, _ = test_one_set(loader=val_loader, device=device, net=net, is_mixed_precision=args.mixed_precision,
+        _, x = test_one_set(loader=val_loader, device=device, net=net, is_mixed_precision=args.mixed_precision,
                             categories=categories, num_classes=num_classes, output_size=input_sizes[2])
 
         # --do-not-save => args.do_not_save = False
@@ -141,3 +141,6 @@ if __name__ == '__main__':
             os.remove('temp.pt')
 
         writer.close()
+
+        with open('log.txt', 'a') as f:
+            f.write(exp_name + ': ' + str(x) + '\n')
