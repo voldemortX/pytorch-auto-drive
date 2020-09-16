@@ -77,7 +77,7 @@ python main_semseg.py --epochs=60 --lr=0.002 --batch-size=8 --dataset=city --mod
 Or run full-precision training on Cityscapes with ERFNet:
 
 ```
-python main_semseg.py --epochs=150 --lr=0.0005 --batch-size=6 --dataset=city --model=ERFNet --val-num-steps=500
+python main_semseg.py --epochs=150 --lr=0.0005 --batch-size=6 --dataset=city --model=erfnet --val-num-steps=500
 ```
 
 ## Notes:
