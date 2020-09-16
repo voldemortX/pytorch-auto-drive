@@ -137,7 +137,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, erfnet=False):
              Normalize(mean=mean, std=std)])
     elif dataset == 'city':  # All the same size (whole set is down-sampled by 2)
         base = base_city
-        workers = 12
+        workers = 8
         if erfnet:
             transform_train = Compose(
                 [ToTensor(),

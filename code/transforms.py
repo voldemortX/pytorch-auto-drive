@@ -196,7 +196,7 @@ class ToTensor(object):
         if isinstance(pic, np.ndarray):
             return torch.as_tensor(pic.transpose((2, 0, 1)), dtype=torch.float32)
         else:
-            return torch.as_tensor(np.asarray(pic), dtype=torch.int64)
+            return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)
 
     def _pil_to_tensor(self, pic):
         # Convert a PIL Image to tensor(a direct copy)

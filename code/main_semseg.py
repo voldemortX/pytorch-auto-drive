@@ -22,6 +22,8 @@ from all_utils_semseg import visualize, init, deeplab_v3, deeplab_v2, fcn, erfne
 if __name__ == '__main__':
     # Settings
     parser = argparse.ArgumentParser(description='PyTorch 1.6.0')
+    parser.add_argument('--exp-name', type=str, default='',
+                        help='Name of experiment')
     parser.add_argument('--lr', type=float, default=0.002,
                         help='Initial learning rate (default: 0.001)')
     parser.add_argument('--epochs', type=int, default=30,
@@ -57,6 +59,11 @@ if __name__ == '__main__':
         colors = colors_city
     else:
         raise ValueError
+
+    exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
+    with open(exp_name + '_cfg.txt', 'w') as f:
+        f.write(str(vars(args)))
+
     device = torch.device('cpu')
     weights = None
     is_erfnet = False
@@ -129,7 +136,7 @@ if __name__ == '__main__':
 
         # --do-not-save => args.do_not_save = False
         if args.do_not_save:  # Rename the checkpoint with timestamp
-            os.rename('temp.pt', str(time.time()) + '.pt')
+            os.rename('temp.pt', exp_name + '.pt')
         else:  # Since the checkpoint is already saved, it should be deleted
             os.remove('temp.pt')
 
