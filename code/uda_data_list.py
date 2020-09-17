@@ -1,22 +1,10 @@
 import os
 from data_processing import base_gtav as base
 
-
-# Pad with 0
-def pad(x):
-    zero = '0'
-    length = len(x)
-    if length < 5:
-        x = zero * (5 - length) + x
-    x += '\n'
-
-    return x
-
-
 # Count
-start = 1
-end = 24966
-train_list = [pad(str(x)) for x in range(start, end + 1)]
+start = 2500
+end = 5000
+train_list = [str(x) for x in range(start, end + 1)]
 print('Whole training set size: ' + str(len(train_list)))
 
 # Save training list
