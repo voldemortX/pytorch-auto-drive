@@ -26,7 +26,7 @@ Specialized real-time backbone: ERFNet
 ### Performance (ImageNet pre-training, val accuracy averaged across 3 runs)
 
 | model | resolution | mixed precision? | Dataset | mIoU (%) | Training time |
-| :---: | :---: | :---: | :---: | :---: |
+| :---: | :---: | :---: | :---: | :---: | :---: |
 | FCN | 321 x 321 | *yes* | PASCAL VOC 2012 | 69.09 | |
 | FCN | 321 x 321 | *no* | PASCAL VOC 2012 | 69.16 | |
 | DeepLabV2 | 321 x 321 | *yes* | PASCAL VOC 2012 | 72.88 | |
