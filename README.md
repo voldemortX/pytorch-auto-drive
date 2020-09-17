@@ -41,7 +41,7 @@ Specialized real-time backbone: ERFNet
 
 ## Usage(Linux):
 
-Setup apex with a python3 enviroment (cuda 10).
+Setup a python3 enviroment (cuda 10), with PyTorch 1.6, TorchVision 0.7.0, tqdm, tensorboard, numpy.
 
 Download the code:
 
