@@ -288,8 +288,7 @@ def test_one_set(loader, device, net, num_classes, categories, output_size, is_m
                 output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
                 conf_mat.update(target.flatten(), output.argmax(1).flatten())
 
-    with autocast(is_mixed_precision):
-        acc_global, acc, iu = conf_mat.compute()
+    acc_global, acc, iu = conf_mat.compute()
     print(categories)
     print((
             'global correct: {:.2f}\n'
