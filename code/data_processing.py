@@ -60,6 +60,11 @@ train_cities = ['aachen', 'bremen', 'darmstadt', 'erfurt', 'hanover',
                 'cologne', 'dusseldorf', 'hamburg', 'jena', 'monchengladbach',
                 'stuttgart', 'ulm', 'zurich']
 
+# For GTAV (19 classes, ignore as black, no such thing as background)
+base_gtav = '../../../dataset/gtav'
+sizes_gtav = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/training resize max/testing label size
+sizes_gtav_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
+
 
 # Reimplemented based on torchvision.datasets.VOCSegmentation
 class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
@@ -121,6 +126,19 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
 
         self.images = [os.path.join(image_dir, x + "_leftImg8bit.png") for x in file_names]
         self.masks = [os.path.join(mask_dir, x + "_gtFine_labelIds" + self.mask_type) for x in file_names]
+
+    def _gtav_init(self, root, image_set):
+        image_dir = os.path.join(root, 'images')
+        mask_dir = os.path.join(root, 'labels')
+
+        # We first generate data lists before all this, so we can do this easier
+        splits_dir = os.path.join(root, 'data_lists')
+        split_f = os.path.join(splits_dir, image_set + '.txt')
+        with open(os.path.join(split_f), "r") as f:
+            file_names = [x.strip() for x in f.readlines()]
+
+        self.images = [os.path.join(image_dir, x + ".png") for x in file_names]
+        self.masks = [os.path.join(mask_dir, x + self.mask_type) for x in file_names]
 
 
 class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):

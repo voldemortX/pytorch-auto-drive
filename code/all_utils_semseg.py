@@ -6,7 +6,7 @@ from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
 
 from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet
-from data_processing import StandardSegmentationDataset, base_city, base_voc, label_id_map_city
+from data_processing import StandardSegmentationDataset, base_city, base_voc, base_gtav, label_id_map_city
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, RandomTranslation,\
                        ZeroPad, LabelMap, Compose
 
@@ -162,11 +162,39 @@ def init(batch_size, state, input_sizes, std, mean, dataset, erfnet=False):
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
                  Normalize(mean=mean, std=std),
                  LabelMap(label_id_map_city)])
+    elif dataset == 'gtav':  # All the same size (whole set is down-sampled by 2)
+        base = base_gtav
+        workers = 8
+        if erfnet:
+            transform_train = Compose(
+                [ToTensor(),
+                 Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
+                 LabelMap(label_id_map_city),
+                 RandomTranslation(trans_h=2, trans_w=2),
+                 RandomHorizontalFlip(flip_prob=0.5)])
+            transform_test = Compose(
+                [ToTensor(),
+                 Resize(size_image=input_sizes[0], size_label=input_sizes[2]),
+                 LabelMap(label_id_map_city)])
+        else:
+            transform_train = Compose(
+                [ToTensor(),
+                 RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),
+                 RandomCrop(size=input_sizes[0]),
+                 RandomHorizontalFlip(flip_prob=0.5),
+                 Normalize(mean=mean, std=std),
+                 LabelMap(label_id_map_city)])
+            transform_test = Compose(
+                [ToTensor(),
+                 Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
+                 Normalize(mean=mean, std=std),
+                 LabelMap(label_id_map_city)])
     else:
         raise ValueError
 
     # Not the actual test set (i.e. validation set)
-    test_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test, data_set=dataset)
+    test_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test,
+                                           data_set='city' if dataset == 'gtav' else dataset)
     val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=batch_size, num_workers=workers, shuffle=False)
 
     # Testing

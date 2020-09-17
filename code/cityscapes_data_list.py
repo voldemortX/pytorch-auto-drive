@@ -1,4 +1,5 @@
 import os
+from data_processing import base_city as base
 
 
 def traverse(images_dir, data_list):
@@ -7,9 +8,6 @@ def traverse(images_dir, data_list):
         for image in sorted(os.listdir(city_path)):
             temp = city + '/' + image.split('_leftImg8bit')[0] + '\n'
             data_list.append(temp)
-
-
-base = "../../dataset/cityscapes"
 
 # Traverse images
 train_list = []

@@ -6,7 +6,7 @@ import random
 import math
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, \
+from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, sizes_gtav, \
                             num_classes_voc, num_classes_city, categories_voc, categories_city, weights_city_erfnet
 from all_utils_semseg import visualize, init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set,\
                              load_checkpoint
@@ -25,13 +25,13 @@ if __name__ == '__main__':
     parser.add_argument('--exp-name', type=str, default='',
                         help='Name of experiment')
     parser.add_argument('--lr', type=float, default=0.002,
-                        help='Initial learning rate (default: 0.001)')
+                        help='Initial learning rate (default: 0.002)')
     parser.add_argument('--epochs', type=int, default=30,
                         help='Number of epochs (default: 30)')
     parser.add_argument('--val-num-steps', type=int, default=1000,
                         help='Validation frequency (default: 1000)')
     parser.add_argument('--dataset', type=str, default='voc',
-                        help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city) (default: voc)')
+                        help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city)/GTAV(gtav) (default: voc)')
     parser.add_argument('--model', type=str, default='deeplabv3',
                         help='Model selection (fcn/pspnet/deeplabv2/deeplabv3) (default: deeplabv3)')
     parser.add_argument('--batch-size', type=int, default=8,
@@ -55,6 +55,11 @@ if __name__ == '__main__':
     elif args.dataset == 'city':
         num_classes = num_classes_city
         input_sizes = sizes_city
+        categories = categories_city
+        colors = colors_city
+    elif args.dataset == 'gtav':
+        num_classes = num_classes_city
+        input_sizes = sizes_gtav
         categories = categories_city
         colors = colors_city
     else:
