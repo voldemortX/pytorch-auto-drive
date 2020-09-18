@@ -86,6 +86,6 @@ Note that ERFNet currently does not support mixed precision training, due to a b
 
 Most experiments used same random seeds. However, it is still not deterministic due to parallel computing and other unknown factors.
 
-Cityscapes dataset is down-sampled by 2, to specify different sizes, modify this [line](code/data_processing.py#L32); similar changes can be down with PASCAL VOC 2012.
+Cityscapes dataset is down-sampled by 2, to specify different sizes, modify this [line](code/data_processing.py#L32); similar changes can be done with PASCAL VOC 2012.
 
 On **a single RTX 2080Ti**, training DeeplabV3 (30 epochs at 321x321 resolution) takes **~9h15m** and **~8.5G** GPU memory (or **~6h35m** and **~5.5G** GPU memory with mixed precision training).
