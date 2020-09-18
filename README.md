@@ -31,13 +31,13 @@ Specialized real-time backbone: ERFNet
 | FCN | 321 x 321 | *no* | PASCAL VOC 2012 | 69.16 | |
 | DeepLabV2 | 321 x 321 | *yes* | PASCAL VOC 2012 | 72.88 | |
 | DeepLabV3 | 321 x 321 | *yes* | PASCAL VOC 2012 | 76.70 | |
-| FCN | 257 x 513 | *yes* | Cityscapes | 65.57 | |
-| DeepLabV2 | 257 x 513 | *yes* | Cityscapes | 66.72 | 2.3h |
-| DeepLabV3 | 257 x 513 | *yes* | Cityscapes | 67.84 | 4.8h |
+| FCN | 257 x 513 | *yes* | Cityscapes | 65.57 | 2.3h |
+| DeepLabV2 | 257 x 513 | *yes* | Cityscapes | 66.89 | 2.3h |
+| DeepLabV3 | 257 x 513 | *yes* | Cityscapes | 67.87 | 4.8h |
 | DeepLabV3 | 257 x 513 | *no* | Cityscapes | 67.76 | |
-| ERFNet| 512 x 1024 | *no* | Cityscapes | 71.68 | 5h |
+| ERFNet| 512 x 1024 | *no* | Cityscapes | 71.99 | 5h |
 
-*\*Note that the best run from ERFNet on Cityscapes val is 72.2% in mIoU, same as the original implementation by the authors.*
+*\*Note that the best run from ERFNet on Cityscapes val is 72.47% in mIoU, slightly better than the original implementation by the authors (72.2%).*
 
 ## Usage(Linux):
 
@@ -77,7 +77,7 @@ python main_semseg.py --epochs=60 --lr=0.002 --batch-size=8 --dataset=city --mod
 Or run full-precision training on Cityscapes with ERFNet:
 
 ```
-python main_semseg.py --epochs=150 --lr=0.0005 --batch-size=6 --dataset=city --model=erfnet --val-num-steps=500
+python main_semseg.py --epochs=150 --lr=0.0007 --batch-size=10 --dataset=city --model=erfnet
 ```
 
 ## Notes:
