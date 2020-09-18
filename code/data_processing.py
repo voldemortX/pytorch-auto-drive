@@ -76,6 +76,8 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
             self._voc_init(root, image_set)
         elif data_set == 'city':
             self._city_init(root, image_set)
+        elif data_set == 'gtav':
+            self._gtav_init(root, image_set)
         else:
             raise ValueError
 
