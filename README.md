@@ -1,4 +1,4 @@
-# Codebase for Segmentation and Lane Detection
+# Codebase for deep autonomous driving perception tasks
 
 Segmentation models (Deeplab, FCN, ERFNet), Lane detection models (in progress) based on Python 3.6 and Pytorch 1.6.0 (cuda 10.0) & torchvision 0.7.0 with mixed precision training.
 
