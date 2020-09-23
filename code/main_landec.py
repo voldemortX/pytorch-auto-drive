@@ -6,33 +6,28 @@ import random
 import math
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from apex import amp
-from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, \
-                            num_classes_voc, num_classes_city, categories_voc, categories_city, weights_city_erfnet
-from all_utils_seg import visualize, init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set,\
-                          load_checkpoint
-
-# All hail Clearlove, 7th of his name!
-# torch.manual_seed(4396)
-# random.seed(7777)
-# np.random.seed(7777)
-#torch.backends.cudnn.deterministic = True  # Might hurt performance
-#torch.backends.cudnn.benchmark = False  # Might hurt performance
+from losses import LaneLoss, SADLoss
+from data_processing import mean, std, sizes_tusimple, sizes_culane, num_classes_tusimple, num_classes_culane
+from all_utils_semseg import load_checkpoint
+from all_utils_landec import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane, \
+                             scnn_tusimple, scnn_culane
 
 
 if __name__ == '__main__':
     # Settings
-    parser = argparse.ArgumentParser(description='PyTorch 1.2.0')
+    parser = argparse.ArgumentParser(description='PyTorch 1.6.0')
+    parser.add_argument('--exp-name', type=str, default='',
+                        help='Name of experiment')
     parser.add_argument('--lr', type=float, default=0.002,
-                        help='Initial learning rate (default: 0.001)')
+                        help='Initial learning rate (default: 0.002)')
     parser.add_argument('--epochs', type=int, default=30,
                         help='Number of epochs (default: 30)')
     parser.add_argument('--val-num-steps', type=int, default=1000,
                         help='Validation frequency (default: 1000)')
-    parser.add_argument('--dataset', type=str, default='voc',
-                        help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city) (default: voc)')
-    parser.add_argument('--model', type=str, default='deeplabv3',
-                        help='Model selection (fcn/pspnet/deeplabv2/deeplabv3) (default: deeplabv3)')
+    parser.add_argument('--dataset', type=str, default='tusimple',
+                        help='Train/Evaluate on TuSimple (voc) / CULane (culane) (default: tusimple)')
+    parser.add_argument('--model', type=str, default='scnn',
+                        help='Model selection (scnn/sad) (default: scnn)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size (default: 8)')
     parser.add_argument('--do-not-save', action='store_false', default=True,
@@ -46,60 +41,46 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Basic configurations
-    if args.dataset == 'voc':
-        num_classes = num_classes_voc
-        input_sizes = sizes_voc
-        categories = categories_voc
-        colors = colors_voc
-    elif args.dataset == 'city':
-        num_classes = num_classes_city
-        input_sizes = sizes_city
-        categories = categories_city
-        colors = colors_city
+    if args.dataset == 'tusimple':
+        num_classes = num_classes_tusimple
+        input_sizes = sizes_tusimple
+    elif args.dataset == 'culane':
+        num_classes = num_classes_culane
+        input_sizes = sizes_culane
     else:
         raise ValueError
+
+    exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
+    with open(exp_name + '_cfg.txt', 'w') as f:
+        f.write(str(vars(args)))
+
     device = torch.device('cpu')
-    weights = None
-    is_erfnet = False
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
-    if args.model == 'deeplabv3':
-        net = deeplab_v3(num_classes=num_classes)
-    elif args.model == 'deeplabv2':
-        net = deeplab_v2(num_classes=num_classes)
-    elif args.model == 'fcn':
-        net = fcn(num_classes)
-    elif args.model == 'erfnet':
-        net = erfnet(num_classes=num_classes)
-        weights = torch.tensor(weights_city_erfnet).to(device)
-        input_sizes = sizes_city_erfnet
-        is_erfnet = True
+    scnn = True if args.model == 'scnn' else False
+    if args.dataset == 'tusimple':
+        net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
+    elif args.dataset == 'culane':
+        net = erfnet_culane(num_classes=num_classes, scnn=scnn)
     else:
         raise ValueError
     print(device)
     net.to(device)
 
-    if args.model == 'erfnet':
-        optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999),  eps=1e-08, weight_decay=1e-4)
-    else:
-        optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0005)
-
-    if args.mixed_precision:
-        net, optimizer = amp.initialize(net, optimizer, opt_level='O1')
+    optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999),  eps=1e-08, weight_decay=1e-4)
 
     # Testing
     if args.state == 1:
         test_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
-                           mean=mean, std=std, erfnet=is_erfnet)
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
-                        is_mixed_precision=args.mixed_precision, filename=args.continue_from)
-        test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
-                     output_size=input_sizes[2])
+                           mean=mean, std=std)
+        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
+        test_one_set()
     else:
-        criterion = torch.nn.CrossEntropyLoss(ignore_index=255, weight=weights)
-        writer = SummaryWriter('runs/experiment_' + str(int(time.time())))
+        # 20200923
+        criterion = torch.nn.CrossEntropyLoss()
+        writer = SummaryWriter('runs/' + exp_name)
         train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
-                                        input_sizes=input_sizes, mean=mean, std=std, erfnet=is_erfnet)
+                                        input_sizes=input_sizes, mean=mean, std=std)
 
         # The "poly" policy, variable names are confusing (May need reimplementation)
         if args.model == 'erfnet':
@@ -118,8 +99,7 @@ if __name__ == '__main__':
                                                              ** 0.9)
         # Resume training?
         if args.continue_from is not None:
-            load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                            is_mixed_precision=args.mixed_precision, filename=args.continue_from)
+            load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=args.continue_from)
         # visualize(train_loader, colors=colors, mean=mean, std=std)
 
         # Train
@@ -129,15 +109,17 @@ if __name__ == '__main__':
                        num_classes=num_classes, input_sizes=input_sizes, val_num_steps=args.val_num_steps)
 
         # Final evaluations
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None,
-                        is_mixed_precision=args.mixed_precision, filename='temp.pt')
-        _, _ = test_one_set(loader=val_loader, device=device, net=net,
+        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename='temp.pt')
+        _, x = test_one_set(loader=val_loader, device=device, net=net, is_mixed_precision=args.mixed_precision,
                             categories=categories, num_classes=num_classes, output_size=input_sizes[2])
 
         # --do-not-save => args.do_not_save = False
         if args.do_not_save:  # Rename the checkpoint with timestamp
-            os.rename('temp.pt', str(time.time()) + '.pt')
+            os.rename('temp.pt', exp_name + '.pt')
         else:  # Since the checkpoint is already saved, it should be deleted
             os.remove('temp.pt')
 
         writer.close()
+
+        with open('log.txt', 'a') as f:
+            f.write(exp_name + ': ' + str(x) + '\n')

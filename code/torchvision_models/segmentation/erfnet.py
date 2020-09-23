@@ -165,7 +165,8 @@ class LaneExist(nn.Module):
 
 # ERFNet
 class ERFNet(nn.Module):
-    def __init__(self, num_classes, encoder=None, aux=0, dropout_1=0.03, dropout_2=0.3, flattened_size=3965):
+    def __init__(self, num_classes, encoder=None, aux=0, dropout_1=0.03, dropout_2=0.3, flattened_size=3965,
+                 scnn=False):
         super().__init__()
         if encoder is None:
             self.encoder = Encoder(num_classes=num_classes, dropout_1=dropout_1, dropout_2=dropout_2)
@@ -173,7 +174,7 @@ class ERFNet(nn.Module):
             self.encoder = encoder
         self.decoder = Decoder(num_classes)
         if aux > 0:
-            self.aux_head = LaneExist(num_output=aux, flattened_size=3965)
+            self.aux_head = LaneExist(num_output=aux, flattened_size=flattened_size)
         else:
             self.aux_head = None
 

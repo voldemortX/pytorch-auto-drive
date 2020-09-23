@@ -7,7 +7,8 @@ import math
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, sizes_gtav, \
-                            num_classes_voc, num_classes_city, categories_voc, categories_city, weights_city_erfnet
+                            num_classes_voc, num_classes_city, categories_voc, categories_city, weights_city_erfnet, \
+                            sizes_city_big
 from all_utils_semseg import visualize, init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set,\
                              load_checkpoint
 
@@ -78,6 +79,10 @@ if __name__ == '__main__':
         net = deeplab_v3(num_classes=num_classes)
     elif args.model == 'deeplabv2':
         net = deeplab_v2(num_classes=num_classes)
+    elif args.model == 'deeplabv2-big':
+        net = deeplab_v2(num_classes=num_classes)
+        is_erfnet = True
+        input_sizes = sizes_city_big
     elif args.model == 'fcn':
         net = fcn(num_classes)
     elif args.model == 'erfnet':
@@ -104,7 +109,7 @@ if __name__ == '__main__':
                      output_size=input_sizes[2], is_mixed_precision=args.mixed_precision)
     else:
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255, weight=weights)
-        writer = SummaryWriter('runs/experiment_' + str(int(time.time())))
+        writer = SummaryWriter('runs/' + exp_name)
         train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
                                         input_sizes=input_sizes, mean=mean, std=std, erfnet=is_erfnet)
 
