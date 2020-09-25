@@ -29,13 +29,13 @@ Specialized real-time backbone: ERFNet
 | model | resolution | mixed precision? | Dataset | mIoU (%) | Training time |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | FCN | 321 x 321 | *yes* | PASCAL VOC 2012 | 69.46 | 3.3h |
-| FCN | 321 x 321 | *no* | PASCAL VOC 2012 | 69.16 | |
+| FCN | 321 x 321 | *no* | PASCAL VOC 2012 | 69.90 | 6.3h |
 | DeepLabV2 | 321 x 321 | *yes* | PASCAL VOC 2012 | 72.84 | 3.3h |
 | DeepLabV3 | 321 x 321 | *yes* | PASCAL VOC 2012 | 77.05 | 6.9h |
 | FCN | 257 x 513 | *yes* | Cityscapes | 65.79 | 2.3h |
 | DeepLabV2 | 257 x 513 | *yes* | Cityscapes | 66.89 | 2.3h |
 | DeepLabV3 | 257 x 513 | *yes* | Cityscapes | 67.87 | 4.8h |
-| DeepLabV3 | 257 x 513 | *no* | Cityscapes | 67.76 | |
+| DeepLabV2 | 257 x 513 | *no* | Cityscapes | 67.07 | 4h |
 | ERFNet| 512 x 1024 | *no* | Cityscapes | 71.99 | 5h |
 
 *\*Note that the best run from ERFNet on Cityscapes val is 72.47% in mIoU, slightly better than the original implementation by the authors (72.2%).*
