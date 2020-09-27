@@ -114,7 +114,7 @@ def load_checkpoint(net, optimizer, lr_scheduler, filename):
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
 
 
-def init(batch_size, state, input_sizes, std, mean, dataset, erfnet=False):
+def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
     # Return data_loaders
     # depending on whether the state is
     # 1: training
@@ -135,10 +135,10 @@ def init(batch_size, state, input_sizes, std, mean, dataset, erfnet=False):
             [ToTensor(),
              ZeroPad(size=input_sizes[2]),
              Normalize(mean=mean, std=std)])
-    elif dataset == 'city':  # All the same size (whole set is down-sampled by 2)
-        base = base_city
+    elif dataset == 'city' or dataset == 'gtav':  # All the same size
+        base = base_city if dataset == 'city' else base_gtav
         workers = 8
-        if erfnet:
+        if city_aug == 2:  # ERFNet
             transform_train = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
@@ -149,32 +149,16 @@ def init(batch_size, state, input_sizes, std, mean, dataset, erfnet=False):
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[2]),
                  LabelMap(label_id_map_city)])
-        else:
+        elif city_aug == 1:  # City big
             transform_train = Compose(
                 [ToTensor(),
-                 RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),
                  RandomCrop(size=input_sizes[0]),
-                 RandomHorizontalFlip(flip_prob=0.5),
-                 Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map_city)])
+                 LabelMap(label_id_map_city),
+                 RandomTranslation(trans_h=2, trans_w=2),
+                 RandomHorizontalFlip(flip_prob=0.5)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
-                 Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map_city)])
-    elif dataset == 'gtav':  # All the same size (whole set is down-sampled by 2)
-        base = base_gtav
-        workers = 8
-        if erfnet:
-            transform_train = Compose(
-                [ToTensor(),
-                 Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-                 LabelMap(label_id_map_city),
-                 RandomTranslation(trans_h=2, trans_w=2),
-                 RandomHorizontalFlip(flip_prob=0.5)])
-            transform_test = Compose(
-                [ToTensor(),
-                 Resize(size_image=input_sizes[0], size_label=input_sizes[2]),
                  LabelMap(label_id_map_city)])
         else:
             transform_train = Compose(
@@ -195,7 +179,11 @@ def init(batch_size, state, input_sizes, std, mean, dataset, erfnet=False):
     # Not the actual test set (i.e. validation set)
     test_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test,
                                            data_set='city' if dataset == 'gtav' else dataset)
-    val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=batch_size, num_workers=workers, shuffle=False)
+    if city_aug == 1:
+        val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=1, num_workers=workers, shuffle=False)
+    else:
+        val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=batch_size, num_workers=workers,
+                                                 shuffle=False)
 
     # Testing
     if state == 1:

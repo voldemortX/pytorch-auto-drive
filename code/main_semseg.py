@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
     device = torch.device('cpu')
     weights = None
-    is_erfnet = False
+    city_aug = 0
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     if args.model == 'deeplabv3':
@@ -81,7 +81,7 @@ if __name__ == '__main__':
         net = deeplab_v2(num_classes=num_classes)
     elif args.model == 'deeplabv2-big':
         net = deeplab_v2(num_classes=num_classes)
-        is_erfnet = True
+        city_aug = 1
         input_sizes = sizes_city_big
     elif args.model == 'fcn':
         net = fcn(num_classes)
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         net = erfnet(num_classes=num_classes)
         weights = torch.tensor(weights_city_erfnet).to(device)
         input_sizes = sizes_city_erfnet
-        is_erfnet = True
+        city_aug = 2
     else:
         raise ValueError
     print(device)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     # Testing
     if args.state == 1:
         test_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
-                           mean=mean, std=std, erfnet=is_erfnet)
+                           mean=mean, std=std, city_aug=city_aug)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
         test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
                      output_size=input_sizes[2], is_mixed_precision=args.mixed_precision)
@@ -111,7 +111,7 @@ if __name__ == '__main__':
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255, weight=weights)
         writer = SummaryWriter('runs/' + exp_name)
         train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
-                                        input_sizes=input_sizes, mean=mean, std=std, erfnet=is_erfnet)
+                                        input_sizes=input_sizes, mean=mean, std=std, city_aug=city_aug)
 
         # The "poly" policy, variable names are confusing (May need reimplementation)
         if args.model == 'erfnet':
