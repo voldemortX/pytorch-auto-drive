@@ -36,7 +36,8 @@ Specialized real-time backbone: ERFNet
 | DeepLabV2 | 257 x 513 | *yes* | Cityscapes | 66.89 | 2.3h |
 | DeepLabV3 | 257 x 513 | *yes* | Cityscapes | 67.87 | 4.8h |
 | DeepLabV2 | 257 x 513 | *no* | Cityscapes | 67.07 | 4h |
-| ERFNet| 512 x 1024 | *no* | Cityscapes | 71.99 | 5h |
+| ERFNet| 512 x 1024 | *yes* | Cityscapes | 71.99 | 5h |
+| DeepLabV2 | 512 x 1024 | *yes* | Cityscapes | 71.17 | 9h |
 
 *\*Note that the best run from ERFNet on Cityscapes val is 72.47% in mIoU, slightly better than the original implementation by the authors (72.2%).*
 
@@ -87,8 +88,16 @@ Or run mixed precision training on Cityscapes with ERFNet:
 python main_semseg.py --epochs=150 --lr=0.0007 --batch-size=10 --dataset=city --model=erfnet --mixed-precision
 ```
 
+Or run mixed precision training on Cityscapes with high resolution DeeplabV2 (standard configuration for UDA segmentation):
+
+```
+python main_semseg.py --epochs=60 --lr=0.0014 --batch-size=4 --dataset=city --model=deeplabv2-big --mixed-precision
+```
+
 ## Notes:
 
-Cityscapes dataset is down-sampled by 2, to specify different sizes, modify this [line](code/data_processing.py#L32); similar changes can be done with PASCAL VOC 2012.
+Cityscapes dataset is down-sampled by 2 when training at 257 x 513, to specify different sizes, modify this [line](code/data_processing.py#L32); similar changes can be done with other experiments.
 
-Training times are measured on **a single RTX 2080Ti**.
+Training times are measured on **a single RTX 2080Ti**, including online validation time.
+
+All segmentation results reported are from single model without CRF and without multi-scale testing.
