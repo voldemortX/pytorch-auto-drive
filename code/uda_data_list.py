@@ -4,7 +4,7 @@ from data_processing import base_gtav as base
 # Count
 start = 2500
 end = 5000
-train_list = [str(x) for x in range(start, end + 1)]
+train_list = ['0' + str(x) + '\n' for x in range(start, end + 1)]
 print('Whole training set size: ' + str(len(train_list)))
 
 # Save training list

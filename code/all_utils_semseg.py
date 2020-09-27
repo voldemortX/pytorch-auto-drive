@@ -177,8 +177,8 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
         raise ValueError
 
     # Not the actual test set (i.e. validation set)
-    test_set = StandardSegmentationDataset(root=base, image_set='val', transforms=transform_test,
-                                           data_set='city' if dataset == 'gtav' else dataset)
+    test_set = StandardSegmentationDataset(root=base_city if dataset == 'gtav' else dataset, image_set='val',
+                                           transforms=transform_test, data_set='city' if dataset == 'gtav' else dataset)
     if city_aug == 1:
         val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=1, num_workers=workers, shuffle=False)
     else:
