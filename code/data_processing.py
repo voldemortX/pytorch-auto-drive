@@ -66,6 +66,16 @@ base_gtav = '../../../dataset/gtav'
 sizes_gtav = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/training resize max/testing label size
 sizes_gtav_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
 
+# For TuSimple
+base_tusimple = '../../../dataset/tusimple'
+sizes_tusimple = [(256, 512), (720, 1280)]  # training size/actual size
+num_classes_tusimple = 6
+
+# For CULane
+base_culane = '../../../dataset/culane'
+sizes_culane = [(288, 800), (590, 1640)]  # training size/actual size
+num_classes_culane = 4
+
 
 # Reimplemented based on torchvision.datasets.VOCSegmentation
 class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
@@ -147,7 +157,7 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
 class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None, data_set='tusimple'):
         super().__init__(root, transforms, transform, target_transform)
-        self.is_test = (image_set == 'test')
+        self.is_test = (image_set == 'test' or image_set == 'val')
         image_dir, splits_dir, mask_dir = self.get_init_parameters(root=root, data_set=data_set)
         self._init_all(image_dir=image_dir, splits_dir=splits_dir, mask_dir=mask_dir, image_set=image_set)
 
