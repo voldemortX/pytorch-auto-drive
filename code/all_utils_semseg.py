@@ -137,12 +137,13 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
              Normalize(mean=mean, std=std)])
     elif dataset == 'city' or dataset == 'gtav':  # All the same size
         base = base_city if dataset == 'city' else base_gtav
+        outlier = False if dataset == 'city' else True  # GTAV has fucked up label ID
         workers = 8
         if city_aug == 2:  # ERFNet
             transform_train = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-                 LabelMap(label_id_map_city),
+                 LabelMap(label_id_map_city, outlier=outlier),
                  RandomTranslation(trans_h=2, trans_w=2),
                  RandomHorizontalFlip(flip_prob=0.5)])
             transform_test = Compose(
@@ -153,7 +154,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
             transform_train = Compose(
                 [ToTensor(),
                  RandomCrop(size=input_sizes[0]),
-                 LabelMap(label_id_map_city),
+                 LabelMap(label_id_map_city, outlier=outlier),
                  RandomTranslation(trans_h=2, trans_w=2),
                  RandomHorizontalFlip(flip_prob=0.5)])
             transform_test = Compose(
@@ -167,7 +168,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
                  RandomCrop(size=input_sizes[0]),
                  RandomHorizontalFlip(flip_prob=0.5),
                  Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map_city)])
+                 LabelMap(label_id_map_city, outlier=outlier)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
@@ -177,7 +178,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
         raise ValueError
 
     # Not the actual test set (i.e. validation set)
-    test_set = StandardSegmentationDataset(root=base_city if dataset == 'gtav' else dataset, image_set='val',
+    test_set = StandardSegmentationDataset(root=base_city if dataset == 'gtav' else base, image_set='val',
                                            transforms=transform_test, data_set='city' if dataset == 'gtav' else dataset)
     if city_aug == 1:
         val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=1, num_workers=workers, shuffle=False)
@@ -190,7 +191,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
         return val_loader
     else:
         # Training
-        train_set = StandardSegmentationDataset(root=base, image_set='train' if dataset == 'city' else 'trainaug',
+        train_set = StandardSegmentationDataset(root=base, image_set='trainaug' if dataset == 'voc' else 'train',
                                                 transforms=transform_train, data_set=dataset)
         train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=batch_size,
                                                    num_workers=workers, shuffle=True)

@@ -245,10 +245,13 @@ class Normalize(object):
 
 # Init with a python list as the map(mainly for cityscapes's id -> train_id)
 class LabelMap(object):
-    def __init__(self, label_id_map):
+    def __init__(self, label_id_map, outlier=False):
         self.label_id_map = torch.tensor(label_id_map)
+        self.outlier = outlier
 
     def __call__(self, image, target):
+        if self.outlier:
+            target[target > self.label_id_map.shape[0]] = 0  # Label 0 is usually ignored
         target = self.label_id_map[target]
 
         return image, target
