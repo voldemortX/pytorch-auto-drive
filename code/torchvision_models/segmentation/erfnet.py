@@ -1,5 +1,6 @@
-# Copied and modified from Eromera/erfnet_pytorch and
-# cardwing/Codes-for-Lane-Detection
+# Copied and modified from Eromera/erfnet_pytorch,
+# cardwing/Codes-for-Lane-Detection and
+# jcdubron/scnn_pytorch
 
 import torch
 import torch.nn as nn
@@ -108,6 +109,7 @@ class Decoder(nn.Module):
         self.layers.append(UpsamplerBlock(64, 16))
         self.layers.append(non_bottleneck_1d(16, 0, 1))
         self.layers.append(non_bottleneck_1d(16, 0, 1))
+
         self.output_conv = nn.ConvTranspose2d(16, num_classes, 2, stride=2, padding=0, output_padding=0, bias=True)
 
     def forward(self, input):
@@ -127,12 +129,10 @@ class LaneExist(nn.Module):
         super().__init__()
 
         self.layers = nn.ModuleList()
-
         self.layers.append(nn.Conv2d(128, 32, (3, 3), stride=1, padding=(4, 4), bias=False, dilation=(4, 4)))
         self.layers.append(nn.BatchNorm2d(32, eps=1e-03))
 
         self.layers_final = nn.ModuleList()
-
         self.layers_final.append(nn.Dropout2d(0.1))
         self.layers_final.append(nn.Conv2d(32, 5, (1, 1), stride=1, padding=(0, 0), bias=True))
 
@@ -163,6 +163,36 @@ class LaneExist(nn.Module):
         return output
 
 
+# SCNN head
+class SpatialConv(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_d = nn.Conv2d(128, 128, (1, 9), padding=(0, 4))
+        self.conv_u = nn.Conv2d(128, 128, (1, 9), padding=(0, 4))
+        self.conv_r = nn.Conv2d(128, 128, (9, 1), padding=(4, 0))
+        self.conv_l = nn.Conv2d(128, 128, (9, 1), padding=(4, 0))
+
+    def forward(self, input):
+        output = input
+
+        # First one remains unchanged (according to the original paper), why not add a relu afterwards?
+        # Update and send to next
+        # Down
+        for i in range(1, output.shape[2]):
+            output[:, :, i:i+1, :].add_(F.relu(self.conv_d(output[:, :, i-1:i, :])))
+        # Up
+        for i in range(output.shape[2] - 2, 0, -1):
+            output[:, :, i:i+1, :].add_(F.relu(self.conv_u(output[:, :, i+1:i+2, :])))
+        # Right
+        for i in range(1, output.shape[3]):
+            output[:, :, :, i:i+1].add_(F.relu(self.conv_r(output[:, :, :, i-1:i])))
+        # Left
+        for i in range(output.shape[3] - 2, 0, -1):
+            output[:, :, :, i:i+1].add_(F.relu(self.conv_l(output[:, :, :, i+1:i+2])))
+
+        return output
+
+
 # ERFNet
 class ERFNet(nn.Module):
     def __init__(self, num_classes, encoder=None, aux=0, dropout_1=0.03, dropout_2=0.3, flattened_size=3965,
@@ -172,7 +202,14 @@ class ERFNet(nn.Module):
             self.encoder = Encoder(num_classes=num_classes, dropout_1=dropout_1, dropout_2=dropout_2)
         else:
             self.encoder = encoder
+
         self.decoder = Decoder(num_classes)
+
+        if scnn:
+            self.spatial_conv = SpatialConv()
+        else:
+            self.spatial_conv = None
+
         if aux > 0:
             self.aux_head = LaneExist(num_output=aux, flattened_size=flattened_size)
         else:
@@ -184,7 +221,10 @@ class ERFNet(nn.Module):
             return self.encoder.forward(input, predict=True)
         else:
             output = self.encoder(input)    # predict=False by default
+            if self.spatial_conv is not None:
+                output = self.spatial_conv(output)
             out['out'] = self.decoder.forward(output)
+
             if self.aux_head is not None:
                 out['aux'] = self.aux_head(output)
             return out
