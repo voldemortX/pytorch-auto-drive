@@ -79,12 +79,12 @@ def train_schedule(writer, loader, save_num_steps, device, criterion, net, optim
         running_loss = 0.0
         time_now = time.time()
         for i, data in enumerate(loader, 0):
-            inputs, labels = data
-            inputs, labels = inputs.to(device), labels.to(device)
+            inputs, labels, lane_existence = data
+            inputs, labels, lane_existence = inputs.to(device), labels.to(device), lane_existence.to(device)
             optimizer.zero_grad()
 
             with autocast(is_mixed_precision):
-                loss = criterion(inputs, labels)  # To support intermediate losses for SAD
+                loss = criterion(inputs, labels, lane_existence, net)  # To support intermediate losses for SAD
 
             if is_mixed_precision:
                 scaler.scale(loss).backward()

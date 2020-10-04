@@ -172,7 +172,7 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             target = ''  # To accommodate transforms
         else:
             target = Image.open(self.masks[index])
-            lane_existence = self.lane_existences[index]
+            lane_existence = torch.tensor(self.lane_existences[index])
 
         # Transforms
         if self.transforms is not None:
