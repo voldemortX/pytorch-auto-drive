@@ -69,12 +69,15 @@ sizes_gtav_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder outpu
 # For TuSimple
 base_tusimple = '../../../dataset/tusimple'
 sizes_tusimple = [(256, 512), (720, 1280)]  # training size/actual size
-num_classes_tusimple = 6
+num_classes_tusimple = 7
+weights_tusimple = [0.4, 1, 1, 1, 1, 1, 1]
+
 
 # For CULane
 base_culane = '../../../dataset/culane'
 sizes_culane = [(288, 800), (590, 1640)]  # training size/actual size
-num_classes_culane = 4
+num_classes_culane = 5
+weights_culane = [0.4, 1, 1, 1, 1]
 
 
 # Reimplemented based on torchvision.datasets.VOCSegmentation
@@ -172,7 +175,7 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             target = ''  # To accommodate transforms
         else:
             target = Image.open(self.masks[index])
-            lane_existence = torch.tensor(self.lane_existences[index])
+            lane_existence = torch.tensor(self.lane_existences[index]).float()
 
         # Transforms
         if self.transforms is not None:

@@ -7,7 +7,8 @@ import math
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from losses import LaneLoss, SADLoss
-from data_processing import mean, std, sizes_tusimple, sizes_culane, num_classes_tusimple, num_classes_culane
+from data_processing import mean, std, sizes_tusimple, sizes_culane, num_classes_tusimple, num_classes_culane, \
+                            weights_tusimple, weights_culane
 from all_utils_semseg import load_checkpoint
 from all_utils_landec import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane
 
@@ -26,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='tusimple',
                         help='Train/Evaluate on TuSimple (voc) / CULane (culane) (default: tusimple)')
     parser.add_argument('--model', type=str, default='scnn',
-                        help='Model selection (scnn/sad) (default: scnn)')
+                        help='Model selection (baseline/scnn/sad) (default: scnn)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size (default: 8)')
     parser.add_argument('--mixed-precision', action='store_true', default=False,
@@ -55,9 +56,12 @@ if __name__ == '__main__':
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     scnn = True if args.model == 'scnn' else False
+    weights = None
     if args.dataset == 'tusimple':
+        weights = torch.tensor(weights_tusimple).to(device)
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'culane':
+        weights = torch.tensor(weights_culane).to(device)
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
     else:
         raise ValueError
@@ -76,7 +80,7 @@ if __name__ == '__main__':
             f.write(exp_name + ': ' + str(x) + '\n')
     else:
         if args.model == 'scnn' or args.model == 'baseline':
-            criterion = LaneLoss()
+            criterion = LaneLoss(weight=weights, ignore_index=255)
         elif args.model == 'sad':
             criterion = SADLoss()
         else:

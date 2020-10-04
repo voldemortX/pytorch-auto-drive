@@ -13,7 +13,7 @@ from all_utils_semseg import save_checkpoint
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for TuSimple (With only ImageNet pretraining)
     return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=6,
-                         dropout_1=0.1, dropout_2=0.1, flattened_size=4500, scnn=scnn)
+                         dropout_1=0.1, dropout_2=0.1, flattened_size=2560, scnn=scnn)
 
 
 def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
@@ -25,22 +25,22 @@ def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pr
 def init(batch_size, state, input_sizes, dataset, mean, std):
     # Return data_loaders
     # depending on whether the state is
-    # 1: training
-    # 2: just testing (validation set)
-    # 3: just testing (test set)
+    # 0: training
+    # 1: just testing (validation set)
+    # 2: just testing (test set)
 
     # Transformations
     # ! Can't use torchvision.Transforms.Compose
     if dataset == 'tusimple':
         base = base_tusimple
-        workers = 4
+        workers = 8
     elif dataset == 'culane':
         base = base_culane
         workers = 4
     else:
         raise ValueError
 
-    if state == 1:
+    if state == 0:
         transforms = Compose(
             [ToTensor(),
              Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
@@ -49,7 +49,7 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
         data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms, data_set=dataset)
         data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
                                                   num_workers=workers, shuffle=True)
-    elif state == 2 or state == 3:
+    elif state == 1 or state == 2:
         transforms = Compose(
             [ToTensor(),
              Resize(size_image=input_sizes[0], size_label=input_sizes[0]),

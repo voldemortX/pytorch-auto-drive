@@ -154,11 +154,10 @@ class LaneExist(nn.Module):
         output = F.softmax(output, dim=1)
         output = self.maxpool(output)
         # print(output.shape)
-        output = output.flatten()
+        output = output.flatten(start_dim=1)
         output = self.linear1(output)
         output = F.relu(output)
         output = self.linear2(output)
-        output = F.sigmoid(output)
 
         return output
 
