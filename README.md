@@ -12,6 +12,8 @@ Cityscapes.
 
 GTAV (The UDA baseline setup: GTAV 24966 training set, with cityscapes *val* set validation).
 
+SYNTHIA (The UDA baseline setup: SYNTHIA 9400 training set, with cityscapes *val* set validation).
+
 TuSimple (In progress).
 
 CULane (In progress).
