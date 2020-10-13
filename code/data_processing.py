@@ -66,6 +66,17 @@ base_gtav = '../../../dataset/gtav'
 sizes_gtav = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/training resize max/testing label size
 sizes_gtav_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
 
+# For SYNTHIA (23 classes, ignore as black, no such thing as background, mapped to Cityscapes)
+base_synthia = '../../../dataset/syn'
+sizes_synthia = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/training resize max/testing label size
+sizes_synthia_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
+label_id_map_synthia = [255, 10,  2,   0, 1,   4,
+                        8,   5,   13,  7, 255, 18,
+                        17,  255, 255, 6, 9,   12,
+                        14,  15,  16,  3, 255]
+iou_16 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18]
+iou_13 = [0, 1, 2, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18]
+
 # For TuSimple
 base_tusimple = '../../../dataset/tusimple'
 sizes_tusimple = [(256, 512), (720, 1280)]  # training size/actual size
@@ -146,6 +157,19 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
     def _gtav_init(self, root, image_set):
         image_dir = os.path.join(root, 'images')
         mask_dir = os.path.join(root, 'labels')
+
+        # We first generate data lists before all this, so we can do this easier
+        splits_dir = os.path.join(root, 'data_lists')
+        split_f = os.path.join(splits_dir, image_set + '.txt')
+        with open(os.path.join(split_f), "r") as f:
+            file_names = [x.strip() for x in f.readlines()]
+
+        self.images = [os.path.join(image_dir, x + ".png") for x in file_names]
+        self.masks = [os.path.join(mask_dir, x + self.mask_type) for x in file_names]
+
+    def _synthia_init(self, root, image_set):
+        image_dir = os.path.join(root, 'RGB')
+        mask_dir = os.path.join(root, 'GT/LABELS')
 
         # We first generate data lists before all this, so we can do this easier
         splits_dir = os.path.join(root, 'data_lists')

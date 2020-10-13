@@ -8,7 +8,7 @@ import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, sizes_gtav, \
                             num_classes_voc, num_classes_city, categories_voc, categories_city, weights_city_erfnet, \
-                            sizes_city_big
+                            sizes_city_big, sizes_synthia
 from all_utils_semseg import visualize, init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set,\
                              load_checkpoint
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     parser.add_argument('--val-num-steps', type=int, default=1000,
                         help='Validation frequency (default: 1000)')
     parser.add_argument('--dataset', type=str, default='voc',
-                        help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city)/GTAV(gtav) (default: voc)')
+                        help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city)/GTAV(gtav)/SYNTHIA(synthia) (default: voc)')
     parser.add_argument('--model', type=str, default='deeplabv3',
                         help='Model selection (fcn/pspnet/deeplabv2/deeplabv3) (default: deeplabv3)')
     parser.add_argument('--batch-size', type=int, default=8,
@@ -48,6 +48,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Basic configurations
+    city_aug = 0
+    classes = None
+
     if args.dataset == 'voc':
         num_classes = num_classes_voc
         input_sizes = sizes_voc
@@ -63,6 +66,14 @@ if __name__ == '__main__':
         input_sizes = sizes_gtav
         categories = categories_city
         colors = colors_city
+        city_aug = 3
+    elif args.dataset == 'synthia':
+        num_classes = num_classes_city
+        input_sizes = sizes_synthia
+        categories = categories_city
+        colors = colors_city
+        city_aug = 3
+        classes = 16  # Or 13
     else:
         raise ValueError
 
@@ -72,7 +83,7 @@ if __name__ == '__main__':
 
     device = torch.device('cpu')
     weights = None
-    city_aug = 0
+
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     if args.model == 'deeplabv3':
@@ -106,7 +117,7 @@ if __name__ == '__main__':
                            mean=mean, std=std, city_aug=city_aug)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
         test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
-                     output_size=input_sizes[2], is_mixed_precision=args.mixed_precision)
+                     output_size=input_sizes[2], is_mixed_precision=args.mixed_precision, classes=classes)
     else:
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255, weight=weights)
         writer = SummaryWriter('runs/' + exp_name)
@@ -135,14 +146,14 @@ if __name__ == '__main__':
 
         # Train
         train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                       num_epochs=args.epochs, is_mixed_precision=args.mixed_precision,
+                       num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, classes=classes,
                        validation_loader=val_loader, device=device, criterion=criterion, categories=categories,
                        num_classes=num_classes, input_sizes=input_sizes, val_num_steps=args.val_num_steps)
 
         # Final evaluations
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename='temp.pt')
         _, x = test_one_set(loader=val_loader, device=device, net=net, is_mixed_precision=args.mixed_precision,
-                            categories=categories, num_classes=num_classes, output_size=input_sizes[2])
+                            categories=categories, num_classes=num_classes, output_size=input_sizes[2], classes=classes)
 
         # --do-not-save => args.do_not_save = False
         if args.do_not_save:  # Rename the checkpoint with timestamp

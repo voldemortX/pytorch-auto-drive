@@ -140,7 +140,7 @@ class RandomCrop(object):
     def get_params(img, output_size):
         h, w = get_tensor_image_size(img)
         th, tw = output_size
-        if w == tw and h == th:
+        if w <= tw and h <= th:
             return 0, 0, h, w
 
         i = random.randint(0, h - th)

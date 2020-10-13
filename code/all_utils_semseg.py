@@ -6,7 +6,8 @@ from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
 
 from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet
-from data_processing import StandardSegmentationDataset, base_city, base_voc, base_gtav, label_id_map_city
+from data_processing import StandardSegmentationDataset, base_city, base_voc, base_gtav, base_synthia, \
+                            label_id_map_city, label_id_map_synthia, iou_13, iou_16
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, RandomTranslation,\
                        ZeroPad, LabelMap, Compose
 
@@ -135,11 +136,29 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
             [ToTensor(),
              ZeroPad(size=input_sizes[2]),
              Normalize(mean=mean, std=std)])
-    elif dataset == 'city' or dataset == 'gtav':  # All the same size
-        base = base_city if dataset == 'city' else base_gtav
+    elif dataset == 'city' or dataset == 'gtav' or dataset == 'synthia':  # All the same size
+        if dataset == 'city':
+            base = base_city
+        elif dataset == 'gtav':
+            base = base_gtav
+        else:
+            base = base_synthia
         outlier = False if dataset == 'city' else True  # GTAV has fucked up label ID
         workers = 8
-        if city_aug == 2:  # ERFNet
+
+        if city_aug == 3:
+            transform_train = Compose(
+                [ToTensor(),
+                 RandomCrop(size=input_sizes[0]),
+                 RandomHorizontalFlip(flip_prob=0.5),
+                 Normalize(mean=mean, std=std),
+                 LabelMap(label_id_map_synthia if dataset == 'synthia' else label_id_map_city, outlier=outlier)])
+            transform_test = Compose(
+                [ToTensor(),
+                 Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
+                 Normalize(mean=mean, std=std),
+                 LabelMap(label_id_map_city)])
+        elif city_aug == 2:  # ERFNet
             transform_train = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
@@ -199,7 +218,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
 
 
 def train_schedule(writer, loader, val_num_steps, validation_loader, device, criterion, net, optimizer, lr_scheduler,
-                   num_epochs, is_mixed_precision, num_classes, categories, input_sizes):
+                   num_epochs, is_mixed_precision, num_classes, categories, input_sizes, classes):
     # Poly training schedule
     # Validate and find the best snapshot
     best_mIoU = 0
@@ -250,7 +269,7 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
             if current_step_num % val_num_steps == (val_num_steps - 1):
                 test_pixel_accuracy, test_mIoU = test_one_set(loader=validation_loader, device=device, net=net,
                                                               num_classes=num_classes, categories=categories,
-                                                              output_size=input_sizes[2],
+                                                              output_size=input_sizes[2], classes=classes,
                                                               is_mixed_precision=is_mixed_precision)
                 writer.add_scalar('test pixel accuracy',
                                   test_pixel_accuracy,
@@ -293,7 +312,7 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
 
 
 # Copied and modified from torch/vision/references/segmentation
-def test_one_set(loader, device, net, num_classes, categories, output_size, is_mixed_precision):
+def test_one_set(loader, device, net, num_classes, categories, output_size, is_mixed_precision, classes=None):
     # Evaluate on 1 data_loader
     net.eval()
     conf_mat = ConfusionMatrix(num_classes)
@@ -311,10 +330,20 @@ def test_one_set(loader, device, net, num_classes, categories, output_size, is_m
             'global correct: {:.2f}\n'
             'average row correct: {}\n'
             'IoU: {}\n'
-            'mean IoU: {:.2f}').format(
+            'mean IoU: {:.2f}\n',
+            'mean IoU-16: {:.2f}\n'
+            'mean IoU-13: {:.2f}').format(
                 acc_global.item() * 100,
                 ['{:.2f}'.format(i) for i in (acc * 100).tolist()],
                 ['{:.2f}'.format(i) for i in (iu * 100).tolist()],
-                iu.mean().item() * 100))
+                iu.mean().item() * 100),
+                iu[iou_16].mean().item() * 100,
+                iu[iou_13].mean().item() * 100)
 
-    return acc_global.item() * 100, iu.mean().item() * 100
+    iou = iu.mean().item() * 100
+    if classes == 16:
+        iou = iu[iou_16].mean().item() * 100
+    elif classes == 13:
+        iou = iu[iou_13].mean().item() * 100
+
+    return acc_global.item() * 100, iou
