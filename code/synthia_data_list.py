@@ -14,7 +14,7 @@ def pad(x):
 
 
 # Count
-start = 1
+start = 0
 end = 9399
 train_list = [pad(str(x)) for x in range(start, end + 1)]
 print('Whole training set size: ' + str(len(train_list)))
