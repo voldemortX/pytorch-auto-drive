@@ -175,10 +175,12 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
                  RandomCrop(size=input_sizes[0]),
                  LabelMap(label_id_map_city, outlier=outlier),
                  RandomTranslation(trans_h=2, trans_w=2),
-                 RandomHorizontalFlip(flip_prob=0.5)])
+                 RandomHorizontalFlip(flip_prob=0.5),
+                 Normalize(mean=mean, std=std)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
+                 Normalize(mean=mean, std=std),
                  LabelMap(label_id_map_city)])
         else:
             transform_train = Compose(
@@ -331,15 +333,15 @@ def test_one_set(loader, device, net, num_classes, categories, output_size, is_m
             'global correct: {:.2f}\n'
             'average row correct: {}\n'
             'IoU: {}\n'
-            'mean IoU: {:.2f}\n',
+            'mean IoU: {:.2f}\n'
             'mean IoU-16: {:.2f}\n'
             'mean IoU-13: {:.2f}').format(
                 acc_global.item() * 100,
                 ['{:.2f}'.format(i) for i in (acc * 100).tolist()],
                 ['{:.2f}'.format(i) for i in (iu * 100).tolist()],
-                iu.mean().item() * 100),
+                iu.mean().item() * 100,
                 iu[iou_16].mean().item() * 100,
-                iu[iou_13].mean().item() * 100)
+                iu[iou_13].mean().item() * 100))
 
     iou = iu.mean().item() * 100
     if classes == 16:
