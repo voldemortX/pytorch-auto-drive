@@ -67,7 +67,7 @@ sizes_gtav = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/train
 sizes_gtav_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
 
 # For SYNTHIA (23 classes, ignore as black, no such thing as background, mapped to Cityscapes)
-base_synthia = '../../../dataset/syn'
+base_synthia = '../../../dataset/syn/SYNTHIA_RAND_CITYSCPAES'
 sizes_synthia = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/training resize max/testing label size
 sizes_synthia_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
 label_id_map_synthia = [255, 10,  2,   0, 1,   4,
@@ -103,6 +103,8 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
             self._city_init(root, image_set)
         elif data_set == 'gtav':
             self._gtav_init(root, image_set)
+        elif data_set == 'synthia':
+            self._synthia_init(root, image_set)
         else:
             raise ValueError
 
@@ -128,7 +130,7 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
         mask_dir = os.path.join(root, 'SegmentationClassAug')
         splits_dir = os.path.join(root, 'ImageSets/Segmentation')
         split_f = os.path.join(splits_dir, image_set + '.txt')
-        with open(os.path.join(split_f), "r") as f:
+        with open(split_f, "r") as f:
             file_names = [x.strip() for x in f.readlines()]
 
         self.images = [os.path.join(image_dir, x + ".jpg") for x in file_names]
@@ -148,7 +150,7 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
         # We first generate data lists before all this, so we can do this easier
         splits_dir = os.path.join(root, 'data_lists')
         split_f = os.path.join(splits_dir, image_set + '.txt')
-        with open(os.path.join(split_f), "r") as f:
+        with open(split_f, "r") as f:
             file_names = [x.strip() for x in f.readlines()]
 
         self.images = [os.path.join(image_dir, x + "_leftImg8bit.png") for x in file_names]
@@ -161,20 +163,20 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
         # We first generate data lists before all this, so we can do this easier
         splits_dir = os.path.join(root, 'data_lists')
         split_f = os.path.join(splits_dir, image_set + '.txt')
-        with open(os.path.join(split_f), "r") as f:
+        with open(split_f, "r") as f:
             file_names = [x.strip() for x in f.readlines()]
 
         self.images = [os.path.join(image_dir, x + ".png") for x in file_names]
         self.masks = [os.path.join(mask_dir, x + self.mask_type) for x in file_names]
 
     def _synthia_init(self, root, image_set):
-        image_dir = os.path.join(root, 'RGB')
-        mask_dir = os.path.join(root, 'GT/LABELS')
+        image_dir = os.path.join(root, 'RGB', image_set)
+        mask_dir = os.path.join(root, 'GT/LABELS_CONVERTED', image_set)
 
         # We first generate data lists before all this, so we can do this easier
         splits_dir = os.path.join(root, 'data_lists')
         split_f = os.path.join(splits_dir, image_set + '.txt')
-        with open(os.path.join(split_f), "r") as f:
+        with open(split_f, "r") as f:
             file_names = [x.strip() for x in f.readlines()]
 
         self.images = [os.path.join(image_dir, x + ".png") for x in file_names]
@@ -231,7 +233,7 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
     def _init_all(self, image_dir, splits_dir, mask_dir, image_set):
         # Got the lists from 2 datasets to be in the same format
         split_f = os.path.join(splits_dir, image_set + '.txt')
-        with open(os.path.join(split_f), "r") as f:
+        with open(split_f, "r") as f:
             contents = [x.strip() for x in f.readlines()]
 
         self.images = [os.path.join(image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
