@@ -9,7 +9,7 @@ from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resne
 from data_processing import StandardSegmentationDataset, base_city, base_voc, base_gtav, base_synthia, \
                             label_id_map_city, label_id_map_synthia, iou_13, iou_16
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, RandomTranslation,\
-                       ZeroPad, LabelMap, Compose
+                       ZeroPad, LabelMap, MatchSize, Compose
 
 
 def fcn(num_classes):
@@ -146,13 +146,22 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
         outlier = False if dataset == 'city' else True  # GTAV has fucked up label ID
         workers = 8
 
-        if city_aug == 3:
-            transform_train = Compose(
-                [ToTensor(),
-                 RandomCrop(size=input_sizes[0]),
-                 RandomHorizontalFlip(flip_prob=0.5),
-                 Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map_synthia if dataset == 'synthia' else label_id_map_city, outlier=outlier)])
+        if city_aug == 3:  # SYNTHIA & GTAV
+            if dataset == 'gtav':
+                transform_train = Compose(
+                    [ToTensor(),
+                     MatchSize(l2i=True),
+                     RandomCrop(size=input_sizes[0]),
+                     RandomHorizontalFlip(flip_prob=0.5),
+                     Normalize(mean=mean, std=std),
+                     LabelMap(label_id_map_city, outlier=outlier)])
+            else:
+                transform_train = Compose(
+                    [ToTensor(),
+                     RandomCrop(size=input_sizes[0]),
+                     RandomHorizontalFlip(flip_prob=0.5),
+                     Normalize(mean=mean, std=std),
+                     LabelMap(label_id_map_synthia if dataset == 'synthia' else label_id_map_city, outlier=outlier)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
@@ -182,7 +191,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
                  Normalize(mean=mean, std=std),
                  LabelMap(label_id_map_city)])
-        else:
+        else:  # Standard city
             transform_train = Compose(
                 [ToTensor(),
                  RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),

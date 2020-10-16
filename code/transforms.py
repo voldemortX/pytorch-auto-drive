@@ -251,7 +251,26 @@ class LabelMap(object):
 
     def __call__(self, image, target):
         if self.outlier:
-            target[target > self.label_id_map.shape[0]] = 0  # Label 0 is usually ignored
+            target[target >= self.label_id_map.shape[0]] = 0  # Label 0 is usually ignored
         target = self.label_id_map[target]
+
+        return image, target
+
+
+# Match label and image size
+class MatchSize(object):
+    def __init__(self, l2i=True):
+        self.l2i = l2i  # Match (l)abel to (i)mage
+
+    def __call__(self, image, target):
+        hi, wi = get_tensor_image_size(image)
+        hl, wl = get_tensor_image_size(target)
+        if hi == hl and wi == wl:
+            return image, target
+
+        if self.l2i:
+            target = F.resize(target, (hi, wi), interpolation=Image.NEAREST)
+        else:
+            image = F.resize(image, (hl, wl), interpolation=Image.LINEAR)
 
         return image, target
