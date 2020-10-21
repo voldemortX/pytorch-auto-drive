@@ -150,7 +150,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
             if dataset == 'gtav':
                 transform_train = Compose(
                     [ToTensor(),
-                     MatchSize(l2i=True),
+                     Resize(size_label=input_sizes[1], size_image=input_sizes[1]),
                      RandomCrop(size=input_sizes[0]),
                      RandomHorizontalFlip(flip_prob=0.5),
                      Normalize(mean=mean, std=std),
@@ -161,7 +161,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
                      RandomCrop(size=input_sizes[0]),
                      RandomHorizontalFlip(flip_prob=0.5),
                      Normalize(mean=mean, std=std),
-                     LabelMap(label_id_map_synthia if dataset == 'synthia' else label_id_map_city, outlier=outlier)])
+                     LabelMap(label_id_map_synthia, outlier=outlier)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),

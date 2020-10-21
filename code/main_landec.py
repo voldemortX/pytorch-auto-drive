@@ -8,7 +8,7 @@ import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from losses import LaneLoss, SADLoss
 from data_processing import mean, std, sizes_tusimple, sizes_culane, num_classes_tusimple, num_classes_culane, \
-                            weights_tusimple, weights_culane
+                            weights_tusimple, weights_culane, gap_tusimple, gap_culane, ppl_culane, ppl_tusimple
 from all_utils_semseg import load_checkpoint
 from all_utils_landec import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane
 
@@ -60,24 +60,28 @@ if __name__ == '__main__':
     if args.dataset == 'tusimple':
         weights = torch.tensor(weights_tusimple).to(device)
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
+        gap = gap_tusimple
+        ppl = ppl_tusimple
     elif args.dataset == 'culane':
         weights = torch.tensor(weights_culane).to(device)
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
+        gap = gap_culane
+        ppl = ppl_culane
     else:
         raise ValueError
     print(device)
     net.to(device)
 
     optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
+    # optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999),  eps=1e-08, weight_decay=1e-4)
 
     # Testing
     if args.state == 1 or args.state == 2:
         data_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
                            mean=mean, std=std)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
-        x = test_one_set()
-        with open('log.txt', 'a') as f:
-            f.write(exp_name + ': ' + str(x) + '\n')
+        test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision,
+                     input_sizes=input_sizes, gap=gap, ppl=ppl)
     else:
         if args.model == 'scnn' or args.model == 'baseline':
             criterion = LaneLoss(weight=weights, ignore_index=255)
@@ -100,6 +104,7 @@ if __name__ == '__main__':
         # Train
         train_schedule(writer=writer, loader=data_loader, save_num_steps=args.save_num_steps, device=device,
                        criterion=criterion, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                       num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, exp_name=exp_name)
+                       num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, input_sizes=input_sizes,
+                       exp_name=exp_name)
 
         writer.close()

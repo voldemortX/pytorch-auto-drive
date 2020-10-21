@@ -36,7 +36,7 @@ class Resize(object):
 
     def __call__(self, image, target):
         image = F.resize(image, self.size_image, interpolation=Image.LINEAR)
-        target = F.resize(target, self.size_label, interpolation=Image.NEAREST)
+        target = target if (type(target) == str) else F.resize(target, self.size_label, interpolation=Image.NEAREST)
 
         return image, target
 
@@ -195,6 +195,8 @@ class ToTensor(object):
     def label_to_tensor(pic):  # 3 dimensional arrays or normal segmentation masks
         if isinstance(pic, np.ndarray):
             return torch.as_tensor(pic.transpose((2, 0, 1)), dtype=torch.float32)
+        elif isinstance(pic, str):
+            return pic
         else:
             return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)
 

@@ -1,7 +1,6 @@
 # TuSimple (SAD lists)
 # /clips/0313-1/6040/20.jpg /segGT6/0313-1/6040/20.png 0 1 1 1 1 0 =>
 # 0313-1/6040/20 0 1 1 1 1 0
-# TODO: Test set
 
 import os
 root = '../../../dataset/tusimple/lists'
@@ -33,9 +32,9 @@ for i in range(len(old_file_names)):
         temp = f.readlines()
     for x in range(len(temp)):
         if 'test.txt' in file_name:
-            temp[x] = temp[x].replace('.jpg', '')
+            temp[x] = temp[x].replace('.jpg', '')[1:]
         else:
-            temp[x] = temp[x][: temp[x].find('.jpg')] + temp[x][temp[x].find('.png') + 4:]
+            temp[x] = temp[x][1: temp[x].find('.jpg')] + temp[x][temp[x].find('.png') + 4:]
     file_name = os.path.join(root, new_file_names[i])
     with open(file_name, 'w') as f:
         f.writelines(temp)

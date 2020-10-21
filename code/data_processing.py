@@ -63,7 +63,7 @@ train_cities = ['aachen', 'bremen', 'darmstadt', 'erfurt', 'hanover',
 
 # For GTAV (19 classes, ignore as black, no such thing as background)
 base_gtav = '../../../dataset/gtav'
-sizes_gtav = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/training resize max/testing label size
+sizes_gtav = [(257, 513), (1912, 1054), (513, 1025)]  # training crop size/max size/testing label size
 sizes_gtav_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
 
 # For SYNTHIA (23 classes, ignore as black, no such thing as background, mapped to Cityscapes)
@@ -82,6 +82,8 @@ base_tusimple = '../../../dataset/tusimple'
 sizes_tusimple = [(256, 512), (720, 1280)]  # training size/actual size
 num_classes_tusimple = 7
 weights_tusimple = [0.4, 1, 1, 1, 1, 1, 1]
+gap_tusimple = 10  # Y pixel gap per sampling point
+ppl_tusimple = 56  # Points per lane
 
 
 # For CULane
@@ -89,6 +91,8 @@ base_culane = '../../../dataset/culane'
 sizes_culane = [(288, 800), (590, 1640)]  # training size/actual size
 num_classes_culane = 5
 weights_culane = [0.4, 1, 1, 1, 1]
+gap_culane = 20  # Y pixel gap per sampling point
+ppl_culane = 18  # Points per lane
 
 
 # Reimplemented based on torchvision.datasets.VOCSegmentation
@@ -186,7 +190,11 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
 class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None, data_set='tusimple'):
         super().__init__(root, transforms, transform, target_transform)
-        self.is_test = (image_set == 'test' or image_set == 'val')
+        self.test = 0
+        if image_set == 'val':
+            self.test = 1
+        elif image_set == 'test':  # Different format (without lane existence annotations)
+            self.test = 2
         image_dir, splits_dir, mask_dir = self.get_init_parameters(root=root, data_set=data_set)
         self._init_all(image_dir=image_dir, splits_dir=splits_dir, mask_dir=mask_dir, image_set=image_set)
 
@@ -197,8 +205,8 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
         # if not just testing,
         # else just return input image.
         img = Image.open(self.images[index]).convert('RGB')
-        if self.is_test:
-            target = ''  # To accommodate transforms
+        if self.test > 0:
+            target = self.masks[index]
         else:
             target = Image.open(self.masks[index])
             lane_existence = torch.tensor(self.lane_existences[index]).float()
@@ -207,8 +215,8 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
         if self.transforms is not None:
             img, target = self.transforms(img, target)
 
-        if self.is_test:
-            return img
+        if self.test > 0:
+            return img, target
         else:
             return img, target, lane_existence
 
@@ -232,11 +240,20 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
 
     def _init_all(self, image_dir, splits_dir, mask_dir, image_set):
         # Got the lists from 2 datasets to be in the same format
+        output_dir = './output'
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
         split_f = os.path.join(splits_dir, image_set + '.txt')
         with open(split_f, "r") as f:
             contents = [x.strip() for x in f.readlines()]
 
-        self.images = [os.path.join(image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
-        if not self.is_test:
+        if self.test == 2:  # Test
+            self.images = [os.path.join(image_dir, x + '.jpg') for x in contents]
+            self.masks = [os.path.join(output_dir, x + '.lines.txt') for x in contents]
+        elif self.test == 1:  # Val
+            self.images = [os.path.join(image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
+            self.masks = [os.path.join(output_dir, x[:x.find(' ')] + '.lines.txt') for x in contents]
+        else:  # Train
+            self.images = [os.path.join(image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
             self.masks = [os.path.join(mask_dir, x[:x.find(' ')] + '.png') for x in contents]
             self.lane_existences = [list(map(int, x[x.find(' '):].split())) for x in contents]

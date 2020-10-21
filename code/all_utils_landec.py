@@ -1,3 +1,5 @@
+import os
+import cv2
 import torch
 import time
 import matplotlib.pyplot as plt
@@ -19,7 +21,7 @@ def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_
 def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for CULane (With only ImageNet pretraining)
     return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=4,
-                         dropout_1=0.1, dropout_2=0.1, flattened_size=3965, scnn=scnn)
+                         dropout_1=0.1, dropout_2=0.1, flattened_size=4500, scnn=scnn)
 
 
 def init(batch_size, state, input_sizes, dataset, mean, std):
@@ -36,7 +38,7 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
         workers = 8
     elif dataset == 'culane':
         base = base_culane
-        workers = 4
+        workers = 10
     else:
         raise ValueError
 
@@ -54,7 +56,7 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
             [ToTensor(),
              Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
              Normalize(mean=mean, std=std)])
-        data_set = StandardLaneDetectionDataset(root=base, image_set='val' if state == 2 else 'test',
+        data_set = StandardLaneDetectionDataset(root=base, image_set='val' if state == 1 else 'test',
                                                 transforms=transforms, data_set=dataset)
         data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
                                                   num_workers=workers, shuffle=False)
@@ -65,7 +67,7 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
 
 
 def train_schedule(writer, loader, save_num_steps, device, criterion, net, optimizer, lr_scheduler,
-                   num_epochs, is_mixed_precision, exp_name):
+                   num_epochs, is_mixed_precision, input_sizes, exp_name):
     # Should be the same as segmentation, given customized loss classes
     net.train()
     epoch = 0
@@ -84,7 +86,8 @@ def train_schedule(writer, loader, save_num_steps, device, criterion, net, optim
             optimizer.zero_grad()
 
             with autocast(is_mixed_precision):
-                loss = criterion(inputs, labels, lane_existence, net)  # To support intermediate losses for SAD
+                # To support intermediate losses for SAD
+                loss = criterion(inputs, labels, lane_existence, net, input_sizes[0])
 
             if is_mixed_precision:
                 scaler.scale(loss).backward()
@@ -107,7 +110,8 @@ def train_schedule(writer, loader, save_num_steps, device, criterion, net, optim
                 running_loss = 0.0
 
             # Record checkpoints
-            if current_step_num % save_num_steps == (save_num_steps - 1):
+            if current_step_num % save_num_steps == (save_num_steps - 1) or \
+               current_step_num == num_epochs * len(loader):
                 save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
                                 filename=exp_name + '_' + str(current_step_num) + '.pt')
 
@@ -115,6 +119,103 @@ def train_schedule(writer, loader, save_num_steps, device, criterion, net, optim
         print('Epoch time: %.2fs' % (time.time() - time_now))
 
 
-def test_one_set():
-    # Evaluate on 1 data_loader
-    pass
+# Adapted from harryhan618/SCNN_Pytorch
+def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl):
+    # Predict on 1 data_loader and save predictions for the official script
+
+    net.eval()
+    with torch.no_grad():
+        for images, filenames in tqdm(loader):
+            images = images.to(device)
+
+            with autocast(is_mixed_precision):
+                outputs = net(images)
+                prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
+                                                           align_corners=True).softmax(dim=1)
+                existence = (outputs['aux'] > 0.5)
+
+            # To CPU
+            prob_map = prob_map.cpu().numpy()
+            existence = existence.cpu().numpy()
+
+            # Get coordinates for lanes
+            for j in range(existence.shape[0]):
+                lane_coordinates = prob_to_lines(prob_map[j], existence[j], resize_shape=input_sizes[1],
+                                                 gap=gap, ppl=ppl)
+
+                # Save lanes to disk
+                dir_name = filenames[j][:filenames[j].rfind('/')]
+                if not os.path.exists(dir_name):
+                    os.makedirs(dir_name)
+                with open(filenames[j], "w") as f:
+                    for lane in lane_coordinates:
+                        for (x, y) in lane:
+                            print("{} {}".format(x, y), end=" ", file=f)
+                        print(file=f)
+
+
+# Adapted from harryhan618/SCNN_Pytorch
+def get_lane(prob_map, gap, ppl, thresh, resize_shape=None):
+    """
+    Arguments:
+    ----------
+    prob_map: prob map for single lane, np array size (h, w)
+    resize_shape:  reshape size target, (H, W)
+    Return:
+    ----------
+    coords: x coords bottom up every gap px, 0 for non-exist, in resized shape
+    """
+
+    if resize_shape is None:
+        resize_shape = prob_map.shape
+    h, w = prob_map.shape
+    H, W = resize_shape
+
+    coords = np.zeros(ppl)
+    for i in range(ppl):
+        y = int(h - i * gap / H * h - 1)
+        if y < 0:
+            break
+        line = prob_map[y, :]
+        id = np.argmax(line)
+        if line[id] > thresh:
+            coords[i] = int(id / w * W)
+    if (coords > 0).sum() < 2:
+        coords = np.zeros(ppl)
+    return coords
+
+
+# Adapted from harryhan618/SCNN_Pytorch
+def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=None, thresh=0.3):
+    """
+    Arguments:
+    ----------
+    seg_pred: np.array size (num_classes, h, w)
+    resize_shape:  reshape size target, (H, W)
+    exist:   list of existence, e.g. [0, 1, 1, 0]
+    smooth:  whether to smooth the probability or not
+    gap: y pixel gap for sampling
+    ppl:     how many points for one lane
+    thresh:  probability threshold
+    Return:
+    ----------
+    coordinates: [x, y] list of lanes, e.g.: [ [[9, 569], [50, 549]] ,[[630, 569], [647, 549]] ]
+    """
+    if resize_shape is None:
+        resize_shape = seg_pred.shape[1:]  # seg_pred (num_classes, h, w)
+    _, h, w = seg_pred.shape
+    H, W = resize_shape
+    coordinates = []
+
+    if ppl is None:
+        ppl = round(H / 2 / gap)
+
+    for i in range(1, seg_pred.shape[0]):
+        prob_map = seg_pred[i, :, :]
+        if smooth:
+            prob_map = cv2.blur(prob_map, (9, 9), borderType=cv2.BORDER_REPLICATE)
+        if exist[i - 1]:
+            coords = get_lane(prob_map, gap, ppl, thresh, resize_shape)
+            coordinates.append([[coords[j], H - 1 - j * gap] for j in range(ppl) if coords[j] > 0])
+
+    return coordinates
