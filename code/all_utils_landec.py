@@ -46,7 +46,7 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
         transforms = Compose(
             [ToTensor(),
              Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-             RandomHorizontalFlip(flip_prob=0.5),
+             #RandomHorizontalFlip(flip_prob=0.5),
              Normalize(mean=mean, std=std)])
         data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms, data_set=dataset)
         data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
@@ -149,9 +149,10 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl)
                     os.makedirs(dir_name)
                 with open(filenames[j], "w") as f:
                     for lane in lane_coordinates:
-                        for (x, y) in lane:
-                            print("{} {}".format(x, y), end=" ", file=f)
-                        print(file=f)
+                        if lane:  # No printing for []
+                            for (x, y) in lane:
+                                print("{} {}".format(x, y), end=" ", file=f)
+                            print(file=f)
 
 
 # Adapted from harryhan618/SCNN_Pytorch
