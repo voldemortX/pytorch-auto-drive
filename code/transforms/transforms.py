@@ -1,10 +1,14 @@
 # Mostly copied and modified from torch/vision/references/segmentation to support unlabeled data
 # Copied functions from fmassa/vision-1 to support multi-dimensional masks loaded from numpy ndarray
+# Update: The current torchvision github repo now supports tensor operation for all common transformations,
+# you are encouraged to check it out
 import numpy as np
 from PIL import Image
+from collections.abc import Sequence
+import numbers
 import random
 import torch
-import functional as F
+from . import functional as F
 
 
 # For 2/3 dimensional tensors only
@@ -16,6 +20,25 @@ def get_tensor_image_size(img):
         w = img.size()[2]
 
     return h, w
+
+
+def _check_sequence_input(x, name, req_sizes):
+    msg = req_sizes[0] if len(req_sizes) < 2 else " or ".join([str(s) for s in req_sizes])
+    if not isinstance(x, Sequence):
+        raise TypeError("{} should be a sequence of length {}.".format(name, msg))
+    if len(x) not in req_sizes:
+        raise ValueError("{} should be sequence of length {}.".format(name, msg))
+
+
+def _setup_angle(x, name, req_sizes=(2, )):
+    if isinstance(x, numbers.Number):
+        if x < 0:
+            raise ValueError("If {} is a single number, it must be positive.".format(name))
+        x = [-x, x]
+    else:
+        _check_sequence_input(x, name, req_sizes)
+
+    return [float(d) for d in x]
 
 
 class Compose(object):
@@ -64,8 +87,8 @@ class ZeroPad(object):
         oh, ow = get_tensor_image_size(target)
         pad_h = h - oh if oh < h else 0
         pad_w = w - ow if ow < w else 0
-        image = F.pad(image, (0, 0, pad_w, pad_h), fill=0)
-        target = F.pad(target, (0, 0, pad_w, pad_h), fill=255)
+        image = F.pad(image, [0, 0, pad_w, pad_h], fill=0)
+        target = F.pad(target, [0, 0, pad_w, pad_h], fill=255)
 
         return image, target
 
@@ -82,8 +105,8 @@ class RandomTranslation(object):
 
     def __call__(self, image, target):
         th, tw = get_tensor_image_size(image)
-        image = F.pad(image, (self.trans_w, self.trans_h, self.trans_w, self.trans_h), fill=0)
-        target = F.pad(target, (self.trans_w, self.trans_h, self.trans_w, self.trans_h), fill=255)
+        image = F.pad(image, [self.trans_w, self.trans_h, self.trans_w, self.trans_h], fill=0)
+        target = F.pad(target, [self.trans_w, self.trans_h, self.trans_w, self.trans_h], fill=255)
         i, j, h, w = RandomCrop.get_params(image, (th, tw))
         image = F.crop(image, i, j, h, w)
         target = F.crop(target, i, j, h, w)
@@ -108,8 +131,8 @@ class RandomZeroPad(object):
             t = -b
             b = 0
 
-        image = F.pad(image, (l, t, r, b), fill=0)
-        target = F.pad(target, (l, t, r, b), fill=255)
+        image = F.pad(image, [l, t, r, b], fill=0)
+        target = F.pad(target, [l, t, r, b], fill=255)
 
         return image, target
 
@@ -126,8 +149,8 @@ class RandomResize(object):
         max_h, max_w = self.max_size
         h = random.randint(min_h, max_h)
         w = random.randint(min_w, max_w)
-        image = F.resize(image, (h, w), interpolation=Image.LINEAR)
-        target = F.resize(target, (h, w), interpolation=Image.NEAREST)
+        image = F.resize(image, [h, w], interpolation=Image.LINEAR)
+        target = F.resize(target, [h, w], interpolation=Image.NEAREST)
 
         return image, target
 
@@ -271,8 +294,34 @@ class MatchSize(object):
             return image, target
 
         if self.l2i:
-            target = F.resize(target, (hi, wi), interpolation=Image.NEAREST)
+            target = F.resize(target, [hi, wi], interpolation=Image.NEAREST)
         else:
-            image = F.resize(image, (hl, wl), interpolation=Image.LINEAR)
+            image = F.resize(image, [hl, wl], interpolation=Image.LINEAR)
+
+        return image, target
+
+
+# TODO: Support fill color 255 for tensor inputs
+# Now fill color is fixed to 0 (background for lane detection label)
+class RandomRotation(object):
+    def __init__(self, degrees, expand=False, center=None, fill=None):
+        self.degrees = _setup_angle(degrees, name="degrees", req_sizes=(2, ))
+
+        if center is not None:
+            _check_sequence_input(center, "center", req_sizes=(2, ))
+
+        self.center = center
+        self.expand = expand
+        self.fill = fill
+
+    @staticmethod
+    def get_params(degrees):
+
+        return random.uniform(degrees[0], degrees[1])
+
+    def __call__(self, image, target):
+        angle = self.get_params(self.degrees)
+        image = F.rotate(image, angle, resample=Image.LINEAR, expand=self.expand, center=self.center, fill=0)
+        target = F.rotate(target, angle, resample=Image.NEAREST, expand=self.expand, center=self.center, fill=255)
 
         return image, target

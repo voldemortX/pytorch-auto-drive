@@ -8,7 +8,7 @@ from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet
 from data_processing import StandardLaneDetectionDataset, base_tusimple, base_culane
-from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, Compose
+from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from all_utils_semseg import save_checkpoint
 
 
@@ -44,9 +44,9 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
 
     if state == 0:
         transforms = Compose(
-            [ToTensor(),
+            [RandomRotation(degrees=1),
+             ToTensor(),
              Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-             #RandomHorizontalFlip(flip_prob=0.5),
              Normalize(mean=mean, std=std)])
         data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms, data_set=dataset)
         data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
