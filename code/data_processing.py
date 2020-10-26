@@ -252,7 +252,7 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             self.masks = [os.path.join(output_dir, x + '.lines.txt') for x in contents]
         elif self.test == 1:  # Val
             self.images = [os.path.join(image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
-            self.masks = [os.path.join(output_dir, x[:x.find(' ')] + '.lines.txt') for x in contents]
+            self.masks = [os.path.join(mask_dir, x[:x.find(' ')] + '.png') for x in contents]
         else:  # Train
             self.images = [os.path.join(image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
             self.masks = [os.path.join(mask_dir, x[:x.find(' ')] + '.png') for x in contents]

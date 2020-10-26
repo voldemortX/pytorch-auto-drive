@@ -91,8 +91,8 @@ if __name__ == '__main__':
             raise NotImplementedError
 
         writer = SummaryWriter('runs/' + exp_name)
-        data_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
-                           input_sizes=input_sizes, mean=mean, std=std)
+        data_loader, validation_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
+                                              input_sizes=input_sizes, mean=mean, std=std)
 
         lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
                                                          lambda x: (1 - x / (len(data_loader) * args.epochs))
@@ -102,9 +102,9 @@ if __name__ == '__main__':
             load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=args.continue_from)
 
         # Train
-        train_schedule(writer=writer, loader=data_loader, save_num_steps=args.save_num_steps, device=device,
+        train_schedule(writer=writer, loader=data_loader, validation_loader=validation_loader, device=device,
                        criterion=criterion, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
                        num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, input_sizes=input_sizes,
-                       exp_name=exp_name)
+                       exp_name=exp_name, num_classes=num_classes, save_num_steps=args.save_num_steps)
 
         writer.close()

@@ -9,7 +9,7 @@ from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet
 from data_processing import StandardLaneDetectionDataset, base_tusimple, base_culane
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
-from all_utils_semseg import save_checkpoint
+from all_utils_semseg import save_checkpoint, ConfusionMatrix
 
 
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
@@ -44,13 +44,19 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
 
     if state == 0:
         transforms = Compose(
-            [RandomRotation(degrees=1),
+            [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
+             RandomRotation(degrees=1),
              ToTensor(),
-             Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
              Normalize(mean=mean, std=std)])
         data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms, data_set=dataset)
         data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
                                                   num_workers=workers, shuffle=True)
+        validation_set = StandardLaneDetectionDataset(root=base, image_set='val',
+                                                      transforms=transforms, data_set=dataset)
+        validation_loader = torch.utils.data.DataLoader(dataset=validation_set, batch_size=batch_size,
+                                                        num_workers=workers, shuffle=False)
+        return data_loader, validation_loader
+
     elif state == 1 or state == 2:
         transforms = Compose(
             [ToTensor(),
@@ -66,8 +72,8 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
     return data_loader
 
 
-def train_schedule(writer, loader, save_num_steps, device, criterion, net, optimizer, lr_scheduler,
-                   num_epochs, is_mixed_precision, input_sizes, exp_name):
+def train_schedule(writer, loader, validation_loader, save_num_steps, device, criterion, net, optimizer, lr_scheduler,
+                   num_epochs, is_mixed_precision, input_sizes, exp_name, num_classes):
     # Should be the same as segmentation, given customized loss classes
     net.train()
     epoch = 0
@@ -76,6 +82,7 @@ def train_schedule(writer, loader, save_num_steps, device, criterion, net, optim
         scaler = GradScaler()
 
     # Training
+    best_validation = 0
     while epoch < num_epochs:
         net.train()
         running_loss = 0.0
@@ -115,8 +122,51 @@ def train_schedule(writer, loader, save_num_steps, device, criterion, net, optim
                 save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
                                 filename=exp_name + '_' + str(current_step_num) + '.pt')
 
+                test_pixel_accuracy, test_mIoU = fast_evaluate(loader=validation_loader, device=device, net=net,
+                                                               num_classes=num_classes, output_size=input_sizes[0],
+                                                               is_mixed_precision=is_mixed_precision)
+                writer.add_scalar('test pixel accuracy',
+                                  test_pixel_accuracy,
+                                  current_step_num)
+                writer.add_scalar('test mIoU',
+                                  test_mIoU,
+                                  current_step_num)
+                net.train()
+
+                # Record best model (straight to disk)
+                if test_mIoU > best_validation:
+                    best_validation = test_mIoU
+                    save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=exp_name + '.pt')
+
         epoch += 1
         print('Epoch time: %.2fs' % (time.time() - time_now))
+
+
+def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_classes):
+    # Fast evaluation (e.g. on the validation set) by pixel-wise mean IoU
+    net.eval()
+    conf_mat = ConfusionMatrix(num_classes)
+    with torch.no_grad():
+        for image, target in tqdm(loader):
+            image, target = image.to(device), target.to(device)
+            with autocast(is_mixed_precision):
+                output = net(image)['out']
+                output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
+                conf_mat.update(target.flatten(), output.argmax(1).flatten())
+
+    acc_global, acc, iu = conf_mat.compute()
+    print((
+        'global correct: {:.2f}\n'
+        'average row correct: {}\n'
+        'IoU: {}\n'
+        'mean IoU: {:.2f}'
+        ).format(
+        acc_global.item() * 100,
+        ['{:.2f}'.format(i) for i in (acc * 100).tolist()],
+        ['{:.2f}'.format(i) for i in (iu * 100).tolist()],
+        iu.mean().item() * 100))
+
+    return acc_global.item() * 100, iu.mean().item() * 100
 
 
 # Adapted from harryhan618/SCNN_Pytorch
