@@ -33,6 +33,16 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
 
     # Transformations
     # ! Can't use torchvision.Transforms.Compose
+    transforms_test = Compose(
+        [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
+         ToTensor(),
+         Normalize(mean=mean, std=std)])
+    transforms_train = Compose(
+        [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
+         RandomRotation(degrees=1),
+         ToTensor(),
+         Normalize(mean=mean, std=std)])
+
     if dataset == 'tusimple':
         base = base_tusimple
         workers = 8
@@ -43,27 +53,20 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
         raise ValueError
 
     if state == 0:
-        transforms = Compose(
-            [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-             RandomRotation(degrees=1),
-             ToTensor(),
-             Normalize(mean=mean, std=std)])
-        data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms, data_set=dataset)
+        data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms_train,
+                                                data_set=dataset)
         data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
                                                   num_workers=workers, shuffle=True)
         validation_set = StandardLaneDetectionDataset(root=base, image_set='val',
-                                                      transforms=transforms, data_set=dataset)
-        validation_loader = torch.utils.data.DataLoader(dataset=validation_set, batch_size=batch_size,
+                                                      transforms=transforms_test, data_set=dataset)
+        validation_loader = torch.utils.data.DataLoader(dataset=validation_set, batch_size=batch_size * 4,
                                                         num_workers=workers, shuffle=False)
         return data_loader, validation_loader
 
     elif state == 1 or state == 2:
-        transforms = Compose(
-            [ToTensor(),
-             Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-             Normalize(mean=mean, std=std)])
+
         data_set = StandardLaneDetectionDataset(root=base, image_set='val' if state == 1 else 'test',
-                                                transforms=transforms, data_set=dataset)
+                                                transforms=transforms_test, data_set=dataset)
         data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
                                                   num_workers=workers, shuffle=False)
     else:

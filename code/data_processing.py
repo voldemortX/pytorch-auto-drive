@@ -205,8 +205,10 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
         # if not just testing,
         # else just return input image.
         img = Image.open(self.images[index]).convert('RGB')
-        if self.test > 0:
+        if self.test == 2:
             target = self.masks[index]
+        elif self.test == 1:
+            target = Image.open(self.masks[index])
         else:
             target = Image.open(self.masks[index])
             lane_existence = torch.tensor(self.lane_existences[index]).float()
