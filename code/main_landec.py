@@ -1,16 +1,12 @@
-import os
 import time
 import torch
 import argparse
-import random
-import math
-import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 from losses import LaneLoss, SADLoss
 from data_processing import mean, std, sizes_tusimple, sizes_culane, num_classes_tusimple, num_classes_culane, \
                             weights_tusimple, weights_culane, gap_tusimple, gap_culane, ppl_culane, ppl_tusimple
 from all_utils_semseg import load_checkpoint
-from all_utils_landec import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane
+from all_utils_landec import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane, fast_evaluate
 
 
 if __name__ == '__main__':
@@ -22,8 +18,8 @@ if __name__ == '__main__':
                         help='Initial learning rate (default: 0.01)')
     parser.add_argument('--epochs', type=int, default=30,
                         help='Number of epochs (default: 30)')
-    parser.add_argument('--save-num-steps', type=int, default=1000,
-                        help='Validation frequency (default: 1000)')
+    parser.add_argument('--val-num-steps', type=int, default=0,
+                        help='Validation frequency (default: 0), 0: no online evaluation')
     parser.add_argument('--dataset', type=str, default='tusimple',
                         help='Train/Evaluate on TuSimple (voc) / CULane (culane) (default: tusimple)')
     parser.add_argument('--model', type=str, default='scnn',
@@ -80,8 +76,13 @@ if __name__ == '__main__':
         data_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
                            mean=mean, std=std)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
-        test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision,
-                     input_sizes=input_sizes, gap=gap, ppl=ppl)
+        if args.state == 1:  # Validate with mean IoU
+            _, x = fast_evaluate(loader=data_loader, device=device, net=net,
+                                 num_classes=num_classes, output_size=input_sizes[0],
+                                 is_mixed_precision=args.is_mixed_precision)
+        else:  # Test with official scripts later (so just predict lanes here)
+            test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision,
+                         input_sizes=input_sizes, gap=gap, ppl=ppl)
     else:
         if args.model == 'scnn' or args.model == 'baseline':
             criterion = LaneLoss(weight=weights, ignore_index=255)
@@ -102,9 +103,10 @@ if __name__ == '__main__':
             load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=args.continue_from)
 
         # Train
-        train_schedule(writer=writer, loader=data_loader, validation_loader=validation_loader, device=device,
-                       criterion=criterion, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+        train_schedule(writer=writer, loader=data_loader,
+                       validation_loader=None if args.val_num_steps == 0 else validation_loader,
+                       criterion=criterion, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, device=device,
                        num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, input_sizes=input_sizes,
-                       exp_name=exp_name, num_classes=num_classes, save_num_steps=args.save_num_steps)
+                       exp_name=exp_name, num_classes=num_classes, val_num_steps=args.val_num_steps)
 
         writer.close()

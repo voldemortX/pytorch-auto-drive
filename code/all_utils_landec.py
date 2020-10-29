@@ -75,7 +75,7 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
     return data_loader
 
 
-def train_schedule(writer, loader, validation_loader, save_num_steps, device, criterion, net, optimizer, lr_scheduler,
+def train_schedule(writer, loader, validation_loader, val_num_steps, device, criterion, net, optimizer, lr_scheduler,
                    num_epochs, is_mixed_precision, input_sizes, exp_name, num_classes):
     # Should be the same as segmentation, given customized loss classes
     net.train()
@@ -120,29 +120,35 @@ def train_schedule(writer, loader, validation_loader, save_num_steps, device, cr
                 running_loss = 0.0
 
             # Record checkpoints
-            if current_step_num % save_num_steps == (save_num_steps - 1) or \
-               current_step_num == num_epochs * len(loader):
-                save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                                filename=exp_name + '_' + str(current_step_num) + '.pt')
+            if validation_loader is not None:
+                if current_step_num % val_num_steps == (val_num_steps - 1) or \
+                   current_step_num == num_epochs * len(loader):
+                    # save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                    #                 filename=exp_name + '_' + str(current_step_num) + '.pt')
 
-                test_pixel_accuracy, test_mIoU = fast_evaluate(loader=validation_loader, device=device, net=net,
-                                                               num_classes=num_classes, output_size=input_sizes[0],
-                                                               is_mixed_precision=is_mixed_precision)
-                writer.add_scalar('test pixel accuracy',
-                                  test_pixel_accuracy,
-                                  current_step_num)
-                writer.add_scalar('test mIoU',
-                                  test_mIoU,
-                                  current_step_num)
-                net.train()
+                    test_pixel_accuracy, test_mIoU = fast_evaluate(loader=validation_loader, device=device, net=net,
+                                                                   num_classes=num_classes, output_size=input_sizes[0],
+                                                                   is_mixed_precision=is_mixed_precision)
+                    writer.add_scalar('test pixel accuracy',
+                                      test_pixel_accuracy,
+                                      current_step_num)
+                    writer.add_scalar('test mIoU',
+                                      test_mIoU,
+                                      current_step_num)
+                    net.train()
 
-                # Record best model (straight to disk)
-                if test_mIoU > best_validation:
-                    best_validation = test_mIoU
-                    save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=exp_name + '.pt')
+                    # Record best model (straight to disk)
+                    if test_mIoU > best_validation:
+                        best_validation = test_mIoU
+                        save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                                        filename=exp_name + '.pt')
 
         epoch += 1
         print('Epoch time: %.2fs' % (time.time() - time_now))
+
+    # For no-evaluation mode
+    if validation_loader is None:
+        save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=exp_name + '.pt')
 
 
 def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_classes):
