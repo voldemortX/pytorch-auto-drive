@@ -79,7 +79,10 @@ if __name__ == '__main__':
         if args.state == 1:  # Validate with mean IoU
             _, x = fast_evaluate(loader=data_loader, device=device, net=net,
                                  num_classes=num_classes, output_size=input_sizes[0],
-                                 is_mixed_precision=args.is_mixed_precision)
+                                 is_mixed_precision=args.mixed_precision)
+            with open('log.txt', 'a') as f:
+                f.write(exp_name + ' validation: ' + str(x) + '\n')
+
         else:  # Test with official scripts later (so just predict lanes here)
             test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision,
                          input_sizes=input_sizes, gap=gap, ppl=ppl)
