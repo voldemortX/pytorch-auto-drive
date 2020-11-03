@@ -102,6 +102,12 @@ Or run mixed precision training on Cityscapes with high resolution DeeplabV2 (st
 python main_semseg.py --epochs=60 --lr=0.0014 --batch-size=4 --dataset=city --model=deeplabv2-big --mixed-precision
 ```
 
+Or run mixed precision training on CULane with ERFNet:
+
+```
+python main_landec.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --model=baseline --mixed-precision
+```
+
 ## Notes:
 
 Cityscapes dataset is down-sampled by 2 when training at 257 x 513, to specify different sizes, modify this [line](code/data_processing.py#L32); similar changes can be done with other experiments.
