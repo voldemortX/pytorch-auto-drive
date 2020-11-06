@@ -14,11 +14,13 @@ GTAV (The UDA baseline setup: GTAV 24966 training set, with cityscapes *val* set
 
 SYNTHIA (The UDA baseline setup: SYNTHIA 9400 training set, with cityscapes *val* set validation).
 
+CULane.
+
 TuSimple (In progress).
 
-CULane (In progress).
-
 ## Currently supported models:
+
+### Segmentation:
 
 ResNet-101 backbone: DeeplabV3, DeeplabV2, FCN
 
@@ -26,7 +28,11 @@ Specialized real-time backbone: ERFNet
 
 *You can of course also use other backbones (e.g. ResNet-50) in torchvision by simply calling a different function by using the most recent torchvision implementation*
 
-## Performance (ImageNet pre-training, val accuracy averaged across 3 runs):
+### Lane detection:
+
+ERFNet backbone: Baseline (Just ERFNet and post-processing)
+
+## Segmentation performance (ImageNet pre-training, val accuracy averaged across 3 runs):
 
 | model | resolution | mixed precision? | Dataset | mIoU (%) | Training time |
 | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -94,6 +100,12 @@ Or run mixed precision training on Cityscapes with high resolution DeeplabV2 (st
 
 ```
 python main_semseg.py --epochs=60 --lr=0.0014 --batch-size=4 --dataset=city --model=deeplabv2-big --mixed-precision
+```
+
+Or run mixed precision training on CULane with ERFNet:
+
+```
+python main_landec.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --model=baseline --mixed-precision
 ```
 
 ## Notes:
