@@ -12,7 +12,7 @@ Other datasets can only be downloaded in their official websites.
 
 1. Change the base directories in [code/data_processing.py](code/data_processing.py) to your datasets' locations, variables named `base_*`.
 
-2. Pre-processings:
+2. Pre-processing:
 
 For PASCAL VOC:
 

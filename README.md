@@ -1,10 +1,10 @@
 # Codebase for deep autonomous driving perception tasks
 
-Segmentation models (**Deeplab, FCN, ERFNet**), Lane detection models (**ERFNet, ERFNet-SCNN and others**) based on Python 3.6 and Pytorch 1.6.0 (cuda 10) & torchvision 0.7.0 with mixed precision training.
+Segmentation models (**Deeplab, FCN, ERFNet**), Lane detection models (**ERFNet, ERFNet-SCNN and others**) based on Python 3.6 and PyTorch 1.6.0 (CUDA 10) & TorchVision 0.7.0 with mixed precision training.
 
 ## Highlights
 
-Fast probability map to poly line conversion, modulated (borrowed) mIOU & pixel acc calculation, "poly" learning rate schedule, basic input loading, transformations and visulizations, also tests of mixed precision training and tensorboard logging.
+Fast probability map to poly line conversion, modulated (borrowed) mIOU & pixel acc calculation, "poly" learning rate schedule, basic input loading, transformations and visualizations, also tests of mixed precision training and tensorboard logging.
 
 And models from this repo is faster (also better or at least similar) than the official implementations and other implementations out there.
 
@@ -19,7 +19,7 @@ And models from this repo is faster (also better or at least similar) than the o
 | lane detection | CULane |
 | lane detection | TuSimple (*In progress*) |
 
-\* The UDA baseline setup, with cityscapes *val* set as validation.
+\* The UDA baseline setup, with Cityscapes *val* set as validation.
 
 ## Supported models:
 
@@ -34,7 +34,7 @@ And models from this repo is faster (also better or at least similar) than the o
 | lane detection | ERFNet | SAD (*In progress*) |
 | lane detection | ERFNet | PRNet (*In progress*) |
 
-*You can of course also use other backbones (e.g. ResNet-50) in torchvision by simply calling a different function by using the most recent torchvision implementation*
+*You can of course also use other backbones (e.g. ResNet-50) in TorchVision by simply calling a different function by using the most recent TorchVision implementation*
 
 ## Semantic segmentation performance:
 
@@ -65,7 +65,7 @@ And models from this repo is faster (also better or at least similar) than the o
 
 ## Preparations:
 
-1. Setup a Python3 enviroment (cuda 10), with PyTorch >= 1.6, TorchVision >= 0.7.0, tqdm, tensorboard, numpy.
+1. Setup a Python3 environment (CUDA 10), with PyTorch >= 1.6, TorchVision >= 0.7.0, tqdm, tensorboard, numpy.
 
 2. Download the code:
    
