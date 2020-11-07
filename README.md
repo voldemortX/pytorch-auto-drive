@@ -51,7 +51,7 @@ And models from this repo is faster (also better or at least similar) than the o
 | ERFNet| 512 x 1024 | *yes* | Cityscapes | 71.99 | 5h |
 | DeeplabV2 | 512 x 1024 | *yes* | Cityscapes | 71.17 | 9h |
 
-*\* All performance is measured with ImageNet pre-training and reproted as 3 times average on validation set. Note that the best run from ERFNet on Cityscapes val is 72.47% in mIoU, slightly better than the original implementation by the authors (72.2%).*
+*\* All performance is measured with ImageNet pre-training and reported as 3 times average on validation set. Note that the best run from ERFNet on Cityscapes val is 72.47% in mIoU, slightly better than the original implementation by the authors (72.2%).*
 
 ## Lane detection performance:
 
@@ -61,7 +61,7 @@ And models from this repo is faster (also better or at least similar) than the o
 | SCNN | 288 x 800 | *yes* | CULane |  |  |
 
 
-*\* All performance is measured with ImageNet pre-training and reproted as 3 times average on test set.*
+*\* All performance is measured with ImageNet pre-training and reported as 3 times average on test set.*
 
 ## Preparations:
 
