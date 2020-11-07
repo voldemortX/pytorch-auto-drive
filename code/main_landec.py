@@ -44,8 +44,9 @@ if __name__ == '__main__':
     else:
         raise ValueError
 
+    states = ['train', 'val', 'test']
     exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
-    with open(exp_name + '_cfg.txt', 'w') as f:
+    with open(exp_name + '_' + states[args.state] + '_cfg.txt', 'w') as f:
         f.write(str(vars(args)))
 
     device = torch.device('cpu')
