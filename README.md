@@ -40,10 +40,10 @@ And models from this repo is faster (also better or at least similar) than the o
 
 | model | resolution | mixed precision? | Dataset | mIoU (%) | Training time |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| FCN | 321 x 321 | *yes* | PASCAL VOC 2012 | 69.46 | 3.3h |
-| FCN | 321 x 321 | *no* | PASCAL VOC 2012 | 69.90 | 6.3h |
-| DeeplabV2 | 321 x 321 | *yes* | PASCAL VOC 2012 | 72.84 | 3.3h |
-| DeeplabV3 | 321 x 321 | *yes* | PASCAL VOC 2012 | 77.05 | 6.9h |
+| FCN | 321 x 321 | *yes* | PASCAL VOC 2012 | 70.72 | 3.3h |
+| FCN | 321 x 321 | *no* | PASCAL VOC 2012 | 70.90 | 6.3h |
+| DeeplabV2 | 321 x 321 | *yes* | PASCAL VOC 2012 | 74.59 | 3.3h |
+| DeeplabV3 | 321 x 321 | *yes* | PASCAL VOC 2012 | 78.11 | 6.9h |
 | FCN | 257 x 513 | *yes* | Cityscapes | 65.79 | 2.3h |
 | DeeplabV2 | 257 x 513 | *yes* | Cityscapes | 66.89 | 2.3h |
 | DeeplabV3 | 257 x 513 | *yes* | Cityscapes | 67.87 | 4.8h |

@@ -155,6 +155,24 @@ class RandomResize(object):
         return image, target
 
 
+class RandomScale(object):
+    def __init__(self, min_scale, max_scale=None):
+        self.min_scale = min_scale
+        if max_scale is None:
+            max_scale = min_scale
+        self.max_scale = max_scale
+
+    def __call__(self, image, target):
+        scale = random.uniform(self.min_scale, self.max_scale)
+        h, w = get_tensor_image_size(image)
+        h = int(scale * h)
+        w = int(scale * w)
+        image = F.resize(image, [h, w], interpolation=Image.LINEAR)
+        target = F.resize(target, [h, w], interpolation=Image.NEAREST)
+
+        return image, target
+
+
 class RandomCrop(object):
     def __init__(self, size):
         self.size = size
@@ -174,8 +192,8 @@ class RandomCrop(object):
         # Pad if needed
         ih, iw = get_tensor_image_size(image)
         if ih < self.size[0] or iw < self.size[1]:
-            print(image.size())
-            print(self.size)
+            # print(image.size())
+            # print(self.size)
             image, target = ZeroPad.zero_pad(image, target,
                                              max(self.size[0], ih),
                                              max(self.size[1], iw))

@@ -9,7 +9,7 @@ from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resne
 from data_processing import StandardSegmentationDataset, base_city, base_voc, base_gtav, base_synthia, \
                             label_id_map_city, label_id_map_synthia, iou_13, iou_16
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, RandomTranslation,\
-                       ZeroPad, LabelMap, MatchSize, Compose
+                       ZeroPad, LabelMap, RandomScale, Compose
 
 
 def fcn(num_classes):
@@ -128,7 +128,8 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
         workers = 4
         transform_train = Compose(
             [ToTensor(),
-             RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),
+             # RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),
+             RandomScale(min_scale=0.5, max_scale=1.5),
              RandomCrop(size=input_sizes[0]),
              RandomHorizontalFlip(flip_prob=0.5),
              Normalize(mean=mean, std=std)])
