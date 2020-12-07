@@ -190,13 +190,31 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
 class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None, data_set='tusimple'):
         super().__init__(root, transforms, transform, target_transform)
-        self.test = 0
         if image_set == 'val':
             self.test = 1
         elif image_set == 'test':  # Different format (without lane existence annotations)
             self.test = 2
-        image_dir, splits_dir, mask_dir = self.get_init_parameters(root=root, data_set=data_set)
-        self._init_all(image_dir=image_dir, splits_dir=splits_dir, mask_dir=mask_dir, image_set=image_set)
+        else:
+            self.test = 0
+        if data_set == 'tusimple':
+            self.image_dir = os.path.join(root, 'clips')
+            self.mask_dir = os.path.join(root, 'segGT6')
+            self.output_prefix = 'clips'
+            self.output_suffix = '.jpg'
+        elif data_set == 'culane':
+            self.image_dir = root
+            self.mask_dir = os.path.join(root, 'laneseg_label_w16')
+            self.output_prefix = './output'
+            self.output_suffix = '.lines.txt'
+            if not os.path.exists(self.output_prefix):
+                os.makedirs(self.output_prefix)
+        else:
+            raise ValueError
+        self.data_set = data_set
+        self.image_set = image_set
+        self.splits_dir = os.path.join(root, 'lists')
+
+        self._init_all()
 
         assert (len(self.images) == len(self.masks))
 
@@ -225,37 +243,19 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
     def __len__(self):
         return len(self.images)
 
-    @staticmethod
-    def get_init_parameters(root, data_set):
-        if data_set == 'tusimple':
-            image_dir = os.path.join(root, 'clips')
-            mask_dir = os.path.join(root, 'segGT6')
-        elif data_set == 'culane':
-            image_dir = root
-            mask_dir = os.path.join(root, 'laneseg_label_w16')
-        else:
-            raise ValueError
-
-        splits_dir = os.path.join(root, 'lists')
-
-        return image_dir, splits_dir, mask_dir
-
-    def _init_all(self, image_dir, splits_dir, mask_dir, image_set):
+    def _init_all(self):
         # Got the lists from 2 datasets to be in the same format
-        output_dir = './output'
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        split_f = os.path.join(splits_dir, image_set + '.txt')
+        split_f = os.path.join(self.splits_dir, self.image_set + '.txt')
         with open(split_f, "r") as f:
             contents = [x.strip() for x in f.readlines()]
 
         if self.test == 2:  # Test
-            self.images = [os.path.join(image_dir, x + '.jpg') for x in contents]
-            self.masks = [os.path.join(output_dir, x + '.lines.txt') for x in contents]
+            self.images = [os.path.join(self.image_dir, x + '.jpg') for x in contents]
+            self.masks = [os.path.join(self.output_prefix, x + self.output_suffix) for x in contents]
         elif self.test == 1:  # Val
-            self.images = [os.path.join(image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
-            self.masks = [os.path.join(mask_dir, x[:x.find(' ')] + '.png') for x in contents]
+            self.images = [os.path.join(self.image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
+            self.masks = [os.path.join(self.mask_dir, x[:x.find(' ')] + '.png') for x in contents]
         else:  # Train
-            self.images = [os.path.join(image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
-            self.masks = [os.path.join(mask_dir, x[:x.find(' ')] + '.png') for x in contents]
+            self.images = [os.path.join(self.image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
+            self.masks = [os.path.join(self.mask_dir, x[:x.find(' ')] + '.png') for x in contents]
             self.lane_existences = [list(map(int, x[x.find(' '):].split())) for x in contents]

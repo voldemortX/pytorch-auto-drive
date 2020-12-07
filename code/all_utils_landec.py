@@ -3,6 +3,8 @@ import cv2
 import torch
 import time
 import matplotlib.pyplot as plt
+from math import floor
+import ujson as json
 import numpy as np
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
@@ -179,9 +181,10 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
 
 
 # Adapted from harryhan618/SCNN_Pytorch
-def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl):
+def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, dataset):
     # Predict on 1 data_loader and save predictions for the official script
 
+    all_lanes = []
     net.eval()
     with torch.no_grad():
         for images, filenames in tqdm(loader):
@@ -200,22 +203,38 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl)
             # Get coordinates for lanes
             for j in range(existence.shape[0]):
                 lane_coordinates = prob_to_lines(prob_map[j], existence[j], resize_shape=input_sizes[1],
-                                                 gap=gap, ppl=ppl)
+                                                 gap=gap, ppl=ppl, dataset=dataset)
 
-                # Save lanes to disk
-                dir_name = filenames[j][:filenames[j].rfind('/')]
-                if not os.path.exists(dir_name):
-                    os.makedirs(dir_name)
-                with open(filenames[j], "w") as f:
-                    for lane in lane_coordinates:
-                        if lane:  # No printing for []
-                            for (x, y) in lane:
-                                print("{} {}".format(x, y), end=" ", file=f)
-                            print(file=f)
+                if dataset == 'culane':
+                    # Save each lane to disk
+                    dir_name = filenames[j][:filenames[j].rfind('/')]
+                    if not os.path.exists(dir_name):
+                        os.makedirs(dir_name)
+                    with open(filenames[j], "w") as f:
+                        for lane in lane_coordinates:
+                            if lane:  # No printing for []
+                                for (x, y) in lane:
+                                    print("{} {}".format(x, y), end=" ", file=f)
+                                print(file=f)
+                elif dataset == 'tusimple':
+                    # Save lanes to a single file
+                    formatted = {
+                        "h_samples": [160 + y * 10 for y in range(ppl)],
+                        "lanes": lane_coordinates,
+                        "run_time": 0,
+                        "raw_file": filenames[j]
+                    }
+                    all_lanes.append(formatted)
+                else:
+                    raise ValueError
+
+    if dataset == 'tusimple':
+        json.dump(all_lanes, './output/tusimple_pred.txt')
 
 
 # Adapted from harryhan618/SCNN_Pytorch
-def get_lane(prob_map, gap, ppl, thresh, resize_shape=None):
+# Note that in tensors we have indices start from 0 and in annotations coordinates start at 1
+def get_lane(prob_map, gap, ppl, thresh, resize_shape=None, dataset='culane'):
     """
     Arguments:
     ----------
@@ -233,20 +252,25 @@ def get_lane(prob_map, gap, ppl, thresh, resize_shape=None):
 
     coords = np.zeros(ppl)
     for i in range(ppl):
-        y = int(h - i * gap / H * h - 1)
+        if dataset == 'tusimple':  # Annotation start at 10 pixel away from top
+            y = int((H - 10 - i * gap) * h / H) - 1
+        elif dataset == 'culane':  # Annotation start at top
+            y = int((H - i * gap) * h / H) - 1
+        else:
+            raise ValueError
         if y < 0:
             break
         line = prob_map[y, :]
         id = np.argmax(line)
         if line[id] > thresh:
-            coords[i] = int(id / w * W)
+            coords[i] = int(id / w * W) + 1
     if (coords > 0).sum() < 2:
         coords = np.zeros(ppl)
     return coords
 
 
 # Adapted from harryhan618/SCNN_Pytorch
-def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=None, thresh=0.3):
+def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=None, thresh=0.3, dataset='culane'):
     """
     Arguments:
     ----------
@@ -257,9 +281,10 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
     gap: y pixel gap for sampling
     ppl:     how many points for one lane
     thresh:  probability threshold
+    all_points: Whether to save all sample points or just points predicted as lane
     Return:
     ----------
-    coordinates: [x, y] list of lanes, e.g.: [ [[9, 569], [50, 549]] ,[[630, 569], [647, 549]] ]
+    coordinates: [x, y] list of lanes, e.g.: [ [[9, 570], [50, 550]] ,[[630, 570], [647, 550]] ]
     """
     if resize_shape is None:
         resize_shape = seg_pred.shape[1:]  # seg_pred (num_classes, h, w)
@@ -275,7 +300,12 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
         if smooth:
             prob_map = cv2.blur(prob_map, (9, 9), borderType=cv2.BORDER_REPLICATE)
         if exist[i - 1]:
-            coords = get_lane(prob_map, gap, ppl, thresh, resize_shape)
-            coordinates.append([[coords[j], H - 1 - j * gap] for j in range(ppl) if coords[j] > 0])
+            coords = get_lane(prob_map, gap, ppl, thresh, resize_shape, dataset=dataset)
+            if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
+                coordinates.append([[coords[j]] if coords[j] > 0 else [-2] for j in range(ppl)])
+            elif dataset == 'culane':
+                coordinates.append([[coords[j], H - j * gap] for j in range(ppl) if coords[j] > 0])
+            else:
+                raise ValueError
 
     return coordinates
