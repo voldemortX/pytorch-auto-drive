@@ -71,7 +71,7 @@ base_synthia = '../../../dataset/syn/SYNTHIA_RAND_CITYSCPAES'
 sizes_synthia = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/training resize max/testing label size
 sizes_synthia_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
 label_id_map_synthia = [255, 10,  2,   0, 1,   4,
-                        8,   5,   13,  7, 255, 18,
+                        8,   5,   13,  7, 11, 18,
                         17,  255, 255, 6, 9,   12,
                         14,  15,  16,  3, 255]
 iou_16 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18]
