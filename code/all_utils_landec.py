@@ -16,8 +16,8 @@ from all_utils_semseg import save_checkpoint, ConfusionMatrix
 
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for TuSimple (With only ImageNet pretraining)
-    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=6,
-                         dropout_1=0.1, dropout_2=0.1, flattened_size=2560, scnn=scnn)
+    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=4,
+                         dropout_1=0.1, dropout_2=0.1, flattened_size=4400, scnn=scnn)
 
 
 def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
@@ -47,7 +47,7 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
 
     if dataset == 'tusimple':
         base = base_tusimple
-        workers = 8
+        workers = 10
     elif dataset == 'culane':
         base = base_culane
         workers = 10
@@ -224,12 +224,14 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                         "run_time": 0,
                         "raw_file": filenames[j]
                     }
-                    all_lanes.append(formatted)
+                    all_lanes.append(json.dumps(formatted))
                 else:
                     raise ValueError
 
     if dataset == 'tusimple':
-        json.dump(all_lanes, './output/tusimple_pred.txt')
+        with open('./output/tusimple_pred.json', 'w') as f:
+            for lane in all_lanes:
+                print(lane, end="\n", file=f)
 
 
 # Adapted from harryhan618/SCNN_Pytorch
@@ -253,9 +255,9 @@ def get_lane(prob_map, gap, ppl, thresh, resize_shape=None, dataset='culane'):
     coords = np.zeros(ppl)
     for i in range(ppl):
         if dataset == 'tusimple':  # Annotation start at 10 pixel away from top
-            y = int((H - 10 - i * gap) * h / H) - 1
+            y = int(h - (ppl - i) * gap / H * h)
         elif dataset == 'culane':  # Annotation start at top
-            y = int((H - i * gap) * h / H) - 1
+            y = int(h - i * gap / H * h - 1)  # Same as original SCNN code
         else:
             raise ValueError
         if y < 0:
@@ -263,7 +265,7 @@ def get_lane(prob_map, gap, ppl, thresh, resize_shape=None, dataset='culane'):
         line = prob_map[y, :]
         id = np.argmax(line)
         if line[id] > thresh:
-            coords[i] = int(id / w * W) + 1
+            coords[i] = int(id / w * W)
     if (coords > 0).sum() < 2:
         coords = np.zeros(ppl)
     return coords
@@ -284,7 +286,7 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
     all_points: Whether to save all sample points or just points predicted as lane
     Return:
     ----------
-    coordinates: [x, y] list of lanes, e.g.: [ [[9, 570], [50, 550]] ,[[630, 570], [647, 550]] ]
+    coordinates: [x, y] list of lanes, e.g.: [ [[9, 569], [50, 549]] ,[[630, 569], [647, 549]] ]
     """
     if resize_shape is None:
         resize_shape = seg_pred.shape[1:]  # seg_pred (num_classes, h, w)
@@ -297,14 +299,16 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
 
     for i in range(1, seg_pred.shape[0]):
         prob_map = seg_pred[i, :, :]
-        if smooth:
-            prob_map = cv2.blur(prob_map, (9, 9), borderType=cv2.BORDER_REPLICATE)
         if exist[i - 1]:
+            if smooth:
+                prob_map = cv2.blur(prob_map, (9, 9), borderType=cv2.BORDER_REPLICATE)
             coords = get_lane(prob_map, gap, ppl, thresh, resize_shape, dataset=dataset)
+            if coords.sum() == 0:
+                continue
             if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
-                coordinates.append([[coords[j]] if coords[j] > 0 else [-2] for j in range(ppl)])
+                coordinates.append([coords[j] if coords[j] > 0 else -2 for j in range(ppl)])
             elif dataset == 'culane':
-                coordinates.append([[coords[j], H - j * gap] for j in range(ppl) if coords[j] > 0])
+                coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
             else:
                 raise ValueError
 

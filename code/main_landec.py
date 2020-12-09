@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
         else:  # Test with official scripts later (so just predict lanes here)
             test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision,
-                         input_sizes=input_sizes, gap=gap, ppl=ppl)
+                         input_sizes=input_sizes, gap=gap, ppl=ppl, dataset=args.dataset)
     else:
         if args.model == 'scnn' or args.model == 'baseline':
             criterion = LaneLoss(weight=weights, ignore_index=255)

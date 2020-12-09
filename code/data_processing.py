@@ -79,9 +79,9 @@ iou_13 = [0, 1, 2, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18]
 
 # For TuSimple
 base_tusimple = '../../../dataset/tusimple'
-sizes_tusimple = [(256, 512), (720, 1280)]  # training size/actual size
-num_classes_tusimple = 7
-weights_tusimple = [0.4, 1, 1, 1, 1, 1, 1]
+sizes_tusimple = [(360, 640), (720, 1280)]  # training size/actual size
+num_classes_tusimple = 5
+weights_tusimple = [0.4, 1, 1, 1, 1]
 gap_tusimple = 10  # Y pixel gap per sampling point
 ppl_tusimple = 56  # Points per lane
 
@@ -198,7 +198,7 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             self.test = 0
         if data_set == 'tusimple':
             self.image_dir = os.path.join(root, 'clips')
-            self.mask_dir = os.path.join(root, 'segGT6')
+            self.mask_dir = os.path.join(root, 'segGT')
             self.output_prefix = 'clips'
             self.output_suffix = '.jpg'
         elif data_set == 'culane':
@@ -234,7 +234,6 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
         # Transforms
         if self.transforms is not None:
             img, target = self.transforms(img, target)
-
         if self.test > 0:
             return img, target
         else:

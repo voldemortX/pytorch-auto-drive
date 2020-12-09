@@ -1,12 +1,14 @@
 # TuSimple (SAD lists)
-# /clips/0313-1/6040/20.jpg /segGT6/0313-1/6040/20.png 0 1 1 1 1 0 =>
-# 0313-1/6040/20 0 1 1 1 1 0
+# /clips/0313-1/6040/20.jpg /segGT/0313-1/6040/20.png 1 1 1 1 =>
+# 0313-1/6040/20 1 1 1 1
 import os
 from data_processing import base_tusimple
 
 root = os.path.join(base_tusimple, 'lists')
-old_file_names = ['list6_train.txt', 'list6_val.txt', 'list6.txt', 'list_test.txt']
-new_file_names = ['train.txt', 'val.txt', 'trainval.txt', 'test.txt']
+# old_file_names = ['list6_train.txt', 'list6_val.txt', 'list6.txt', 'list_test.txt']
+# new_file_names = ['train.txt', 'val.txt', 'trainval.txt', 'test.txt']
+old_file_names = ['list_train.txt', 'list_val.txt', 'list_test.txt']
+new_file_names = ['train.txt', 'val.txt', 'test.txt']
 for i in range(len(old_file_names)):
     file_name = os.path.join(root, old_file_names[i])
     with open(file_name, 'r') as f:

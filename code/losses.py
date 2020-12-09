@@ -39,6 +39,7 @@ class LaneLoss(_WeightedLoss):
         outputs = net(inputs)
         prob_maps = torch.nn.functional.interpolate(outputs['out'], size=interp_size, mode='bilinear',
                                                     align_corners=True)
+        targets[targets > lane_existence.shape[-1]] = 255  # Ignore extra lanes
         segmentation_loss = F.cross_entropy(prob_maps, targets, weight=self.weight,
                                             ignore_index=self.ignore_index, reduction=self.reduction)
         existence_loss = F.binary_cross_entropy_with_logits(outputs['aux'], lane_existence,

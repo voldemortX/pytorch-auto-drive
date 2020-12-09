@@ -17,7 +17,7 @@ And models from this repo is faster (also better or at least similar) than the o
 | semantic segmentation | GTAV* |
 | semantic segmentation | SYNTHIA* |
 | lane detection | CULane |
-| lane detection | TuSimple (*In progress*) |
+| lane detection | TuSimple |
 
 \* The UDA baseline setup, with Cityscapes *val* set as validation.
 
@@ -59,6 +59,8 @@ And models from this repo is faster (also better or at least similar) than the o
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | ERFNet | 288 x 800 | *yes* | CULane | 0.7346 | 6h |
 | SCNN | 288 x 800 | *yes* | CULane |  |  |
+| ERFNet | 360 x 640 | *yes* | TuSimple |  |  |
+| SCNN | 360 x 640 | *yes* | TuSimple |  |  |
 
 
 *\* All performance is measured with ImageNet pre-training and reported as 3 times average on test set.*

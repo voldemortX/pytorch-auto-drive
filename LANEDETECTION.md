@@ -4,7 +4,7 @@
 
 The CULane dataset can be downloaded in their [official website](https://xingangpan.github.io/projects/CULane.html).
 
-The TuSimple dataset can be downloaded at their [github repo](https://github.com/TuSimple/tusimple-benchmark/issues/3). However, you'll also need [segmentation labels](https://drive.google.com/open?id=1uLZk_i6rxRMvwLF8dLy19dTJiOgnbotf), [train data lists](https://github.com/cardwing/Codes-for-Lane-Detection/tree/master/ENet-TuSimple-Torch/list6) and [test data list](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list/list_test.txt) provided by [@cardwing](https://github.com/cardwing), thanks for their efforts. Note that there are 10 duplicated lines, refer to [this issue](https://github.com/cardwing/Codes-for-Lane-Detection/issues/11).
+The TuSimple dataset can be downloaded at their [github repo](https://github.com/TuSimple/tusimple-benchmark/issues/3). However, you'll also need [segmentation labels](https://drive.google.com/open?id=1uLZk_i6rxRMvwLF8dLy19dTJiOgnbotf), [train data lists](https://drive.google.com/open?id=1hzfxufoCnUYEahQ3k29b8flJhNk0gAo4) and [test data list](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list/list_test.txt) provided by [@cardwing](https://github.com/cardwing), thanks for their efforts.
 
 **Now we assume you are in the code folder.**
 
@@ -49,13 +49,14 @@ To validate a trained model on mean IoU, you can use either mixed-precision or f
 python main_landec.py --state=1 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size> --exp-name=<whatever you like> --mixed-precision
 ```
 
-To test a trained model with culane:
+### To test a trained model with CULane:
 
 1. Prepare official scripts.
 
 ```
 cd tools/culane_evaluation
 make
+mkdir output
 ```
 
 *Then change `data_dir` to your CULane base directory in [eval.sh](code/tools/culane_evaluation/eval.sh).*
@@ -63,7 +64,7 @@ make
 2. Predict and save lanes.
    
 ```
-python main_landec.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size> --mixed-precision
+python main_landec.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size, recommend 80> --mixed-precision
 ```
 
 3. Evaluate with official scripts.
@@ -73,3 +74,28 @@ python main_landec.py --state=2 --continue-from=<trained model .pt filename> --d
 ```
 
 You can then check the test/validation performance at `log.txt`, and per-class performance at `code/tools/culane_evaluation/output` .
+
+### To test a trained model with TuSimple:
+
+1. Prepare official scripts.
+
+```
+cd tools/tusimple_evaluation
+mkdir output
+```
+
+*Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh](code/autotest_tusimple.sh).*
+
+1. Predict and save lanes.
+   
+```
+python main_landec.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size, recommend 80> --mixed-precision
+```
+
+3. Evaluate with official scripts.
+
+```
+./autotest_tusimple.sh <your experiment name>
+```
+
+You can then check the test/validation performance at `log.txt`, and detailed performance at `code/tools/tusimple_evaluation/output` .
