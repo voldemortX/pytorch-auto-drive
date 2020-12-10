@@ -31,7 +31,7 @@ if __name__ == '__main__':
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
     parser.add_argument('--state', type=int, default=0,
-                        help='Conduct final test(2)/validate(1)/normal training(0) (default: 0)')
+                        help='Conduct validation(3)/final test(2)/fast validation(1)/normal training(0) (default: 0)')
     args = parser.parse_args()
 
     # Basic configurations
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     else:
         raise ValueError
 
-    states = ['train', 'val', 'test']
+    states = ['train', 'valfast', 'test', 'val']
     exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
     with open(exp_name + '_' + states[args.state] + '_cfg.txt', 'w') as f:
         f.write(str(vars(args)))
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     # optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999),  eps=1e-08, weight_decay=1e-4)
 
     # Testing
-    if args.state == 1 or args.state == 2:
+    if args.state == 1 or args.state == 2 or args.state == 3:
         data_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
                            mean=mean, std=std)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)

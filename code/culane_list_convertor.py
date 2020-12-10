@@ -5,14 +5,14 @@
 import os
 from data_processing import base_culane
 root = os.path.join(base_culane, 'lists')
-old_file_names = ['train_gt.txt', 'val_gt.txt', 'test.txt']
-new_file_names = ['train.txt', 'val.txt', 'test.txt']
+old_file_names = ['train_gt.txt', 'val_gt.txt', 'val', 'test.txt']
+new_file_names = ['train.txt', 'valfast.txt', 'val', 'test.txt']
 for i in range(len(old_file_names)):
     file_name = os.path.join(root, old_file_names[i])
     with open(file_name, 'r') as f:
         temp = f.readlines()
     for x in range(len(temp)):
-        if 'test.txt' in file_name:
+        if 'test.txt' or 'val.txt' in file_name:
             temp[x] = temp[x].replace('.jpg', '')[1:]
         else:
             temp[x] = temp[x][1: temp[x].find('.jpg')] + temp[x][temp[x].find('.png') + 4:]

@@ -30,8 +30,9 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
     # Return data_loaders
     # depending on whether the state is
     # 0: training
-    # 1: just testing (validation set)
+    # 1: fast validation by mean IoU (validation set)
     # 2: just testing (test set)
+    # 3: just testing (validation set)
 
     # Transformations
     # ! Can't use torchvision.Transforms.Compose
@@ -65,9 +66,9 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
                                                         num_workers=workers, shuffle=False)
         return data_loader, validation_loader
 
-    elif state == 1 or state == 2:
-
-        data_set = StandardLaneDetectionDataset(root=base, image_set='val' if state == 1 else 'test',
+    elif state == 1 or state == 2 or state == 3:
+        image_sets = ['valfast', 'test', 'val']
+        data_set = StandardLaneDetectionDataset(root=base, image_set=image_sets[state - 1],
                                                 transforms=transforms_test, data_set=dataset)
         data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
                                                   num_workers=workers, shuffle=False)

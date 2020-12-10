@@ -190,9 +190,9 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
 class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None, data_set='tusimple'):
         super().__init__(root, transforms, transform, target_transform)
-        if image_set == 'val':
+        if image_set == 'valfast':
             self.test = 1
-        elif image_set == 'test':  # Different format (without lane existence annotations)
+        elif image_set == 'test' or image_set == 'val':  # Different format (without lane existence annotations)
             self.test = 2
         else:
             self.test = 0
