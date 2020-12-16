@@ -195,7 +195,8 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
         else:  # Standard city
             transform_train = Compose(
                 [ToTensor(),
-                 RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),
+                 # RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),
+                 RandomScale(min_scale=0.5, max_scale=1.5),
                  RandomCrop(size=input_sizes[0]),
                  RandomHorizontalFlip(flip_prob=0.5),
                  Normalize(mean=mean, std=std),
@@ -212,8 +213,8 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
     test_set = StandardSegmentationDataset(root=base_city if dataset == 'gtav' or dataset == 'synthia' else base,
                                            image_set='val', transforms=transform_test,
                                            data_set='city' if dataset == 'gtav' or dataset == 'synthia' else dataset)
-    if city_aug == 1:
-        val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=1, num_workers=workers, shuffle=False)
+    if city_aug == 1 or city_aug == 3:
+        val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=2, num_workers=workers, shuffle=False)
     else:
         val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=batch_size, num_workers=workers,
                                                  shuffle=False)

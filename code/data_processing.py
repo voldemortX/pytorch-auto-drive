@@ -63,12 +63,12 @@ train_cities = ['aachen', 'bremen', 'darmstadt', 'erfurt', 'hanover',
 
 # For GTAV (19 classes, ignore as black, no such thing as background)
 base_gtav = '../../../dataset/gtav'
-sizes_gtav = [(257, 513), (1912, 1054), (513, 1025)]  # training crop size/max size/testing label size
+sizes_gtav = [(512, 1024), (1054, 1912), (1024, 2048)]  # training crop size/max size/testing label size
 sizes_gtav_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
 
 # For SYNTHIA (23 classes, ignore as black, no such thing as background, mapped to Cityscapes)
 base_synthia = '../../../dataset/syn/SYNTHIA_RAND_CITYSCPAES'
-sizes_synthia = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/training resize max/testing label size
+sizes_synthia = [(512, 1024), (760, 1280), (1024, 2048)]  # training resize min/training resize max/testing label size
 sizes_synthia_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
 label_id_map_synthia = [255, 10,  2,   0, 1,   4,
                         8,   5,   13,  7, 11, 18,
