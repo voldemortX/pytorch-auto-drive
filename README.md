@@ -2,6 +2,8 @@
 
 Segmentation models (**Deeplab, FCN, ERFNet**), Lane detection models (**ERFNet, ERFNet-SCNN and others**) based on Python 3.6 and PyTorch 1.6.0 (CUDA 10) & TorchVision 0.7.0 with mixed precision training.
 
+**This repository is under active development, which means performance reported could improve in the future.**
+
 ## Highlights
 
 Fast probability map to poly line conversion, modulated (borrowed) mIOU & pixel acc calculation, "poly" learning rate schedule, basic input loading, transformations and visualizations, also tests of mixed precision training and tensorboard logging.
