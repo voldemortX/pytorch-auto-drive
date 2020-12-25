@@ -62,19 +62,19 @@ python main_semseg.py --epochs=150 --lr=0.0007 --batch-size=10 --dataset=city --
 Mixed precision training on Cityscapes with high resolution DeeplabV2:
 
 ```
-python main_semseg.py --epochs=60 --lr=0.0014 --batch-size=4 --dataset=city --model=deeplabv2-big --mixed-precision --exp-name=<whatever you like>
+python main_semseg.py --epochs=60 --lr=0.002 --batch-size=4 --dataset=city --model=deeplabv2-big --mixed-precision --exp-name=<whatever you like>
 ```
 
-Mixed precision training on GTAV with high resolution DeeplabV2:
+Mixed precision training on GTAV:
 
 ```
-python main_semseg.py --epochs=15 --lr=0.0014 --batch-size=4 --dataset=gtav --model=deeplabv2-big --mixed-precision --exp-name=<whatever you like>
+python main_semseg.py --epochs=10 --lr=0.002 --batch-size=4 --dataset=gtav --model=deeplabv2 --mixed-precision --exp-name=<whatever you like>
 ```
 
-Mixed precision training on SYNTHIA with high resolution DeeplabV2:
+Mixed precision training on SYNTHIA:
 
 ```
-python main_semseg.py --epochs=30 --lr=0.0014 --batch-size=4 --dataset=gtav --model=deeplabv2-big --mixed-precision --exp-name=<whatever you like>
+python main_semseg.py --epochs=20 --lr=0.002 --batch-size=4 --dataset=synthia --model=deeplabv2 --mixed-precision --exp-name=<whatever you like>
 ```
 
 ## Testing:

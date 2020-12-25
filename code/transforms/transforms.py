@@ -59,7 +59,7 @@ class Resize(object):
 
     def __call__(self, image, target):
         image = F.resize(image, self.size_image, interpolation=Image.LINEAR)
-        target = target if (type(target) == str) else F.resize(target, self.size_label, interpolation=Image.NEAREST)
+        target = target if (isinstance(target, str)) else F.resize(target, self.size_label, interpolation=Image.NEAREST)
 
         return image, target
 
@@ -212,7 +212,7 @@ class RandomHorizontalFlip(object):
         t = random.random()
         if t < self.flip_prob:
             image = F.hflip(image)
-        target = target if (type(target) == str or t >= self.flip_prob) else F.hflip(target)
+        target = target if (isinstance(target, str) or t >= self.flip_prob) else F.hflip(target)
 
         return image, target
 
@@ -319,7 +319,7 @@ class MatchSize(object):
         return image, target
 
 
-# TODO: Support fill color 255 for tensor inputs
+# TODO: Support fill color 255 for tensor inputs (supported in torchvision nightly)
 # Now fill color is fixed to 0 (background for lane detection label)
 class RandomRotation(object):
     def __init__(self, degrees, expand=False, center=None, fill=None):

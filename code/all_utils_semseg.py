@@ -152,6 +152,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
                 transform_train = Compose(
                     [ToTensor(),
                      Resize(size_label=input_sizes[1], size_image=input_sizes[1]),
+                     RandomScale(min_scale=0.5, max_scale=1.5),
                      RandomCrop(size=input_sizes[0]),
                      RandomHorizontalFlip(flip_prob=0.5),
                      Normalize(mean=mean, std=std),
@@ -159,6 +160,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
             else:
                 transform_train = Compose(
                     [ToTensor(),
+                     RandomScale(min_scale=0.5, max_scale=1.5),
                      RandomCrop(size=input_sizes[0]),
                      RandomHorizontalFlip(flip_prob=0.5),
                      Normalize(mean=mean, std=std),

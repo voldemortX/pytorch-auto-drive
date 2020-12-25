@@ -51,7 +51,9 @@ And models from this repo is faster (also better or at least similar) than the o
 | DeeplabV3 | 257 x 513 | *yes* | Cityscapes | 67.87 | 4.8h |
 | DeeplabV2 | 257 x 513 | *no* | Cityscapes | 67.07 | 4h |
 | ERFNet| 512 x 1024 | *yes* | Cityscapes | 71.99 | 5h |
-| DeeplabV2 | 512 x 1024 | *yes* | Cityscapes | 71.17 | 9h |
+| DeeplabV2 | 512 x 1024 | *yes* | Cityscapes | 71.78 | 9h |
+| DeeplabV2 | 512 x 1024 | *yes* | GTAV | 32.90 | 13.8h |
+| DeeplabV2 | 512 x 1024 | *yes* | SYNTHIA | 33.89 (mIoU-16) | 10.4h |
 
 *\* All performance is measured with ImageNet pre-training and reported as 3 times average on validation set. Note that the best run from ERFNet on Cityscapes val is 72.47% in mIoU, slightly better than the original implementation by the authors (72.2%).*
 
