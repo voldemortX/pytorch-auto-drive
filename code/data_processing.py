@@ -29,7 +29,7 @@ categories_voc = ['Background',
 
 # For cityscapes (19 classes, ignore as black, no such thing as background)
 base_city = '../../../dataset/cityscapes'
-sizes_city = [(257, 513), (513, 1025), (513, 1025)]  # training resize min/training resize max/testing label size
+sizes_city = [(256, 512), (512, 1024), (512, 1024)]  # training resize min/training resize max/testing label size
 sizes_city_big = [(512, 1024), (512, 1024), (1024, 2048)]  # training resize min/training resize max/testing label size
 sizes_city_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
 weights_city_erfnet = [2.8149201869965, 6.9850029945374, 3.7890393733978, 9.9428062438965,

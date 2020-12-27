@@ -50,7 +50,7 @@ python main_semseg.py --epochs=30 --lr=0.002 --batch-size=8 --dataset=voc --mode
 Full precision training on Cityscapes with DeeplabV3:
 
 ```
-python main_semseg.py --epochs=60 --lr=0.002 --batch-size=8 --dataset=city --model=deeplabv3 --exp-name=<whatever you like>
+python main_semseg.py --epochs=60 --lr=0.004 --batch-size=8 --dataset=city --model=deeplabv3 --exp-name=<whatever you like>
 ```
 
 Mixed precision training on Cityscapes with ERFNet:

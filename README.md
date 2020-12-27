@@ -1,6 +1,6 @@
 # Codebase for deep autonomous driving perception tasks
 
-Segmentation models (**Deeplab, FCN, ERFNet**), Lane detection models (**ERFNet, ERFNet-SCNN and others**) based on Python 3.6 and PyTorch 1.6.0 (CUDA 10) & TorchVision 0.7.0 with mixed precision training.
+Segmentation models (**Deeplab, FCN, ERFNet**), Lane detection models (**ERFNet, ERFNet-SCNN and others**) based on Python 3.6 and PyTorch >=1.6.0 (CUDA 10) & TorchVision >=0.7.0 with mixed precision training.
 
 **This repository is under active development, which means performance reported could improve in the future.**
 
@@ -45,17 +45,17 @@ And models from this repo is faster (also better or at least similar) than the o
 | FCN | 321 x 321 | *yes* | PASCAL VOC 2012 | 70.72 | 3.3h |
 | FCN | 321 x 321 | *no* | PASCAL VOC 2012 | 70.90 | 6.3h |
 | DeeplabV2 | 321 x 321 | *yes* | PASCAL VOC 2012 | 74.59 | 3.3h |
-| DeeplabV3 | 321 x 321 | *yes* | PASCAL VOC 2012 | 78.11 | 6.9h |
-| FCN | 257 x 513 | *yes* | Cityscapes | 65.79 | 2.3h |
-| DeeplabV2 | 257 x 513 | *yes* | Cityscapes | 66.89 | 2.3h |
-| DeeplabV3 | 257 x 513 | *yes* | Cityscapes | 67.87 | 4.8h |
-| DeeplabV2 | 257 x 513 | *no* | Cityscapes | 67.07 | 4h |
+| DeeplabV3 | 321 x 321 | *yes* | PASCAL VOC 2012 | 78.11 | 7h |
+| FCN | 256 x 512 | *yes* | Cityscapes | 68.05 | 2.2h |
+| DeeplabV2 | 256 x 512 | *yes* | Cityscapes | 68.65 | 2.2h |
+| DeeplabV3 | 256 x 512 | *yes* | Cityscapes | 69.87 | 4.5h |
+| DeeplabV2 | 256 x 512 | *no* | Cityscapes | 68.45 | 4h |
 | ERFNet| 512 x 1024 | *yes* | Cityscapes | 71.99 | 5h |
 | DeeplabV2 | 512 x 1024 | *yes* | Cityscapes | 71.78 | 9h |
 | DeeplabV2 | 512 x 1024 | *yes* | GTAV | 32.90 | 13.8h |
 | DeeplabV2 | 512 x 1024 | *yes* | SYNTHIA | 33.89 (mIoU-16) | 10.4h |
 
-*\* All performance is measured with ImageNet pre-training and reported as 3 times average on validation set. Note that the best run from ERFNet on Cityscapes val is 72.47% in mIoU, slightly better than the original implementation by the authors (72.2%).*
+*\* All performance is measured with ImageNet pre-training and reported as 3 times average on val set. Note that the best run from ERFNet on Cityscapes val is 72.47% in mIoU, slightly better than the original implementation by the authors (72.2%).*
 
 ## Lane detection performance:
 
@@ -100,7 +100,7 @@ Get started with [LANEDETECTION.md](LANEDETECTION.md) for lane detection.
 
 ## Notes:
 
-1. Cityscapes dataset is down-sampled by 2 when training at 257 x 513, to specify different sizes, modify them in code/data_processing.py; similar changes can be done with other experiments.
+1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in code/data_processing.py; similar changes can be done with other experiments.
 
 2. Training times are measured on **a single RTX 2080Ti**, including online validation time for segmentation, test time for lane detection.
 
