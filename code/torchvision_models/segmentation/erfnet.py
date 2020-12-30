@@ -2,6 +2,7 @@
 # cardwing/Codes-for-Lane-Detection and
 # jcdubron/scnn_pytorch
 
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -170,6 +171,15 @@ class SpatialConv(nn.Module):
         self.conv_u = nn.Conv2d(128, 128, (1, 9), padding=(0, 4))
         self.conv_r = nn.Conv2d(128, 128, (9, 1), padding=(4, 0))
         self.conv_l = nn.Conv2d(128, 128, (9, 1), padding=(4, 0))
+        self._adjust_initializations()
+
+    def _adjust_initializations(self) -> None:
+        # https://github.com/XingangPan/SCNN/issues/82
+        bound = math.sqrt(2.0 / (128 * 9 * 5))
+        nn.init.uniform_(self.conv_d.weight, -bound, bound)
+        nn.init.uniform_(self.conv_u.weight, -bound, bound)
+        nn.init.uniform_(self.conv_r.weight, -bound, bound)
+        nn.init.uniform_(self.conv_l.weight, -bound, bound)
 
     def forward(self, input):
         output = input

@@ -69,6 +69,15 @@ if __name__ == '__main__':
     print(device)
     net.to(device)
 
+    # if args.model == 'scnn':
+    #     # Gradient too large after spatial conv
+    #     optimizer = torch.optim.SGD([
+    #         {'params': net.encoder.parameters(), 'lr': 0.1 * args.lr},
+    #         {'params': net.spatial_conv.parameters()},
+    #         {'params': net.decoder.parameters()},
+    #         {'params': net.aux_head.parameters()},
+    #     ], lr=args.lr, momentum=0.9, weight_decay=1e-4)
+    # else:
     optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
     # optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999),  eps=1e-08, weight_decay=1e-4)
 
