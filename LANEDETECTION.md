@@ -39,6 +39,12 @@ Mixed precision training on CULane with ERFNet:
 python main_landec.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --model=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
+Mixed precision training on CULane with ERFNet-SCNN:
+
+```
+python main_landec.py --epochs=12 --lr=0.08 --batch-size=20 --dataset=culane --model=scnn --mixed-precision --exp-name=<whatever you like>
+```
+
 ## Testing:
 
 Training contains online fast validations by using --val-num-steps=\<some number > 0\> and the best model is saved, but we find that the best checkpoint is usually the last, so probably no need for validations. For log details you can checkout tensorboard.

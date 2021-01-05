@@ -62,7 +62,7 @@ And models from this repo is faster (also better or at least similar) than the o
 | model | resolution | mixed precision? | Dataset | F measure | Training time |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | ERFNet | 288 x 800 | *yes* | CULane | 0.7346 | 6h |
-| SCNN | 288 x 800 | *yes* | CULane |  |  |
+| SCNN | 288 x 800 | *yes* | CULane | 0.7392 | 11.3h |
 | ERFNet | 360 x 640 | *yes* | TuSimple |  |  |
 | SCNN | 360 x 640 | *yes* | TuSimple |  |  |
 
