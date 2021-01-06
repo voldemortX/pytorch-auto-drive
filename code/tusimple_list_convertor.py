@@ -14,7 +14,7 @@ for i in range(len(old_file_names)):
     with open(file_name, 'r') as f:
         temp = f.readlines()
     for x in range(len(temp)):
-        if 'test.txt' or 'val.txt' in new_file_names[i]:
+        if new_file_names[i] == 'test.txt' or new_file_names[i] == 'val.txt':
             temp[x] = temp[x][temp[x].find('clips/') + 6: temp[x].find('.jpg')] + '\n'
         else:
             temp[x] = temp[x][temp[x].find('clips/') + 6: temp[x].find('.jpg')] + temp[x][temp[x].find('.png') + 4:]

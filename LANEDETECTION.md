@@ -102,16 +102,24 @@ mkdir output
 
 *Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh](code/autotest_tusimple.sh).*
 
-1. Predict and save lanes.
+2. Predict and save lanes.
    
 ```
 python main_landec.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size, recommend 80> --mixed-precision
 ```
 
-3. Evaluate with official scripts.
+Use `--state=3` to predict lanes for the validation set.
+
+3. Evaluate on the test set with official scripts.
 
 ```
-./autotest_tusimple.sh <your experiment name>
+./autotest_tusimple.sh <your experiment name> test
+```
+
+Or evaluate on the validation set:
+
+```
+./autotest_tusimple.sh <your experiment name> val
 ```
 
 You can then check the test/validation performance at `log.txt`, and detailed performance at `code/tools/tusimple_evaluation/output` .
