@@ -17,7 +17,7 @@ The TuSimple dataset can be downloaded at their [github repo](https://github.com
 For CULane:
 
 ```
-cp -r <your culane base dir>/list <your culane base dir>/lists
+cp -r <your culane base dir>/list/* <your culane base dir>/lists/
 python culane_list_convertor.py
 ```
 
@@ -63,6 +63,8 @@ python main_landec.py --state=1 --continue-from=<trained model .pt filename> --d
 cd tools/culane_evaluation
 make
 mkdir output
+chmod 777 *.sh
+cd -
 ```
 
 *Then change `data_dir` to your CULane base directory in [eval.sh](code/tools/culane_evaluation/eval.sh).*
@@ -73,10 +75,18 @@ mkdir output
 python main_landec.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size, recommend 80> --mixed-precision
 ```
 
-3. Evaluate with official scripts.
+Use `--state=3` to predict lanes for the validation set.
+
+3. Evaluate on the test set with official scripts.
 
 ```
-./autotest_culane.sh <your experiment name>
+./autotest_culane.sh <your experiment name> test
+```
+
+Or evaluate on the validation set:
+
+```
+./autotest_culane.sh <your experiment name> val
 ```
 
 You can then check the test/validation performance at `log.txt`, and per-class performance at `code/tools/culane_evaluation/output` .
