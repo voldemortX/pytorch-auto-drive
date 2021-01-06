@@ -63,6 +63,7 @@ python main_landec.py --state=1 --continue-from=<trained model .pt filename> --d
 cd tools/culane_evaluation
 make
 mkdir output
+chmod 777 *.sh
 ```
 
 *Then change `data_dir` to your CULane base directory in [eval.sh](code/tools/culane_evaluation/eval.sh).*
