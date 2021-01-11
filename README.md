@@ -35,7 +35,7 @@ And models from this repo is faster (also better or at least similar) than the o
 | lane detection | ERFNet | SCNN |
 | lane detection | ERFNet | SAD (*In progress*) |
 | lane detection | ERFNet | PRNet (*In progress*) |
-| lane detection | ERFNet | LDTR (*In progress*) |
+| lane detection | ERFNet | LSTR (*In progress*) |
 
 *You can of course also use other backbones (e.g. ResNet-50) in TorchVision by simply calling a different function in the most recent TorchVision implementation*
 
