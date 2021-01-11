@@ -24,7 +24,7 @@ _parse_fill = F_pil._parse_fill
 
 
 def _get_image_size(img: Tensor) -> List[int]:
-    """Returns image sizea as (w, h)
+    """Returns image size as (w, h)
     """
     if isinstance(img, torch.Tensor):
         return F_t._get_image_size(img)

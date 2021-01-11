@@ -8,6 +8,7 @@ from collections.abc import Sequence
 import numbers
 import random
 import torch
+import math
 from . import functional as F
 
 
@@ -57,9 +58,23 @@ class Resize(object):
         self.size_image = size_image
         self.size_label = size_label
 
+    @staticmethod
+    def transform_points(points, in_size, out_size):
+        # Resize a np.array (N x 2) of points (x, y), original axis start from top-left corner
+        in_h, in_w = in_size
+        out_h, out_w = out_size
+        scale = np.array([out_h / in_h, out_w / in_w])
+        return points * scale
+
     def __call__(self, image, target):
         image = F.resize(image, self.size_image, interpolation=Image.LINEAR)
-        target = target if (isinstance(target, str)) else F.resize(target, self.size_label, interpolation=Image.NEAREST)
+        if isinstance(target, str):
+            return target
+        elif isinstance(target, np.ndarray):
+            in_size = F._get_image_size(image)
+            target = self.transform_points(target, in_size, self.size_label)
+        else:
+            target = F.resize(target, self.size_label, interpolation=Image.NEAREST)
 
         return image, target
 
@@ -150,7 +165,13 @@ class RandomResize(object):
         h = random.randint(min_h, max_h)
         w = random.randint(min_w, max_w)
         image = F.resize(image, [h, w], interpolation=Image.LINEAR)
-        target = F.resize(target, [h, w], interpolation=Image.NEAREST)
+        if isinstance(target, str):
+            return target
+        elif isinstance(target, np.ndarray):
+            in_size = F._get_image_size(image)
+            target = Resize.transform_points(target, in_size, (h, w))
+        else:
+            target = F.resize(target, [h, w], interpolation=Image.NEAREST)
 
         return image, target
 
@@ -337,9 +358,21 @@ class RandomRotation(object):
 
         return random.uniform(degrees[0], degrees[1])
 
+    @staticmethod
+    def transform_points(points, angle, h, w):
+        # Rotate a np.array (N x 2) of points (x, y) anti-clockwise, original axis start from top-left corner
+        offset = np.array([h / 2, w / 2])
+        matrix = np.array([[math.cos(angle / 360.0 * math.pi), math.sin(angle / 360.0 * math.pi)],
+                           [math.sin(-angle / 360.0 * math.pi), math.cos(angle / 360.0 * math.pi)]])
+        return np.matmul((points - offset), matrix) + offset
+
     def __call__(self, image, target):
         angle = self.get_params(self.degrees)
         image = F.rotate(image, angle, resample=Image.LINEAR, expand=self.expand, center=self.center, fill=0)
-        target = F.rotate(target, angle, resample=Image.NEAREST, expand=self.expand, center=self.center, fill=255)
+        if isinstance(target, np.ndarray):
+            h, w = F._get_image_size(image)
+            self.transform_points(target, angle, h, w)
+        else:
+            target = F.rotate(target, angle, resample=Image.NEAREST, expand=self.expand, center=self.center, fill=255)
 
         return image, target
