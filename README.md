@@ -64,8 +64,8 @@ And models from this repo is faster (also better or at least similar) than the o
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | ERFNet | 288 x 800 | *yes* | CULane | 0.7346 | 0.7359 | 6h |
 | SCNN | 288 x 800 | *yes* | CULane | 0.7392 | 0.7405 | 11.3h |
-| ERFNet | 360 x 640 | *yes* | TuSimple |  |  |
-| SCNN | 360 x 640 | *yes* | TuSimple |  |  |
+| ERFNet | 360 x 640 | *yes* | TuSimple | 0.9468 | 0.9483 | 0.2h |
+| SCNN | 360 x 640 | *yes* | TuSimple | 0.9520 | 0.9526 | 0.4h |
 
 
 *\* All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*

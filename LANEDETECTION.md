@@ -39,10 +39,22 @@ Mixed precision training on CULane with ERFNet:
 python main_landec.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --model=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
+Mixed precision training on TuSimple with ERFNet:
+
+```
+python main_landec.py --epochs=12 --lr=0.7 --batch-size=20 --dataset=tusimple --model=erfnet --mixed-precision --exp-name=<whatever you like>
+```
+
 Mixed precision training on CULane with ERFNet-SCNN:
 
 ```
 python main_landec.py --epochs=12 --lr=0.08 --batch-size=20 --dataset=culane --model=scnn --mixed-precision --exp-name=<whatever you like>
+```
+
+Mixed precision training on TuSimple with ERFNet-SCNN:
+
+```
+python main_landec.py --epochs=12 --lr=0.3 --batch-size=20 --dataset=tusimple --model=scnn --mixed-precision --exp-name=<whatever you like>
 ```
 
 ## Testing:

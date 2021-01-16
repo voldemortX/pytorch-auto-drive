@@ -17,7 +17,7 @@ from all_utils_semseg import save_checkpoint, ConfusionMatrix
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for TuSimple (With only ImageNet pretraining)
     return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=4,
-                         dropout_1=0.1, dropout_2=0.1, flattened_size=4400, scnn=scnn)
+                         dropout_1=0.3, dropout_2=0.3, flattened_size=4400, scnn=scnn)
 
 
 def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
@@ -42,7 +42,7 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
          Normalize(mean=mean, std=std)])
     transforms_train = Compose(
         [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-         RandomRotation(degrees=1),
+         RandomRotation(degrees=3),
          ToTensor(),
          Normalize(mean=mean, std=std)])
 
