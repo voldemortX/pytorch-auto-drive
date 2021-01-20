@@ -3,7 +3,7 @@ import numpy as np
 import imageio
 from PIL import Image
 from tqdm import tqdm
-from data_processing import base_synthia
+from .base_dirs import base_synthia
 
 
 for image_set in ['train', 'val']:

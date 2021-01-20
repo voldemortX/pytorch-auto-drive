@@ -2,14 +2,13 @@ import os
 import cv2
 import torch
 import time
-import matplotlib.pyplot as plt
-from math import floor
 import ujson as json
 import numpy as np
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet
-from data_processing import StandardLaneDetectionDataset, base_tusimple, base_culane
+from utils.datasets import StandardLaneDetectionDataset
+from tools.base_dirs import base_tusimple, base_culane
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from all_utils_semseg import save_checkpoint, ConfusionMatrix
 
@@ -116,9 +115,9 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
 
             # Record losses
             if current_step_num % loss_num_steps == (loss_num_steps - 1):
-                print('[%d, %d] loss: %.4f' % (epoch + 1, i + 1, running_loss / 100))
+                print('[%d, %d] loss: %.4f' % (epoch + 1, i + 1, running_loss / loss_num_steps))
                 writer.add_scalar('training loss',
-                                  running_loss / 100,
+                                  running_loss / loss_num_steps,
                                   current_step_num)
                 running_loss = 0.0
 
@@ -230,7 +229,7 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                     raise ValueError
 
     if dataset == 'tusimple':
-        with open('./output/tusimple_pred.json', 'w') as f:
+        with open('../output/tusimple_pred.json', 'w') as f:
             for lane in all_lanes:
                 print(lane, end="\n", file=f)
 

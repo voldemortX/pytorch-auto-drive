@@ -1,5 +1,5 @@
 import os
-from data_processing import base_gtav as base
+from .base_dirs import base_gtav as base
 
 
 # Pad with 0

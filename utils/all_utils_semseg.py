@@ -4,11 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
-
+from tools.base_dirs import base_city, base_voc, base_gtav, base_synthia
 from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet
-from data_processing import StandardSegmentationDataset, base_city, base_voc, base_gtav, base_synthia, \
-                            label_id_map_city, label_id_map_synthia, iou_13, iou_16
-from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomResize, RandomCrop, RandomTranslation,\
+from utils.datasets import StandardSegmentationDataset, label_id_map_city, label_id_map_synthia, iou_13, iou_16
+from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomCrop, RandomTranslation,\
                        ZeroPad, LabelMap, RandomScale, Compose
 
 
@@ -276,9 +275,9 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
 
             # Record losses
             if current_step_num % loss_num_steps == (loss_num_steps - 1):
-                print('[%d, %d] loss: %.4f' % (epoch + 1, i + 1, running_loss / 100))
+                print('[%d, %d] loss: %.4f' % (epoch + 1, i + 1, running_loss / loss_num_steps))
                 writer.add_scalar('training loss',
-                                  running_loss / 100,
+                                  running_loss / loss_num_steps,
                                   current_step_num)
                 running_loss = 0.0
 

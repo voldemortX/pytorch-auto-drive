@@ -364,7 +364,10 @@ class RandomRotation(object):
         offset = np.array([h / 2, w / 2])
         matrix = np.array([[math.cos(angle / 360.0 * math.pi), math.sin(angle / 360.0 * math.pi)],
                            [math.sin(-angle / 360.0 * math.pi), math.cos(angle / 360.0 * math.pi)]])
-        return np.matmul((points - offset), matrix) + offset
+        points = np.matmul((points - offset), matrix) + offset
+        indices = (points[:, 0] < h) + (points[:, 1] < w) + (points > 0).sum(axis=1, dtype=np.bool)
+
+        return points[indices]
 
     def __call__(self, image, target):
         angle = self.get_params(self.degrees)

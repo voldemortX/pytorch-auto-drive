@@ -2,11 +2,12 @@ import time
 import torch
 import argparse
 from torch.utils.tensorboard import SummaryWriter
-from losses import LaneLoss, SADLoss
-from data_processing import mean, std, sizes_tusimple, sizes_culane, num_classes_tusimple, num_classes_culane, \
+from utils.losses import LaneLoss, SADLoss
+from utils.datasets import mean, std, sizes_tusimple, sizes_culane, num_classes_tusimple, num_classes_culane, \
                             weights_tusimple, weights_culane, gap_tusimple, gap_culane, ppl_culane, ppl_tusimple
-from all_utils_semseg import load_checkpoint
-from all_utils_landec import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane, fast_evaluate
+from utils.all_utils_semseg import load_checkpoint
+from utils.all_utils_landec_as_seg import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane, \
+    fast_evaluate
 
 
 if __name__ == '__main__':

@@ -3,7 +3,8 @@
 # /driver_23_30frame/05151649_0422.MP4/00000 1 1 1 1
 
 import os
-from data_processing import base_culane
+from .base_dirs import base_culane
+
 root = os.path.join(base_culane, 'lists')
 old_file_names = ['train_gt.txt', 'val_gt.txt', 'val.txt', 'test.txt']
 new_file_names = ['train.txt', 'valfast.txt', 'val.txt', 'test.txt']

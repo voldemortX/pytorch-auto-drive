@@ -1,5 +1,5 @@
 #!/bin/bash
-data_dir=../../../../../dataset/tusimple/
+data_dir=../../../../dataset/tusimple/
 echo experiment name: $1
 echo status: $2
 

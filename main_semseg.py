@@ -2,14 +2,12 @@ import os
 import time
 import torch
 import argparse
-import random
 import math
-import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from data_processing import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, sizes_gtav, \
+from utils.datasets import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, sizes_gtav, \
                             num_classes_voc, num_classes_city, categories_voc, categories_city, weights_city_erfnet, \
                             sizes_city_big, sizes_synthia
-from all_utils_semseg import visualize, init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set,\
+from utils.all_utils_semseg import init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set,\
                              load_checkpoint
 
 # All hail Clearlove, 7th of his name!
