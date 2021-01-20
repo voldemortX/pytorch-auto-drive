@@ -34,25 +34,25 @@ python tools/tusimple_list_convertor.py
 Mixed precision training on CULane with ERFNet:
 
 ```
-python main_landec.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --model=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --model=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on TuSimple with ERFNet:
 
 ```
-python main_landec.py --epochs=12 --lr=0.7 --batch-size=20 --dataset=tusimple --model=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.7 --batch-size=20 --dataset=tusimple --model=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on CULane with ERFNet-SCNN:
 
 ```
-python main_landec.py --epochs=12 --lr=0.08 --batch-size=20 --dataset=culane --model=scnn --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.08 --batch-size=20 --dataset=culane --model=scnn --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on TuSimple with ERFNet-SCNN:
 
 ```
-python main_landec.py --epochs=12 --lr=0.3 --batch-size=20 --dataset=tusimple --model=scnn --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.3 --batch-size=20 --dataset=tusimple --model=scnn --mixed-precision --exp-name=<whatever you like>
 ```
 
 ## Testing:
@@ -62,7 +62,7 @@ Training contains online fast validations by using --val-num-steps=\<some number
 To validate a trained model on mean IoU, you can use either mixed-precision or fp32 for any model trained with/without mixed-precision:
 
 ```
-python main_landec.py --state=1 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size> --exp-name=<whatever you like> --mixed-precision
+python main_landec_as_seg.py --state=1 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size> --exp-name=<whatever you like> --mixed-precision
 ```
 
 ### Test a trained model with CULane:
@@ -82,7 +82,7 @@ Then change `data_dir` to your CULane base directory in [eval.sh](tools/culane_e
 2. Predict and save lanes.
    
 ```
-python main_landec.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size, recommend 80> --mixed-precision
+python main_landec_as_seg.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size, recommend 80> --mixed-precision
 ```
 
 Use `--state=3` to predict lanes for the validation set.
@@ -115,7 +115,7 @@ Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh]
 2. Predict and save lanes.
    
 ```
-python main_landec.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size, recommend 80> --mixed-precision
+python main_landec_as_seg.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size, recommend 80> --mixed-precision
 ```
 
 Use `--state=3` to predict lanes for the validation set.
