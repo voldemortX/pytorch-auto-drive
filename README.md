@@ -41,7 +41,7 @@ And models from this repo is faster (also better or at least similar) than the o
 
 ## Semantic segmentation performance:
 
-| model | resolution | mixed precision? | Dataset | mIoU (%) | Training time |
+| model | resolution | mixed precision? | dataset | mIoU (%) | training time |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | FCN | 321 x 321 | *yes* | PASCAL VOC 2012 | 70.72 | 3.3h |
 | FCN | 321 x 321 | *no* | PASCAL VOC 2012 | 70.90 | 6.3h |
@@ -60,15 +60,36 @@ And models from this repo is faster (also better or at least similar) than the o
 
 ## Lane detection performance:
 
-| model | resolution | mixed precision? | Dataset | F measure (avg) | F measure (best) | Training time |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| ERFNet | 288 x 800 | *yes* | CULane | 0.7337 | 0.7354 | 6h |
-| SCNN | 288 x 800 | *yes* | CULane | 0.7441 | 0.7444 | 11.3h |
-| ERFNet | 360 x 640 | *yes* | TuSimple | 0.9468 | 0.9483 | 0.2h |
-| SCNN | 360 x 640 | *yes* | TuSimple | 0.9520 | 0.9526 | 0.4h |
-
+| model | resolution | mixed precision? | dataset | metric | average | best | training time |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.37 | 73.54 | 6h |
+| SCNN | 288 x 800 | *yes* | CULane | F measure | 74.41 | 74.44 | 11.3h |
+| ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 94.68% | 94.83% | 0.2h |
+| SCNN | 360 x 640 | *yes* | TuSimple | Accuracy | 95.20% | 95.26% | 0.4h |
 
 *\* All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
+
+### Tusimple detailed performance (best):
+
+| model | accuracy | FP | FN |
+| :---: | :---: | :---: | :---: |
+| ERFNet | 94.83% | 0.0498 | 0.0619 |
+| SCNN | 95.26% | 0.0360 | 0.0522 |
+
+### CULane detailed performance (best):
+
+| category | ERFNet | SCNN |
+| :---: | :---: | :---: |
+| normal | 91.35 | 91.84 |
+| crowded | 71.45 | 72.55 |
+| night | 68.77 | 69.42 |
+| no line | 46.05 | 47.99 |
+| shadow | 69.21 | 75.59 |
+| arrow | 87.19 | 87.32 |
+| dazzle light | 62.34 | 63.93 |
+| curve | 67.27 | 69.81 |
+| crossroad | 1837 | 2160 |
+| total | 73.54 | 74.44 |
 
 ## Preparations:
 

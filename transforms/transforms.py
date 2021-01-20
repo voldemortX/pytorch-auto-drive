@@ -69,7 +69,7 @@ class Resize(object):
     def __call__(self, image, target):
         image = F.resize(image, self.size_image, interpolation=Image.LINEAR)
         if isinstance(target, str):
-            return target
+            return image, target
         elif isinstance(target, np.ndarray):
             in_size = F._get_image_size(image)
             target = self.transform_points(target, in_size, self.size_label)
@@ -166,7 +166,7 @@ class RandomResize(object):
         w = random.randint(min_w, max_w)
         image = F.resize(image, [h, w], interpolation=Image.LINEAR)
         if isinstance(target, str):
-            return target
+            return image, target
         elif isinstance(target, np.ndarray):
             in_size = F._get_image_size(image)
             target = Resize.transform_points(target, in_size, (h, w))
@@ -374,7 +374,7 @@ class RandomRotation(object):
         image = F.rotate(image, angle, resample=Image.LINEAR, expand=self.expand, center=self.center, fill=0)
         if isinstance(target, np.ndarray):
             h, w = F._get_image_size(image)
-            self.transform_points(target, angle, h, w)
+            target = self.transform_points(target, angle, h, w)
         else:
             target = F.rotate(target, angle, resample=Image.NEAREST, expand=self.expand, center=self.center, fill=255)
 

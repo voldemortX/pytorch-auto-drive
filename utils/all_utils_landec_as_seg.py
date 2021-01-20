@@ -229,7 +229,7 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                     raise ValueError
 
     if dataset == 'tusimple':
-        with open('../output/tusimple_pred.json', 'w') as f:
+        with open('./output/tusimple_pred.json', 'w') as f:
             for lane in all_lanes:
                 print(lane, end="\n", file=f)
 
