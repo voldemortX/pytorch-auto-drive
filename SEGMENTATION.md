@@ -6,11 +6,9 @@ The PASCAL VOC 2012 dataset we use is the commonly used 10582 training set versi
 
 Other datasets can only be downloaded in their official websites.
 
-**Now we assume you are in the code folder.**
-
 ## Training:
 
-1. Change the base directories in [code/data_processing.py](code/data_processing.py) to your datasets' locations, variables named `base_*`.
+1. Change the base directories in [tools/base_dirs.py](tools/base_dirs.py) to your datasets' locations.
 
 2. Pre-processing:
 
@@ -21,25 +19,25 @@ For PASCAL VOC:
 For Cityscapes:
 
 ```
-python cityscapes_data_list.py
+python tools/cityscapes_data_list.py
 ```
 
 For GTAV:
 
 ```
-python gtav_data_list.py
+python tools/gtav_data_list.py
 ```
 
 For SYNTHIA:
 
 ```
-python synthia_label_convertor.py
-python synthia_data_list.py
+python tools/synthia_label_convertor.py
+python tools/synthia_data_list.py
 ```
 
-3. If you are using ERFNet, download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models), and put it in `code/`.
+1. If you are using ERFNet, download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models).
 
-4. Here are some examples for segmentation:
+2. Here are some examples for segmentation:
 
 Mixed precision training on PASCAL VOC 2012 with DeeplabV2:
 

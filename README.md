@@ -72,19 +72,20 @@ And models from this repo is faster (also better or at least similar) than the o
 
 ## Preparations:
 
-1. Setup a Python3 environment (CUDA 10), with PyTorch >= 1.6, TorchVision >= 0.7.0, tqdm, tensorboard, numpy.
+1. Setup a Python3 environment (CUDA 10), with PyTorch >= 1.6, TorchVision >= 0.7.0, tqdm, tensorboard, numpy, imageio, opencv-python.
 
 2. Download the code:
    
 ```
 git clone https://github.com/voldemortX/pytorch-auto-drive.git
-cd code
+cd pytorch-auto-drive
 ```
 
 3. Prepare the code:
 
 ```
 chmod 777 *.sh
+mkdir output
 ```
 
 ## Enable tensorboard (optional):
@@ -101,7 +102,7 @@ Get started with [LANEDETECTION.md](LANEDETECTION.md) for lane detection.
 
 ## Notes:
 
-1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in code/data_processing.py; similar changes can be done with other experiments.
+1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in `utils/datasets/__init__.py`; similar changes can be done with other experiments.
 
 2. Training times are measured on **a single RTX 2080Ti**, including online validation time for segmentation, test time for lane detection.
 
