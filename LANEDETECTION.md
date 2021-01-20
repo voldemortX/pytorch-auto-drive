@@ -77,7 +77,7 @@ chmod 777 *.sh
 cd -
 ```
 
-*Then change `data_dir` to your CULane base directory in [eval.sh](tools/culane_evaluation/eval.sh).*
+Then change `data_dir` to your CULane base directory in [eval.sh](tools/culane_evaluation/eval.sh) and [eval_validation.sh](tools/culane_evaluation/eval_validation.sh). *Mind that you need extra ../../ if relative path is used.*
 
 2. Predict and save lanes.
    
@@ -110,7 +110,7 @@ cd tools/tusimple_evaluation
 mkdir output
 ```
 
-*Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh](autotest_tusimple.sh).*
+Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh](autotest_tusimple.sh). *Mind that you need extra ../../ if relative path is used.*
 
 2. Predict and save lanes.
    
