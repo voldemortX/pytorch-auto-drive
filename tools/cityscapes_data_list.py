@@ -1,5 +1,5 @@
 import os
-from .base_dirs import base_city as base
+from base_dirs import base_city as base
 
 
 def traverse(images_dir, data_list):

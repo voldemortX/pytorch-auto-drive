@@ -2,7 +2,7 @@
 # /clips/0313-1/6040/20.jpg /segGT/0313-1/6040/20.png 1 1 1 1 =>
 # 0313-1/6040/20 1 1 1 1
 import os
-from .base_dirs import base_tusimple
+from base_dirs import base_tusimple
 
 root = os.path.join(base_tusimple, 'lists')
 # old_file_names = ['list6_train.txt', 'list6_val.txt', 'list6.txt', 'list_test.txt']

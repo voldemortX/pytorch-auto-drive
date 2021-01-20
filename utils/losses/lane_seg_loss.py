@@ -1,4 +1,3 @@
-# Implemented upon pytorch 1.6.0
 import torch
 from torch import Tensor
 from typing import Optional

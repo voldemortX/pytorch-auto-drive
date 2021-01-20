@@ -10,7 +10,7 @@ from torchvision_models.segmentation import erfnet_resnet
 from utils.datasets import StandardLaneDetectionDataset
 from tools.base_dirs import base_tusimple, base_culane
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
-from all_utils_semseg import save_checkpoint, ConfusionMatrix
+from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
 
 
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
