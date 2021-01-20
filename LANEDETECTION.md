@@ -34,13 +34,13 @@ python tools/tusimple_list_convertor.py
 Mixed precision training on CULane with ERFNet:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --model=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --model=baseline --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on TuSimple with ERFNet:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.7 --batch-size=20 --dataset=tusimple --model=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.7 --batch-size=20 --dataset=tusimple --model=baseline --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on CULane with ERFNet-SCNN:
