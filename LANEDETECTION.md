@@ -73,7 +73,7 @@ python main_landec_as_seg.py --state=1 --continue-from=<trained model .pt filena
 cd tools/culane_evaluation
 make
 mkdir output
-chmod 777 *.sh
+chmod eval*.sh
 cd -
 ```
 
