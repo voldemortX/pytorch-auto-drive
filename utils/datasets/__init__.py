@@ -1,14 +1,13 @@
 from .segmentation import *
 from .lane_as_segmentation import *
-from .tusimple import *
-from .culane import *
+# from .tusimple import *
+# from .culane import *
 
 mean = [0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
 
 # Here 'training resize min' is also the final training crop size as RandomResize & RandomCrop are used together
 # For PASCAL VOC 2012
-base_voc = '../data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
 sizes_voc = [(321, 321), (505, 505), (505, 505)]  # training resize min/training resize max/testing label size
 num_classes_voc = 21
 colors_voc = [[0, 0, 0],
@@ -26,7 +25,6 @@ categories_voc = ['Background',
                   'Sheep', 'Sofa', 'Train', 'Tvmonitor']
 
 # For cityscapes (19 classes, ignore as black, no such thing as background)
-base_city = '../../../dataset/cityscapes'
 sizes_city = [(256, 512), (512, 1024), (512, 1024)]  # training resize min/training resize max/testing label size
 sizes_city_big = [(512, 1024), (512, 1024), (1024, 2048)]  # training resize min/training resize max/testing label size
 sizes_city_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
@@ -60,12 +58,10 @@ train_cities = ['aachen', 'bremen', 'darmstadt', 'erfurt', 'hanover',
                 'stuttgart', 'ulm', 'zurich']
 
 # For GTAV (19 classes, ignore as black, no such thing as background)
-base_gtav = '../../../dataset/gtav'
 sizes_gtav = [(512, 1024), (1054, 1912), (1024, 2048)]  # training crop size/max size/testing label size
 sizes_gtav_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
 
 # For SYNTHIA (23 classes, ignore as black, no such thing as background, mapped to Cityscapes)
-base_synthia = '../../../dataset/syn/SYNTHIA_RAND_CITYSCPAES'
 sizes_synthia = [(512, 1024), (760, 1280), (1024, 2048)]  # training resize min/training resize max/testing label size
 sizes_synthia_erfnet = [(512, 1024), (64, 128), (512, 1024)]  # input/encoder output/testing label size
 label_id_map_synthia = [255, 10,  2,   0, 1,   4,
@@ -76,18 +72,17 @@ iou_16 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18]
 iou_13 = [0, 1, 2, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18]
 
 # For TuSimple
-base_tusimple = '../../../dataset/tusimple'
 sizes_tusimple = [(360, 640), (720, 1280)]  # training size/actual size
-num_classes_tusimple = 5
-weights_tusimple = [0.4, 1, 1, 1, 1]
+num_classes_tusimple = 7
+weights_tusimple = [0.4, 1, 1, 1, 1, 1, 1]
 gap_tusimple = 10  # Y pixel gap per sampling point
 ppl_tusimple = 56  # Points per lane
-
+threshold_tusimple = 0.2
 
 # For CULane
-base_culane = '../../../dataset/culane'
 sizes_culane = [(288, 800), (590, 1640)]  # training size/actual size
 num_classes_culane = 5
 weights_culane = [0.4, 1, 1, 1, 1]
 gap_culane = 20  # Y pixel gap per sampling point
 ppl_culane = 18  # Points per lane
+threshold_culane = 0.3

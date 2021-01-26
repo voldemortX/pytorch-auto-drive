@@ -16,7 +16,7 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             self.test = 0
         if data_set == 'tusimple':
             self.image_dir = os.path.join(root, 'clips')
-            self.mask_dir = os.path.join(root, 'segGT')
+            self.mask_dir = os.path.join(root, 'segGT6')
             self.output_prefix = 'clips'
             self.output_suffix = '.jpg'
         elif data_set == 'culane':

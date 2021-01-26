@@ -4,7 +4,8 @@ import argparse
 from torch.utils.tensorboard import SummaryWriter
 from utils.losses import LaneLoss, SADLoss
 from utils.datasets import mean, std, sizes_tusimple, sizes_culane, num_classes_tusimple, num_classes_culane, \
-                            weights_tusimple, weights_culane, gap_tusimple, gap_culane, ppl_culane, ppl_tusimple
+    weights_tusimple, weights_culane, gap_tusimple, gap_culane, ppl_culane, ppl_tusimple, threshold_culane, \
+    threshold_tusimple
 from utils.all_utils_semseg import load_checkpoint
 from utils.all_utils_landec_as_seg import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane, \
     fast_evaluate
@@ -60,11 +61,13 @@ if __name__ == '__main__':
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
         gap = gap_tusimple
         ppl = ppl_tusimple
+        thresh = threshold_tusimple
     elif args.dataset == 'culane':
         weights = torch.tensor(weights_culane).to(device)
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
         gap = gap_culane
         ppl = ppl_culane
+        thresh = threshold_culane
     else:
         raise ValueError
     print(device)
@@ -96,7 +99,7 @@ if __name__ == '__main__':
 
         else:  # Test with official scripts later (so just predict lanes here)
             test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision,
-                         input_sizes=input_sizes, gap=gap, ppl=ppl, dataset=args.dataset)
+                         input_sizes=input_sizes, gap=gap, ppl=ppl, thresh=thresh, dataset=args.dataset)
     else:
         if args.model == 'scnn' or args.model == 'baseline':
             criterion = LaneLoss(weight=weights, ignore_index=255)
