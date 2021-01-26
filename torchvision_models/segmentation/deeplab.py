@@ -9,7 +9,7 @@ __all__ = ["DeepLab"]
 
 
 class DeepLab(_SimpleSegmentationModel):
-    # Should be able to support all deeplab models(>= v2) without CRF
+    # Should be able to support all deeplab models (>= v2) without CRF
     pass
 
 
@@ -35,7 +35,7 @@ class DeepLabV2Head(nn.Sequential):
 class ReconHead(nn.Sequential):
     def __init__(self, in_channels):
         super(ReconHead, self).__init__(
-            # Down, Hold, Up(similar to U-Net)
+            # Down, Hold, Up (similar to U-Net)
             # 41 -> 81
             nn.Conv2d(in_channels, int(in_channels / 2), 1, bias=False),
             nn.BatchNorm2d(int(in_channels / 2)),
@@ -69,7 +69,7 @@ class ReconHead(nn.Sequential):
             nn.BatchNorm2d(int(in_channels / 8)),
             nn.ReLU(),
 
-            # channels -> 3(is this good enough?)
+            # channels -> 3 (is this good enough?)
             nn.Conv2d(int(in_channels / 8), 3, 1, bias=False)
 
             # nn.Conv2d(int(in_channels / 4), 3, 1, bias=False)

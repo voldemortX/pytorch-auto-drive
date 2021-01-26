@@ -15,13 +15,13 @@ from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
 
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for TuSimple (With only ImageNet pretraining)
-    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=4,
+    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
                          dropout_1=0.3, dropout_2=0.3, flattened_size=4400, scnn=scnn)
 
 
 def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for CULane (With only ImageNet pretraining)
-    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=4,
+    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
                          dropout_1=0.1, dropout_2=0.1, flattened_size=4500, scnn=scnn)
 
 
@@ -181,7 +181,7 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
 
 
 # Adapted from harryhan618/SCNN_Pytorch
-def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, dataset):
+def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, thresh, dataset):
     # Predict on 1 data_loader and save predictions for the official script
 
     all_lanes = []
@@ -195,6 +195,10 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                 prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
                                                            align_corners=True).softmax(dim=1)
                 existence = (outputs['aux'] > 0.5)
+                if dataset == 'tusimple':  # At most 5 lanes
+                    indices = (existence.sum(dim=1, keepdim=True) > 5).expand_as(existence) * \
+                              (existence == existence.min(dim=1, keepdim=True).values)
+                    existence[indices] = 0
 
             # To CPU
             prob_map = prob_map.cpu().numpy()
@@ -203,7 +207,7 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
             # Get coordinates for lanes
             for j in range(existence.shape[0]):
                 lane_coordinates = prob_to_lines(prob_map[j], existence[j], resize_shape=input_sizes[1],
-                                                 gap=gap, ppl=ppl, dataset=dataset)
+                                                 gap=gap, ppl=ppl, thresh=thresh, dataset=dataset)
 
                 if dataset == 'culane':
                     # Save each lane to disk
