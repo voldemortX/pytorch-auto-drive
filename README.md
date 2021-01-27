@@ -33,9 +33,12 @@ And models from this repo is faster (also better or at least similar) than the o
 | semantic segmentation | - | ERFNet |
 | lane detection | ERFNet | ERFNet |
 | lane detection | ERFNet | SCNN |
+| lane detection | VGG | SCNN (*In progress*) |
 | lane detection | ERFNet | SAD (*In progress*) |
 | lane detection | ERFNet | PRNet (*In progress*) |
 | lane detection | ERFNet | LSTR (*In progress*) |
+| lane detection | ERFNet | RESA (*In progress*) |
+| lane detection | VGG | RESA (*In progress*) |
 
 *You can of course also use other backbones (e.g. ResNet-50) in TorchVision by simply calling a different function in the most recent TorchVision implementation*
 
@@ -93,7 +96,7 @@ And models from this repo is faster (also better or at least similar) than the o
 
 ## Preparations:
 
-1. Setup a Python3 environment (CUDA 10), with PyTorch >= 1.6, TorchVision >= 0.7.0, tqdm, tensorboard, numpy, imageio, opencv-python.
+1. Setup a Python3 environment (CUDA 10), with PyTorch >= 1.6, TorchVision >= 0.7.0, tqdm, tensorboard, numpy, imageio, opencv-python, yaml.
 
 2. Download the code:
    

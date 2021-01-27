@@ -8,7 +8,7 @@ Other datasets can only be downloaded in their official websites.
 
 ## Training:
 
-1. Change the base directories in [tools/base_dirs.py](tools/base_dirs.py) to your datasets' locations.
+1. Change the `BASE_DIR` in [configs.yaml](configs.yaml) to your datasets' locations.
 
 2. Pre-processing:
 
@@ -35,7 +35,7 @@ python tools/synthia_label_convertor.py
 python tools/synthia_data_list.py
 ```
 
-1. If you are using ERFNet, download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models).
+1. If you are using ERFNet, download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
 
 2. Here are some examples for segmentation:
 

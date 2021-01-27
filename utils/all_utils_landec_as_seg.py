@@ -8,7 +8,6 @@ from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet
 from utils.datasets import StandardLaneDetectionDataset
-from tools.base_dirs import base_tusimple, base_culane
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
 
@@ -25,7 +24,7 @@ def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pr
                          dropout_1=0.1, dropout_2=0.1, flattened_size=4500, scnn=scnn)
 
 
-def init(batch_size, state, input_sizes, dataset, mean, std):
+def init(batch_size, state, input_sizes, dataset, mean, std, base):
     # Return data_loaders
     # depending on whether the state is
     # 0: training
@@ -46,10 +45,8 @@ def init(batch_size, state, input_sizes, dataset, mean, std):
          Normalize(mean=mean, std=std)])
 
     if dataset == 'tusimple':
-        base = base_tusimple
         workers = 10
     elif dataset == 'culane':
-        base = base_culane
         workers = 10
     else:
         raise ValueError

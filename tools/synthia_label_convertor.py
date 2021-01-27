@@ -3,15 +3,18 @@ import numpy as np
 import imageio
 from PIL import Image
 from tqdm import tqdm
-from base_dirs import base_synthia
+import yaml
 
 
+with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
+    configs = yaml.load(f, Loader=yaml.Loader)
+base = configs['SYNTHIA']['BASE_DIR']
 for image_set in ['train', 'val']:
-    mask_dir = os.path.join(base_synthia, 'GT/LABELS', image_set)
-    new_mask_dir = os.path.join(base_synthia, 'GT/LABELS_CONVERTED', image_set)
+    mask_dir = os.path.join(base, 'GT/LABELS', image_set)
+    new_mask_dir = os.path.join(base, 'GT/LABELS_CONVERTED', image_set)
     if not os.path.exists(new_mask_dir):
         os.makedirs(new_mask_dir)
-    splits_file = os.path.join(base_synthia, 'data_lists', image_set + '.txt')
+    splits_file = os.path.join(base, 'data_lists', image_set + '.txt')
     with open(splits_file, 'r') as f:
         file_names = [x.strip() for x in f.readlines()]
 

@@ -3,24 +3,15 @@ import time
 import torch
 import argparse
 import math
+import yaml
 from torch.utils.tensorboard import SummaryWriter
-from utils.datasets import colors_voc, colors_city, mean, std, sizes_voc, sizes_city, sizes_city_erfnet, sizes_gtav, \
-                            num_classes_voc, num_classes_city, categories_voc, categories_city, weights_city_erfnet, \
-                            sizes_city_big, sizes_synthia
-from utils.all_utils_semseg import init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set,\
-                             load_checkpoint
-
-# All hail Clearlove, 7th of his name!
-# torch.manual_seed(4396)
-# random.seed(7777)
-# np.random.seed(7777)
-#torch.backends.cudnn.deterministic = True  # Might hurt performance
-#torch.backends.cudnn.benchmark = False  # Might hurt performance
+from utils.all_utils_semseg import init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set, \
+    load_checkpoint
 
 
 if __name__ == '__main__':
     # Settings
-    parser = argparse.ArgumentParser(description='PyTorch 1.6.0')
+    parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
     parser.add_argument('--exp-name', type=str, default='',
                         help='Name of experiment')
     parser.add_argument('--lr', type=float, default=0.002,
@@ -44,44 +35,39 @@ if __name__ == '__main__':
     parser.add_argument('--state', type=int, default=0,
                         help='Conduct final test(1)/normal training(0) (default: 0)')
     args = parser.parse_args()
-
-    # Basic configurations
-    city_aug = 0
-    classes = None
-
-    if args.dataset == 'voc':
-        num_classes = num_classes_voc
-        input_sizes = sizes_voc
-        categories = categories_voc
-        colors = colors_voc
-    elif args.dataset == 'city':
-        num_classes = num_classes_city
-        input_sizes = sizes_city
-        categories = categories_city
-        colors = colors_city
-    elif args.dataset == 'gtav':
-        num_classes = num_classes_city
-        input_sizes = sizes_gtav
-        categories = categories_city
-        colors = colors_city
-        city_aug = 3
-    elif args.dataset == 'synthia':
-        num_classes = num_classes_city
-        input_sizes = sizes_synthia
-        categories = categories_city
-        colors = colors_city
-        city_aug = 3
-        classes = 16  # Or 13
-    else:
-        raise ValueError
-
     exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
     with open(exp_name + '_cfg.txt', 'w') as f:
         f.write(str(vars(args)))
+    with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
+        configs = yaml.load(f, Loader=yaml.Loader)
 
+    # Basic configurations
+    mean = configs['GENERAL']['MEAN']
+    std = configs['GENERAL']['STD']
+    if args.dataset not in configs['SEGMENTATION_DATASETS'].keys():
+        raise ValueError
+    num_classes = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['NUM_CLASSES']
+    input_sizes = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['SIZES']
+    categories = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['CATEGORIES']
+    colors = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['COLORS']
+    label_id_map = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['LABEL_ID_MAP'] if \
+        'LABEL_ID_MAP' in configs[configs['SEGMENTATION_DATASETS'][args.dataset]].keys() else \
+        configs['CITYSCAPES']['LABEL_ID_MAP']
+    train_base = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['BASE_DIR']
+    test_base = None
+    classes = None
+    selector = None
+    city_aug = 0
+    if args.dataset == 'gtav':
+        city_aug = 3
+        test_base = configs['CITYSCAPES']['BASE_DIR']
+    elif args.dataset == 'synthia':
+        city_aug = 3
+        test_base = configs['CITYSCAPES']['BASE_DIR']
+        classes = 16  # Or 13
+        selector = configs['SYNTHIA']['IOU_16']  # Or 13
     device = torch.device('cpu')
     weights = None
-
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     if args.model == 'deeplabv3':
@@ -91,13 +77,13 @@ if __name__ == '__main__':
     elif args.model == 'deeplabv2-big':
         net = deeplab_v2(num_classes=num_classes)
         city_aug = 1
-        input_sizes = sizes_city_big
+        input_sizes = configs['CITYSCAPES']['SIZES_BIG']
     elif args.model == 'fcn':
         net = fcn(num_classes)
     elif args.model == 'erfnet':
         net = erfnet(num_classes=num_classes)
-        weights = torch.tensor(weights_city_erfnet).to(device)
-        input_sizes = sizes_city_erfnet
+        weights = torch.tensor(configs['CITYSCAPES']['WEIGHTS_ERFNET']).to(device)
+        input_sizes = configs['CITYSCAPES']['SIZES_ERFNET']
         city_aug = 2
     else:
         raise ValueError
@@ -112,15 +98,18 @@ if __name__ == '__main__':
     # Testing
     if args.state == 1:
         test_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
-                           mean=mean, std=std, city_aug=city_aug)
+                           mean=mean, std=std, train_base=train_base, test_base=test_base,
+                           label_id_map=label_id_map, city_aug=city_aug)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
         test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
-                     output_size=input_sizes[2], is_mixed_precision=args.mixed_precision, classes=classes)
+                     output_size=input_sizes[2], is_mixed_precision=args.mixed_precision,
+                     selector=selector, classes=classes)
     else:
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255, weight=weights)
         writer = SummaryWriter('runs/' + exp_name)
         train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
-                                        input_sizes=input_sizes, mean=mean, std=std, city_aug=city_aug)
+                                        input_sizes=input_sizes, mean=mean, std=std, train_base=train_base,
+                                        test_base=test_base, label_id_map=label_id_map, city_aug=city_aug)
 
         # The "poly" policy, variable names are confusing (May need reimplementation)
         if args.model == 'erfnet':
@@ -144,14 +133,16 @@ if __name__ == '__main__':
 
         # Train
         train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                       num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, classes=classes,
+                       num_epochs=args.epochs, is_mixed_precision=args.mixed_precision,
                        validation_loader=val_loader, device=device, criterion=criterion, categories=categories,
-                       num_classes=num_classes, input_sizes=input_sizes, val_num_steps=args.val_num_steps)
+                       num_classes=num_classes, input_sizes=input_sizes, val_num_steps=args.val_num_steps,
+                       classes=classes, selector=selector)
 
         # Final evaluations
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename='temp.pt')
         _, x = test_one_set(loader=val_loader, device=device, net=net, is_mixed_precision=args.mixed_precision,
-                            categories=categories, num_classes=num_classes, output_size=input_sizes[2], classes=classes)
+                            categories=categories, num_classes=num_classes, output_size=input_sizes[2],
+                            classes=classes, selector=selector)
 
         # --do-not-save => args.do_not_save = False
         if args.do_not_save:  # Rename the checkpoint with timestamp

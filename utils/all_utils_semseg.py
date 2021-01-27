@@ -4,9 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
-from tools.base_dirs import base_city, base_voc, base_gtav, base_synthia
 from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet
-from utils.datasets import StandardSegmentationDataset, label_id_map_city, label_id_map_synthia, iou_13, iou_16
+from utils.datasets import StandardSegmentationDataset
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomCrop, RandomTranslation,\
                        ZeroPad, LabelMap, RandomScale, Compose
 
@@ -114,7 +113,7 @@ def load_checkpoint(net, optimizer, lr_scheduler, filename):
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
 
 
-def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
+def init(batch_size, state, input_sizes, std, mean, dataset, train_base, test_base=None, label_id_map=None, city_aug=0):
     # Return data_loaders
     # depending on whether the state is
     # 1: training
@@ -122,8 +121,9 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
 
     # Transformations
     # ! Can't use torchvision.Transforms.Compose
+    if test_base is None:
+        test_base = train_base
     if dataset == 'voc':
-        base = base_voc
         workers = 4
         transform_train = Compose(
             [ToTensor(),
@@ -137,12 +137,6 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
              ZeroPad(size=input_sizes[2]),
              Normalize(mean=mean, std=std)])
     elif dataset == 'city' or dataset == 'gtav' or dataset == 'synthia':  # All the same size
-        if dataset == 'city':
-            base = base_city
-        elif dataset == 'gtav':
-            base = base_gtav
-        else:
-            base = base_synthia
         outlier = False if dataset == 'city' else True  # GTAV has fucked up label ID
         workers = 8
 
@@ -155,7 +149,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
                      RandomCrop(size=input_sizes[0]),
                      RandomHorizontalFlip(flip_prob=0.5),
                      Normalize(mean=mean, std=std),
-                     LabelMap(label_id_map_city, outlier=outlier)])
+                     LabelMap(label_id_map, outlier=outlier)])
             else:
                 transform_train = Compose(
                     [ToTensor(),
@@ -163,28 +157,28 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
                      RandomCrop(size=input_sizes[0]),
                      RandomHorizontalFlip(flip_prob=0.5),
                      Normalize(mean=mean, std=std),
-                     LabelMap(label_id_map_synthia, outlier=outlier)])
+                     LabelMap(label_id_map, outlier=outlier)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
                  Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map_city)])
+                 LabelMap(label_id_map)])
         elif city_aug == 2:  # ERFNet
             transform_train = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-                 LabelMap(label_id_map_city, outlier=outlier),
+                 LabelMap(label_id_map, outlier=outlier),
                  RandomTranslation(trans_h=2, trans_w=2),
                  RandomHorizontalFlip(flip_prob=0.5)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[2]),
-                 LabelMap(label_id_map_city)])
+                 LabelMap(label_id_map)])
         elif city_aug == 1:  # City big
             transform_train = Compose(
                 [ToTensor(),
                  RandomCrop(size=input_sizes[0]),
-                 LabelMap(label_id_map_city, outlier=outlier),
+                 LabelMap(label_id_map, outlier=outlier),
                  RandomTranslation(trans_h=2, trans_w=2),
                  RandomHorizontalFlip(flip_prob=0.5),
                  Normalize(mean=mean, std=std)])
@@ -192,7 +186,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
                 [ToTensor(),
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
                  Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map_city)])
+                 LabelMap(label_id_map)])
         else:  # Standard city
             transform_train = Compose(
                 [ToTensor(),
@@ -202,18 +196,17 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
                  RandomCrop(size=input_sizes[0]),
                  RandomHorizontalFlip(flip_prob=0.5),
                  Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map_city, outlier=outlier)])
+                 LabelMap(label_id_map, outlier=outlier)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
                  Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map_city)])
+                 LabelMap(label_id_map)])
     else:
         raise ValueError
 
     # Not the actual test set (i.e. validation set)
-    test_set = StandardSegmentationDataset(root=base_city if dataset == 'gtav' or dataset == 'synthia' else base,
-                                           image_set='val', transforms=transform_test,
+    test_set = StandardSegmentationDataset(root=test_base, image_set='val', transforms=transform_test,
                                            data_set='city' if dataset == 'gtav' or dataset == 'synthia' else dataset)
     if city_aug == 1 or city_aug == 3:
         val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=2, num_workers=workers, shuffle=False)
@@ -226,7 +219,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
         return val_loader
     else:
         # Training
-        train_set = StandardSegmentationDataset(root=base, image_set='trainaug' if dataset == 'voc' else 'train',
+        train_set = StandardSegmentationDataset(root=train_base, image_set='trainaug' if dataset == 'voc' else 'train',
                                                 transforms=transform_train, data_set=dataset)
         train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=batch_size,
                                                    num_workers=workers, shuffle=True)
@@ -234,7 +227,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, city_aug=0):
 
 
 def train_schedule(writer, loader, val_num_steps, validation_loader, device, criterion, net, optimizer, lr_scheduler,
-                   num_epochs, is_mixed_precision, num_classes, categories, input_sizes, classes):
+                   num_epochs, is_mixed_precision, num_classes, categories, input_sizes, selector, classes):
     # Poly training schedule
     # Validate and find the best snapshot
     best_mIoU = 0
@@ -257,7 +250,8 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
 
             with autocast(is_mixed_precision):
                 outputs = net(inputs)['out']
-                outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear', align_corners=True)
+                outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear',
+                                                          align_corners=True)
                 conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
                 loss = criterion(outputs, labels)
 
@@ -285,7 +279,8 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
             if current_step_num % val_num_steps == (val_num_steps - 1):
                 test_pixel_accuracy, test_mIoU = test_one_set(loader=validation_loader, device=device, net=net,
                                                               num_classes=num_classes, categories=categories,
-                                                              output_size=input_sizes[2], classes=classes,
+                                                              output_size=input_sizes[2],
+                                                              selector=selector, classes=classes,
                                                               is_mixed_precision=is_mixed_precision)
                 writer.add_scalar('test pixel accuracy',
                                   test_pixel_accuracy,
@@ -328,8 +323,10 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
 
 
 # Copied and modified from torch/vision/references/segmentation
-def test_one_set(loader, device, net, num_classes, categories, output_size, is_mixed_precision, classes=None):
+def test_one_set(loader, device, net, num_classes, categories, output_size, is_mixed_precision,
+                 selector=None, classes=None):
     # Evaluate on 1 data_loader
+    # Use selector & classes to select part of the classes as metric (for SYNTHIA)
     net.eval()
     conf_mat = ConfusionMatrix(num_classes)
     with torch.no_grad():
@@ -347,19 +344,17 @@ def test_one_set(loader, device, net, num_classes, categories, output_size, is_m
             'average row correct: {}\n'
             'IoU: {}\n'
             'mean IoU: {:.2f}\n'
-            'mean IoU-16: {:.2f}\n'
-            'mean IoU-13: {:.2f}').format(
+            'mean IoU-{}: {:.2f}').format(
                 acc_global.item() * 100,
                 ['{:.2f}'.format(i) for i in (acc * 100).tolist()],
                 ['{:.2f}'.format(i) for i in (iu * 100).tolist()],
                 iu.mean().item() * 100,
-                iu[iou_16].mean().item() * 100,
-                iu[iou_13].mean().item() * 100))
+                -1 if classes is None else classes,
+                -1 if selector is None else iu[selector].mean().item() * 100))
 
-    iou = iu.mean().item() * 100
-    if classes == 16:
-        iou = iu[iou_16].mean().item() * 100
-    elif classes == 13:
-        iou = iu[iou_13].mean().item() * 100
+    if selector is None:
+        iou = iu.mean().item() * 100
+    else:
+        iou = iu[selector].mean().item() * 100
 
     return acc_global.item() * 100, iou

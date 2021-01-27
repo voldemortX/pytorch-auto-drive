@@ -1,11 +1,9 @@
 import time
 import torch
 import argparse
+import yaml
 from torch.utils.tensorboard import SummaryWriter
 from utils.losses import LaneLoss, SADLoss
-from utils.datasets import mean, std, sizes_tusimple, sizes_culane, num_classes_tusimple, num_classes_culane, \
-    weights_tusimple, weights_culane, gap_tusimple, gap_culane, ppl_culane, ppl_tusimple, threshold_culane, \
-    threshold_tusimple
 from utils.all_utils_semseg import load_checkpoint
 from utils.all_utils_landec_as_seg import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane, \
     fast_evaluate
@@ -13,7 +11,7 @@ from utils.all_utils_landec_as_seg import init, train_schedule, test_one_set, er
 
 if __name__ == '__main__':
     # Settings
-    parser = argparse.ArgumentParser(description='PyTorch 1.6.0')
+    parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
     parser.add_argument('--exp-name', type=str, default='',
                         help='Name of experiment')
     parser.add_argument('--lr', type=float, default=0.01,
@@ -35,39 +33,34 @@ if __name__ == '__main__':
     parser.add_argument('--state', type=int, default=0,
                         help='Conduct validation(3)/final test(2)/fast validation(1)/normal training(0) (default: 0)')
     args = parser.parse_args()
-
-    # Basic configurations
-    if args.dataset == 'tusimple':
-        num_classes = num_classes_tusimple
-        input_sizes = sizes_tusimple
-    elif args.dataset == 'culane':
-        num_classes = num_classes_culane
-        input_sizes = sizes_culane
-    else:
-        raise ValueError
-
-    states = ['train', 'valfast', 'test', 'val']
     exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
+    states = ['train', 'valfast', 'test', 'val']
     with open(exp_name + '_' + states[args.state] + '_cfg.txt', 'w') as f:
         f.write(str(vars(args)))
+    with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
+        configs = yaml.load(f, Loader=yaml.Loader)
 
+    # Basic configurations
+    mean = configs['GENERAL']['MEAN']
+    std = configs['GENERAL']['STD']
+    if args.dataset not in configs['LANE_DATASETS'].keys():
+        raise ValueError
+    num_classes = configs[configs['LANE_DATASETS'][args.dataset]]['NUM_CLASSES']
+    input_sizes = configs[configs['LANE_DATASETS'][args.dataset]]['SIZES']
+    gap = configs[configs['LANE_DATASETS'][args.dataset]]['GAP']
+    ppl = configs[configs['LANE_DATASETS'][args.dataset]]['PPL']
+    thresh = configs[configs['LANE_DATASETS'][args.dataset]]['THRESHOLD']
+    weights = configs[configs['LANE_DATASETS'][args.dataset]]['WEIGHTS']
+    base = configs[configs['LANE_DATASETS'][args.dataset]]['BASE_DIR']
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     scnn = True if args.model == 'scnn' else False
-    weights = None
+    weights = torch.tensor(weights).to(device)
     if args.dataset == 'tusimple':
-        weights = torch.tensor(weights_tusimple).to(device)
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
-        gap = gap_tusimple
-        ppl = ppl_tusimple
-        thresh = threshold_tusimple
     elif args.dataset == 'culane':
-        weights = torch.tensor(weights_culane).to(device)
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
-        gap = gap_culane
-        ppl = ppl_culane
-        thresh = threshold_culane
     else:
         raise ValueError
     print(device)
@@ -88,7 +81,7 @@ if __name__ == '__main__':
     # Testing
     if args.state == 1 or args.state == 2 or args.state == 3:
         data_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
-                           mean=mean, std=std)
+                           mean=mean, std=std, base=base)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
         if args.state == 1:  # Validate with mean IoU
             _, x = fast_evaluate(loader=data_loader, device=device, net=net,
@@ -110,7 +103,7 @@ if __name__ == '__main__':
 
         writer = SummaryWriter('runs/' + exp_name)
         data_loader, validation_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
-                                              input_sizes=input_sizes, mean=mean, std=std)
+                                              input_sizes=input_sizes, mean=mean, std=std, base=base)
 
         # With best learning rate schedule, warmup proves unnecessary
         # if args.model == 'scnn':

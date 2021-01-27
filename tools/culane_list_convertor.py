@@ -3,9 +3,13 @@
 # /driver_23_30frame/05151649_0422.MP4/00000 1 1 1 1
 
 import os
-from base_dirs import base_culane
+import yaml
 
-root = os.path.join(base_culane, 'lists')
+
+with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
+    configs = yaml.load(f, Loader=yaml.Loader)
+base = configs['CULANE']['BASE_DIR']
+root = os.path.join(base, 'lists')
 old_file_names = ['train_gt.txt', 'val_gt.txt', 'val.txt', 'test.txt']
 new_file_names = ['train.txt', 'valfast.txt', 'val.txt', 'test.txt']
 for i in range(len(old_file_names)):

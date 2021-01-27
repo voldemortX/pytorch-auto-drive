@@ -1,5 +1,5 @@
 import os
-from base_dirs import base_city as base
+import yaml
 
 
 def traverse(images_dir, data_list):
@@ -9,7 +9,11 @@ def traverse(images_dir, data_list):
             temp = city + '/' + image.split('_leftImg8bit')[0] + '\n'
             data_list.append(temp)
 
+
 # Traverse images
+with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
+    configs = yaml.load(f, Loader=yaml.Loader)
+base = configs['CITYSCAPES']['BASE_DIR']
 train_list = []
 val_list = []
 test_list = []
