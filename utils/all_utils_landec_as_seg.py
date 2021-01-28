@@ -255,9 +255,9 @@ def get_lane(prob_map, gap, ppl, thresh, resize_shape=None, dataset='culane'):
 
     coords = np.zeros(ppl)
     for i in range(ppl):
-        if dataset == 'tusimple':  # Annotation start at 10 pixel away from top
+        if dataset == 'tusimple':  # Annotation start at 10 pixel away from bottom
             y = int(h - (ppl - i) * gap / H * h)
-        elif dataset == 'culane':  # Annotation start at top
+        elif dataset == 'culane':  # Annotation start at bottom
             y = int(h - i * gap / H * h - 1)  # Same as original SCNN code
         else:
             raise ValueError
