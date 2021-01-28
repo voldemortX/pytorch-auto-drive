@@ -126,7 +126,7 @@ Get started with [LANEDETECTION.md](LANEDETECTION.md) for lane detection.
 
 ## Notes:
 
-1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in `utils/datasets/__init__.py`; similar changes can be done with other experiments.
+1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in [configs.yaml](configs.yaml); similar changes can be done with other experiments.
 
 2. Training times are measured on **a single RTX 2080Ti**, including online validation time for segmentation, test time for lane detection.
 
