@@ -113,7 +113,8 @@ def load_checkpoint(net, optimizer, lr_scheduler, filename):
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
 
 
-def init(batch_size, state, input_sizes, std, mean, dataset, train_base, test_base=None, label_id_map=None, city_aug=0):
+def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_label_id_map, 
+         test_base=None, test_label_id_map=None, city_aug=0):
     # Return data_loaders
     # depending on whether the state is
     # 1: training
@@ -123,6 +124,8 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, test_ba
     # ! Can't use torchvision.Transforms.Compose
     if test_base is None:
         test_base = train_base
+    if test_label_id_map is None:
+        test_label_id_map = train_label_id_map
     if dataset == 'voc':
         workers = 4
         transform_train = Compose(
@@ -149,7 +152,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, test_ba
                      RandomCrop(size=input_sizes[0]),
                      RandomHorizontalFlip(flip_prob=0.5),
                      Normalize(mean=mean, std=std),
-                     LabelMap(label_id_map, outlier=outlier)])
+                     LabelMap(train_label_id_map, outlier=outlier)])
             else:
                 transform_train = Compose(
                     [ToTensor(),
@@ -157,28 +160,28 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, test_ba
                      RandomCrop(size=input_sizes[0]),
                      RandomHorizontalFlip(flip_prob=0.5),
                      Normalize(mean=mean, std=std),
-                     LabelMap(label_id_map, outlier=outlier)])
+                     LabelMap(train_label_id_map, outlier=outlier)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
                  Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map)])
+                 LabelMap(test_label_id_map)])
         elif city_aug == 2:  # ERFNet
             transform_train = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-                 LabelMap(label_id_map, outlier=outlier),
+                 LabelMap(train_label_id_map, outlier=outlier),
                  RandomTranslation(trans_h=2, trans_w=2),
                  RandomHorizontalFlip(flip_prob=0.5)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[2]),
-                 LabelMap(label_id_map)])
+                 LabelMap(test_label_id_map)])
         elif city_aug == 1:  # City big
             transform_train = Compose(
                 [ToTensor(),
                  RandomCrop(size=input_sizes[0]),
-                 LabelMap(label_id_map, outlier=outlier),
+                 LabelMap(train_label_id_map, outlier=outlier),
                  RandomTranslation(trans_h=2, trans_w=2),
                  RandomHorizontalFlip(flip_prob=0.5),
                  Normalize(mean=mean, std=std)])
@@ -186,7 +189,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, test_ba
                 [ToTensor(),
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
                  Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map)])
+                 LabelMap(test_label_id_map)])
         else:  # Standard city
             transform_train = Compose(
                 [ToTensor(),
@@ -196,12 +199,12 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, test_ba
                  RandomCrop(size=input_sizes[0]),
                  RandomHorizontalFlip(flip_prob=0.5),
                  Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map, outlier=outlier)])
+                 LabelMap(train_label_id_map, outlier=outlier)])
             transform_test = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
                  Normalize(mean=mean, std=std),
-                 LabelMap(label_id_map)])
+                 LabelMap(test_label_id_map)])
     else:
         raise ValueError
 

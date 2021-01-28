@@ -50,20 +50,23 @@ if __name__ == '__main__':
     input_sizes = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['SIZES']
     categories = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['CATEGORIES']
     colors = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['COLORS']
-    label_id_map = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['LABEL_ID_MAP'] if \
+    train_label_id_map = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['LABEL_ID_MAP'] if \
         'LABEL_ID_MAP' in configs[configs['SEGMENTATION_DATASETS'][args.dataset]].keys() else \
         configs['CITYSCAPES']['LABEL_ID_MAP']
     train_base = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['BASE_DIR']
     test_base = None
+    test_label_id_map = None
     classes = None
     selector = None
     city_aug = 0
     if args.dataset == 'gtav':
         city_aug = 3
         test_base = configs['CITYSCAPES']['BASE_DIR']
+        test_label_id_map = configs['CITYSCAPES']['LABEL_ID_MAP']
     elif args.dataset == 'synthia':
         city_aug = 3
         test_base = configs['CITYSCAPES']['BASE_DIR']
+        test_label_id_map = configs['CITYSCAPES']['LABEL_ID_MAP']
         classes = 16  # Or 13
         selector = configs['SYNTHIA']['IOU_16']  # Or 13
     device = torch.device('cpu')
@@ -98,8 +101,8 @@ if __name__ == '__main__':
     # Testing
     if args.state == 1:
         test_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
-                           mean=mean, std=std, train_base=train_base, test_base=test_base,
-                           label_id_map=label_id_map, city_aug=city_aug)
+                           mean=mean, std=std, train_base=train_base, test_base=test_base, city_aug=city_aug,
+                           train_label_id_map=train_label_id_map, test_label_id_map=test_label_id_map)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
         test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
                      output_size=input_sizes[2], is_mixed_precision=args.mixed_precision,
@@ -109,7 +112,8 @@ if __name__ == '__main__':
         writer = SummaryWriter('runs/' + exp_name)
         train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
                                         input_sizes=input_sizes, mean=mean, std=std, train_base=train_base,
-                                        test_base=test_base, label_id_map=label_id_map, city_aug=city_aug)
+                                        test_base=test_base, city_aug=city_aug,
+                                        train_label_id_map=train_label_id_map, test_label_id_map=test_label_id_map)
 
         # The "poly" policy, variable names are confusing (May need reimplementation)
         if args.model == 'erfnet':
