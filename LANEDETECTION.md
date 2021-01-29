@@ -27,9 +27,9 @@ For TuSimple:
 python tools/tusimple_list_convertor.py
 ```
 
-1. Download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
+3. Download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
 
-2. Here are some examples for lane detection:
+4. Here are some examples for lane detection:
 
 Mixed precision training on CULane with ERFNet:
 
@@ -73,7 +73,7 @@ python main_landec_as_seg.py --state=1 --continue-from=<trained model .pt filena
 cd tools/culane_evaluation
 make
 mkdir output
-chmod eval*.sh
+chmod 777 eval*
 cd -
 ```
 
