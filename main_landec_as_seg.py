@@ -107,17 +107,17 @@ if __name__ == '__main__':
 
         # With best learning rate schedule, warmup proves unnecessary
         # if args.model == 'scnn':
-        #     # Warmup https://github.com/XingangPan/SCNN/issues/82
-        #     # warmup_steps = len(data_loader)
-        #     warmup_steps = 100
-        #     l = lambda t: t / warmup_steps if t < warmup_steps \
-        #         else (1 - (t - warmup_steps) / (len(data_loader) * args.epochs - warmup_steps)) ** 0.9
+            # Warmup https://github.com/XingangPan/SCNN/issues/82
+            # warmup_steps = len(data_loader)
+        warmup_steps = 200
+        l = lambda t: t / warmup_steps if t < warmup_steps \
+            else (1 - (t - warmup_steps) / (len(data_loader) * args.epochs - warmup_steps)) ** 0.9
         # else:
-        #     l = lambda t: (1 - t / (len(data_loader) * args.epochs)) ** 0.9
-        # lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, l)
-        lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
-                                                         lambda t: (1 - t / (len(data_loader) * args.epochs))
-                                                         ** 0.9)
+        #    l = lambda t: (1 - t / (len(data_loader) * args.epochs)) ** 0.9
+        lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, l)
+        # lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
+        #                                                 lambda t: (1 - t / (len(data_loader) * args.epochs))
+        #                                                 ** 0.9)
 
         # Resume training?
         if args.continue_from is not None:

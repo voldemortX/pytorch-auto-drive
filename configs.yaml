@@ -108,7 +108,7 @@ TUSIMPLE:  # TuSimple
     WEIGHTS: [0.4, 1, 1, 1, 1, 1, 1]
     GAP: 10  # Y pixel gap per sampling point
     PPL: 56  # Points per lane
-    THRESHOLD: 0.2  # Threshold for lane generation from segmentation mask
+    THRESHOLD: 0.3  # Threshold for lane generation from segmentation mask
 
 CULANE:  # CULane
     BASE_DIR: '../../dataset/culane'
