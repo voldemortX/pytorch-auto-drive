@@ -21,7 +21,7 @@ if __name__ == '__main__':
                         help='Validation frequency (default: 0), 0: no online evaluation')
     parser.add_argument('--dataset', type=str, default='tusimple',
                         help='Train/Evaluate on TuSimple (voc) / CULane (culane) (default: tusimple)')
-    parser.add_argument('--method', type=str, default='scnn',
+    parser.add_argument('--method', type=str, default='baseline',
                         help='method selection (scnn/sad/baseline/etc) (default: scnn)')
     parser.add_argument('--backbone', type=str, default='erfnet',
                         help='backbone selection (erfnet/vgg16) (default: erfnet)')

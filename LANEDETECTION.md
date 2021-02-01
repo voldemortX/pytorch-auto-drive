@@ -34,13 +34,13 @@ python tools/tusimple_list_convertor.py
 Mixed precision training on CULane with ERFNet:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --method=none --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --method=baseline --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on TuSimple with ERFNet:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.7 --batch-size=20 --dataset=tusimple --method=none --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.7 --batch-size=20 --dataset=tusimple --method=baseline --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on CULane with ERFNet-SCNN:
@@ -55,7 +55,7 @@ Mixed precision training on TuSimple with ERFNet-SCNN:
 python main_landec_as_seg.py --epochs=12 --lr=0.3 --batch-size=20 --dataset=tusimple --method=scnn --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
-Mixed precision training on CULane with Vgg16-SCNN:
+Mixed precision training on CULane with VGG-SCNN:
 
 ```
 python main_landec_as_seg.py --epochs=12 --lr=0.015 --batch-size=20 --dataset=culane --method=scnn --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
