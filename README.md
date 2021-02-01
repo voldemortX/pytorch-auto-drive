@@ -33,7 +33,7 @@ And models from this repo is faster (also better or at least similar) than the o
 | semantic segmentation | - | ERFNet |
 | lane detection | ERFNet | ERFNet |
 | lane detection | ERFNet | SCNN |
-| lane detection | VGG | SCNN (*In progress*) |
+| lane detection | VGG | SCNN |
 | lane detection | ERFNet | SAD (*In progress*) |
 | lane detection | ERFNet | PRNet (*In progress*) |
 | lane detection | ERFNet | LSTR (*In progress*) |
@@ -69,6 +69,7 @@ And models from this repo is faster (also better or at least similar) than the o
 | SCNN | 288 x 800 | *yes* | CULane | F measure | 74.41 | 74.44 | 11.3h |
 | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 94.68% | 94.83% | 0.2h |
 | SCNN | 360 x 640 | *yes* | TuSimple | Accuracy | 95.20% | 95.26% | 0.4h |
+| VGG16 |  | *yes* | CULane | F measure |  |  |  |
 
 *\* All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
 
