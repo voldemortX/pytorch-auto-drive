@@ -68,7 +68,6 @@ if __name__ == '__main__':
         raise ValueError
     print(device)
     net.to(device)
-    print(net)
     # if args.model == 'scnn':
     #     # Gradient too large after spatial conv
     #     optimizer = torch.optim.SGD([
