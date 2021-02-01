@@ -77,9 +77,7 @@ class VGG16Net(nn.Module):
             nn.Conv2d(128, 5, 1)
         )
 
-        self.act = nn.Sequential(
-            nn.Softmax(dim=1)
-        )
+        self.softmax = nn.Softmax(dim=1)
 
         if aux > 0:
             self.aux_head = LaneExistVgg(num_output=aux, flattened_size=flattened_size)
@@ -97,7 +95,7 @@ class VGG16Net(nn.Module):
 
         output = self.fc8(output)
         out['out'] = output
-        output = self.act(output)
+        output = self.softmax(output)
         if self.aux_head is not None:
             out['aux'] = self.aux_head(output)
 
