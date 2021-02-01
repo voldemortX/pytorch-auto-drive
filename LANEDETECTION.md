@@ -34,31 +34,31 @@ python tools/tusimple_list_convertor.py
 Mixed precision training on CULane with ERFNet:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --model=none --baseline=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --method=none --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on TuSimple with ERFNet:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.7 --batch-size=20 --dataset=tusimple --model=none --baseline=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.7 --batch-size=20 --dataset=tusimple --method=none --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on CULane with ERFNet-SCNN:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.08 --batch-size=20 --dataset=culane --model=scnn --baseline=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.08 --batch-size=20 --dataset=culane --method=scnn --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on TuSimple with ERFNet-SCNN:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.3 --batch-size=20 --dataset=tusimple --model=scnn --baseline=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.3 --batch-size=20 --dataset=tusimple --method=scnn --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on CULane with Vgg16-SCNN:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.015 --batch-size=20 --dataset=culane --model=scnn --baseline=vgg16 --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.015 --batch-size=20 --dataset=culane --method=scnn --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
 ```
 
 
@@ -69,7 +69,7 @@ Training contains online fast validations by using --val-num-steps=\<some number
 To validate a trained model on mean IoU, you can use either mixed-precision or fp32 for any model trained with/without mixed-precision:
 
 ```
-python main_landec_as_seg.py --state=1 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --baseline=<trained baseline> --batch-size=<any batch size> --exp-name=<whatever you like> --mixed-precision
+python main_landec_as_seg.py --state=1 --continue-from=<trained model .pt filename> --dataset=<dataset> --method=<trained method architecture> --backbone=<trained backbone> --batch-size=<any batch size> --exp-name=<whatever you like> --mixed-precision
 ```
 
 ### Test a trained model with CULane:
@@ -89,7 +89,7 @@ Then change `data_dir` to your CULane base directory in [eval.sh](tools/culane_e
 2. Predict and save lanes.
    
 ```
-python main_landec_as_seg.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size, recommend 80> --mixed-precision
+python main_landec_as_seg.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --method=<trained model architecture> --backbone=<trained backbone> --batch-size=<any batch size, recommend 80> --mixed-precision
 ```
 
 Use `--state=3` to predict lanes for the validation set.
@@ -122,7 +122,7 @@ Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh]
 2. Predict and save lanes.
    
 ```
-python main_landec_as_seg.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size, recommend 80> --mixed-precision
+python main_landec_as_seg.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --method=<trained model architecture> --backbone=<trained backbone> --batch-size=<any batch size, recommend 80> --mixed-precision
 ```
 
 Use `--state=3` to predict lanes for the validation set.
