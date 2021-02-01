@@ -6,8 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.losses import LaneLoss, SADLoss
 from utils.all_utils_semseg import load_checkpoint
 from utils.all_utils_landec_as_seg import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane, \
-    fast_evaluate
-
+    fast_evaluate, vgg16_culane
 
 if __name__ == '__main__':
     # Settings
@@ -23,7 +22,9 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='tusimple',
                         help='Train/Evaluate on TuSimple (voc) / CULane (culane) (default: tusimple)')
     parser.add_argument('--model', type=str, default='scnn',
-                        help='Model selection (baseline/scnn/sad) (default: scnn)')
+                        help='Model selection (scnn/sad/none) (default: scnn)')
+    parser.add_argument('--baseline', type=str, default='erfnet',
+                        help='Baseline selection (erfnet/vgg16) (default: erfnet)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size (default: 8)')
     parser.add_argument('--mixed-precision', action='store_true', default=False,
@@ -57,15 +58,17 @@ if __name__ == '__main__':
         device = torch.device('cuda:0')
     scnn = True if args.model == 'scnn' else False
     weights = torch.tensor(weights).to(device)
-    if args.dataset == 'tusimple':
+    if args.dataset == 'tusimple' and args.baseline == 'erfnet':
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
-    elif args.dataset == 'culane':
+    elif args.dataset == 'culane'and args.baseline == 'erfnet':
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
+    elif args.dataset == 'culane'and args.baseline == 'vgg16':
+        net = net = vgg16_culane(num_classes=num_classes, scnn=scnn)
     else:
         raise ValueError
     print(device)
     net.to(device)
-
+    print(net)
     # if args.model == 'scnn':
     #     # Gradient too large after spatial conv
     #     optimizer = torch.optim.SGD([
@@ -94,7 +97,7 @@ if __name__ == '__main__':
             test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision,
                          input_sizes=input_sizes, gap=gap, ppl=ppl, thresh=thresh, dataset=args.dataset)
     else:
-        if args.model == 'scnn' or args.model == 'baseline':
+        if args.model == 'scnn' or args.model == 'none':
             criterion = LaneLoss(weight=weights, ignore_index=255)
         elif args.model == 'sad':
             criterion = SADLoss()

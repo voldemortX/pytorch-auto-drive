@@ -4,11 +4,12 @@ from .. import resnet
 from .deeplab import DeepLabV3Head, DeepLabV2Head, DeepLab, ReconHead
 from .fcn import FCN, FCNHead
 from .erfnet import ERFNet
+from .vgg16 import VGG16Net
 from torch import load
 
 
 __all__ = ['fcn_resnet50', 'fcn_resnet101', 'deeplabv2_resnet101', 'deeplabv3_resnet50', 'deeplabv3_resnet101',
-           'erfnet_resnet']
+           'erfnet_resnet','vgg16']
 
 
 model_urls = {
@@ -148,4 +149,18 @@ def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_cl
             if my_key in original_weights.keys():
                 original_weights[my_key] = saved_weights[key]
         net.load_state_dict(original_weights)
+    return net
+
+def vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, aux=0,
+          dropout_1=0.1, dropout_2=0.3, flattened_size=4500, scnn=False):
+    """Different from erfnet.
+
+       Args:
+           pretrained_weights (str): If pytorch-pretrained , load pre-trained weights from torchvision
+       """
+    pretrained = False
+    if pretrained_weights == 'pytorch-pretrained':
+        pretrained = True
+    net = VGG16Net(num_classes=num_classes, encoder=None, aux=aux, dropout_1=dropout_1, dropout_2=dropout_2,
+                   flattened_size=flattened_size, scnn=scnn, pretrain=pretrained)
     return net
