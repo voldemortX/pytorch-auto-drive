@@ -26,10 +26,9 @@ class LaneExistVgg(nn.Module):
         return output
 
 
-
-class Vgg16(nn.Module):
+class VGG16(nn.Module):
     def __init__(self, pretained=True):
-        super(Vgg16, self).__init__()
+        super(VGG16, self).__init__()
         self.pretrained = pretained
         self.net = torchvision.models.vgg16_bn(pretrained=self.pretrained).features
         for i in [34, 37, 40]:
@@ -48,13 +47,13 @@ class Vgg16(nn.Module):
         return x
 
 
-class VGG16Net(nn.Module):
+class DeepLabV1(nn.Module):
     def __init__(self, num_classes, encoder=None, aux=0, dropout_1=0.1, flattened_size=3965,
                  scnn=False, pretrain=False):
-        super(VGG16Net, self).__init__()
+        super(DeepLabV1, self).__init__()
 
         if encoder is None:
-            self.encoder = Vgg16(pretained=pretrain)
+            self.encoder = VGG16(pretained=pretrain)
         else:
             self.encoder = encoder
 
@@ -95,8 +94,9 @@ class VGG16Net(nn.Module):
 
         output = self.fc8(output)
         out['out'] = output
-        output = self.softmax(output)
+
         if self.aux_head is not None:
+            output = self.softmax(output)
             out['aux'] = self.aux_head(output)
 
         return out

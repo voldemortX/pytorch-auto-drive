@@ -4,7 +4,7 @@ from .. import resnet
 from .deeplab import DeepLabV3Head, DeepLabV2Head, DeepLab, ReconHead
 from .fcn import FCN, FCNHead
 from .erfnet import ERFNet
-from .deeplab_vgg import VGG16Net
+from .deeplab_vgg import DeepLabV1
 from torch import load
 
 
@@ -159,6 +159,6 @@ def vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, aux=0,
     pretrained = False
     if pretrained_weights == 'pytorch-pretrained':
         pretrained = True
-    net = VGG16Net(num_classes=num_classes, encoder=None, aux=aux, dropout_1=dropout_1,
+    net = DeepLabV1(num_classes=num_classes, encoder=None, aux=aux, dropout_1=dropout_1,
                    flattened_size=flattened_size, scnn=scnn, pretrain=pretrained)
     return net

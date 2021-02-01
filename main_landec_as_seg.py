@@ -60,9 +60,9 @@ if __name__ == '__main__':
     weights = torch.tensor(weights).to(device)
     if args.dataset == 'tusimple' and args.backbone == 'erfnet':
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
-    elif args.dataset == 'culane'and args.backbone == 'erfnet':
+    elif args.dataset == 'culane' and args.backbone == 'erfnet':
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
-    elif args.dataset == 'culane'and args.backbone == 'vgg16':
+    elif args.dataset == 'culane' and args.backbone == 'vgg16':
         net = net = vgg16_culane(num_classes=num_classes, scnn=scnn)
     else:
         raise ValueError
