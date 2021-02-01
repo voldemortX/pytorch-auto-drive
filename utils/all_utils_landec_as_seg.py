@@ -26,7 +26,7 @@ def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pr
 def vgg16_culane(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
     # Define Vgg16 for CULane (With only ImageNet pretraining)
     return vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
-                 dropout_1=0.1, dropout_2=0.1, flattened_size=4500, scnn=scnn)
+                 dropout_1=0.1, flattened_size=4500, scnn=scnn)
 
 def init(batch_size, state, input_sizes, dataset, mean, std, base):
     # Return data_loaders

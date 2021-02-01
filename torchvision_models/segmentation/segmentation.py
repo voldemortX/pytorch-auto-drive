@@ -4,7 +4,7 @@ from .. import resnet
 from .deeplab import DeepLabV3Head, DeepLabV2Head, DeepLab, ReconHead
 from .fcn import FCN, FCNHead
 from .erfnet import ERFNet
-from .vgg16 import VGG16Net
+from .deeplab_vgg import VGG16Net
 from torch import load
 
 
@@ -152,15 +152,11 @@ def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_cl
     return net
 
 def vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, aux=0,
-          dropout_1=0.1, dropout_2=0.3, flattened_size=4500, scnn=False):
-    """Different from erfnet.
+          dropout_1=0.1, flattened_size=4500, scnn=False):
 
-       Args:
-           pretrained_weights (str): If pytorch-pretrained , load pre-trained weights from torchvision
-       """
     pretrained = False
     if pretrained_weights == 'pytorch-pretrained':
         pretrained = True
-    net = VGG16Net(num_classes=num_classes, encoder=None, aux=aux, dropout_1=dropout_1, dropout_2=dropout_2,
+    net = VGG16Net(num_classes=num_classes, encoder=None, aux=aux, dropout_1=dropout_1,
                    flattened_size=flattened_size, scnn=scnn, pretrain=pretrained)
     return net

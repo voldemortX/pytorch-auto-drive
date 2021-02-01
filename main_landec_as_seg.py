@@ -21,10 +21,10 @@ if __name__ == '__main__':
                         help='Validation frequency (default: 0), 0: no online evaluation')
     parser.add_argument('--dataset', type=str, default='tusimple',
                         help='Train/Evaluate on TuSimple (voc) / CULane (culane) (default: tusimple)')
-    parser.add_argument('--model', type=str, default='scnn',
-                        help='Model selection (scnn/sad/none) (default: scnn)')
-    parser.add_argument('--baseline', type=str, default='erfnet',
-                        help='Baseline selection (erfnet/vgg16) (default: erfnet)')
+    parser.add_argument('--method', type=str, default='scnn',
+                        help='method selection (scnn/sad/baseline/etc) (default: scnn)')
+    parser.add_argument('--backbone', type=str, default='erfnet',
+                        help='backbone selection (erfnet/vgg16) (default: erfnet)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size (default: 8)')
     parser.add_argument('--mixed-precision', action='store_true', default=False,
@@ -56,13 +56,13 @@ if __name__ == '__main__':
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
-    scnn = True if args.model == 'scnn' else False
+    scnn = True if args.method == 'scnn' else False
     weights = torch.tensor(weights).to(device)
-    if args.dataset == 'tusimple' and args.baseline == 'erfnet':
+    if args.dataset == 'tusimple' and args.backbone == 'erfnet':
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
-    elif args.dataset == 'culane'and args.baseline == 'erfnet':
+    elif args.dataset == 'culane'and args.backbone == 'erfnet':
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
-    elif args.dataset == 'culane'and args.baseline == 'vgg16':
+    elif args.dataset == 'culane'and args.backbone == 'vgg16':
         net = net = vgg16_culane(num_classes=num_classes, scnn=scnn)
     else:
         raise ValueError
@@ -96,9 +96,9 @@ if __name__ == '__main__':
             test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision,
                          input_sizes=input_sizes, gap=gap, ppl=ppl, thresh=thresh, dataset=args.dataset)
     else:
-        if args.model == 'scnn' or args.model == 'none':
+        if args.method == 'scnn' or args.method == 'baseline':
             criterion = LaneLoss(weight=weights, ignore_index=255)
-        elif args.model == 'sad':
+        elif args.method == 'sad':
             criterion = SADLoss()
         else:
             raise NotImplementedError
