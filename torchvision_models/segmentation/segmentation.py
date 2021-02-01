@@ -153,7 +153,9 @@ def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_cl
 
 def vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, aux=0,
           dropout_1=0.1, flattened_size=4500, scnn=False):
+    """similar with erfnet.
 
+    """
     pretrained = False
     if pretrained_weights == 'pytorch-pretrained':
         pretrained = True
