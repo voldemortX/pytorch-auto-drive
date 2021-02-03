@@ -40,7 +40,7 @@ python main_landec_as_seg.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=cul
 Mixed precision training on TuSimple with ERFNet:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.7 --batch-size=20 --dataset=tusimple --method=baseline --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=baseline --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on CULane with ERFNet-SCNN:
@@ -52,7 +52,7 @@ python main_landec_as_seg.py --epochs=12 --lr=0.08 --batch-size=20 --dataset=cul
 Mixed precision training on TuSimple with ERFNet-SCNN:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.3 --batch-size=20 --dataset=tusimple --method=scnn --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=scnn --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on CULane with VGG-SCNN:

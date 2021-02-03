@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from collections import OrderedDict
 
 
-class DownsamplerBlock (nn.Module):
+class DownsamplerBlock(nn.Module):
     def __init__(self, ninput, noutput):
         super().__init__()
         self.conv = nn.Conv2d(ninput, noutput-ninput, (3, 3), stride=2, padding=1, bias=True)
@@ -22,7 +22,7 @@ class DownsamplerBlock (nn.Module):
         return F.relu(output)
     
 
-class non_bottleneck_1d (nn.Module):
+class non_bottleneck_1d(nn.Module):
     def __init__(self, chann, dropprob, dilated):        
         super().__init__()
         self.conv3x1_1 = nn.Conv2d(chann, chann, (3, 1), stride=1, padding=(1, 0), bias=True)
@@ -126,7 +126,7 @@ class Decoder(nn.Module):
 
 # Really tricky without global pooling
 class LaneExist(nn.Module):
-    def __init__(self, num_output, flattened_size=3965):
+    def __init__(self, num_output, flattened_size=3965, dropout=0.1):
         super().__init__()
 
         self.layers = nn.ModuleList()
@@ -134,7 +134,7 @@ class LaneExist(nn.Module):
         self.layers.append(nn.BatchNorm2d(32, eps=1e-03))
 
         self.layers_final = nn.ModuleList()
-        self.layers_final.append(nn.Dropout2d(0.1))
+        self.layers_final.append(nn.Dropout2d(dropout))
         self.layers_final.append(nn.Conv2d(32, 5, (1, 1), stride=1, padding=(0, 0), bias=True))
 
         self.maxpool = nn.MaxPool2d(2, stride=2)
@@ -220,7 +220,7 @@ class ERFNet(nn.Module):
             self.spatial_conv = None
 
         if aux > 0:
-            self.aux_head = LaneExist(num_output=aux, flattened_size=flattened_size)
+            self.aux_head = LaneExist(num_output=aux, flattened_size=flattened_size, dropout=dropout_2)
         else:
             self.aux_head = None
 

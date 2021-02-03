@@ -40,7 +40,9 @@ And models from this repo is faster (also better or at least similar) than the o
 | lane detection | ERFNet | RESA (*In progress*) |
 | lane detection | VGG | RESA (*In progress*) |
 
-*You can of course also use other backbones (e.g. ResNet-50) in TorchVision by simply calling a different function in the most recent TorchVision implementation*
+*You can of course also use other backbones (e.g. ResNet-50) in TorchVision by simply calling a different function in the most recent TorchVision implementation.*
+
+*The VGG backbone for SCNN/RESA/etc. should technically be DeepLab-LargeFOV, we keep calling it VGG for consistency with common practices.*
 
 ## Semantic segmentation performance:
 
@@ -63,26 +65,27 @@ And models from this repo is faster (also better or at least similar) than the o
 
 ## Lane detection performance:
 
-| model | resolution | mixed precision? | dataset | metric | average | best | training time |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.37 | 73.54 | 6h |
-| SCNN | 288 x 800 | *yes* | CULane | F measure | 74.41 | 74.44 | 11.3h |
-| ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 94.68% | 94.83% | 0.2h |
-| SCNN | 360 x 640 | *yes* | TuSimple | Accuracy | 95.20% | 95.26% | 0.4h |
-| VGG16 | 288 x 800 | *yes* | CULane | F measure |  |  |  |
+| method | backbone | resolution | mixed precision? | dataset | metric | average | best | training time |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Baseline | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.37 | 73.54 | 6h |
+| SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 74.41 | 74.44 | 11.3h |
+| Baseline | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 95.15% | 95.24% | 0.8h |
+| SCNN | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 96.00% | 96.12% | 1.6h |
+| Baseline | VGG | 288 x 800 | *yes* | CULane | F measure |  |  |  |
+| SCNN | VGG | 288 x 800 | *yes* | CULane | F measure |  |  |  |
 
 *\* All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
 
 ### Tusimple detailed performance (best):
 
-| model | accuracy | FP | FN |
-| :---: | :---: | :---: | :---: |
-| ERFNet | 94.83% | 0.0498 | 0.0619 |
-| SCNN | 95.26% | 0.0360 | 0.0522 |
+| method | backbone | accuracy | FP | FN |
+| :---: | :---: | :---: | :---: | :---: |
+| Baseline | ERFNet | 95.24% | 0.0569 | 0.0457 |
+| SCNN | ERFNet | 96.12% | 0.0468 | 0.0335 |
 
 ### CULane detailed performance (best):
 
-| category | ERFNet | SCNN |
+| category | ERFNet-Baseline | ERFNet-SCNN |
 | :---: | :---: | :---: |
 | normal | 91.35 | 91.84 |
 | crowded | 71.45 | 72.55 |
