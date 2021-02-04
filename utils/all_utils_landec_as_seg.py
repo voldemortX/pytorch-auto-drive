@@ -6,7 +6,7 @@ import ujson as json
 import numpy as np
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
-from torchvision_models.segmentation import erfnet_resnet,vgg16
+from torchvision_models.segmentation import erfnet_resnet, vgg16
 from utils.datasets import StandardLaneDetectionDataset
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
@@ -22,6 +22,12 @@ def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pr
     # Define ERFNet for CULane (With only ImageNet pretraining)
     return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
                          dropout_1=0.1, dropout_2=0.1, flattened_size=4500, scnn=scnn)
+
+
+def vgg16_tusimple(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
+    # Define Vgg16 for Tusimple (With only ImageNet pretraining)
+    return vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
+                 dropout_1=0.1, flattened_size=6160, scnn=scnn)
 
 
 def vgg16_culane(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
@@ -127,7 +133,7 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
             # Record checkpoints
             if validation_loader is not None:
                 if current_step_num % val_num_steps == (val_num_steps - 1) or \
-                   current_step_num == num_epochs * len(loader):
+                        current_step_num == num_epochs * len(loader):
                     # save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
                     #                 filename=exp_name + '_' + str(current_step_num) + '.pt')
 
@@ -174,7 +180,7 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
         'average row correct: {}\n'
         'IoU: {}\n'
         'mean IoU: {:.2f}'
-        ).format(
+    ).format(
         acc_global.item() * 100,
         ['{:.2f}'.format(i) for i in (acc * 100).tolist()],
         ['{:.2f}'.format(i) for i in (iu * 100).tolist()],

@@ -16,7 +16,6 @@ class LaneExistVGG(nn.Module):
         self.linear2 = nn.Linear(128, num_output)
 
     def forward(self, input, predict=False):
-        # print(output.shape)
         output = self.avgpool(input)
         output = output.flatten(start_dim=1)
         output = self.linear1(output)
@@ -95,11 +94,9 @@ class DeepLabV1(nn.Module):
 
         output = self.fc8(output)
         out['out'] = output
-
         if self.aux_head is not None:
             output = self.softmax(output)
             out['aux'] = self.aux_head(output)
-
         return out
 
 # t = torch.randn(1, 3, 288, 800)

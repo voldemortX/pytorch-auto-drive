@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.losses import LaneLoss, SADLoss
 from utils.all_utils_semseg import load_checkpoint
 from utils.all_utils_landec_as_seg import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane, \
-    fast_evaluate, vgg16_culane
+    fast_evaluate, vgg16_culane, vgg16_tusimple
 
 if __name__ == '__main__':
     # Settings
@@ -64,6 +64,8 @@ if __name__ == '__main__':
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'culane' and args.backbone == 'vgg16':
         net = vgg16_culane(num_classes=num_classes, scnn=scnn)
+    elif args.dataset == 'tusimple' and args.backbone == 'vgg16':
+        net = vgg16_tusimple(num_classes=num_classes, scnn=scnn)
     else:
         raise ValueError
     print(device)
