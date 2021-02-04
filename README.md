@@ -25,13 +25,14 @@ And models from this repo is faster (also better or at least similar) than the o
 
 ## Supported models:
 
-| Task | Backbone | Model |
+| Task | Backbone | Model/Method |
 | :---: | :---: | :---: |
 | semantic segmentation | ResNet-101 | FCN |
 | semantic segmentation | ResNet-101 | DeeplabV2 |
 | semantic segmentation | ResNet-101 | DeeplabV3 |
 | semantic segmentation | - | ERFNet |
-| lane detection | ERFNet | ERFNet |
+| lane detection | ERFNet | Baseline |
+| lane detection | VGG | Baseline |
 | lane detection | ERFNet | SCNN |
 | lane detection | VGG | SCNN |
 | lane detection | ERFNet | SAD (*In progress*) |
