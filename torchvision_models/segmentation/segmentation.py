@@ -151,6 +151,7 @@ def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_cl
         net.load_state_dict(original_weights)
     return net
 
+
 def vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, aux=0,
           dropout_1=0.1, flattened_size=4500, scnn=False):
     """similar with erfnet.
@@ -160,5 +161,5 @@ def vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, aux=0,
     if pretrained_weights == 'pytorch-pretrained':
         pretrained = True
     net = DeepLabV1(num_classes=num_classes, encoder=None, aux=aux, dropout_1=dropout_1,
-                   flattened_size=flattened_size, scnn=scnn, pretrain=pretrained)
+                    flattened_size=flattened_size, scnn=scnn, pretrain=pretrained)
     return net

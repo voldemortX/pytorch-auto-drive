@@ -6,8 +6,9 @@ import torch.nn.functional as F
 from collections import OrderedDict
 from .erfnet import SpatialConv
 
+
 # Really tricky without global pooling
-class LaneExistVgg(nn.Module):
+class LaneExistVGG(nn.Module):
     def __init__(self, num_output, flattened_size=4500):
         super().__init__()
         self.avgpool = nn.AvgPool2d(2, 2)
@@ -73,13 +74,13 @@ class DeepLabV1(nn.Module):
 
         self.fc8 = nn.Sequential(
             nn.Dropout2d(dropout_1),
-            nn.Conv2d(128, 5, 1)
+            nn.Conv2d(128, num_classes, 1)
         )
 
         self.softmax = nn.Softmax(dim=1)
 
         if aux > 0:
-            self.aux_head = LaneExistVgg(num_output=aux, flattened_size=flattened_size)
+            self.aux_head = LaneExistVGG(num_output=aux, flattened_size=flattened_size)
         else:
             self.aux_head = None
 
