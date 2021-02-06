@@ -2,7 +2,7 @@
 
 Segmentation models (**Deeplab, FCN, ERFNet**), Lane detection models (**ERFNet, ERFNet-SCNN and others**) based on Python 3.6 and PyTorch >=1.6.0 (CUDA 10) & TorchVision >=0.7.0 with mixed precision training.
 
-**This repository is under active development, which means performance reported could improve in the future.**
+**This repository is under active development, which means performance reported could improve in the future. While results with models uploaded are probably stable.**
 
 ## Highlights
 
@@ -45,6 +45,42 @@ And models from this repo is faster (also better or at least similar) than the o
 
 *The VGG backbone for SCNN/RESA/etc. should technically be DeepLab-LargeFOV, we keep calling it VGG for consistency with common practices.*
 
+## Lane detection performance:
+
+| method | backbone | resolution | mixed precision? | dataset | metric | average | best | training time |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Baseline | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.40 | 73.49 | 6h |
+| SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
+| Baseline | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 95.15% | 95.24% | 0.8h |
+| SCNN | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 96.00% | 96.12% | 1.6h |
+| Baseline | VGG | 288 x 800 | *yes* | CULane | F measure |  |  |  |
+| SCNN | VGG | 288 x 800 | *yes* | CULane | F measure |  |  |  |
+
+*\* All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
+
+### Tusimple detailed performance (best):
+
+| method | backbone | accuracy | FP | FN | |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| Baseline | ERFNet | 95.24% | 0.0569 | 0.0457 | [model](https://drive.google.com/file/d/12n_ck3Ir86j3VOhIn0hT96Ru4n8nhP5G/view?usp=sharing) |
+| SCNN | ERFNet | 96.12% | 0.0468 | 0.0335 | [model](https://drive.google.com/file/d/1rzE2fZ5mQswMIm6ICK1lWH-rsQyjRbxL/view?usp=sharing) |
+
+### CULane detailed performance (best):
+
+| category | ERFNet-Baseline | ERFNet-SCNN |
+| :---: | :---: | :---: |
+| normal | 91.48 | 91.82 |
+| crowded | 71.27 | 72.13 |
+| night | 68.09 | 69.49 |
+| no line | 46.76 | 46.68 |
+| shadow | 74.47 | 70.59 |
+| arrow | 86.09 | 87.40 |
+| dazzle light | 64.18 | 65.80 |
+| curve | 66.89 | 68.30 |
+| crossroad | 2102 | 2236 |
+| total | 73.49 | 74.03 |
+| | [model](https://drive.google.com/file/d/16-Q_jZYc9IIKUEHhClSTwZI4ClMeVvQS/view?usp=sharing) | [model](https://drive.google.com/file/d/1YOAuIJqh0M1RsPN5zISY7kTx9xt29IS3/view?usp=sharing) |
+
 ## Semantic segmentation performance:
 
 | model | resolution | mixed precision? | dataset | mIoU (%) | training time |
@@ -63,41 +99,6 @@ And models from this repo is faster (also better or at least similar) than the o
 | DeeplabV2 | 512 x 1024 | *yes* | SYNTHIA | 33.89 (mIoU-16) | 10.4h |
 
 *\* All performance is measured with ImageNet pre-training and reported as 3 times average on val set. Note that the best run from ERFNet on Cityscapes val is 72.47% in mIoU, slightly better than the original implementation by the authors (72.2%).*
-
-## Lane detection performance:
-
-| method | backbone | resolution | mixed precision? | dataset | metric | average | best | training time |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Baseline | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.37 | 73.54 | 6h |
-| SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 74.41 | 74.44 | 11.3h |
-| Baseline | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 95.15% | 95.24% | 0.8h |
-| SCNN | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 96.00% | 96.12% | 1.6h |
-| Baseline | VGG | 288 x 800 | *yes* | CULane | F measure |  |  |  |
-| SCNN | VGG | 288 x 800 | *yes* | CULane | F measure |  |  |  |
-
-*\* All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
-
-### Tusimple detailed performance (best):
-
-| method | backbone | accuracy | FP | FN |
-| :---: | :---: | :---: | :---: | :---: |
-| Baseline | ERFNet | 95.24% | 0.0569 | 0.0457 |
-| SCNN | ERFNet | 96.12% | 0.0468 | 0.0335 |
-
-### CULane detailed performance (best):
-
-| category | ERFNet-Baseline | ERFNet-SCNN |
-| :---: | :---: | :---: |
-| normal | 91.35 | 91.84 |
-| crowded | 71.45 | 72.55 |
-| night | 68.77 | 69.42 |
-| no line | 46.05 | 47.99 |
-| shadow | 69.21 | 75.59 |
-| arrow | 87.19 | 87.32 |
-| dazzle light | 62.34 | 63.93 |
-| curve | 67.27 | 69.81 |
-| crossroad | 1837 | 2160 |
-| total | 73.54 | 74.44 |
 
 ## Preparations:
 
@@ -125,9 +126,9 @@ tensorboard --logdir=runs
 
 ## Getting started
 
-Get started with [SEGMENTATION.md](SEGMENTATION.md) for semantic segmentation.
-
 Get started with [LANEDETECTION.md](LANEDETECTION.md) for lane detection.
+
+Get started with [SEGMENTATION.md](SEGMENTATION.md) for semantic segmentation.
 
 ## Notes:
 
@@ -137,4 +138,4 @@ Get started with [LANEDETECTION.md](LANEDETECTION.md) for lane detection.
 
 3. All segmentation results reported are from single model without CRF and without multi-scale testing.
 
-4. PR and issues are always welcomed.
+4. **Pull Requests** and **Issues** are most welcomed.

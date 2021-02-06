@@ -34,7 +34,7 @@ python tools/tusimple_list_convertor.py
 Mixed precision training on CULane with ERFNet:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.15 --batch-size=20 --dataset=culane --method=baseline --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=baseline --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on TuSimple with ERFNet:
@@ -46,7 +46,7 @@ python main_landec_as_seg.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusi
 Mixed precision training on CULane with ERFNet-SCNN:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.08 --batch-size=20 --dataset=culane --method=scnn --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=scnn --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on TuSimple with ERFNet-SCNN:
