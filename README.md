@@ -20,7 +20,7 @@ And models from this repo is faster (also better or at least similar) than the o
 | semantic segmentation | SYNTHIA* |
 | lane detection | CULane |
 | lane detection | TuSimple |
-| lane detection | BDD100K (in progress) |
+| lane detection | BDD100K (*In progress*) |
 
 \* The UDA baseline setup, with Cityscapes *val* set as validation.
 
