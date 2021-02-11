@@ -36,8 +36,10 @@ And models from this repo is faster (also better or at least similar) than the o
 | lane detection | ERFNet | SCNN |
 | lane detection | VGG | SCNN |
 | lane detection | ERFNet | SAD (*In progress*) |
+| lane detection | ENet | SAD (*In progress*) |
 | lane detection | ERFNet | PRNet (*In progress*) |
 | lane detection | ERFNet | LSTR (*In progress*) |
+| lane detection | ResNet-18 | LSTR (*In progress*) |
 | lane detection | ERFNet | RESA (*In progress*) |
 | lane detection | VGG | RESA (*In progress*) |
 
