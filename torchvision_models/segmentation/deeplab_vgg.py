@@ -28,7 +28,7 @@ class VGG16(nn.Module):
 
 
 class DeepLabV1(nn.Module):
-    def __init__(self, num_classes, encoder=None, aux=0, dropout_1=0.1, flattened_size=3965,
+    def __init__(self, num_classes, encoder=None, num_lanes=0, dropout_1=0.1, flattened_size=3965,
                  scnn=False, pretrain=False):
         super(DeepLabV1, self).__init__()
 
@@ -58,10 +58,10 @@ class DeepLabV1(nn.Module):
 
         self.softmax = nn.Softmax(dim=1)
 
-        if aux > 0:
-            self.aux_head = _SimpleLaneExist(num_output=aux, flattened_size=flattened_size)
+        if num_lanes > 0:
+            self.lane_classifier = _SimpleLaneExist(num_output=num_lanes, flattened_size=flattened_size)
         else:
-            self.aux_head = None
+            self.lane_classifier = None
 
     def forward(self, input):
         out = OrderedDict()
@@ -74,9 +74,9 @@ class DeepLabV1(nn.Module):
 
         output = self.fc8(output)
         out['out'] = output
-        if self.aux_head is not None:
+        if self.lane_classifier is not None:
             output = self.softmax(output)
-            out['lane'] = self.aux_head(output)
+            out['lane'] = self.lane_classifier(output)
         return out
 
 # t = torch.randn(1, 3, 288, 800)

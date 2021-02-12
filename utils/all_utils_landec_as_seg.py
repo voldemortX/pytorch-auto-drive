@@ -14,25 +14,25 @@ from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
 
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for TuSimple (With only ImageNet pretraining)
-    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
+    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
                          dropout_1=0.3, dropout_2=0.3, flattened_size=4400, scnn=scnn)
 
 
 def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for CULane (With only ImageNet pretraining)
-    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
+    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
                          dropout_1=0.1, dropout_2=0.1, flattened_size=4500, scnn=scnn)
 
 
 def vgg16_tusimple(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
     # Define Vgg16 for Tusimple (With only ImageNet pretraining)
-    return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
+    return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
                            dropout_1=0.1, flattened_size=6160, scnn=scnn)
 
 
 def vgg16_culane(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
     # Define Vgg16 for CULane (With only ImageNet pretraining)
-    return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
+    return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
                            dropout_1=0.1, flattened_size=4500, scnn=scnn)
 
 

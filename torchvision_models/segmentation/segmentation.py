@@ -222,14 +222,14 @@ def deeplabv3_resnet101(pretrained=False, progress=True,
                        recon_loss, **kwargs)
 
 
-def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_classes=19, aux=0,
+def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_classes=19, num_lanes=0,
                   dropout_1=0.03, dropout_2=0.3, flattened_size=3965, scnn=False):
     """Constructs a ERFNet model with ResNet-style backbone.
 
     Args:
         pretrained_weights (str): If not None, load ImageNet pre-trained weights from this filename
     """
-    net = ERFNet(num_classes=num_classes, encoder=None, aux=aux, dropout_1=dropout_1, dropout_2=dropout_2,
+    net = ERFNet(num_classes=num_classes, encoder=None, num_lanes=num_lanes, dropout_1=dropout_1, dropout_2=dropout_2,
                  flattened_size=flattened_size, scnn=scnn)
     if pretrained_weights is not None:  # Load ImageNet pre-trained weights
         saved_weights = load(pretrained_weights)['state_dict']
@@ -242,7 +242,7 @@ def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_cl
     return net
 
 
-def deeplabv1_vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, aux=0,
+def deeplabv1_vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, num_lanes=0,
                     dropout_1=0.1, flattened_size=4500, scnn=False):
     """Constructs a DeepLab-LargeFOV model with a VGG16 backbone, same as the official DeepLabV1.
 
@@ -252,6 +252,6 @@ def deeplabv1_vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, aux
     pretrain = False
     if pretrained_weights == 'pytorch-pretrained':
         pretrain = True
-    net = DeepLabV1(num_classes=num_classes, encoder=None, aux=aux, dropout_1=dropout_1,
+    net = DeepLabV1(num_classes=num_classes, encoder=None, num_lanes=num_lanes, dropout_1=dropout_1,
                     flattened_size=flattened_size, scnn=scnn, pretrain=pretrain)
     return net

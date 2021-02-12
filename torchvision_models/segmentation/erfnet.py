@@ -166,7 +166,7 @@ class LaneExist(nn.Module):
 
 # ERFNet
 class ERFNet(nn.Module):
-    def __init__(self, num_classes, encoder=None, aux=0, dropout_1=0.03, dropout_2=0.3, flattened_size=3965,
+    def __init__(self, num_classes, encoder=None, num_lanes=0, dropout_1=0.03, dropout_2=0.3, flattened_size=3965,
                  scnn=False):
         super().__init__()
         if encoder is None:
@@ -181,10 +181,10 @@ class ERFNet(nn.Module):
         else:
             self.spatial_conv = None
 
-        if aux > 0:
-            self.aux_head = LaneExist(num_output=aux, flattened_size=flattened_size, dropout=dropout_2)
+        if num_lanes > 0:
+            self.lane_classifier = LaneExist(num_output=num_lanes, flattened_size=flattened_size, dropout=dropout_2)
         else:
-            self.aux_head = None
+            self.lane_classifier = None
 
     def forward(self, input, only_encode=False):
         out = OrderedDict()
@@ -196,6 +196,6 @@ class ERFNet(nn.Module):
                 output = self.spatial_conv(output)
             out['out'] = self.decoder.forward(output)
 
-            if self.aux_head is not None:
-                out['lane'] = self.aux_head(output)
+            if self.lane_classifier is not None:
+                out['lane'] = self.lane_classifier(output)
             return out
