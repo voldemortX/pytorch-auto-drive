@@ -34,17 +34,17 @@ And models from this repo is faster (also better or at least similar) than the o
 | semantic segmentation | - | ERFNet |
 | lane detection | ERFNet | Baseline |
 | lane detection | VGG | Baseline |
+| lane detection | ResNets (18, 34, 50, 101) | Baseline |
 | lane detection | ERFNet | SCNN |
 | lane detection | VGG | SCNN |
+| lane detection | ResNets (18, 34, 50, 101) | SCNN |
 | lane detection | ERFNet | SAD (*In progress*) |
 | lane detection | ENet | SAD (*In progress*) |
 | lane detection | ERFNet | PRNet (*In progress*) |
 | lane detection | ERFNet | LSTR (*In progress*) |
-| lane detection | ResNet-18 | LSTR (*In progress*) |
+| lane detection | ResNet18-reduced | LSTR (*In progress*) |
 | lane detection | ERFNet | RESA (*In progress*) |
 | lane detection | VGG | RESA (*In progress*) |
-
-*You can of course also use other backbones (e.g. ResNet-50) in TorchVision by simply calling a different function in the most recent TorchVision implementation.*
 
 *The VGG backbone for SCNN/RESA/etc. should technically be DeepLab-LargeFOV, we keep calling it VGG for consistency with common practices.*
 
