@@ -12,7 +12,7 @@ from torch import nn
 
 
 __all__ = ['fcn_resnet50', 'fcn_resnet101', 'deeplabv2_resnet101', 'deeplabv3_resnet50', 'deeplabv3_resnet101',
-           'erfnet_resnet', 'vgg16',
+           'erfnet_resnet', 'deeplabv1_vgg16',
            'deeplabv1_resnet101', 'deeplabv1_resnet50', 'deeplabv1_resnet34', 'deeplabv1_resnet18']
 
 
@@ -242,8 +242,8 @@ def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_cl
     return net
 
 
-def vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, aux=0,
-          dropout_1=0.1, flattened_size=4500, scnn=False):
+def deeplabv1_vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, aux=0,
+                    dropout_1=0.1, flattened_size=4500, scnn=False):
     """Constructs a DeepLab-LargeFOV model with a VGG16 backbone, same as the official DeepLabV1.
 
     Args:

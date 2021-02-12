@@ -6,7 +6,7 @@ import ujson as json
 import numpy as np
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
-from torchvision_models.segmentation import erfnet_resnet, vgg16
+from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16
 from utils.datasets import StandardLaneDetectionDataset
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
@@ -26,14 +26,14 @@ def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pr
 
 def vgg16_tusimple(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
     # Define Vgg16 for Tusimple (With only ImageNet pretraining)
-    return vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
-                 dropout_1=0.1, flattened_size=6160, scnn=scnn)
+    return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
+                           dropout_1=0.1, flattened_size=6160, scnn=scnn)
 
 
 def vgg16_culane(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
     # Define Vgg16 for CULane (With only ImageNet pretraining)
-    return vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
-                 dropout_1=0.1, flattened_size=4500, scnn=scnn)
+    return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
+                           dropout_1=0.1, flattened_size=4500, scnn=scnn)
 
 
 def init(batch_size, state, input_sizes, dataset, mean, std, base):
