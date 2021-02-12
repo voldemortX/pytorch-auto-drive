@@ -55,7 +55,7 @@ And models from this repo is faster (also better or at least similar) than the o
 | SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
 | Baseline | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 95.15% | 95.24% | 0.8h |
 | SCNN | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 96.00% | 96.12% | 1.6h |
-| Baseline | VGG | 288 x 800 | *yes* | CULane | F measure |  |  |  |
+| Baseline | VGG | 288 x 800 | *yes* | CULane | F measure | 63.90 | 63.98 | 9.3h |
 | SCNN | VGG | 288 x 800 | *yes* | CULane | F measure | 73.13 | 73.23 | 12.8h |
 
 *\* All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
@@ -69,18 +69,18 @@ And models from this repo is faster (also better or at least similar) than the o
 
 ### CULane detailed performance (best):
 
-| category | ERFNet-Baseline | ERFNet-SCNN | VGG16-SCNN |
-| :---: | :---: | :---: | :---: |
-| normal | 91.48 | 91.82 | 91.17 |
-| crowded | 71.27 | 72.13 | 71.56 |
-| night | 68.09 | 69.49 | 67.83 |
-| no line | 46.76 | 46.68 | 45.59 |
-| shadow | 74.47 | 70.59 | 69.38 | 
-| arrow | 86.09 | 87.40 | 86.56 |
-| dazzle light | 64.18 | 65.80 | 62.83|
-| curve | 66.89 | 68.30 | 66.58 |
-| crossroad | 2102 | 2236 | 1809 |
-| total | 73.49 | 74.03 | 73.23 |
+| category | ERFNet-Baseline | ERFNet-SCNN | VGG16-SCNN | VGG16-Baseline |
+| :---: | :---: | :---: | :---: | :---: |
+| normal | 91.48 | 91.82 | 91.17 | 83.67 |
+| crowded | 71.27 | 72.13 | 71.56 | 61.64 |
+| night | 68.09 | 69.49 | 67.83 | 58.12 |
+| no line | 46.76 | 46.68 | 45.59 | 34.93 |
+| shadow | 74.47 | 70.59 | 69.38 | 54.07 |
+| arrow | 86.09 | 87.40 | 86.56 | 75.52 |
+| dazzle light | 64.18 | 65.80 | 62.83| 52.65 |
+| curve | 66.89 | 68.30 | 66.58 | 61.30 |
+| crossroad | 2102 | 2236 | 1809 | 1985 |
+| total | 73.49 | 74.03 | 73.23 | 63.98 |
 | | [model](https://drive.google.com/file/d/16-Q_jZYc9IIKUEHhClSTwZI4ClMeVvQS/view?usp=sharing) | [model](https://drive.google.com/file/d/1YOAuIJqh0M1RsPN5zISY7kTx9xt29IS3/view?usp=sharing) |
 
 ## Semantic segmentation performance:
