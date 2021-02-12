@@ -6,52 +6,68 @@ from collections import OrderedDict
 
 
 class _SimpleSegmentationModel(nn.Module):
-    def __init__(self, backbone, classifier, aux_classifier=None, recon_head=None):
+    def __init__(self, backbone, classifier, aux_classifier=None, recon_head=None,
+                 lane_classifier=None, channel_reducer=None, scnn_layer=None):
         super(_SimpleSegmentationModel, self).__init__()
         self.backbone = backbone
         self.classifier = classifier
-        self.aux_classifier = aux_classifier
+        self.aux_classifier = aux_classifier  # Name aux is already take for COCO pre-trained models
+        self.lane_classifier = lane_classifier   # TODO: Rename aux in other functions and classes
+        self.channel_reducer = channel_reducer  # Reduce ResNet feature channels to 128 as did in RESA
+        self.scnn_layer = scnn_layer
         self.recon_head = recon_head
 
     def forward(self, x):
         # input_shape = x.shape[-2:]
         # contract: features is a dict of tensors
         features = self.backbone(x)
-
         result = OrderedDict()
-        x = features["out"]
+        x = features['out']
+
+        # For lane detection
+        if self.channel_reducer is not None:
+            x = self.channel_reducer(x)
+        if self.scnn_layer is not None:
+            x = self.scnn_layer(x)
+
+        # Semantic segmentation
         x = self.classifier(x)
         # x = F.interpolate(x, size=(513, 513), mode='bilinear', align_corners=True)
-        result["out"] = x
+        result['out'] = x
 
+        # For lane detection
+        if self.lane_classifier is not None:
+            result['lane'] = self.lane_classifier(x.softmax(dim=1))
+
+        # For COCO pre-trained models
         if self.aux_classifier is not None:
-            x = features["aux"]
+            x = features['aux']
             x = self.aux_classifier(x)
             # x = F.interpolate(x, size=input_shape, mode='bilinear', align_corners=True)
-            result["aux"] = x
+            result['aux'] = x
 
         # Reconstruction
         if self.recon_head is not None:
-            x = features["recon"]
+            x = features['recon']
             x = self.recon_head(x)
-            result["recon"] = x
+            result['recon'] = x
 
         return result
 
 
 # SCNN head
 class _SpatialConv(nn.Module):
-    def __init__(self):
+    def __init__(self, num_channels=128):
         super().__init__()
-        self.conv_d = nn.Conv2d(128, 128, (1, 9), padding=(0, 4))
-        self.conv_u = nn.Conv2d(128, 128, (1, 9), padding=(0, 4))
-        self.conv_r = nn.Conv2d(128, 128, (9, 1), padding=(4, 0))
-        self.conv_l = nn.Conv2d(128, 128, (9, 1), padding=(4, 0))
-        self._adjust_initializations()
+        self.conv_d = nn.Conv2d(num_channels, num_channels, (1, 9), padding=(0, 4))
+        self.conv_u = nn.Conv2d(num_channels, num_channels, (1, 9), padding=(0, 4))
+        self.conv_r = nn.Conv2d(num_channels, num_channels, (9, 1), padding=(4, 0))
+        self.conv_l = nn.Conv2d(num_channels, num_channels, (9, 1), padding=(4, 0))
+        self._adjust_initializations(num_channels=num_channels)
 
-    def _adjust_initializations(self) -> None:
+    def _adjust_initializations(self, num_channels=128):
         # https://github.com/XingangPan/SCNN/issues/82
-        bound = math.sqrt(2.0 / (128 * 9 * 5))
+        bound = math.sqrt(2.0 / (num_channels * 9 * 5))
         nn.init.uniform_(self.conv_d.weight, -bound, bound)
         nn.init.uniform_(self.conv_u.weight, -bound, bound)
         nn.init.uniform_(self.conv_r.weight, -bound, bound)

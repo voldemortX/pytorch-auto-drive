@@ -1,11 +1,14 @@
+import warnings
 from .._utils import IntermediateLayerGetter
 from ..utils import load_state_dict_from_url
 from .. import resnet
-from .deeplab import DeepLabV3Head, DeepLabV2Head, DeepLab, ReconHead
+from .deeplab import DeepLabV3Head, DeepLabV2Head, DeepLabV1Head, DeepLab, ReconHead
 from .fcn import FCN, FCNHead
 from .erfnet import ERFNet
 from .deeplab_vgg import DeepLabV1
+from ._utils import _SpatialConv, _SimpleLaneExist
 from torch import load
+from torch import nn
 
 
 __all__ = ['fcn_resnet50', 'fcn_resnet101', 'deeplabv2_resnet101', 'deeplabv3_resnet50', 'deeplabv3_resnet101',
@@ -19,10 +22,15 @@ model_urls = {
     'deeplabv3_resnet50_coco': None,
     'deeplabv3_resnet101_coco': 'https://download.pytorch.org/models/deeplabv3_resnet101_coco-586e9e4e.pth',
     'deeplabv2_resnet101_coco': None,
+    'deeplabv1_resnet18_coco': None,
+    'deeplabv1_resnet34_coco': None,
+    'deeplabv1_resnet50_coco': None,
+    'deeplabv1_resnet101_coco': None
 }
 
 
-def _segm_resnet(name, backbone_name, num_classes, aux, recon_loss, pretrained_backbone=True):
+def _segm_resnet(name, backbone_name, num_classes, aux, recon_loss, pretrained_backbone=True,
+                 num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965):
     backbone = resnet.__dict__[backbone_name](
         pretrained=pretrained_backbone,
         replace_stride_with_dilation=[False, True, True])
@@ -34,32 +42,57 @@ def _segm_resnet(name, backbone_name, num_classes, aux, recon_loss, pretrained_b
         return_layers['layer2'] = 'recon'
     backbone = IntermediateLayerGetter(backbone, return_layers=return_layers)
 
+    # For lane detection (the style here is fucked up, but lets keep it for now)
+    inplanes = 2048 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 512
+    lane_classifier = None
+    if num_lanes > 0:
+        lane_classifier = _SimpleLaneExist(num_output=num_lanes, flattened_size=flatten_size)
+    channel_reducer = None
+    if channel_reduce > 0:
+        if channel_reduce > inplanes:
+            raise ValueError
+        channel_reducer = nn.Conv2d(inplanes, channel_reduce, kernel_size=1, stride=1, bias=False)
+    scnn_layer = None
+    if scnn:
+        num_channels = inplanes if channel_reduce <= 0 else channel_reduce
+        if channel_reduce != 128:
+            warnings.warn('Spatial conv is commonly conducted with 128 channels, not {} channels'.format(
+                channel_reduce))
+        scnn_layer = _SpatialConv(num_channels=num_channels)
+
     aux_classifier = None
     if aux:
-        inplanes = 1024
+        inplanes = 1024 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 256
         aux_classifier = FCNHead(inplanes, num_classes)
 
     recon_classifier = None
     if recon_loss:
-        recon_classifier = ReconHead(in_channels=512)
+        recon_classifier = ReconHead(in_channels=512 if backbone_name == 'resnet50' or backbone_name == 'resnet101'
+                                     else 128)
 
     model_map = {
         'deeplabv3': (DeepLabV3Head, DeepLab),
         'deeplabv2': (DeepLabV2Head, DeepLab),
+        'deeplabv1': (DeepLabV1Head, DeepLab),
         'fcn': (FCNHead, FCN),
     }
-    inplanes = 2048
+    inplanes = 2048 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 512
     classifier = model_map[name][0](inplanes, num_classes)
     base_model = model_map[name][1]
 
-    model = base_model(backbone, classifier, aux_classifier, recon_classifier)
+    model = base_model(backbone, classifier, aux_classifier, recon_classifier,
+                       lane_classifier=lane_classifier, channel_reducer=channel_reducer, scnn_layer=scnn_layer)
     return model
 
 
-def _load_model(arch_type, backbone, pretrained, progress, num_classes, aux_loss, recon_loss, **kwargs):
+# TODO: Get rid of **kwargs
+def _load_model(arch_type, backbone, pretrained, progress, num_classes, aux_loss, recon_loss,
+                num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
     if pretrained:
         aux_loss = True
-    model = _segm_resnet(arch_type, backbone, num_classes, aux_loss, recon_loss, **kwargs)
+    model = _segm_resnet(arch_type, backbone, num_classes, aux_loss, recon_loss,
+                         num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flatten_size=flatten_size,
+                         **kwargs)
     if pretrained:
         arch = arch_type + '_' + backbone + '_coco'
         model_url = model_urls[arch]
@@ -95,9 +128,65 @@ def fcn_resnet101(pretrained=False, progress=True,
     return _load_model('fcn', 'resnet101', pretrained, progress, num_classes, aux_loss, recon_loss, **kwargs)
 
 
+def deeplabv1_resnet18(pretrained=False, progress=True, num_classes=21, aux_loss=None, recon_loss=False,
+                       num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
+    """Constructs a DeepLab-LargeFOV model with a ResNet-18 backbone.
+
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on COCO train2017 which
+            contains the same classes as Pascal VOC
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _load_model('deeplabv1', 'resnet18', pretrained, progress, num_classes, aux_loss, recon_loss,
+                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flatten_size=flatten_size,
+                       **kwargs)
+
+
+def deeplabv1_resnet34(pretrained=False, progress=True, num_classes=21, aux_loss=None, recon_loss=False,
+                       num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
+    """Constructs a DeepLab-LargeFOV model with a ResNet-34 backbone.
+
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on COCO train2017 which
+            contains the same classes as Pascal VOC
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _load_model('deeplabv1', 'resnet34', pretrained, progress, num_classes, aux_loss, recon_loss,
+                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flatten_size=flatten_size,
+                       **kwargs)
+
+
+def deeplabv1_resnet50(pretrained=False, progress=True, num_classes=21, aux_loss=None, recon_loss=False,
+                       num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
+    """Constructs a DeepLab-LargeFOV model with a ResNet-50 backbone.
+
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on COCO train2017 which
+            contains the same classes as Pascal VOC
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _load_model('deeplabv1', 'resnet50', pretrained, progress, num_classes, aux_loss, recon_loss,
+                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flatten_size=flatten_size,
+                       **kwargs)
+
+
+def deeplabv1_resnet101(pretrained=False, progress=True, num_classes=21, aux_loss=None, recon_loss=False,
+                       num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
+    """Constructs a DeepLab-LargeFOV model with a ResNet-101 backbone.
+
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on COCO train2017 which
+            contains the same classes as Pascal VOC
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _load_model('deeplabv1', 'resnet101', pretrained, progress, num_classes, aux_loss, recon_loss,
+                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flatten_size=flatten_size,
+                       **kwargs)
+
+
 def deeplabv2_resnet101(pretrained=False, progress=True,
                         num_classes=21, aux_loss=None, recon_loss=False, **kwargs):
-    """Constructs a DeepLabV3 model with a ResNet-101 backbone.
+    """Constructs a DeepLabV2 model with a ResNet-101 backbone.
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on COCO train2017 which
@@ -135,7 +224,7 @@ def deeplabv3_resnet101(pretrained=False, progress=True,
 
 def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_classes=19, aux=0,
                   dropout_1=0.03, dropout_2=0.3, flattened_size=3965, scnn=False):
-    """Different from others.
+    """Constructs a ERFNet model with ResNet-style backbone.
 
     Args:
         pretrained_weights (str): If not None, load ImageNet pre-trained weights from this filename
@@ -155,12 +244,14 @@ def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_cl
 
 def vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, aux=0,
           dropout_1=0.1, flattened_size=4500, scnn=False):
-    """similar with erfnet.
+    """Constructs a DeepLab-LargeFOV model with a VGG16 backbone, same as the official DeepLabV1.
 
+    Args:
+        pretrained_weights (str): If "pytorch-pretrained", load ImageNet pre-trained weights
     """
-    pretrained = False
+    pretrain = False
     if pretrained_weights == 'pytorch-pretrained':
-        pretrained = True
+        pretrain = True
     net = DeepLabV1(num_classes=num_classes, encoder=None, aux=aux, dropout_1=dropout_1,
-                    flattened_size=flattened_size, scnn=scnn, pretrain=pretrained)
+                    flattened_size=flattened_size, scnn=scnn, pretrain=pretrain)
     return net
