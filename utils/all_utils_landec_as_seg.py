@@ -203,7 +203,7 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                 outputs = net(images)
                 prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
                                                            align_corners=True).softmax(dim=1)
-                existence = (outputs['aux'].sigmoid() > 0.5)
+                existence = (outputs['lane'].sigmoid() > 0.5)
                 if dataset == 'tusimple':  # At most 5 lanes
                     indices = (existence.sum(dim=1, keepdim=True) > 5).expand_as(existence) * \
                               (existence == existence.min(dim=1, keepdim=True).values)

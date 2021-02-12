@@ -76,11 +76,11 @@ class DeepLabV1(nn.Module):
         out['out'] = output
         if self.aux_head is not None:
             output = self.softmax(output)
-            out['aux'] = self.aux_head(output)
+            out['lane'] = self.aux_head(output)
         return out
 
 # t = torch.randn(1, 3, 288, 800)
 # net = VGG16Net(num_classes=5, encoder=None, aux=5, flattened_size=4500, scnn=True)
 # res=net(t)
 # print(res['out'].shape)
-# print(res['aux'].shape)
+# print(res['lane'].shape)

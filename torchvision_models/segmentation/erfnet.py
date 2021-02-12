@@ -197,5 +197,5 @@ class ERFNet(nn.Module):
             out['out'] = self.decoder.forward(output)
 
             if self.aux_head is not None:
-                out['aux'] = self.aux_head(output)
+                out['lane'] = self.aux_head(output)
             return out
