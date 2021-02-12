@@ -171,7 +171,7 @@ def deeplabv1_resnet50(pretrained=False, progress=True, num_classes=21, aux_loss
 
 
 def deeplabv1_resnet101(pretrained=False, progress=True, num_classes=21, aux_loss=None, recon_loss=False,
-                       num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
+                        num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
     """Constructs a DeepLab-LargeFOV model with a ResNet-101 backbone.
 
     Args:

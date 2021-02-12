@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.losses import LaneLoss, SADLoss, HungarianLoss
 from utils.all_utils_semseg import load_checkpoint
 from utils.all_utils_landec_as_seg import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane, \
-    fast_evaluate, vgg16_culane, vgg16_tusimple
+    fast_evaluate, vgg16_culane, vgg16_tusimple, resnet_tusimple, resnet_culane
 
 if __name__ == '__main__':
     # Settings
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--method', type=str, default='baseline',
                         help='method selection (lstr/scnn/sad/baseline/etc) (default: scnn)')
     parser.add_argument('--backbone', type=str, default='erfnet',
-                        help='backbone selection (erfnet/vgg16/resnet18s) (default: erfnet)')
+                        help='backbone selection (erfnet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101) (default: erfnet)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size (default: 8)')
     parser.add_argument('--mixed-precision', action='store_true', default=False,
@@ -66,6 +66,10 @@ if __name__ == '__main__':
         net = vgg16_culane(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'tusimple' and args.backbone == 'vgg16':
         net = vgg16_tusimple(num_classes=num_classes, scnn=scnn)
+    elif args.dataset == 'tusimple' and 'resnet' in args.backbone:
+        net = resnet_tusimple(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
+    elif args.dataset == 'culane' and 'resnet' in args.backbone:
+        net = resnet_culane(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
     elif args.method == 'lstr':
         pass
     else:

@@ -6,7 +6,8 @@ import ujson as json
 import numpy as np
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
-from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16
+from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
+    deeplabv1_resnet50, deeplabv1_resnet101
 from utils.datasets import StandardLaneDetectionDataset
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
@@ -34,6 +35,30 @@ def vgg16_culane(num_classes, scnn=False, pretrained_weights='pytorch-pretrained
     # Define Vgg16 for CULane (With only ImageNet pretraining)
     return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
                            dropout_1=0.1, flattened_size=4500, scnn=scnn)
+
+
+def resnet_tusimple(num_classes, backbone_name='resnet18', scnn=False):
+    # Define ResNets for Tusimple (With only ImageNet pretraining)
+    model_map = {
+        'resnet18': deeplabv1_resnet18,
+        'resnet34': deeplabv1_resnet34,
+        'resnet50': deeplabv1_resnet50,
+        'resnet101': deeplabv1_resnet101,
+    }
+    return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
+                                    channel_reduce=128, flattened_size=6160, scnn=scnn)
+
+
+def resnet_culane(num_classes, backbone_name='resnet18', scnn=False):
+    # Define ResNets for CULane (With only ImageNet pretraining)
+    model_map = {
+        'resnet18': deeplabv1_resnet18,
+        'resnet34': deeplabv1_resnet34,
+        'resnet50': deeplabv1_resnet50,
+        'resnet101': deeplabv1_resnet101,
+    }
+    return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
+                                    channel_reduce=128, flattened_size=4500, scnn=scnn)
 
 
 def init(batch_size, state, input_sizes, dataset, mean, std, base):
