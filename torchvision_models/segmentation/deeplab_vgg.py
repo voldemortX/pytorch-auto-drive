@@ -1,31 +1,11 @@
 # jcdubron/scnn_pytorch
-import torch
 import torch.nn as nn
 import torchvision
-import torch.nn.functional as F
 from collections import OrderedDict
-from .erfnet import SpatialConv
+from ._utils import _SpatialConv, _SimpleLaneExist
 
 
-# Really tricky without global pooling
-class LaneExistVGG(nn.Module):
-    def __init__(self, num_output, flattened_size=4500):
-        super().__init__()
-        self.avgpool = nn.AvgPool2d(2, 2)
-        self.linear1 = nn.Linear(flattened_size, 128)
-        self.linear2 = nn.Linear(128, num_output)
-
-    def forward(self, input, predict=False):
-        output = self.avgpool(input)
-        output = output.flatten(start_dim=1)
-        output = self.linear1(output)
-        output = F.relu(output)
-        output = self.linear2(output)
-        if predict:
-            output = torch.sigmoid(output)
-        return output
-
-
+# Modified VGG16 backbone in DeepLab-LargeFOV
 class VGG16(nn.Module):
     def __init__(self, pretained=True):
         super(VGG16, self).__init__()
@@ -67,7 +47,7 @@ class DeepLabV1(nn.Module):
         )
 
         if scnn:
-            self.scnn = SpatialConv()
+            self.scnn = _SpatialConv()
         else:
             self.scnn = None
 
@@ -79,7 +59,7 @@ class DeepLabV1(nn.Module):
         self.softmax = nn.Softmax(dim=1)
 
         if aux > 0:
-            self.aux_head = LaneExistVGG(num_output=aux, flattened_size=flattened_size)
+            self.aux_head = _SimpleLaneExist(num_output=aux, flattened_size=flattened_size)
         else:
             self.aux_head = None
 

@@ -9,7 +9,8 @@ from torch import load
 
 
 __all__ = ['fcn_resnet50', 'fcn_resnet101', 'deeplabv2_resnet101', 'deeplabv3_resnet50', 'deeplabv3_resnet101',
-           'erfnet_resnet','vgg16']
+           'erfnet_resnet', 'vgg16',
+           'deeplabv1_resnet101', 'deeplabv1_resnet50', 'deeplabv1_resnet34', 'deeplabv1_resnet18']
 
 
 model_urls = {
