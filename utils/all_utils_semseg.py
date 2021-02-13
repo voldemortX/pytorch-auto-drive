@@ -1,7 +1,9 @@
 import torch
 import time
+import warnings
 import matplotlib.pyplot as plt
 import numpy as np
+from collections import OrderedDict
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet
@@ -98,19 +100,23 @@ def save_checkpoint(net, optimizer, lr_scheduler, filename='temp.pt'):
 # Load model checkpoints (supports amp)
 def load_checkpoint(net, optimizer, lr_scheduler, filename):
     checkpoint = torch.load(filename)
+    # To keep BC while having a acceptable variable name for lane detection
+    checkpoint['model'] = OrderedDict((k.replace('aux_head', 'lane_classifier') if 'aux_head' in k else k, v)
+                                      for k, v in checkpoint['model'].items())
     net.load_state_dict(checkpoint['model'])
 
-    # print(len(net.state_dict().keys()))
-    # print(len(checkpoint.keys()))
-    # ori_state_dict = net.state_dict()
-    # for key in checkpoint.keys():
-    #     ori_state_dict[key[7:]] = checkpoint[key]
-    # net.load_state_dict(ori_state_dict)
-
     if optimizer is not None:
-        optimizer.load_state_dict(checkpoint['optimizer'])
+        try:  # Shouldn't be necessary, but just in case
+            optimizer.load_state_dict(checkpoint['optimizer'])
+        except RuntimeError:
+            warnings.warn('Incorrect optimizer state dict, maybe you are using old code with aux_head?')
+            pass
     if lr_scheduler is not None:
-        lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+        try:  # Shouldn't be necessary, but just in case
+            lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+        except RuntimeError:
+            warnings.warn('Incorrect lr scheduler state dict, maybe you are using old code with aux_head?')
+            pass
 
 
 def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_label_id_map, 
