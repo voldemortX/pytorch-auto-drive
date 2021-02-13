@@ -29,7 +29,7 @@ model_urls = {
 
 
 def _segm_resnet(name, backbone_name, num_classes, aux, recon_loss, pretrained_backbone=True,
-                 num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965):
+                 num_lanes=0, channel_reduce=0, scnn=False, flattened_size=3965):
     backbone = resnet.__dict__[backbone_name](
         pretrained=pretrained_backbone,
         replace_stride_with_dilation=[False, True, True])
@@ -43,11 +43,12 @@ def _segm_resnet(name, backbone_name, num_classes, aux, recon_loss, pretrained_b
 
     # For lane detection (the style here is fucked up, but lets keep it for now)
     inplanes = 2048 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 512
+    num_channels = inplanes if channel_reduce <= 0 else channel_reduce
     lane_classifier = None
     final_dilation = True  # A dilation of 12 for the final prediction layer as in original DeepLab-LargeFOV
     if num_lanes > 0:
         final_dilation = False  # Lane detection baseline has no dilation in ResNet final prediction
-        lane_classifier = SimpleLaneExist(num_output=num_lanes, flattened_size=flatten_size)
+        lane_classifier = SimpleLaneExist(num_output=num_lanes, flattened_size=flattened_size)
     channel_reducer = None
     if channel_reduce > 0:
         if channel_reduce > inplanes:
@@ -55,7 +56,6 @@ def _segm_resnet(name, backbone_name, num_classes, aux, recon_loss, pretrained_b
         channel_reducer = RESAReducer(in_channels=inplanes, reduce=channel_reduce)
     scnn_layer = None
     if scnn:
-        num_channels = inplanes if channel_reduce <= 0 else channel_reduce
         if channel_reduce != 128:
             warnings.warn('Spatial conv is commonly conducted with 128 channels, not {} channels'.format(
                 channel_reduce))
@@ -77,11 +77,10 @@ def _segm_resnet(name, backbone_name, num_classes, aux, recon_loss, pretrained_b
         'deeplabv1': (DeepLabV1Head, DeepLab),
         'fcn': (FCNHead, FCN),
     }
-    inplanes = 2048 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 512
     if final_dilation:
-        classifier = model_map[name][0](inplanes, num_classes)
+        classifier = model_map[name][0](num_channels, num_classes)
     else:
-        classifier = model_map[name][0](inplanes, num_classes, 1)
+        classifier = model_map[name][0](num_channels, num_classes, 1)
     base_model = model_map[name][1]
 
     model = base_model(backbone, classifier, aux_classifier, recon_classifier,
@@ -91,11 +90,11 @@ def _segm_resnet(name, backbone_name, num_classes, aux, recon_loss, pretrained_b
 
 # TODO: Get rid of **kwargs
 def _load_model(arch_type, backbone, pretrained, progress, num_classes, aux_loss, recon_loss,
-                num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
+                num_lanes=0, channel_reduce=0, scnn=False, flattened_size=3965, **kwargs):
     if pretrained:
         aux_loss = True
     model = _segm_resnet(arch_type, backbone, num_classes, aux_loss, recon_loss,
-                         num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flatten_size=flatten_size,
+                         num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flattened_size=flattened_size,
                          **kwargs)
     if pretrained:
         arch = arch_type + '_' + backbone + '_coco'
@@ -133,7 +132,7 @@ def fcn_resnet101(pretrained=False, progress=True,
 
 
 def deeplabv1_resnet18(pretrained=False, progress=True, num_classes=21, aux_loss=None, recon_loss=False,
-                       num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
+                       num_lanes=0, channel_reduce=0, scnn=False, flattened_size=3965, **kwargs):
     """Constructs a DeepLab-LargeFOV model with a ResNet-18 backbone.
 
     Args:
@@ -142,12 +141,12 @@ def deeplabv1_resnet18(pretrained=False, progress=True, num_classes=21, aux_loss
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _load_model('deeplabv1', 'resnet18', pretrained, progress, num_classes, aux_loss, recon_loss,
-                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flatten_size=flatten_size,
+                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flattened_size=flattened_size,
                        **kwargs)
 
 
 def deeplabv1_resnet34(pretrained=False, progress=True, num_classes=21, aux_loss=None, recon_loss=False,
-                       num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
+                       num_lanes=0, channel_reduce=0, scnn=False, flattened_size=3965, **kwargs):
     """Constructs a DeepLab-LargeFOV model with a ResNet-34 backbone.
 
     Args:
@@ -156,12 +155,12 @@ def deeplabv1_resnet34(pretrained=False, progress=True, num_classes=21, aux_loss
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _load_model('deeplabv1', 'resnet34', pretrained, progress, num_classes, aux_loss, recon_loss,
-                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flatten_size=flatten_size,
+                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flattened_size=flattened_size,
                        **kwargs)
 
 
 def deeplabv1_resnet50(pretrained=False, progress=True, num_classes=21, aux_loss=None, recon_loss=False,
-                       num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
+                       num_lanes=0, channel_reduce=0, scnn=False, flattened_size=3965, **kwargs):
     """Constructs a DeepLab-LargeFOV model with a ResNet-50 backbone.
 
     Args:
@@ -170,12 +169,12 @@ def deeplabv1_resnet50(pretrained=False, progress=True, num_classes=21, aux_loss
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _load_model('deeplabv1', 'resnet50', pretrained, progress, num_classes, aux_loss, recon_loss,
-                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flatten_size=flatten_size,
+                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flattened_size=flattened_size,
                        **kwargs)
 
 
 def deeplabv1_resnet101(pretrained=False, progress=True, num_classes=21, aux_loss=None, recon_loss=False,
-                        num_lanes=0, channel_reduce=0, scnn=False, flatten_size=3965, **kwargs):
+                        num_lanes=0, channel_reduce=0, scnn=False, flattened_size=3965, **kwargs):
     """Constructs a DeepLab-LargeFOV model with a ResNet-101 backbone.
 
     Args:
@@ -184,7 +183,7 @@ def deeplabv1_resnet101(pretrained=False, progress=True, num_classes=21, aux_los
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _load_model('deeplabv1', 'resnet101', pretrained, progress, num_classes, aux_loss, recon_loss,
-                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flatten_size=flatten_size,
+                       num_lanes=num_lanes, channel_reduce=channel_reduce, scnn=scnn, flattened_size=flattened_size,
                        **kwargs)
 
 

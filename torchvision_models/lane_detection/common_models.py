@@ -1,7 +1,7 @@
 import math
-
 import torch
 import torch.nn as nn
+from torch.nn import functional as F
 
 
 # Unused
@@ -11,24 +11,19 @@ import torch.nn as nn
 # Dropout 0.1
 # 1x1 Conv -> H x W x 5
 # https://github.com/XingangPan/SCNN/issues/35
-from torch import nn
-from torch.nn import functional as F
-
-
 class SCNNDecoder(nn.Module):
     def __init__(self, in_channels=2048, num_classes=5):
         super(SCNNDecoder, self).__init__()
         out_channels = in_channels // 4
         self.conv1 = nn.Conv2d(in_channels, out_channels, 3, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(out_channels)
-        self.relu1 = nn.ReLU()
         self.dropout1 = nn.Dropout2d(0.1)
         self.conv2 = nn.Conv2d(out_channels, num_classes, 1, bias=False)
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
-        x = self.relu1(x)
+        x = F.relu(x)
         x = self.dropout1(x)
         x = self.conv2(x)
 
@@ -41,12 +36,11 @@ class RESAReducer(nn.Module):
         super(RESAReducer, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, reduce, 1, bias=False)
         self.bn1 = nn.BatchNorm2d(reduce)
-        self.relu1 = nn.ReLU()
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
-        x = self.relu1(x)
+        x = F.relu(x)
 
         return x
 

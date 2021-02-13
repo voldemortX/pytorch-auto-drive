@@ -1,2 +1,2 @@
-from lstr import *
-from common_models import *
+from .lstr import *
+from .common_models import *
