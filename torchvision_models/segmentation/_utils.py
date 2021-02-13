@@ -1,7 +1,4 @@
-import math
-import torch
 from torch import nn
-from torch.nn import functional as F
 from collections import OrderedDict
 
 
@@ -12,7 +9,7 @@ class _SimpleSegmentationModel(nn.Module):
         self.backbone = backbone
         self.classifier = classifier
         self.aux_classifier = aux_classifier  # Name aux is already take for COCO pre-trained models
-        self.lane_classifier = lane_classifier   # TODO: Rename aux in other functions and classes
+        self.lane_classifier = lane_classifier
         self.channel_reducer = channel_reducer  # Reduce ResNet feature channels to 128 as did in RESA
         self.scnn_layer = scnn_layer
         self.recon_head = recon_head
@@ -53,63 +50,3 @@ class _SimpleSegmentationModel(nn.Module):
             result['recon'] = x
 
         return result
-
-
-# SCNN head
-class _SpatialConv(nn.Module):
-    def __init__(self, num_channels=128):
-        super().__init__()
-        self.conv_d = nn.Conv2d(num_channels, num_channels, (1, 9), padding=(0, 4))
-        self.conv_u = nn.Conv2d(num_channels, num_channels, (1, 9), padding=(0, 4))
-        self.conv_r = nn.Conv2d(num_channels, num_channels, (9, 1), padding=(4, 0))
-        self.conv_l = nn.Conv2d(num_channels, num_channels, (9, 1), padding=(4, 0))
-        self._adjust_initializations(num_channels=num_channels)
-
-    def _adjust_initializations(self, num_channels=128):
-        # https://github.com/XingangPan/SCNN/issues/82
-        bound = math.sqrt(2.0 / (num_channels * 9 * 5))
-        nn.init.uniform_(self.conv_d.weight, -bound, bound)
-        nn.init.uniform_(self.conv_u.weight, -bound, bound)
-        nn.init.uniform_(self.conv_r.weight, -bound, bound)
-        nn.init.uniform_(self.conv_l.weight, -bound, bound)
-
-    def forward(self, input):
-        output = input
-
-        # First one remains unchanged (according to the original paper), why not add a relu afterwards?
-        # Update and send to next
-        # Down
-        for i in range(1, output.shape[2]):
-            output[:, :, i:i+1, :].add_(F.relu(self.conv_d(output[:, :, i-1:i, :])))
-        # Up
-        for i in range(output.shape[2] - 2, 0, -1):
-            output[:, :, i:i+1, :].add_(F.relu(self.conv_u(output[:, :, i+1:i+2, :])))
-        # Right
-        for i in range(1, output.shape[3]):
-            output[:, :, :, i:i+1].add_(F.relu(self.conv_r(output[:, :, :, i-1:i])))
-        # Left
-        for i in range(output.shape[3] - 2, 0, -1):
-            output[:, :, :, i:i+1].add_(F.relu(self.conv_l(output[:, :, :, i+1:i+2])))
-
-        return output
-
-
-# Typical lane existence head originated from the SCNN paper
-class _SimpleLaneExist(nn.Module):
-    def __init__(self, num_output, flattened_size=4500):
-        super().__init__()
-        self.avgpool = nn.AvgPool2d(2, 2)
-        self.linear1 = nn.Linear(flattened_size, 128)
-        self.linear2 = nn.Linear(128, num_output)
-
-    def forward(self, input, predict=False):
-        # input: logits
-        output = self.avgpool(input)
-        output = output.flatten(start_dim=1)
-        output = self.linear1(output)
-        output = F.relu(output)
-        output = self.linear2(output)
-        if predict:
-            output = torch.sigmoid(output)
-
-        return output

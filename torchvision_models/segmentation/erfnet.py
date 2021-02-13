@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
-from ._utils import _SpatialConv
+from ..lane_detection.common_models import SpatialConv
 
 
 class DownsamplerBlock(nn.Module):
@@ -177,7 +177,7 @@ class ERFNet(nn.Module):
         self.decoder = Decoder(num_classes)
 
         if scnn:
-            self.spatial_conv = _SpatialConv()
+            self.spatial_conv = SpatialConv()
         else:
             self.spatial_conv = None
 

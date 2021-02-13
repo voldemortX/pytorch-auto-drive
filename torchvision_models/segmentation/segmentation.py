@@ -6,9 +6,8 @@ from .deeplab import DeepLabV3Head, DeepLabV2Head, DeepLabV1Head, DeepLab, Recon
 from .fcn import FCN, FCNHead
 from .erfnet import ERFNet
 from .deeplab_vgg import DeepLabV1
-from ._utils import _SpatialConv, _SimpleLaneExist
+from ..lane_detection import SpatialConv, SimpleLaneExist, RESAReducer
 from torch import load
-from torch import nn
 
 
 __all__ = ['fcn_resnet50', 'fcn_resnet101', 'deeplabv2_resnet101', 'deeplabv3_resnet50', 'deeplabv3_resnet101',
@@ -45,20 +44,22 @@ def _segm_resnet(name, backbone_name, num_classes, aux, recon_loss, pretrained_b
     # For lane detection (the style here is fucked up, but lets keep it for now)
     inplanes = 2048 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 512
     lane_classifier = None
+    final_dilation = True  # A dilation of 12 for the final prediction layer as in original DeepLab-LargeFOV
     if num_lanes > 0:
-        lane_classifier = _SimpleLaneExist(num_output=num_lanes, flattened_size=flatten_size)
+        final_dilation = False  # Lane detection baseline has no dilation in ResNet final prediction
+        lane_classifier = SimpleLaneExist(num_output=num_lanes, flattened_size=flatten_size)
     channel_reducer = None
     if channel_reduce > 0:
         if channel_reduce > inplanes:
             raise ValueError
-        channel_reducer = nn.Conv2d(inplanes, channel_reduce, kernel_size=1, stride=1, bias=False)
+        channel_reducer = RESAReducer(in_channels=inplanes, reduce=channel_reduce)
     scnn_layer = None
     if scnn:
         num_channels = inplanes if channel_reduce <= 0 else channel_reduce
         if channel_reduce != 128:
             warnings.warn('Spatial conv is commonly conducted with 128 channels, not {} channels'.format(
                 channel_reduce))
-        scnn_layer = _SpatialConv(num_channels=num_channels)
+        scnn_layer = SpatialConv(num_channels=num_channels)
 
     aux_classifier = None
     if aux:
@@ -77,7 +78,10 @@ def _segm_resnet(name, backbone_name, num_classes, aux, recon_loss, pretrained_b
         'fcn': (FCNHead, FCN),
     }
     inplanes = 2048 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 512
-    classifier = model_map[name][0](inplanes, num_classes)
+    if final_dilation:
+        classifier = model_map[name][0](inplanes, num_classes)
+    else:
+        classifier = model_map[name][0](inplanes, num_classes, 1)
     base_model = model_map[name][1]
 
     model = base_model(backbone, classifier, aux_classifier, recon_classifier,
@@ -244,7 +248,8 @@ def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_cl
 
 def deeplabv1_vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, num_lanes=0,
                     dropout_1=0.1, flattened_size=4500, scnn=False):
-    """Constructs a DeepLab-LargeFOV model with a VGG16 backbone, same as the official DeepLabV1.
+    """Constructs a DeepLab-LargeFOV model with a VGG16 backbone, similar to the official DeepLabV1.
+       With SCNN modifications (128 channels, max dilation 4).
 
     Args:
         pretrained_weights (str): If "pytorch-pretrained", load ImageNet pre-trained weights

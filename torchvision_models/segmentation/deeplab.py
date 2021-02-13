@@ -38,9 +38,9 @@ class DeepLabV2Head(nn.Sequential):
 # For better format consistency
 # Not the official VGG backbone version
 class DeepLabV1Head(nn.Sequential):
-    def __init__(self, in_channels, num_classes):
+    def __init__(self, in_channels, num_classes, dilation=12):
         super(DeepLabV1Head, self).__init__(
-            LargeFOV(in_channels, num_classes)
+            LargeFOV(in_channels, num_classes, dilation)
         )
 
 
@@ -161,9 +161,10 @@ class ASPP_V2(nn.Module):
 
 
 class LargeFOV(nn.Module):
-    def __init__(self, in_channels, num_classes):
+    def __init__(self, in_channels, num_classes, dilation=12):
         super(LargeFOV, self).__init__()
-        self.conv = nn.Conv2d(in_channels, num_classes, kernel_size=3, stride=1, padding=12, dilation=12, bias=True)
+        self.conv = nn.Conv2d(in_channels, num_classes, kernel_size=3, stride=1,
+                              padding=dilation, dilation=dilation, bias=True)
 
     def forward(self, x):
         return self.conv(x)

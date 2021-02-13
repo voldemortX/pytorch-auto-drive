@@ -2,7 +2,7 @@
 import torch.nn as nn
 import torchvision
 from collections import OrderedDict
-from ._utils import _SpatialConv, _SimpleLaneExist
+from ..lane_detection.common_models import SpatialConv, SimpleLaneExist
 
 
 # Modified VGG16 backbone in DeepLab-LargeFOV
@@ -47,7 +47,7 @@ class DeepLabV1(nn.Module):
         )
 
         if scnn:
-            self.scnn = _SpatialConv()
+            self.scnn = SpatialConv()
         else:
             self.scnn = None
 
@@ -59,7 +59,7 @@ class DeepLabV1(nn.Module):
         self.softmax = nn.Softmax(dim=1)
 
         if num_lanes > 0:
-            self.lane_classifier = _SimpleLaneExist(num_output=num_lanes, flattened_size=flattened_size)
+            self.lane_classifier = SimpleLaneExist(num_output=num_lanes, flattened_size=flattened_size)
         else:
             self.lane_classifier = None
 
