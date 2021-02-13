@@ -104,9 +104,9 @@ if __name__ == '__main__':
                            mean=mean, std=std, train_base=train_base, test_base=test_base, city_aug=city_aug,
                            train_label_id_map=train_label_id_map, test_label_id_map=test_label_id_map)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
-        test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
-                     output_size=input_sizes[2], is_mixed_precision=args.mixed_precision,
-                     selector=selector, classes=classes)
+        _, x = test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
+                            output_size=input_sizes[2], is_mixed_precision=args.mixed_precision,
+                            selector=selector, classes=classes)
     else:
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255, weight=weights)
         writer = SummaryWriter('runs/' + exp_name)
@@ -156,5 +156,5 @@ if __name__ == '__main__':
 
         writer.close()
 
-        with open('log.txt', 'a') as f:
-            f.write(exp_name + ': ' + str(x) + '\n')
+    with open('log.txt', 'a') as f:
+        f.write(exp_name + ': ' + str(x) + '\n')
