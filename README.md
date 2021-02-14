@@ -6,7 +6,7 @@ Segmentation models (**Deeplab, FCN, ERFNet**), Lane detection models (**ERFNet,
 
 ## Highlights
 
-Fast probability map to poly line conversion, modulated (borrowed) mIOU & pixel acc calculation, "poly" learning rate schedule, basic input loading, transformations and visualizations, also tests of mixed precision training and tensorboard logging.
+Fast probability map to poly line conversion, modulated (borrowed) mIOU & pixel acc calculation, "poly" learning rate schedule, basic input loading, transformations and visualizations, also tests of mixed precision training and tensorboard logging. **And you do not need matlab to test on CULane.**
 
 And models from this repo is faster (also better or at least similar) than the official implementations and other implementations out there.
 
