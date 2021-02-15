@@ -21,7 +21,8 @@ if __name__ == '__main__':
     parser.add_argument('--val-num-steps', type=int, default=1000,
                         help='Validation frequency (default: 1000)')
     parser.add_argument('--dataset', type=str, default='voc',
-                        help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city)/GTAV(gtav)/SYNTHIA(synthia) (default: voc)')
+                        help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city)/GTAV(gtav)/SYNTHIA(synthia)'
+                             '(default: voc)')
     parser.add_argument('--model', type=str, default='deeplabv3',
                         help='Model selection (fcn/pspnet/deeplabv2/deeplabv3) (default: deeplabv3)')
     parser.add_argument('--batch-size', type=int, default=8,

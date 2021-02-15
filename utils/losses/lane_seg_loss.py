@@ -23,7 +23,7 @@ class LaneLoss(WeightedLoss):
         targets[targets > lane_existence.shape[-1]] = 255  # Ignore extra lanes
         segmentation_loss = F.cross_entropy(prob_maps, targets, weight=self.weight,
                                             ignore_index=self.ignore_index, reduction=self.reduction)
-        existence_loss = F.binary_cross_entropy_with_logits(outputs['aux'], lane_existence,
+        existence_loss = F.binary_cross_entropy_with_logits(outputs['lane'], lane_existence,
                                                             weight=None, pos_weight=None, reduction=self.reduction)
         total_loss = segmentation_loss + self.existence_weight * existence_loss
 

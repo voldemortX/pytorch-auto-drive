@@ -2,11 +2,12 @@
 # cardwing/Codes-for-Lane-Detection and
 # jcdubron/scnn_pytorch
 
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
+
+from ..lane_detection.common_models import SpatialConv
 
 
 class DownsamplerBlock(nn.Module):
@@ -163,48 +164,9 @@ class LaneExist(nn.Module):
         return output
 
 
-# SCNN head
-class SpatialConv(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv_d = nn.Conv2d(128, 128, (1, 9), padding=(0, 4))
-        self.conv_u = nn.Conv2d(128, 128, (1, 9), padding=(0, 4))
-        self.conv_r = nn.Conv2d(128, 128, (9, 1), padding=(4, 0))
-        self.conv_l = nn.Conv2d(128, 128, (9, 1), padding=(4, 0))
-        self._adjust_initializations()
-
-    def _adjust_initializations(self) -> None:
-        # https://github.com/XingangPan/SCNN/issues/82
-        bound = math.sqrt(2.0 / (128 * 9 * 5))
-        nn.init.uniform_(self.conv_d.weight, -bound, bound)
-        nn.init.uniform_(self.conv_u.weight, -bound, bound)
-        nn.init.uniform_(self.conv_r.weight, -bound, bound)
-        nn.init.uniform_(self.conv_l.weight, -bound, bound)
-
-    def forward(self, input):
-        output = input
-
-        # First one remains unchanged (according to the original paper), why not add a relu afterwards?
-        # Update and send to next
-        # Down
-        for i in range(1, output.shape[2]):
-            output[:, :, i:i+1, :].add_(F.relu(self.conv_d(output[:, :, i-1:i, :])))
-        # Up
-        for i in range(output.shape[2] - 2, 0, -1):
-            output[:, :, i:i+1, :].add_(F.relu(self.conv_u(output[:, :, i+1:i+2, :])))
-        # Right
-        for i in range(1, output.shape[3]):
-            output[:, :, :, i:i+1].add_(F.relu(self.conv_r(output[:, :, :, i-1:i])))
-        # Left
-        for i in range(output.shape[3] - 2, 0, -1):
-            output[:, :, :, i:i+1].add_(F.relu(self.conv_l(output[:, :, :, i+1:i+2])))
-
-        return output
-
-
 # ERFNet
 class ERFNet(nn.Module):
-    def __init__(self, num_classes, encoder=None, aux=0, dropout_1=0.03, dropout_2=0.3, flattened_size=3965,
+    def __init__(self, num_classes, encoder=None, num_lanes=0, dropout_1=0.03, dropout_2=0.3, flattened_size=3965,
                  scnn=False):
         super().__init__()
         if encoder is None:
@@ -219,10 +181,10 @@ class ERFNet(nn.Module):
         else:
             self.spatial_conv = None
 
-        if aux > 0:
-            self.aux_head = LaneExist(num_output=aux, flattened_size=flattened_size, dropout=dropout_2)
+        if num_lanes > 0:
+            self.lane_classifier = LaneExist(num_output=num_lanes, flattened_size=flattened_size, dropout=dropout_2)
         else:
-            self.aux_head = None
+            self.lane_classifier = None
 
     def forward(self, input, only_encode=False):
         out = OrderedDict()
@@ -234,6 +196,6 @@ class ERFNet(nn.Module):
                 output = self.spatial_conv(output)
             out['out'] = self.decoder.forward(output)
 
-            if self.aux_head is not None:
-                out['aux'] = self.aux_head(output)
+            if self.lane_classifier is not None:
+                out['lane'] = self.lane_classifier(output)
             return out

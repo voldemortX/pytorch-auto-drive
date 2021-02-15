@@ -1,31 +1,11 @@
 # jcdubron/scnn_pytorch
-import torch
 import torch.nn as nn
 import torchvision
-import torch.nn.functional as F
 from collections import OrderedDict
-from .erfnet import SpatialConv
+from ..lane_detection.common_models import SpatialConv, SimpleLaneExist
 
 
-# Really tricky without global pooling
-class LaneExistVGG(nn.Module):
-    def __init__(self, num_output, flattened_size=4500):
-        super().__init__()
-        self.avgpool = nn.AvgPool2d(2, 2)
-        self.linear1 = nn.Linear(flattened_size, 128)
-        self.linear2 = nn.Linear(128, num_output)
-
-    def forward(self, input, predict=False):
-        output = self.avgpool(input)
-        output = output.flatten(start_dim=1)
-        output = self.linear1(output)
-        output = F.relu(output)
-        output = self.linear2(output)
-        if predict:
-            output = torch.sigmoid(output)
-        return output
-
-
+# Modified VGG16 backbone in DeepLab-LargeFOV
 class VGG16(nn.Module):
     def __init__(self, pretained=True):
         super(VGG16, self).__init__()
@@ -48,7 +28,7 @@ class VGG16(nn.Module):
 
 
 class DeepLabV1(nn.Module):
-    def __init__(self, num_classes, encoder=None, aux=0, dropout_1=0.1, flattened_size=3965,
+    def __init__(self, num_classes, encoder=None, num_lanes=0, dropout_1=0.1, flattened_size=3965,
                  scnn=False, pretrain=False):
         super(DeepLabV1, self).__init__()
 
@@ -78,10 +58,10 @@ class DeepLabV1(nn.Module):
 
         self.softmax = nn.Softmax(dim=1)
 
-        if aux > 0:
-            self.aux_head = LaneExistVGG(num_output=aux, flattened_size=flattened_size)
+        if num_lanes > 0:
+            self.lane_classifier = SimpleLaneExist(num_output=num_lanes, flattened_size=flattened_size)
         else:
-            self.aux_head = None
+            self.lane_classifier = None
 
     def forward(self, input):
         out = OrderedDict()
@@ -94,13 +74,13 @@ class DeepLabV1(nn.Module):
 
         output = self.fc8(output)
         out['out'] = output
-        if self.aux_head is not None:
+        if self.lane_classifier is not None:
             output = self.softmax(output)
-            out['aux'] = self.aux_head(output)
+            out['lane'] = self.lane_classifier(output)
         return out
 
 # t = torch.randn(1, 3, 288, 800)
 # net = VGG16Net(num_classes=5, encoder=None, aux=5, flattened_size=4500, scnn=True)
 # res=net(t)
 # print(res['out'].shape)
-# print(res['aux'].shape)
+# print(res['lane'].shape)

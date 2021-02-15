@@ -6,7 +6,8 @@ import ujson as json
 import numpy as np
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
-from torchvision_models.segmentation import erfnet_resnet, vgg16
+from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
+    deeplabv1_resnet50, deeplabv1_resnet101
 from utils.datasets import StandardLaneDetectionDataset
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
@@ -14,26 +15,50 @@ from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
 
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for TuSimple (With only ImageNet pretraining)
-    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
+    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
                          dropout_1=0.3, dropout_2=0.3, flattened_size=4400, scnn=scnn)
 
 
 def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for CULane (With only ImageNet pretraining)
-    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
+    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
                          dropout_1=0.1, dropout_2=0.1, flattened_size=4500, scnn=scnn)
 
 
 def vgg16_tusimple(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
     # Define Vgg16 for Tusimple (With only ImageNet pretraining)
-    return vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
-                 dropout_1=0.1, flattened_size=6160, scnn=scnn)
+    return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
+                           dropout_1=0.1, flattened_size=6160, scnn=scnn)
 
 
 def vgg16_culane(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
     # Define Vgg16 for CULane (With only ImageNet pretraining)
-    return vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, aux=num_classes - 1,
-                 dropout_1=0.1, flattened_size=4500, scnn=scnn)
+    return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
+                           dropout_1=0.1, flattened_size=4500, scnn=scnn)
+
+
+def resnet_tusimple(num_classes, backbone_name='resnet18', scnn=False):
+    # Define ResNets for Tusimple (With only ImageNet pretraining)
+    model_map = {
+        'resnet18': deeplabv1_resnet18,
+        'resnet34': deeplabv1_resnet34,
+        'resnet50': deeplabv1_resnet50,
+        'resnet101': deeplabv1_resnet101,
+    }
+    return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
+                                    channel_reduce=128, flattened_size=6160, scnn=scnn)
+
+
+def resnet_culane(num_classes, backbone_name='resnet18', scnn=False):
+    # Define ResNets for CULane (With only ImageNet pretraining)
+    model_map = {
+        'resnet18': deeplabv1_resnet18,
+        'resnet34': deeplabv1_resnet34,
+        'resnet50': deeplabv1_resnet50,
+        'resnet101': deeplabv1_resnet101,
+    }
+    return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
+                                    channel_reduce=128, flattened_size=4500, scnn=scnn)
 
 
 def init(batch_size, state, input_sizes, dataset, mean, std, base):
@@ -203,7 +228,7 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                 outputs = net(images)
                 prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
                                                            align_corners=True).softmax(dim=1)
-                existence = (outputs['aux'].sigmoid() > 0.5)
+                existence = (outputs['lane'].sigmoid() > 0.5)
                 if dataset == 'tusimple':  # At most 5 lanes
                     indices = (existence.sum(dim=1, keepdim=True) > 5).expand_as(existence) * \
                               (existence == existence.min(dim=1, keepdim=True).values)

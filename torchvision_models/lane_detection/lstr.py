@@ -73,7 +73,7 @@ class LSTR(nn.Module):
                                      output_shared, output_specific[:, :, :, 2:]], dim=-1)
         out = {'logits': output_class[-1], 'curves': output_specific[-1]}
         if self.aux_loss:
-            out['aux'] = self._set_aux_loss(output_class, output_specific)
+            out['lane'] = self._set_aux_loss(output_class, output_specific)
 
         return out
 
