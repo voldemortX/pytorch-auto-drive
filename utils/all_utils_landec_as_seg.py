@@ -61,7 +61,7 @@ def resnet_culane(num_classes, backbone_name='resnet18', scnn=False):
                                     channel_reduce=128, flattened_size=4500, scnn=scnn)
 
 
-def init(batch_size, state, input_sizes, dataset, mean, std, base):
+def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10):
     # Return data_loaders
     # depending on whether the state is
     # 0: training
@@ -81,13 +81,6 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base):
          ToTensor(),
          Normalize(mean=mean, std=std)])
 
-    if dataset == 'tusimple':
-        workers = 10
-    elif dataset == 'culane':
-        workers = 10
-    else:
-        raise ValueError
-
     if state == 0:
         data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms_train,
                                                 data_set=dataset)
@@ -105,10 +98,9 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base):
                                                 transforms=transforms_test, data_set=dataset)
         data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
                                                   num_workers=workers, shuffle=False)
+        return data_loader
     else:
         raise ValueError
-
-    return data_loader
 
 
 def train_schedule(writer, loader, validation_loader, val_num_steps, device, criterion, net, optimizer, lr_scheduler,

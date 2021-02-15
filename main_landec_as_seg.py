@@ -19,6 +19,9 @@ if __name__ == '__main__':
                         help='Number of epochs (default: 30)')
     parser.add_argument('--val-num-steps', type=int, default=0,
                         help='Validation frequency (default: 0), 0: no online evaluation')
+    parser.add_argument('--workers', type=int, default=10,
+                        help='Number of workers (threads) when loading data.'
+                             'Recommend value for training: batch_size / 2 (default: 10)')
     parser.add_argument('--dataset', type=str, default='tusimple',
                         help='Train/Evaluate on TuSimple (voc) / CULane (culane) (default: tusimple)')
     parser.add_argument('--method', type=str, default='baseline',
@@ -27,7 +30,7 @@ if __name__ == '__main__':
                         help='backbone selection (erfnet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101)'
                              '(default: erfnet)')
     parser.add_argument('--batch-size', type=int, default=8,
-                        help='input batch size (default: 8)')
+                        help='input batch size. Recommend 4 times the training batch size in testing (default: 8)')
     parser.add_argument('--mixed-precision', action='store_true', default=False,
                         help='Enable mixed precision training (default: False)')
     parser.add_argument('--continue-from', type=str, default=None,
@@ -92,7 +95,7 @@ if __name__ == '__main__':
     # Testing
     if args.state == 1 or args.state == 2 or args.state == 3:
         data_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
-                           mean=mean, std=std, base=base)
+                           mean=mean, std=std, base=base, workers=args.workers)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
         if args.state == 1:  # Validate with mean IoU
             _, x = fast_evaluate(loader=data_loader, device=device, net=net,
@@ -116,7 +119,8 @@ if __name__ == '__main__':
 
         writer = SummaryWriter('runs/' + exp_name)
         data_loader, validation_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
-                                              input_sizes=input_sizes, mean=mean, std=std, base=base)
+                                              input_sizes=input_sizes, mean=mean, std=std, base=base,
+                                              workers=args.workers)
 
         # Warmup https://github.com/XingangPan/SCNN/issues/82
         # Use it as default also for other methods (for fair comparison)
