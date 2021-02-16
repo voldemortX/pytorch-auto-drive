@@ -2,6 +2,26 @@
 
 Segmentation models (**Deeplab, FCN, ERFNet**), Lane detection models (**ERFNet, ERFNet-SCNN and others**) based on Python 3.6 and PyTorch >=1.6.0 (CUDA 10) & TorchVision >=0.7.0 with mixed precision training.
 
+**This repository implements (or plan to implement) the following interesting papers in a unified Python codebase:**
+
+[Fully Convolutional Networks for Semantic Segmentation](https://arxiv.org/abs/1605.06211) CVPR 2015
+
+[DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs](https://arxiv.org/abs/1606.00915) TPAMI 2017
+
+[Rethinking Atrous Convolution for Semantic Image Segmentation](https://arxiv.org/abs/1706.05587) ArXiv preprint 2017
+
+[ERFNet: Efficient Residual Factorized ConvNet for Real-Time Semantic Segmentation](https://ieeexplore.ieee.org/abstract/document/8063438/) ITS 2017
+
+[Spatial As Deep: Spatial CNN for Traffic Scene Understanding](https://arxiv.org/abs/1712.06080) AAAI 2018
+
+[RESA: Recurrent Feature-Shift Aggregator for Lane Detection](https://arxiv.org/abs/2008.13719) AAAI 2021
+
+[Learning Lightweight Lane Detection CNNs by Self Attention Distillation](https://arxiv.org/abs/1908.00821) ICCV 2019
+
+[Polynomial Regression Network for Variable-Number Lane Detection](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) ECCV 2020
+
+[End-to-end Lane Shape Prediction with Transformers](https://arxiv.org/abs/2011.04233) WACV 2021
+
 **This repository is under active development, which means performance reported could improve in the future. While results with models uploaded are probably stable.**
 
 ## Highlights
@@ -28,25 +48,22 @@ And models from this repo is faster (also better or at least similar) than the o
 
 | Task | Backbone | Model/Method |
 | :---: | :---: | :---: |
-| semantic segmentation | ResNet-101 | FCN |
-| semantic segmentation | ResNet-101 | DeeplabV2 |
-| semantic segmentation | ResNet-101 | DeeplabV3 |
-| semantic segmentation | - | ERFNet |
-| lane detection | ERFNet | Baseline |
-| lane detection | VGG | Baseline |
-| lane detection | ResNets (18, 34, 50, 101) | Baseline |
-| lane detection | ERFNet | SCNN |
-| lane detection | VGG | SCNN |
-| lane detection | ResNets (18, 34, 50, 101) | SCNN |
-| lane detection | ERFNet | SAD (*In progress*) |
-| lane detection | ENet | SAD (*In progress*) |
-| lane detection | ERFNet | PRNet (*In progress*) |
-| lane detection | ERFNet | LSTR (*In progress*) |
-| lane detection | ResNet18-reduced | LSTR (*In progress*) |
-| lane detection | ERFNet | RESA (*In progress*) |
-| lane detection | VGG | RESA (*In progress*) |
+| semantic segmentation | ResNet-101 | [FCN](https://arxiv.org/abs/1605.06211) |
+| semantic segmentation | ResNet-101 | [DeeplabV2](https://arxiv.org/abs/1606.00915) |
+| semantic segmentation | ResNet-101 | [DeeplabV3](https://arxiv.org/abs/1706.05587) |
+| semantic segmentation | - | [ERFNet](https://ieeexplore.ieee.org/abstract/document/8063438/) |
+| lane detection | ERFNet, VGG, ResNets (18, 34, 50, 101) | Baseline |
+| lane detection | ERFNet, VGG, ResNets (18, 34, 50, 101) | [SCNN](https://arxiv.org/abs/1712.06080) |
+| lane detection | VGG, ResNets (18, 34, 50, 101) | [RESA](https://arxiv.org/abs/2008.13719) (*In progress*) |
+| lane detection | ERFNet, ENet | [SAD](https://arxiv.org/abs/1908.00821) (*In progress*) |
+| lane detection | ERFNet | [PRNet](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) (*In progress*) |
+| lane detection | ERFNet, ResNet18-reduced | [LSTR](https://arxiv.org/abs/2011.04233) (*In progress*) |
 
-*The VGG backbone for SCNN/RESA/etc. should technically be DeepLab-LargeFOV, we keep calling it VGG for consistency with common practices.*
+*The VGG backbone corresponds to DeepLab-LargeFOV in SCNN.*
+
+*The ResNet backbone corresponds to DeepLabV2 (w.o. ASPP) with output channels reduced to 128 as in RESA.*
+
+*We keep calling it VGG/ResNet for consistency with common practices.*
 
 ## Lane detection performance:
 
