@@ -52,14 +52,14 @@ And models from this repo are faster to train and often have better performance 
 | semantic segmentation | ResNet-101 | [DeeplabV2](https://arxiv.org/abs/1606.00915) |
 | semantic segmentation | ResNet-101 | [DeeplabV3](https://arxiv.org/abs/1706.05587) |
 | semantic segmentation | - | [ERFNet](https://ieeexplore.ieee.org/abstract/document/8063438/) |
-| lane detection | ERFNet, VGG, ResNets (18, 34, 50, 101) | Baseline |
-| lane detection | ERFNet, VGG, ResNets (18, 34, 50, 101) | [SCNN](https://arxiv.org/abs/1712.06080) |
+| lane detection | ERFNet, VGG16, ResNets (18, 34, 50, 101) | Baseline |
+| lane detection | ERFNet, VGG16, ResNets (18, 34, 50, 101) | [SCNN](https://arxiv.org/abs/1712.06080) |
 | lane detection | VGG, ResNets (18, 34, 50, 101) | [RESA](https://arxiv.org/abs/2008.13719) (*In progress*) |
 | lane detection | ERFNet, ENet | [SAD](https://arxiv.org/abs/1908.00821) (*In progress*) |
 | lane detection | ERFNet | [PRNet](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) (*In progress*) |
 | lane detection | ERFNet, ResNet18-reduced | [LSTR](https://arxiv.org/abs/2011.04233) (*In progress*) |
 
-*The VGG backbone corresponds to DeepLab-LargeFOV in SCNN.*
+*The VGG16 backbone corresponds to DeepLab-LargeFOV in SCNN.*
 
 *The ResNet backbone corresponds to DeepLabV2 (w.o. ASPP) with output channels reduced to 128 as in RESA.*
 
@@ -73,8 +73,10 @@ And models from this repo are faster to train and often have better performance 
 | SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
 | Baseline | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 95.15% | 95.24% | 0.8h |
 | SCNN | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 96.00% | 96.12% | 1.6h |
-| Baseline | VGG | 288 x 800 | *yes* | CULane | F measure | 63.90 | 63.98 | 9.3h |
-| SCNN | VGG | 288 x 800 | *yes* | CULane | F measure | 73.13 | 73.23 | 12.8h |
+| Baseline | VGG16 | 288 x 800 | *yes* | CULane | F measure | 63.90 | 63.98 | 9.3h |
+| SCNN | VGG16 | 288 x 800 | *yes* | CULane | F measure | 73.13 | 73.23 | 12.8h |
+| SCNN | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 94.00% | 94.15% | 2h |
+
 
 *\* All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
 
@@ -84,6 +86,7 @@ And models from this repo are faster to train and often have better performance 
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | Baseline | ERFNet | 95.24% | 0.0569 | 0.0457 | [model](https://drive.google.com/file/d/12n_ck3Ir86j3VOhIn0hT96Ru4n8nhP5G/view?usp=sharing) |
 | SCNN | ERFNet | 96.12% | 0.0468 | 0.0335 | [model](https://drive.google.com/file/d/1rzE2fZ5mQswMIm6ICK1lWH-rsQyjRbxL/view?usp=sharing) |
+| SCNN | VGG16 | 94.15% | 0.0723 | 0.0812 |  |
 
 ### CULane detailed performance (best):
 
