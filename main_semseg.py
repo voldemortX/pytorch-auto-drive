@@ -153,7 +153,7 @@ if __name__ == '__main__':
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename='temp.pt')
         _, x = test_one_set(loader=val_loader, device=device, net=net, is_mixed_precision=args.mixed_precision,
                             categories=categories, num_classes=num_classes, labels_size=input_sizes[1],
-                            output_size=input_sizes[2],
+                            output_size=input_sizes[2], encoder_only=args.encoder_only,
                             classes=classes, selector=selector)
 
         # --do-not-save => args.do_not_save = False
