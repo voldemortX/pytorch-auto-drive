@@ -227,7 +227,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_l
     # Not the actual test set (i.e. validation set)
     test_set = StandardSegmentationDataset(root=test_base, image_set='val', transforms=transform_test,
                                            data_set='city' if dataset == 'gtav' or dataset == 'synthia' else dataset)
-    if city_aug == 1 or city_aug == 3:
+    if (city_aug == 1 or city_aug == 3) and state == 0:  # Avoid OOM
         val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=2, num_workers=workers, shuffle=False)
     else:
         val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=batch_size, num_workers=workers,

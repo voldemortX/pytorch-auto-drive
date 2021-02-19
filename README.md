@@ -78,7 +78,7 @@ And models from this repo are faster to train and often have better performance 
 | SCNN | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 94.00% | 94.15% | 2h |
 
 
-*\* All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
+*All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
 
 ### Tusimple detailed performance (best):
 
@@ -106,22 +106,24 @@ And models from this repo are faster to train and often have better performance 
 
 ## Semantic segmentation performance:
 
-| model | resolution | mixed precision? | dataset | mIoU (%) | training time |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| FCN | 321 x 321 | *yes* | PASCAL VOC 2012 | 70.72 | 3.3h |
-| FCN | 321 x 321 | *no* | PASCAL VOC 2012 | 70.90 | 6.3h |
-| DeeplabV2 | 321 x 321 | *yes* | PASCAL VOC 2012 | 74.59 | 3.3h |
-| DeeplabV3 | 321 x 321 | *yes* | PASCAL VOC 2012 | 78.11 | 7h |
-| FCN | 256 x 512 | *yes* | Cityscapes | 68.05 | 2.2h |
-| DeeplabV2 | 256 x 512 | *yes* | Cityscapes | 68.65 | 2.2h |
-| DeeplabV3 | 256 x 512 | *yes* | Cityscapes | 69.87 | 4.5h |
-| DeeplabV2 | 256 x 512 | *no* | Cityscapes | 68.45 | 4h |
-| ERFNet| 512 x 1024 | *yes* | Cityscapes | 71.99 | 5h |
-| DeeplabV2 | 512 x 1024 | *yes* | Cityscapes | 71.78 | 9h |
-| DeeplabV2 | 512 x 1024 | *yes* | GTAV | 32.90 | 13.8h |
-| DeeplabV2 | 512 x 1024 | *yes* | SYNTHIA | 33.89 (mIoU-16) | 10.4h |
+| model | resolution | mixed precision? | dataset | average | best | training time | best model link |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| FCN | 321 x 321 | *yes* | PASCAL VOC 2012 | 70.72 | 70.83 | 3.3h | [model](https://drive.google.com/file/d/1SIIpApBdL0wXanlLeLWBSJJmX3AYLBnf/view?usp=sharing) |
+| FCN | 321 x 321 | *no* | PASCAL VOC 2012 | 70.91 | 71.55 | 6.3h | [model](https://drive.google.com/file/d/1ZunsGFjXxSIwR8Blckyk-Ils6IdhSqV1/view?usp=sharing) |
+| DeeplabV2 | 321 x 321 | *yes* | PASCAL VOC 2012 | 74.59 | 74.74 | 3.3h | [model](https://drive.google.com/file/d/1UGR4u1qvJcczLfcgmSHoVd0CGqHMfLoU/view?usp=sharing) |
+| DeeplabV3 | 321 x 321 | *yes* | PASCAL VOC 2012 | 78.11 | 78.17 | 7h | [model](https://drive.google.com/file/d/1iYN73iqDD74HPZFGorARb6T2w7KkhbPM/view?usp=sharing) |
+| FCN | 256 x 512 | *yes* | Cityscapes | 68.05 | 68.20 | 2.2h | [model](https://drive.google.com/file/d/1zT-lBElfkD1Sratu4WYiTCRU9PF16lLj/view?usp=sharing) |
+| DeeplabV2 | 256 x 512 | *yes* | Cityscapes | 68.65 | 68.90 | 2.2h | [model](https://drive.google.com/file/d/16SR6EEdsuOtU6xyu7BsP-GQ16-y3OfGe/view?usp=sharing) |
+| DeeplabV3 | 256 x 512 | *yes* | Cityscapes | 69.87 | 70.37 | 4.5h | [model](https://drive.google.com/file/d/1HUR09zcPpjD5Q3LAm4p5t7e9gl1ZkpqU/view?usp=sharing) |
+| DeeplabV2 | 256 x 512 | *no* | Cityscapes | 68.45 | 68.89 | 4h | [model](https://drive.google.com/file/d/1fbxsPGu31plfgyQ0N0eiqk659F9osbRm/view?usp=sharing) |
+| ERFNet | 512 x 1024 | *yes* | Cityscapes | 71.99 | 72.47 | 5h | [model](https://drive.google.com/file/d/1uzBSboKD-Xt0K6VHd2aF561Cy13q9xRe/view?usp=sharing) |
+| DeeplabV2 | 512 x 1024 | *yes* | Cityscapes | 71.78 | 72.12 | 9h | [model](https://drive.google.com/file/d/1MUG3PMMlFOtiX7G-TYCZhG_8D9aLqTPE/view?usp=sharing) |
+| DeeplabV2 | 512 x 1024 | *yes* | GTAV | 32.90 | 33.88 | 13.8h | [model](https://drive.google.com/file/d/1udHozZzwka9ktMxaV0tynL1HToy0H6sI/view?usp=sharing) |
+| DeeplabV2 | 512 x 1024 | *yes* | SYNTHIA* | 33.89 | 34.86 | 10.4h | [model](https://drive.google.com/file/d/1M-CO46zjXbVo8pguISUEw3M6NoKHIN0l/view?usp=sharing) |
 
-*\* All performance is measured with ImageNet pre-training and reported as 3 times average on val set. Note that the best run from ERFNet on Cityscapes val is 72.47% in mIoU, slightly better than the original implementation by the authors (72.2%).*
+*All performance is measured with ImageNet pre-training and reported as 3 times average/best mIoU (%) on val set.*
+
+*\*SYHTHIA performance is mIoU-16.*
 
 ## Preparations:
 
