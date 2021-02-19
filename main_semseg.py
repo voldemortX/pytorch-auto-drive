@@ -6,8 +6,7 @@ import math
 import yaml
 from torch.utils.tensorboard import SummaryWriter
 from utils.all_utils_semseg import init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set, \
-    load_checkpoint
-
+    load_checkpoint, enet
 
 if __name__ == '__main__':
     # Settings
@@ -16,6 +15,8 @@ if __name__ == '__main__':
                         help='Name of experiment')
     parser.add_argument('--lr', type=float, default=0.002,
                         help='Initial learning rate (default: 0.002)')
+    parser.add_argument('--weight-decay', type=float, default=1e-4,
+                        help='weight decay (default: 1e-4)')
     parser.add_argument('--epochs', type=int, default=30,
                         help='Number of epochs (default: 30)')
     parser.add_argument('--val-num-steps', type=int, default=1000,
@@ -24,7 +25,7 @@ if __name__ == '__main__':
                         help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city)/GTAV(gtav)/SYNTHIA(synthia)'
                              '(default: voc)')
     parser.add_argument('--model', type=str, default='deeplabv3',
-                        help='Model selection (fcn/pspnet/deeplabv2/deeplabv3) (default: deeplabv3)')
+                        help='Model selection (fcn/pspnet/deeplabv2/deeplabv3/enet) (default: deeplabv3)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size (default: 8)')
     parser.add_argument('--do-not-save', action='store_false', default=True,
@@ -35,6 +36,8 @@ if __name__ == '__main__':
                         help='Continue training from a previous checkpoint')
     parser.add_argument('--state', type=int, default=0,
                         help='Conduct final test(1)/normal training(0) (default: 0)')
+    parser.add_argument('--encoder-only', action='store_true', default=False,
+                        help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
     args = parser.parse_args()
     exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
     with open(exp_name + '_cfg.txt', 'w') as f:
@@ -89,13 +92,16 @@ if __name__ == '__main__':
         weights = torch.tensor(configs['CITYSCAPES']['WEIGHTS_ERFNET']).to(device)
         input_sizes = configs['CITYSCAPES']['SIZES_ERFNET']
         city_aug = 2
+    elif args.model == 'enet':
+        net = enet(num_classes=num_classes, encoder_only=args.encoder_only)
+        input_sizes = configs['CITYSCAPES']['SIZES_ERFNET']
+        city_aug = 2
     else:
         raise ValueError
     print(device)
     net.to(device)
-
-    if args.model == 'erfnet':
-        optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999),  eps=1e-08, weight_decay=1e-4)
+    if args.model == 'erfnet' or args.model == 'enet':
+        optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=args.weight_decay)
     else:
         optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0005)
 
@@ -130,7 +136,7 @@ if __name__ == '__main__':
             # Step-wise
             lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
                                                              lambda x: (1 - x / (len(train_loader) * args.epochs))
-                                                             ** 0.9)
+                                                                       ** 0.9)
         # Resume training?
         if args.continue_from is not None:
             load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=args.continue_from)
@@ -141,12 +147,13 @@ if __name__ == '__main__':
                        num_epochs=args.epochs, is_mixed_precision=args.mixed_precision,
                        validation_loader=val_loader, device=device, criterion=criterion, categories=categories,
                        num_classes=num_classes, input_sizes=input_sizes, val_num_steps=args.val_num_steps,
-                       classes=classes, selector=selector)
+                       classes=classes, selector=selector, encoder_only=args.encoder_only)
 
         # Final evaluations
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename='temp.pt')
         _, x = test_one_set(loader=val_loader, device=device, net=net, is_mixed_precision=args.mixed_precision,
-                            categories=categories, num_classes=num_classes, output_size=input_sizes[2],
+                            categories=categories, num_classes=num_classes, labels_size=input_sizes[1],
+                            output_size=input_sizes[2],
                             classes=classes, selector=selector)
 
         # --do-not-save => args.do_not_save = False

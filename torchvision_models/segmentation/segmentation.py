@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import warnings
 from .._utils import IntermediateLayerGetter
 from ..utils import load_state_dict_from_url
@@ -6,14 +8,14 @@ from .deeplab import DeepLabV3Head, DeepLabV2Head, DeepLabV1Head, DeepLab, Recon
 from .fcn import FCN, FCNHead
 from .erfnet import ERFNet
 from .deeplab_vgg import DeepLabV1
+from .enet import ENet, Encoder
 from ..lane_detection import SpatialConv, SimpleLaneExist, RESAReducer
 from torch import load
-
+import torch
 
 __all__ = ['fcn_resnet50', 'fcn_resnet101', 'deeplabv2_resnet101', 'deeplabv3_resnet50', 'deeplabv3_resnet101',
-           'erfnet_resnet', 'deeplabv1_vgg16',
+           'erfnet_resnet', 'deeplabv1_vgg16', 'enet_',
            'deeplabv1_resnet101', 'deeplabv1_resnet50', 'deeplabv1_resnet34', 'deeplabv1_resnet18']
-
 
 model_urls = {
     'fcn_resnet50_coco': None,
@@ -69,7 +71,7 @@ def _segm_resnet(name, backbone_name, num_classes, aux, recon_loss, pretrained_b
     recon_classifier = None
     if recon_loss:
         recon_classifier = ReconHead(in_channels=512 if backbone_name == 'resnet50' or backbone_name == 'resnet101'
-                                     else 128)
+        else 128)
 
     model_map = {
         'deeplabv3': (DeepLabV3Head, DeepLab),
@@ -258,4 +260,22 @@ def deeplabv1_vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, num
         pretrain = True
     net = DeepLabV1(num_classes=num_classes, encoder=None, num_lanes=num_lanes, dropout_1=dropout_1,
                     flattened_size=flattened_size, scnn=scnn, pretrain=pretrain)
+    return net
+
+
+def enet_(num_classes=19, encoder_relu=False, decoder_relu=True, dropout_1=0.01, dropout_2=0.1, num_lanes=0,
+          sad=False, flattened_size=4500, encoder_only=False, pretrained_weights='encoder_pretrained.pt'):
+    net = ENet(num_classes=num_classes, encoder_relu=encoder_relu, decoder_relu=decoder_relu, dropout_1=dropout_1,
+               dropout_2=dropout_2, num_lanes=num_lanes, sad=sad, flattened_size=flattened_size,
+               encoder_only=encoder_only, encoder=None)
+
+    if pretrained_weights is not None:  # Load pre-trained weights
+        saved_weights = load(pretrained_weights)['model']
+        original_weights = net.state_dict()
+        for key in saved_weights.keys():
+            my_key = key.replace('module.features.', '')
+            if my_key in original_weights.keys():
+                original_weights[my_key] = saved_weights[key]
+        net.load_state_dict(original_weights)
+
     return net

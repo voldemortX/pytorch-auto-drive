@@ -1,15 +1,20 @@
-import torch
 import time
-import warnings
+from collections import OrderedDict
+
 import matplotlib.pyplot as plt
 import numpy as np
-from collections import OrderedDict
-from tqdm import tqdm
+import torch
+import warnings
 from torch.cuda.amp import autocast, GradScaler
-from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet
+from tqdm import tqdm
+from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet, \
+    enet_
+from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomCrop, RandomTranslation, \
+    ZeroPad, LabelMap, RandomScale, Compose
 from utils.datasets import StandardSegmentationDataset
-from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomCrop, RandomTranslation,\
-                       ZeroPad, LabelMap, RandomScale, Compose
+# from torch.nn import functional as F
+from transforms import functional as F
+from PIL import Image
 
 
 def fcn(num_classes):
@@ -32,6 +37,11 @@ def erfnet(num_classes, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes)
 
 
+def enet(num_classes, encoder_only):
+    # Define ENet (Without ImageNet pretraining)
+    return enet_(num_classes=num_classes, encoder_only=encoder_only)
+
+
 # Copied and simplified from torch/vision/references/segmentation
 class ConfusionMatrix(object):
     def __init__(self, num_classes):
@@ -45,7 +55,7 @@ class ConfusionMatrix(object):
         with torch.no_grad():
             k = (a >= 0) & (a < n)
             inds = n * a[k].to(torch.int64) + b[k]
-            self.mat += torch.bincount(inds, minlength=n**2).reshape(n, n)
+            self.mat += torch.bincount(inds, minlength=n ** 2).reshape(n, n)
 
     def reset(self):
         self.mat.zero_()
@@ -119,7 +129,7 @@ def load_checkpoint(net, optimizer, lr_scheduler, filename):
             pass
 
 
-def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_label_id_map, 
+def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_label_id_map,
          test_base=None, test_label_id_map=None, city_aug=0):
     # Return data_loaders
     # depending on whether the state is
@@ -172,7 +182,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_l
                  Resize(size_image=input_sizes[2], size_label=input_sizes[2]),
                  Normalize(mean=mean, std=std),
                  LabelMap(test_label_id_map)])
-        elif city_aug == 2:  # ERFNet
+        elif city_aug == 2:  # ERFNet and ENet
             transform_train = Compose(
                 [ToTensor(),
                  Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
@@ -236,7 +246,8 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_l
 
 
 def train_schedule(writer, loader, val_num_steps, validation_loader, device, criterion, net, optimizer, lr_scheduler,
-                   num_epochs, is_mixed_precision, num_classes, categories, input_sizes, selector, classes):
+                   num_epochs, is_mixed_precision, num_classes, categories, input_sizes, selector, classes,
+                   encoder_only):
     # Poly training schedule
     # Validate and find the best snapshot
     best_mIoU = 0
@@ -259,8 +270,12 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
 
             with autocast(is_mixed_precision):
                 outputs = net(inputs)['out']
-                outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear',
-                                                          align_corners=True)
+
+                if encoder_only:
+                    labels = F.resize(labels, input_sizes[1], interpolation=Image.NEAREST)
+                else:
+                    outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear',
+                                                              align_corners=True)
                 conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
                 loss = criterion(outputs, labels)
 
@@ -288,9 +303,10 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
             if current_step_num % val_num_steps == (val_num_steps - 1):
                 test_pixel_accuracy, test_mIoU = test_one_set(loader=validation_loader, device=device, net=net,
                                                               num_classes=num_classes, categories=categories,
-                                                              output_size=input_sizes[2],
+                                                              output_size=input_sizes[2], labels_size=input_sizes[1],
                                                               selector=selector, classes=classes,
-                                                              is_mixed_precision=is_mixed_precision)
+                                                              is_mixed_precision=is_mixed_precision,
+                                                              encoder_only=encoder_only)
                 writer.add_scalar('test pixel accuracy',
                                   test_pixel_accuracy,
                                   current_step_num)
@@ -332,8 +348,8 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
 
 
 # Copied and modified from torch/vision/references/segmentation
-def test_one_set(loader, device, net, num_classes, categories, output_size, is_mixed_precision,
-                 selector=None, classes=None):
+def test_one_set(loader, device, net, num_classes, categories, output_size, labels_size, is_mixed_precision,
+                 selector=None, classes=None, encoder_only=False):
     # Evaluate on 1 data_loader
     # Use selector & classes to select part of the classes as metric (for SYNTHIA)
     net.eval()
@@ -343,23 +359,27 @@ def test_one_set(loader, device, net, num_classes, categories, output_size, is_m
             image, target = image.to(device), target.to(device)
             with autocast(is_mixed_precision):
                 output = net(image)['out']
-                output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
+                if encoder_only:
+                    target = F.resize(target, size=labels_size, interpolation=Image.NEAREST)
+                else:
+                    output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear',
+                                                              align_corners=True)
                 conf_mat.update(target.flatten(), output.argmax(1).flatten())
 
     acc_global, acc, iu = conf_mat.compute()
     print(categories)
     print((
-            'global correct: {:.2f}\n'
-            'average row correct: {}\n'
-            'IoU: {}\n'
-            'mean IoU: {:.2f}\n'
-            'mean IoU-{}: {:.2f}').format(
-                acc_global.item() * 100,
-                ['{:.2f}'.format(i) for i in (acc * 100).tolist()],
-                ['{:.2f}'.format(i) for i in (iu * 100).tolist()],
-                iu.mean().item() * 100,
-                -1 if classes is None else classes,
-                -1 if selector is None else iu[selector].mean().item() * 100))
+        'global correct: {:.2f}\n'
+        'average row correct: {}\n'
+        'IoU: {}\n'
+        'mean IoU: {:.2f}\n'
+        'mean IoU-{}: {:.2f}').format(
+        acc_global.item() * 100,
+        ['{:.2f}'.format(i) for i in (acc * 100).tolist()],
+        ['{:.2f}'.format(i) for i in (iu * 100).tolist()],
+        iu.mean().item() * 100,
+        -1 if classes is None else classes,
+        -1 if selector is None else iu[selector].mean().item() * 100))
 
     if selector is None:
         iou = iu.mean().item() * 100
