@@ -272,7 +272,12 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
                 outputs = net(inputs)['out']
 
                 if encoder_only:
-                    labels = F.resize(labels, input_sizes[1], interpolation=Image.NEAREST)
+                    labels = labels.unsqueeze(0)
+                    if labels.dtype not in (torch.float32, torch.float64):
+                        labels = labels.to(torch.float32)
+                    labels = torch.nn.functional.interpolate(labels, size=labels_size, mode='nearest')
+                    labels = labels.to(torch.int64)
+                    labels = labels.squeeze(0)
                 else:
                     outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear',
                                                               align_corners=True)
@@ -360,7 +365,12 @@ def test_one_set(loader, device, net, num_classes, categories, output_size, labe
             with autocast(is_mixed_precision):
                 output = net(image)['out']
                 if encoder_only:
-                    target = F.resize(target, size=labels_size, interpolation=Image.NEAREST)
+                    target = target.unsqueeze(0)
+                    if target.dtype not in (torch.float32, torch.float64):
+                        target = target.to(torch.float32)
+                    target = torch.nn.functional.interpolate(target, size=labels_size, mode='nearest')
+                    target = target.to(torch.int64)
+                    target = target.squeeze(0)
                 else:
                     output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear',
                                                               align_corners=True)
