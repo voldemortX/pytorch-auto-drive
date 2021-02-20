@@ -275,7 +275,7 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
                     labels = labels.unsqueeze(0)
                     if labels.dtype not in (torch.float32, torch.float64):
                         labels = labels.to(torch.float32)
-                    labels = torch.nn.functional.interpolate(labels, size=labels_size, mode='nearest')
+                    labels = torch.nn.functional.interpolate(labels, size=input_sizes[1], mode='nearest')
                     labels = labels.to(torch.int64)
                     labels = labels.squeeze(0)
                 else:
