@@ -54,7 +54,7 @@ And models from this repo are faster to train and often have better performance 
 | semantic segmentation | - | [ERFNet](https://ieeexplore.ieee.org/abstract/document/8063438/) |
 | lane detection | ERFNet, VGG16, ResNets (18, 34, 50, 101) | Baseline |
 | lane detection | ERFNet, VGG16, ResNets (18, 34, 50, 101) | [SCNN](https://arxiv.org/abs/1712.06080) |
-| lane detection | VGG, ResNets (18, 34, 50, 101) | [RESA](https://arxiv.org/abs/2008.13719) (*In progress*) |
+| lane detection | VGG16, ResNets (18, 34, 50, 101) | [RESA](https://arxiv.org/abs/2008.13719) (*In progress*) |
 | lane detection | ERFNet, ENet | [SAD](https://arxiv.org/abs/1908.00821) (*In progress*) |
 | lane detection | ERFNet | [PRNet](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) (*In progress*) |
 | lane detection | ERFNet, ResNet18-reduced | [LSTR](https://arxiv.org/abs/2011.04233) (*In progress*) |
@@ -63,21 +63,28 @@ And models from this repo are faster to train and often have better performance 
 
 *The ResNet backbone corresponds to DeepLabV2 (w.o. ASPP) with output channels reduced to 128 as in RESA.*
 
-*We keep calling it VGG/ResNet for consistency with common practices.*
+*We keep calling it VGG16/ResNet for consistency with common practices.*
 
 ## Lane detection performance:
 
 | method | backbone | resolution | mixed precision? | dataset | metric | average | best | training time |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Baseline | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.40 | 73.49 | 6h |
-| SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
+| Baseline | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 93.61% | 93.67% | 1.5h |
+| Baseline | ResNet18 | 360 x 640 | *yes* | TuSimple | Accuracy | 93.80% | 93.98% | 0.7h |
+| Baseline | ResNet34 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.94% | 94.99% | 1.1h |
+| Baseline | ResNet50 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.67% | 94.71% | 1.5h |
+| Baseline | ResNet101 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.77% | 94.83% | 2.6h |
 | Baseline | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 95.15% | 95.24% | 0.8h |
+| SCNN | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 94.00% | 94.15% | 2h |
+| SCNN | ResNet18 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.21% | 94.30% | 1.2h |
+| SCNN | ResNet34 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.66% | 94.76% | 1.6h |
+| SCNN | ResNet50 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.93% | 95.01% | 2.4h |
+| SCNN | ResNet101 | 360 x 640 | *yes* | TuSimple | Accuracy | 95.09% | 95.21% | 3.5h |
 | SCNN | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 96.00% | 96.12% | 1.6h |
 | Baseline | VGG16 | 288 x 800 | *yes* | CULane | F measure | 63.90 | 63.98 | 9.3h |
+| Baseline | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.40 | 73.49 | 6h |
 | SCNN | VGG16 | 288 x 800 | *yes* | CULane | F measure | 73.13 | 73.23 | 12.8h |
-| Baseline | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 93.61% | 93.67% | 1.5h |
-| SCNN | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 94.00% | 94.15% | 2h |
-
+| SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
 
 *All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
 
@@ -85,9 +92,17 @@ And models from this repo are faster to train and often have better performance 
 
 | method | backbone | accuracy | FP | FN | |
 | :---: | :---: | :---: | :---: | :---: | :---: |
+| Baseline | ResNet18 | 93.98% | 0.0874 | 0.0921 | [model](https://drive.google.com/file/d/17VKnwsN4WMbpnD4DgaaerppjXybqn-LG/view?usp=sharing) |
+| Baseline | ResNet34 | 94.99% | 0.0615 | 0.0638 | [model](https://drive.google.com/file/d/1ch5YCNAQPhkPR2PRBNn07kE_t8kicLpq/view?usp=sharing) |
+| Baseline | ResNet50 | 94.71% | 0.0644 | 0.0695 | [model](https://drive.google.com/file/d/10KBMVGc63kPvqL_2deaLfTfC3fSAtnju/view?usp=sharing) |
+| Baseline | ResNet101 | 94.83% | 0.0612 | 0.0677 | [model](https://drive.google.com/file/d/1sFJna_oJ6dfd9AMiAEbragpLSvpduGff/view?usp=sharing) |
 | Baseline | ERFNet | 95.24% | 0.0569 | 0.0457 | [model](https://drive.google.com/file/d/12n_ck3Ir86j3VOhIn0hT96Ru4n8nhP5G/view?usp=sharing) |
-| SCNN | ERFNet | 96.12% | 0.0468 | 0.0335 | [model](https://drive.google.com/file/d/1rzE2fZ5mQswMIm6ICK1lWH-rsQyjRbxL/view?usp=sharing) |
 | SCNN | VGG16 | 94.15% | 0.0723 | 0.0812 |  |
+| SCNN | ResNet18 | 94.30% | 0.0736 | 0.0799 | [model](https://drive.google.com/file/d/1cmP73GKD_9R9ka0sJdY8V0z04bE5jkaZ/view?usp=sharing) |
+| SCNN | ResNet34 | 94.76% | 0.0671 | 0.0694 | [model](https://drive.google.com/file/d/1LHlnPsIsr4RCJar4UKBVfikS41P9e3Em/view?usp=sharing) |
+| SCNN | ResNet50 | 95.01% | 0.0550 | 0.0611 | [model](https://drive.google.com/file/d/1YK-PzdE9q8zn48isiBxwaZEdRsFw_oHe/view?usp=sharing) |
+| SCNN | ResNet101 | 95.21% | 0.0511 | 0.0552 | [model](https://drive.google.com/file/d/13qk5rIHqhDlwylZP9S-8fN53DexPTBQy/view?usp=sharing) |
+| SCNN | ERFNet | 96.12% | 0.0468 | 0.0335 | [model](https://drive.google.com/file/d/1rzE2fZ5mQswMIm6ICK1lWH-rsQyjRbxL/view?usp=sharing) |
 
 ### CULane detailed performance (best):
 
@@ -99,7 +114,7 @@ And models from this repo are faster to train and often have better performance 
 | no line | 46.76 | 46.68 | 45.59 | 34.93 |
 | shadow | 74.47 | 70.59 | 69.38 | 54.07 |
 | arrow | 86.09 | 87.40 | 86.56 | 75.52 |
-| dazzle light | 64.18 | 65.80 | 62.83| 52.65 |
+| dazzle light | 64.18 | 65.80 | 62.83 | 52.65 |
 | curve | 66.89 | 68.30 | 66.58 | 61.30 |
 | crossroad | 2102 | 2236 | 1809 | 1985 |
 | total | 73.49 | 74.03 | 73.23 | 63.98 |
