@@ -172,6 +172,10 @@ Get started with [LANEDETECTION.md](LANEDETECTION.md) for lane detection.
 
 Get started with [SEGMENTATION.md](SEGMENTATION.md) for semantic segmentation.
 
+## Contributing
+
+We welcome **Pull Requests** to fix bugs, update docs or implement new features etc. We also welcome **Issues** to report problems and needs, or ask questions (since your question might be more common and helpful to the community than you presume). Interested folks should checkout our [roadmap](https://github.com/voldemortX/pytorch-auto-drive/issues/4).
+
 ## Notes:
 
 1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in [configs.yaml](configs.yaml); similar changes can be done with other experiments.
@@ -179,5 +183,3 @@ Get started with [SEGMENTATION.md](SEGMENTATION.md) for semantic segmentation.
 2. Training times are measured on **a single RTX 2080Ti**, including online validation time for segmentation, test time for lane detection.
 
 3. All segmentation results reported are from single model without CRF and without multi-scale testing.
-
-4. **Pull Requests** and **Issues** are most welcomed.
