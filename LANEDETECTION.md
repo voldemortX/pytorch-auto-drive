@@ -31,28 +31,34 @@ python tools/tusimple_list_convertor.py
 
 4. Here are some examples for lane detection:
 
-Mixed precision training on CULane with ERFNet:
+Mixed precision training on CULane with ERFNet/ResNet18/ResNet34 Baseline:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=baseline --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=baseline --backbone=erfnet/resnet18/resnet34 --mixed-precision --exp-name=<whatever you like>
 ```
 
-Mixed precision training on TuSimple with ERFNet:
+Mixed precision training on TuSimple with ERFNet/ResNet18/ResNet34 Baseline:
 
 ```
-python main_landec_as_seg.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=baseline --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=baseline --backbone=erfnet/resnet18/resnet34 --mixed-precision --exp-name=<whatever you like>
 ```
 
-Mixed precision training on CULane with ERFNet-SCNN:
+Mixed precision training on CULane with ERFNet-SCNN/ResNet18-SCNN/ResNet34-SCNN:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=scnn --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=scnn --backbone=erfnet/resnet18/resnet34 --mixed-precision --exp-name=<whatever you like>
 ```
 
-Mixed precision training on TuSimple with ERFNet-SCNN:
+Mixed precision training on TuSimple with ERFNet-SCNN/ResNet18-SCNN/ResNet34-SCNN:
 
 ```
-python main_landec_as_seg.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=scnn --backbone=erfnet --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=scnn --backbone=erfnet/resnet18/resnet34 --mixed-precision --exp-name=<whatever you like>
+```
+
+Train ResNet50/ResNet101 Baseline or SCNN with these backbones, we recommend mixed precision training with a smaller batch size by:
+
+```
+--lr=0.13 --batch-size=8 --workers=4
 ```
 
 Mixed precision training on CULane with VGG16-SCNN:
