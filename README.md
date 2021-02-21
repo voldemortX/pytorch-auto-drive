@@ -75,8 +75,8 @@ And models from this repo are faster to train and often have better performance 
 | SCNN | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 96.00% | 96.12% | 1.6h |
 | Baseline | VGG16 | 288 x 800 | *yes* | CULane | F measure | 63.90 | 63.98 | 9.3h |
 | SCNN | VGG16 | 288 x 800 | *yes* | CULane | F measure | 73.13 | 73.23 | 12.8h |
-| Baseline | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 94.00% | 94.15% | 2h |
-| SCNN | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 93.61% | 93.67% | 1.5h |
+| Baseline | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 93.61% | 93.67% | 1.5h |
+| SCNN | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 94.00% | 94.15% | 2h |
 
 
 *All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
