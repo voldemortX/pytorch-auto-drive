@@ -1,6 +1,6 @@
 # Codebase for deep autonomous driving perception tasks
 
-Segmentation models (**Deeplab, FCN, ERFNet**), Lane detection models (**ERFNet, ERFNet-SCNN and others**) based on Python 3.6 and PyTorch >=1.6.0 (CUDA 10) & TorchVision >=0.7.0 with mixed precision training.
+Segmentation models (**ERFNet, ENet, DeepLab, FCN**), Lane detection models (**SCNN, SAD, PRNet, RESA, LSTR, ERFNet and others**) based on Python 3.6 and PyTorch >=1.6.0 (CUDA 10) & TorchVision >=0.7.0 with mixed precision training.
 
 **This repository implements (or plan to implement) the following interesting papers in a unified Python codebase:**
 
