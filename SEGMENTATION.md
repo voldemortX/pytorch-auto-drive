@@ -35,9 +35,9 @@ python tools/synthia_label_convertor.py
 python tools/synthia_data_list.py
 ```
 
-1. If you are using ERFNet, download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
+3. If you are using ERFNet, download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
 
-2. Here are some examples for segmentation:
+4. Here are some examples for segmentation:
 
 Mixed precision training on PASCAL VOC 2012 with DeeplabV2:
 
@@ -77,13 +77,13 @@ python main_semseg.py --epochs=20 --lr=0.002 --batch-size=4 --dataset=synthia --
 
 Mixed precision training on Cityscapes with ENet (two steps):
 
-First training the only encoder to categorize downsampled regions of the input image:
+First pre-train the encoder to categorize downsampled labels:
 
 ```
 python main_semseg.py --epochs=300 --lr=0.0008 --batch-size=16 --weight-decay=0.0002 --dataset=city --model=enet --mixed-precision --encoder-only --exp-name=<whatever you like>
 ```
 
-Second training the whole network to perform upsampling and pixel-wise classification:
+Then train the whole network:
 
 ```
 python main_semseg.py --epochs=300 --lr=0.0008 --batch-size=16 --weight-decay=0.0002 --dataset=city --model=enet --mixed-precision --exp-name=<whatever you like>
