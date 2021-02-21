@@ -75,6 +75,20 @@ Mixed precision training on SYNTHIA:
 python main_semseg.py --epochs=20 --lr=0.002 --batch-size=4 --dataset=synthia --model=deeplabv2 --mixed-precision --exp-name=<whatever you like>
 ```
 
+Mixed precision training on Cityscapes with ENet (two steps):
+
+First training the only encoder to categorize downsampled regions of the input image:
+
+```
+python main_semseg.py --epochs=300 --lr=0.0008 --batch-size=16 --weight-decay=0.0002 --dataset=city --model=enet --mixed-precision --encoder-only --exp-name=<whatever you like>
+```
+
+Second training the whole network to perform upsampling and pixel-wise classification:
+
+```
+python main_semseg.py --epochs=300 --lr=0.0008 --batch-size=16 --weight-decay=0.0002 --dataset=city --model=enet --mixed-precision --exp-name=<whatever you like>
+```
+
 ## Testing:
 
 Training contains online evaluations and the best model is saved, you can check best *val* set performance at `log.txt`, for more details you can checkout tensorboard.
