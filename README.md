@@ -69,7 +69,7 @@ And models from this repo are faster to train and often have better performance 
 
 | method | backbone | resolution | mixed precision? | dataset | metric | average | best | training time |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Baseline | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 93.61% | 93.67% | 1.5h |
+| Baseline | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 93.39% | 93.57% | 1.5h |
 | Baseline | ResNet18 | 360 x 640 | *yes* | TuSimple | Accuracy | 93.80% | 93.98% | 0.7h |
 | Baseline | ResNet34 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.94% | 94.99% | 1.1h |
 | Baseline | ResNet50 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.67% | 94.71% | 1.5h |
