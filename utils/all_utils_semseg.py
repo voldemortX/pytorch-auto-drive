@@ -37,9 +37,10 @@ def erfnet(num_classes, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes)
 
 
-def enet(num_classes, encoder_only):
+def enet(num_classes, encoder_only, continue_from):
     # Define ENet (Without ImageNet pretraining)
-    return enet_(num_classes=num_classes, encoder_only=encoder_only)
+    return enet_(num_classes=num_classes, encoder_only=encoder_only,
+                 pretrained_weights=continue_from if not encoder_only else None)
 
 
 # Copied and simplified from torch/vision/references/segmentation

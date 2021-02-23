@@ -35,7 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
     parser.add_argument('--state', type=int, default=0,
-                        help='Conduct final test(1)/normal training(0) (default: 0)')
+                        help='train the whole enet(2)/Conduct final test(1)/normal training(0) (default: 0)')
     parser.add_argument('--encoder-only', action='store_true', default=False,
                         help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
     args = parser.parse_args()
@@ -93,7 +93,8 @@ if __name__ == '__main__':
         input_sizes = configs['CITYSCAPES']['SIZES_ERFNET']
         city_aug = 2
     elif args.model == 'enet':
-        net = enet(num_classes=num_classes, encoder_only=args.encoder_only)
+        net = enet(num_classes=num_classes, encoder_only=args.encoder_only,
+                   continue_from=args.continue_from if args.state != 1 else None)
         input_sizes = configs['CITYSCAPES']['SIZES_ERFNET']
         city_aug = 2
     else:
@@ -101,7 +102,8 @@ if __name__ == '__main__':
     print(device)
     net.to(device)
     if args.model == 'erfnet' or args.model == 'enet':
-        optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=args.weight_decay)
+        optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999), eps=1e-08,
+                                     weight_decay=args.weight_decay)
     else:
         optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0005)
 
@@ -112,8 +114,8 @@ if __name__ == '__main__':
                            train_label_id_map=train_label_id_map, test_label_id_map=test_label_id_map)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
         _, x = test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
-                            output_size=input_sizes[2], is_mixed_precision=args.mixed_precision,
-                            selector=selector, classes=classes)
+                            output_size=input_sizes[2], labels_size=input_sizes[1],
+                            is_mixed_precision=args.mixed_precision, selector=selector, classes=classes)
     else:
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255, weight=weights)
         writer = SummaryWriter('runs/' + exp_name)
@@ -138,7 +140,7 @@ if __name__ == '__main__':
                                                              lambda x: (1 - x / (len(train_loader) * args.epochs))
                                                                        ** 0.9)
         # Resume training?
-        if args.continue_from is not None:
+        if args.continue_from is not None and args.state != 2:
             load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=args.continue_from)
         # visualize(train_loader, colors=colors, mean=mean, std=std)
 

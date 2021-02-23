@@ -264,7 +264,7 @@ def deeplabv1_vgg16(pretrained_weights='pytorch-pretrained', num_classes=19, num
 
 
 def enet_(num_classes=19, encoder_relu=False, decoder_relu=True, dropout_1=0.01, dropout_2=0.1, num_lanes=0,
-          sad=False, flattened_size=4500, encoder_only=False, pretrained_weights='encoder_pretrained.pt'):
+          sad=False, flattened_size=4500, encoder_only=False, pretrained_weights=None):
     net = ENet(num_classes=num_classes, encoder_relu=encoder_relu, decoder_relu=decoder_relu, dropout_1=dropout_1,
                dropout_2=dropout_2, num_lanes=num_lanes, sad=sad, flattened_size=flattened_size,
                encoder_only=encoder_only, encoder=None)
@@ -273,9 +273,8 @@ def enet_(num_classes=19, encoder_relu=False, decoder_relu=True, dropout_1=0.01,
         saved_weights = load(pretrained_weights)['model']
         original_weights = net.state_dict()
         for key in saved_weights.keys():
-            my_key = key.replace('module.features.', '')
-            if my_key in original_weights.keys():
-                original_weights[my_key] = saved_weights[key]
+            if key in original_weights.keys():
+                original_weights[key] = saved_weights[key]
         net.load_state_dict(original_weights)
 
     return net
