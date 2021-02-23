@@ -86,7 +86,7 @@ python main_semseg.py --epochs=300 --lr=0.0008 --batch-size=16 --weight-decay=0.
 Then train the whole network:
 
 ```
-python main_semseg.py --epochs=300 --lr=0.0008 --batch-size=16 --weight-decay=0.0002 --dataset=city --model=enet --mixed-precision --exp-name=<whatever you like>
+python main_semseg.py --epochs=300 --lr=0.0008 --batch-size=16 --weight-decay=0.0002 --dataset=city --model=enet --mixed-precision --state=2 --continue-from=<the name of the first step> --exp-name=<whatever you like>
 ```
 
 ## Testing:
