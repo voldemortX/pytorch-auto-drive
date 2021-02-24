@@ -75,7 +75,7 @@ And models from this repo are faster to train and often have better performance 
 | Baseline | ResNet50 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.67% | 94.71% | 1.5h |
 | Baseline | ResNet101 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.77% | 94.83% | 2.6h |
 | Baseline | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 95.15% | 95.24% | 0.8h |
-| SCNN | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 94.00% | 94.15% | 2h |
+| SCNN | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 94.46% | 94.65% | 2h |
 | SCNN | ResNet18 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.21% | 94.30% | 1.2h |
 | SCNN | ResNet34 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.66% | 94.76% | 1.6h |
 | SCNN | ResNet50 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.93% | 95.01% | 2.4h |
@@ -92,12 +92,13 @@ And models from this repo are faster to train and often have better performance 
 
 | method | backbone | accuracy | FP | FN | |
 | :---: | :---: | :---: | :---: | :---: | :---: |
+| Baseline | VGG16 | 93.57% | 0.0992 | 0.1058 |  |
 | Baseline | ResNet18 | 93.98% | 0.0874 | 0.0921 | [model](https://drive.google.com/file/d/17VKnwsN4WMbpnD4DgaaerppjXybqn-LG/view?usp=sharing) |
 | Baseline | ResNet34 | 94.99% | 0.0615 | 0.0638 | [model](https://drive.google.com/file/d/1ch5YCNAQPhkPR2PRBNn07kE_t8kicLpq/view?usp=sharing) |
 | Baseline | ResNet50 | 94.71% | 0.0644 | 0.0695 | [model](https://drive.google.com/file/d/10KBMVGc63kPvqL_2deaLfTfC3fSAtnju/view?usp=sharing) |
 | Baseline | ResNet101 | 94.83% | 0.0612 | 0.0677 | [model](https://drive.google.com/file/d/1sFJna_oJ6dfd9AMiAEbragpLSvpduGff/view?usp=sharing) |
 | Baseline | ERFNet | 95.24% | 0.0569 | 0.0457 | [model](https://drive.google.com/file/d/12n_ck3Ir86j3VOhIn0hT96Ru4n8nhP5G/view?usp=sharing) |
-| SCNN | VGG16 | 94.15% | 0.0723 | 0.0812 |  |
+| SCNN | VGG16 | 94.65% | 0.0627 | 0.0675 |  |
 | SCNN | ResNet18 | 94.30% | 0.0736 | 0.0799 | [model](https://drive.google.com/file/d/1cmP73GKD_9R9ka0sJdY8V0z04bE5jkaZ/view?usp=sharing) |
 | SCNN | ResNet34 | 94.76% | 0.0671 | 0.0694 | [model](https://drive.google.com/file/d/1LHlnPsIsr4RCJar4UKBVfikS41P9e3Em/view?usp=sharing) |
 | SCNN | ResNet50 | 95.01% | 0.0550 | 0.0611 | [model](https://drive.google.com/file/d/1YK-PzdE9q8zn48isiBxwaZEdRsFw_oHe/view?usp=sharing) |
