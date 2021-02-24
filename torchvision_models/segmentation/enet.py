@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch
 from torch.nn import functional as F
 from torch.nn.parameter import Parameter
-
+from ..lane_detection.common_models import EDLaneExist
 
 class InitialBlock(nn.Module):
     """The initial block is composed of two branches:
@@ -412,32 +412,32 @@ class SpatialSoftmax(nn.Module):
         return softmax_attention
 
 
-class LaneExistENet(nn.Module):
-    def __init__(self, num_output, num_lane, dropout=0.1, flattened_size=4500):
-        super().__init__()
-        self.conv_dilated = nn.Conv2d(128, 32, kernel_size=3, stride=1, padding=4, dilation=4)
-        self.bn = nn.BatchNorm2d(32)
-        self.dropout = nn.Dropout2d(dropout)
-        self.conv1x1 = nn.Conv2d(32, num_lane, kernel_size=1, stride=1)
-        self.ssm = SpatialSoftmax()
-        self.avgpool = nn.AvgPool2d(2, 2)
-        self.linear1 = nn.Linear(flattened_size, 128)
-        self.linear2 = nn.Linear(128, num_output)
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, input):
-        # input: logits
-        output = self.conv_dilated(input)
-        output = self.bn(output)
-        output = F.relu(output)
-        output = self.ssm(output)
-        output = self.avgpool(output)
-        output = output.flatten(start_dim=1)
-        output = self.linear1(output)
-        output = F.relu(output)
-        output = self.linear2(output)
-        output = self.sigmoid(output)
-        return output
+# class LaneExistENet(nn.Module):
+#     def __init__(self, num_output, num_lane, dropout=0.1, flattened_size=4500):
+#         super().__init__()
+#         self.conv_dilated = nn.Conv2d(128, 32, kernel_size=3, stride=1, padding=4, dilation=4)
+#         self.bn = nn.BatchNorm2d(32)
+#         self.dropout = nn.Dropout2d(dropout)
+#         self.conv1x1 = nn.Conv2d(32, num_lane, kernel_size=1, stride=1)
+#         self.ssm = SpatialSoftmax()
+#         self.avgpool = nn.AvgPool2d(2, 2)
+#         self.linear1 = nn.Linear(flattened_size, 128)
+#         self.linear2 = nn.Linear(128, num_output)
+#         self.sigmoid = nn.Sigmoid()
+#
+#     def forward(self, input):
+#         # input: logits
+#         output = self.conv_dilated(input)
+#         output = self.bn(output)
+#         output = F.relu(output)
+#         output = self.ssm(output)
+#         output = self.avgpool(output)
+#         output = output.flatten(start_dim=1)
+#         output = self.linear1(output)
+#         output = F.relu(output)
+#         output = self.linear2(output)
+#         output = self.sigmoid(output)
+#         return output
 
 
 # class ENet(nn.Module):
@@ -677,7 +677,8 @@ class ENet(nn.Module):
             self.decoder = Decoder(num_classes=num_classes, decoder_relu=decoder_relu, dropout_2=dropout_2)
 
         if num_lanes > 0:
-            self.lane_classifier = LaneExistENet(num_output=num_lanes, flattened_size=flattened_size, dropout=dropout_2)
+            self.lane_classifier = EDLaneExist(num_output=num_lanes, flattened_size=flattened_size, dropout=dropout_2,
+                                               pool='avg')
         else:
             self.lane_classifier = None
 
