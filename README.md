@@ -92,13 +92,13 @@ And models from this repo are faster to train and often have better performance 
 
 | method | backbone | accuracy | FP | FN | |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| Baseline | VGG16 | 93.57% | 0.0992 | 0.1058 |  |
+| Baseline | VGG16 | 93.57% | 0.0992 | 0.1058 | [model](https://drive.google.com/file/d/1ChK0hApqLU0xUiEm4Wul-gNYQDQka151/view?usp=sharing) |
 | Baseline | ResNet18 | 93.98% | 0.0874 | 0.0921 | [model](https://drive.google.com/file/d/17VKnwsN4WMbpnD4DgaaerppjXybqn-LG/view?usp=sharing) |
 | Baseline | ResNet34 | 94.99% | 0.0615 | 0.0638 | [model](https://drive.google.com/file/d/1ch5YCNAQPhkPR2PRBNn07kE_t8kicLpq/view?usp=sharing) |
 | Baseline | ResNet50 | 94.71% | 0.0644 | 0.0695 | [model](https://drive.google.com/file/d/10KBMVGc63kPvqL_2deaLfTfC3fSAtnju/view?usp=sharing) |
 | Baseline | ResNet101 | 94.83% | 0.0612 | 0.0677 | [model](https://drive.google.com/file/d/1sFJna_oJ6dfd9AMiAEbragpLSvpduGff/view?usp=sharing) |
 | Baseline | ERFNet | 95.24% | 0.0569 | 0.0457 | [model](https://drive.google.com/file/d/12n_ck3Ir86j3VOhIn0hT96Ru4n8nhP5G/view?usp=sharing) |
-| SCNN | VGG16 | 94.65% | 0.0627 | 0.0675 |  |
+| SCNN | VGG16 | 94.65% | 0.0627 | 0.0675 | [model](https://drive.google.com/file/d/1Fd46-f_8q-fGcJEI_PhPyh7aBY1uqbIw/view?usp=sharing) |
 | SCNN | ResNet18 | 94.30% | 0.0736 | 0.0799 | [model](https://drive.google.com/file/d/1cmP73GKD_9R9ka0sJdY8V0z04bE5jkaZ/view?usp=sharing) |
 | SCNN | ResNet34 | 94.76% | 0.0671 | 0.0694 | [model](https://drive.google.com/file/d/1LHlnPsIsr4RCJar4UKBVfikS41P9e3Em/view?usp=sharing) |
 | SCNN | ResNet50 | 95.01% | 0.0550 | 0.0611 | [model](https://drive.google.com/file/d/1YK-PzdE9q8zn48isiBxwaZEdRsFw_oHe/view?usp=sharing) |
@@ -134,7 +134,7 @@ And models from this repo are faster to train and often have better performance 
 | DeeplabV3 | 256 x 512 | *yes* | Cityscapes | 69.87 | 70.37 | 4.5h | [model](https://drive.google.com/file/d/1HUR09zcPpjD5Q3LAm4p5t7e9gl1ZkpqU/view?usp=sharing) |
 | DeeplabV2 | 256 x 512 | *no* | Cityscapes | 68.45 | 68.89 | 4h | [model](https://drive.google.com/file/d/1fbxsPGu31plfgyQ0N0eiqk659F9osbRm/view?usp=sharing) |
 | ERFNet | 512 x 1024 | *yes* | Cityscapes | 71.99 | 72.47 | 5h | [model](https://drive.google.com/file/d/1uzBSboKD-Xt0K6VHd2aF561Cy13q9xRe/view?usp=sharing) |
-| ENet | 512 x 1024 | *yes* | Cityscapes | 65.54 | 65.74 | 10.6h |  |
+| ENet | 512 x 1024 | *yes* | Cityscapes | 65.54 | 65.74 | 10.6h | [model](https://drive.google.com/file/d/1oK2mKCetOtY8KFaKLjs7-jOMkxZjbIQD/view?usp=sharing) |
 | DeeplabV2 | 512 x 1024 | *yes* | Cityscapes | 71.78 | 72.12 | 9h | [model](https://drive.google.com/file/d/1MUG3PMMlFOtiX7G-TYCZhG_8D9aLqTPE/view?usp=sharing) |
 | DeeplabV2 | 512 x 1024 | *yes* | GTAV | 32.90 | 33.88 | 13.8h | [model](https://drive.google.com/file/d/1udHozZzwka9ktMxaV0tynL1HToy0H6sI/view?usp=sharing) |
 | DeeplabV2 | 512 x 1024 | *yes* | SYNTHIA* | 33.89 | 34.86 | 10.4h | [model](https://drive.google.com/file/d/1M-CO46zjXbVo8pguISUEw3M6NoKHIN0l/view?usp=sharing) |
