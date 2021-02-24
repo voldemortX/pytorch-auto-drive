@@ -66,12 +66,24 @@ Mixed precision training on CULane with VGG16-SCNN:
 ```
 python main_landec_as_seg.py --epochs=12 --lr=0.03 --batch-size=20 --dataset=culane --method=scnn --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
 ```
+
 Mixed precision training on CULane with VGG16:
 
 ```
 python main_landec_as_seg.py --epochs=12 --lr=0.03 --batch-size=20 --dataset=culane --method=baseline --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
 ```
 
+Mixed precision training on Tusimple with VGG16-SCNN:
+
+```
+python main_landec_as_seg.py --epochs=50 --lr=0.35 --batch-size=20 --dataset=tusimple --method=scnn --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
+```
+
+Mixed precision training on Tusimple with VGG16:
+
+```
+python main_landec_as_seg.py --epochs=50 --lr=0.25 --batch-size=20 --dataset=tusimple --method=baseline --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
+```
 
 
 ## Testing:
