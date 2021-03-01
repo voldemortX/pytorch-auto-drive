@@ -121,7 +121,7 @@ class EDLaneExist(nn.Module):
 
         if pool == 'max':
             self.pool = nn.MaxPool2d(2, stride=2)
-        elif pool == 'max':
+        elif pool == 'avg':
             self.pool = nn.AvgPool2d(2, stride=2)
         else:
             raise RuntimeError("This type of pool has not been defined yet!")
@@ -131,7 +131,6 @@ class EDLaneExist(nn.Module):
 
     def forward(self, input):
         output = input
-
         for layer in self.layers:
             output = layer(output)
 
@@ -142,7 +141,6 @@ class EDLaneExist(nn.Module):
 
         output = F.softmax(output, dim=1)
         output = self.pool(output)
-        # print(output.shape)
         output = output.flatten(start_dim=1)
         output = self.linear1(output)
         output = F.relu(output)

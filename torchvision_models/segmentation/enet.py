@@ -685,17 +685,18 @@ class ENet(nn.Module):
     def forward(self, x):
         out = OrderedDict()
         x, max_indices1_0, stage1_input_size, max_indices2_0, stage2_input_size, input_size = self.encoder(x)
-
         if self.encoder_conv is not None:
             x = self.encoder_conv(x)
+
+        if self.lane_classifier is not None:
+            out['lane'] = self.lane_classifier(x)
 
         if self.decoder is not None:
             x = self.decoder.forward(x, max_indices1_0, stage1_input_size, max_indices2_0,
                                      stage2_input_size, input_size)
         out['out'] = x
 
-        if self.lane_classifier is not None:
-            out['lane'] = self.lane_classifier(x)
+
         return out
 
 # net = ENet(num_classes=19,encoder_only=True)

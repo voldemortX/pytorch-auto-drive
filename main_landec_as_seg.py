@@ -6,8 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.losses import LaneLoss, SADLoss, HungarianLoss
 from utils.all_utils_semseg import load_checkpoint
 from utils.all_utils_landec_as_seg import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane, \
-    fast_evaluate, vgg16_culane, vgg16_tusimple, resnet_tusimple, resnet_culane
-
+    fast_evaluate, vgg16_culane, vgg16_tusimple, resnet_tusimple, resnet_culane, enet_tusimple
 if __name__ == '__main__':
     # Settings
     parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
@@ -37,6 +36,8 @@ if __name__ == '__main__':
                         help='Continue training from a previous checkpoint')
     parser.add_argument('--state', type=int, default=0,
                         help='Conduct validation(3)/final test(2)/fast validation(1)/normal training(0) (default: 0)')
+    parser.add_argument('--encoder-only', action='store_true', default=False,
+                        help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
     args = parser.parse_args()
     exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
     states = ['train', 'valfast', 'test', 'val']
@@ -74,6 +75,9 @@ if __name__ == '__main__':
         net = resnet_tusimple(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
     elif args.dataset == 'culane' and 'resnet' in args.backbone:
         net = resnet_culane(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
+    elif args.dataset == 'tusimple' and args.backbone == 'enet':
+        net = enet_tusimple(num_classes=num_classes, encoder_only=args.encoder_only,
+                            continue_from=args.continue_from)
     elif args.method == 'lstr':
         pass
     else:
@@ -130,7 +134,7 @@ if __name__ == '__main__':
         lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, l)
 
         # Resume training?
-        if args.continue_from is not None:
+        if args.continue_from is not None and args.backbone != 'enet':
             load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=args.continue_from)
 
         # Train

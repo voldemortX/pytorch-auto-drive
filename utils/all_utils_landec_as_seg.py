@@ -7,11 +7,10 @@ import numpy as np
 from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
-    deeplabv1_resnet50, deeplabv1_resnet101
+    deeplabv1_resnet50, deeplabv1_resnet101, enet_
 from utils.datasets import StandardLaneDetectionDataset
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
-
 
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for TuSimple (With only ImageNet pretraining)
@@ -59,6 +58,12 @@ def resnet_culane(num_classes, backbone_name='resnet18', scnn=False):
     }
     return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
                                     channel_reduce=128, flattened_size=4500, scnn=scnn)
+
+
+def enet_tusimple(num_classes, encoder_only, continue_from):
+
+    return enet_(num_classes=num_classes, num_lanes=num_classes - 1, dropout_1=0.01, dropout_2=0.1, flattened_size=4400,
+                 encoder_only=encoder_only, pretrained_weights=continue_from if not encoder_only else None)
 
 
 def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10):
