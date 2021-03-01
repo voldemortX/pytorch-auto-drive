@@ -5,8 +5,7 @@ import argparse
 import math
 import yaml
 from torch.utils.tensorboard import SummaryWriter
-from utils.all_utils_semseg import init, deeplab_v3, deeplab_v2, fcn, erfnet, train_schedule, test_one_set, \
-    load_checkpoint, enet
+from utils.all_utils_semseg import init, train_schedule, test_one_set, load_checkpoint, build_segmentation_model
 
 if __name__ == '__main__':
     # Settings
@@ -74,31 +73,11 @@ if __name__ == '__main__':
         classes = 16  # Or 13
         selector = configs['SYNTHIA']['IOU_16']  # Or 13
     device = torch.device('cpu')
-    weights = None
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
-    if args.model == 'deeplabv3':
-        net = deeplab_v3(num_classes=num_classes)
-    elif args.model == 'deeplabv2':
-        net = deeplab_v2(num_classes=num_classes)
-    elif args.model == 'deeplabv2-big':
-        net = deeplab_v2(num_classes=num_classes)
-        city_aug = 1
-        input_sizes = configs['CITYSCAPES']['SIZES_BIG']
-    elif args.model == 'fcn':
-        net = fcn(num_classes)
-    elif args.model == 'erfnet':
-        net = erfnet(num_classes=num_classes)
-        weights = torch.tensor(configs['CITYSCAPES']['WEIGHTS_ERFNET']).to(device)
-        input_sizes = configs['CITYSCAPES']['SIZES_ERFNET']
-        city_aug = 2
-    elif args.model == 'enet':
-        net = enet(num_classes=num_classes, encoder_only=args.encoder_only,
-                   continue_from=args.continue_from if args.state != 1 else None)
-        input_sizes = configs['CITYSCAPES']['SIZES_ERFNET']
-        city_aug = 2
-    else:
-        raise ValueError
+    net, city_aug, input_sizes, weights = build_segmentation_model(configs, args, num_classes, city_aug, input_sizes)
+    if weights is not None:
+        weights = weights.to(device)
     print(device)
     net.to(device)
     if args.model == 'erfnet' or args.model == 'enet':
@@ -138,11 +117,10 @@ if __name__ == '__main__':
             # Step-wise
             lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
                                                              lambda x: (1 - x / (len(train_loader) * args.epochs))
-                                                                       ** 0.9)
+                                                             ** 0.9)
         # Resume training?
         if args.continue_from is not None and args.state != 2:
             load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=args.continue_from)
-        # visualize(train_loader, colors=colors, mean=mean, std=std)
 
         # Train
         train_schedule(writer=writer, loader=train_loader, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,

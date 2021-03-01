@@ -1,8 +1,5 @@
 import time
 from collections import OrderedDict
-
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
 import warnings
 from torch.cuda.amp import autocast, GradScaler
@@ -12,9 +9,6 @@ from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resne
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomCrop, RandomTranslation, \
     ZeroPad, LabelMap, RandomScale, Compose
 from utils.datasets import StandardSegmentationDataset
-# from torch.nn import functional as F
-from transforms import functional as F
-from PIL import Image
 
 
 def fcn(num_classes):
@@ -67,35 +61,6 @@ class ConfusionMatrix(object):
         acc = torch.diag(h) / h.sum(1)
         iu = torch.diag(h) / (h.sum(1) + h.sum(0) - torch.diag(h))
         return acc_global, acc, iu
-
-
-def show(images, is_label, colors, std, mean):
-    # Draw images/labels from tensors
-    np_images = images.numpy()
-    if is_label:
-        # Map to RGB((N, d1, d2) = {0~20, 255} => (N, d1, d2, 3) = {0.0~1.0})
-        # As for how I managed this, I literally have no clue,
-        # but it seems to be working
-        np_images = np_images.reshape((np_images.shape[0], np_images.shape[1], np_images.shape[2], 1))
-        np_images = np.tile(np_images, (1, 1, 1, 3))
-        np_images[np_images == 255] = 21  # Ignore 255
-        np_images = np.array(colors)[np_images[:, :, :, 0]]
-        np_images = np_images / 255.0
-    else:
-        # Denormalize and map from (N, 3, d1, d2) to (N, d1, d2, 3)
-        np_images = np.transpose(np_images, (0, 2, 3, 1))
-        np_images = np_images * std + mean
-
-    plt.imshow(np_images.reshape((np_images.shape[0] * np_images.shape[1], np_images.shape[2], np_images.shape[3])))
-    plt.show()
-
-
-def visualize(loader, colors, std, mean):
-    # Visualize a whole batch
-    temp = iter(loader)
-    images, labels = temp.next()
-    show(images=images, is_label=False, colors=colors, std=std, mean=mean)
-    show(images=labels, is_label=True, colors=colors, std=std, mean=mean)
 
 
 # Save model checkpoints (supports amp)
@@ -398,3 +363,31 @@ def test_one_set(loader, device, net, num_classes, categories, output_size, labe
         iou = iu[selector].mean().item() * 100
 
     return acc_global.item() * 100, iou
+
+
+def build_segmentation_model(configs, args, num_classes, city_aug, input_sizes):
+    weights = None
+    if args.model == 'deeplabv3':
+        net = deeplab_v3(num_classes=num_classes)
+    elif args.model == 'deeplabv2':
+        net = deeplab_v2(num_classes=num_classes)
+    elif args.model == 'deeplabv2-big':
+        net = deeplab_v2(num_classes=num_classes)
+        city_aug = 1
+        input_sizes = configs['CITYSCAPES']['SIZES_BIG']
+    elif args.model == 'fcn':
+        net = fcn(num_classes)
+    elif args.model == 'erfnet':
+        net = erfnet(num_classes=num_classes)
+        weights = torch.tensor(configs['CITYSCAPES']['WEIGHTS_ERFNET'])
+        input_sizes = configs['CITYSCAPES']['SIZES_ERFNET']
+        city_aug = 2
+    elif args.model == 'enet':
+        net = enet(num_classes=num_classes, encoder_only=args.encoder_only,
+                   continue_from=args.continue_from if args.state != 1 else None)
+        input_sizes = configs['CITYSCAPES']['SIZES_ERFNET']
+        city_aug = 2
+    else:
+        raise ValueError
+
+    return net, city_aug, input_sizes, weights
