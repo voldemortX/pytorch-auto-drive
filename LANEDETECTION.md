@@ -70,7 +70,7 @@ python main_landec_as_seg.py --epochs=12 --lr=0.03 --batch-size=20 --dataset=cul
 Mixed precision training on CULane with VGG16:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.03 --batch-size=20 --dataset=culane --method=baseline --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
+python main_landec_as_seg.py --epochs=12 --lr=0.3 --batch-size=20 --dataset=culane --method=baseline --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
 ```
 
 Mixed precision training on Tusimple with VGG16-SCNN:
