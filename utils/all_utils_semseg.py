@@ -96,7 +96,7 @@ def load_checkpoint(net, optimizer, lr_scheduler, filename):
 
 
 def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_label_id_map,
-         test_base=None, test_label_id_map=None, city_aug=0):
+         test_base=None, test_label_id_map=None, city_aug=0, workers=8):
     # Return data_loaders
     # depending on whether the state is
     # 1: training
@@ -109,7 +109,6 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_l
     if test_label_id_map is None:
         test_label_id_map = train_label_id_map
     if dataset == 'voc':
-        workers = 4
         transform_train = Compose(
             [ToTensor(),
              # RandomResize(min_size=input_sizes[0], max_size=input_sizes[1]),
@@ -123,8 +122,6 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_l
              Normalize(mean=mean, std=std)])
     elif dataset == 'city' or dataset == 'gtav' or dataset == 'synthia':  # All the same size
         outlier = False if dataset == 'city' else True  # GTAV has fucked up label ID
-        workers = 8
-
         if city_aug == 3:  # SYNTHIA & GTAV
             if dataset == 'gtav':
                 transform_train = Compose(

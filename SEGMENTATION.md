@@ -42,7 +42,7 @@ python tools/synthia_data_list.py
 Mixed precision training on PASCAL VOC 2012 with DeeplabV2:
 
 ```
-python main_semseg.py --epochs=30 --lr=0.002 --batch-size=8 --dataset=voc --model=deeplabv2 --mixed-precision --exp-name=<whatever you like>
+python main_semseg.py --epochs=30 --lr=0.002 --batch-size=8 --dataset=voc --model=deeplabv2 --mixed-precision --exp-name=<whatever you like> --workers=4
 ```
 
 Full precision training on Cityscapes with DeeplabV3:
@@ -98,3 +98,5 @@ To evaluate a trained model, you can use either mixed-precision or fp32 for any 
 ```
 python main_semseg.py --state=1 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size>
 ```
+
+Recommend `--workers=0 --batch-size=1` for high precision inference.

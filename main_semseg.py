@@ -20,11 +20,14 @@ if __name__ == '__main__':
                         help='Number of epochs (default: 30)')
     parser.add_argument('--val-num-steps', type=int, default=1000,
                         help='Validation frequency (default: 1000)')
+    parser.add_argument('--workers', type=int, default=8,
+                        help='Number of workers (threads) when loading data.'
+                             'Recommend value for training: batch_size (default: 8)')
     parser.add_argument('--dataset', type=str, default='voc',
                         help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city)/GTAV(gtav)/SYNTHIA(synthia)'
                              '(default: voc)')
     parser.add_argument('--model', type=str, default='deeplabv3',
-                        help='Model selection (fcn/pspnet/deeplabv2/deeplabv3/enet) (default: deeplabv3)')
+                        help='Model selection (fcn/erfnet/deeplabv2/deeplabv3/enet) (default: deeplabv3)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size (default: 8)')
     parser.add_argument('--do-not-save', action='store_false', default=True,
@@ -90,7 +93,8 @@ if __name__ == '__main__':
     if args.state == 1:
         test_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
                            mean=mean, std=std, train_base=train_base, test_base=test_base, city_aug=city_aug,
-                           train_label_id_map=train_label_id_map, test_label_id_map=test_label_id_map)
+                           train_label_id_map=train_label_id_map, test_label_id_map=test_label_id_map,
+                           workers=args.workers)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
         _, x = test_one_set(loader=test_loader, device=device, net=net, categories=categories, num_classes=num_classes,
                             output_size=input_sizes[2], labels_size=input_sizes[1],
@@ -100,7 +104,7 @@ if __name__ == '__main__':
         writer = SummaryWriter('runs/' + exp_name)
         train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
                                         input_sizes=input_sizes, mean=mean, std=std, train_base=train_base,
-                                        test_base=test_base, city_aug=city_aug,
+                                        test_base=test_base, city_aug=city_aug, workers=args.workers,
                                         train_label_id_map=train_label_id_map, test_label_id_map=test_label_id_map)
 
         # The "poly" policy, variable names are confusing (May need reimplementation)
