@@ -145,7 +145,7 @@ And models from this repo are faster to train and often have better performance 
 
 ## Preparations:
 
-1. Setup a Python3 environment (CUDA 10), with PyTorch >= 1.6, TorchVision >= 0.7.0, tqdm, tensorboard, numpy, imageio, opencv-python, yaml.
+1. Setup a Python3 environment (CUDA 10), with PyTorch >= 1.6, TorchVision >= 0.7.0, tqdm, ujson, tensorboard, numpy, imageio, opencv-python, Pillow, pyyaml.
 
 2. Download the code:
    
