@@ -105,6 +105,9 @@ TUSIMPLE:  # TuSimple
     # training size/original size
     SIZES: [ !!python/tuple [360, 640], !!python/tuple [720, 1280] ]
     NUM_CLASSES: 7
+    COLORS: [ [ 0, 0, 0 ],
+              [255, 0, 255], [ 0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 0], [0, 255, 255],
+              [ 0, 0, 0 ] ]
     WEIGHTS: [0.4, 1, 1, 1, 1, 1, 1]
     GAP: 10  # Y pixel gap per sampling point
     PPL: 56  # Points per lane
@@ -115,6 +118,10 @@ CULANE:  # CULane
     # training size/original size
     SIZES: [ !!python/tuple [288, 800], !!python/tuple [590, 1640] ]
     NUM_CLASSES: 5
+    # https://github.com/XingangPan/SCNN/blob/master/tools/prob2lines/main.m
+    COLORS: [ [ 0, 0, 0 ],
+              [ 0, 255, 0 ], [ 0, 0, 255 ], [ 255, 0, 0 ], [ 255, 255, 0 ],
+              [ 0, 0, 0 ] ]
     WEIGHTS: [0.4, 1, 1, 1, 1]
     GAP: 20  # Y pixel gap per sampling point
     PPL: 18  # Points per lane

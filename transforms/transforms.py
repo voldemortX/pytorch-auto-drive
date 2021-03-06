@@ -361,6 +361,7 @@ class RandomRotation(object):
     @staticmethod
     def transform_points(points, angle, h, w):
         # Rotate a np.array (N x 2) of points (x, y) anti-clockwise, original axis start from top-left corner
+        # TODO: Mask -2
         offset = np.array([h / 2, w / 2])
         matrix = np.array([[math.cos(angle / 360.0 * math.pi), math.sin(angle / 360.0 * math.pi)],
                            [math.sin(-angle / 360.0 * math.pi), math.cos(angle / 360.0 * math.pi)]])

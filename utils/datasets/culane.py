@@ -59,3 +59,13 @@ class CULane(torchvision.datasets.VisionDataset):
                 target[i][j][temp[2 * j]] = temp[2 * j + 1]
 
         return target
+
+    @staticmethod
+    def load_target_xy(lines):
+        # A direct loading of JSON file to a list of N x 2 numpy arrays
+        target = []
+        for line in lines:
+            temp = [float(x) for x in line.strip().split(' ')]
+            target.append(np.array(temp).reshape(-1, 2))
+
+        return target

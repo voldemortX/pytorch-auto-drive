@@ -4,7 +4,7 @@ import torch
 from torch.cuda.amp import autocast
 from PIL import Image
 from utils.all_utils_semseg import load_checkpoint, build_segmentation_model
-from tools.vis_tools import segmentation_visualize_batched, simple_segmentation_transform
+from tools.vis_tools import segmentation_visualize_batched, simple_segmentation_transform, save_images
 from transforms import functional as F
 from transforms.transforms import ToTensor
 
@@ -43,7 +43,6 @@ if __name__ == '__main__':
 
     if args.dataset not in configs['SEGMENTATION_DATASETS'].keys():
         raise ValueError
-    num_classes = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['NUM_CLASSES']
     colors = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['COLORS']
     colors = torch.tensor(colors)
     images = Image.open(args.image_path).convert('RGB')
@@ -54,6 +53,7 @@ if __name__ == '__main__':
         mean = configs['GENERAL']['MEAN'] if args.mean is None else args.mean
         std = configs['GENERAL']['STD'] if args.std is None else args.std
         input_sizes = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['SIZES']
+        num_classes = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['NUM_CLASSES']
         assert len(mean) == len(std)
         net, city_aug, _, weights = build_segmentation_model(configs, args, num_classes, 0, input_sizes)
         images_trans = simple_segmentation_transform(images, mean=mean, std=std, resize_shape=[args.height, args.width],
@@ -89,5 +89,5 @@ if __name__ == '__main__':
             labels[labels >= label_id_map.shape[0]] = 0
             labels = label_id_map[labels]
 
-    segmentation_visualize_batched(images=images, labels=labels, filenames=[args.save_path],
-                                   colors=colors, num_classes=num_classes, mean=None, std=None)
+    results = segmentation_visualize_batched(images=images, labels=labels, colors=colors, mean=None, std=None)
+    save_images(results, filenames=[args.save_path])

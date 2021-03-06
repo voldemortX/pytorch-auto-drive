@@ -5,8 +5,8 @@ import yaml
 from torch.utils.tensorboard import SummaryWriter
 from utils.losses import LaneLoss, SADLoss, HungarianLoss
 from utils.all_utils_semseg import load_checkpoint
-from utils.all_utils_landec_as_seg import init, train_schedule, test_one_set, erfnet_tusimple, erfnet_culane, \
-    fast_evaluate, vgg16_culane, vgg16_tusimple, resnet_tusimple, resnet_culane, enet_tusimple
+from utils.all_utils_landec_as_seg import init, train_schedule, test_one_set, fast_evaluate, build_lane_detection_model
+
 if __name__ == '__main__':
     # Settings
     parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
@@ -63,28 +63,9 @@ if __name__ == '__main__':
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
-    scnn = True if args.method == 'scnn' else False
-    weights = torch.tensor(weights).to(device)
-    if args.dataset == 'tusimple' and args.backbone == 'erfnet':
-        net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
-    elif args.dataset == 'culane' and args.backbone == 'erfnet':
-        net = erfnet_culane(num_classes=num_classes, scnn=scnn)
-    elif args.dataset == 'culane' and args.backbone == 'vgg16':
-        net = vgg16_culane(num_classes=num_classes, scnn=scnn)
-    elif args.dataset == 'tusimple' and args.backbone == 'vgg16':
-        net = vgg16_tusimple(num_classes=num_classes, scnn=scnn)
-    elif args.dataset == 'tusimple' and 'resnet' in args.backbone:
-        net = resnet_tusimple(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
-    elif args.dataset == 'culane' and 'resnet' in args.backbone:
-        net = resnet_culane(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
-    elif args.dataset == 'tusimple' and args.backbone == 'enet':
-        net = enet_tusimple(num_classes=num_classes, encoder_only=args.encoder_only,
-                            continue_from=args.continue_from)
-    elif args.method == 'lstr':
-        pass
-    else:
-        raise ValueError
+    net = build_lane_detection_model(args, num_classes)
     print(device)
+    weights = torch.tensor(weights).to(device)
     net.to(device)
     # if args.model == 'scnn':
     #     # Gradient too large after spatial conv

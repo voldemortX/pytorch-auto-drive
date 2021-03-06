@@ -12,6 +12,7 @@ from utils.datasets import StandardLaneDetectionDataset
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
 
+
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
     # Define ERFNet for TuSimple (With only ImageNet pretraining)
     return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
@@ -348,3 +349,28 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
                 raise ValueError
 
     return coordinates
+
+
+def build_lane_detection_model(args, num_classes):
+    scnn = True if args.method == 'scnn' else False
+    if args.dataset == 'tusimple' and args.backbone == 'erfnet':
+        net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
+    elif args.dataset == 'culane' and args.backbone == 'erfnet':
+        net = erfnet_culane(num_classes=num_classes, scnn=scnn)
+    elif args.dataset == 'culane' and args.backbone == 'vgg16':
+        net = vgg16_culane(num_classes=num_classes, scnn=scnn)
+    elif args.dataset == 'tusimple' and args.backbone == 'vgg16':
+        net = vgg16_tusimple(num_classes=num_classes, scnn=scnn)
+    elif args.dataset == 'tusimple' and 'resnet' in args.backbone:
+        net = resnet_tusimple(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
+    elif args.dataset == 'culane' and 'resnet' in args.backbone:
+        net = resnet_culane(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
+    elif args.dataset == 'tusimple' and args.backbone == 'enet':
+        net = enet_tusimple(num_classes=num_classes, encoder_only=args.encoder_only,
+                            continue_from=args.continue_from)
+    elif args.method == 'lstr':
+        pass
+    else:
+        raise ValueError
+
+    return net
