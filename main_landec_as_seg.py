@@ -18,6 +18,8 @@ if __name__ == '__main__':
                         help='Number of epochs (default: 30)')
     parser.add_argument('--val-num-steps', type=int, default=0,
                         help='Validation frequency (default: 0), 0: no online evaluation')
+    parser.add_argument('--warmup-steps', type=int, default=200,
+                        help='Warmup steps (default: 200), 0: no warmup')
     parser.add_argument('--workers', type=int, default=10,
                         help='Number of workers (threads) when loading data.'
                              'Recommend value for training: batch_size / 2 (default: 10)')
@@ -128,10 +130,12 @@ if __name__ == '__main__':
 
         # Warmup https://github.com/XingangPan/SCNN/issues/82
         # Use it as default also for other methods (for fair comparison)
-        warmup_steps = 200
-        l = lambda t: t / warmup_steps if t < warmup_steps \
-            else (1 - (t - warmup_steps) / (len(data_loader) * args.epochs - warmup_steps)) ** 0.9
-        lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, l)
+        if args.warmup_steps > 0:
+            l = lambda t: t / args.warmup_steps if t < args.warmup_steps \
+                else (1 - (t - args.warmup_steps) / (len(data_loader) * args.epochs - args.warmup_steps)) ** 0.9
+            lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, l)
+        else:
+            raise NotImplementedError
 
         # Resume training?
         if args.continue_from is not None and args.backbone != 'enet':
