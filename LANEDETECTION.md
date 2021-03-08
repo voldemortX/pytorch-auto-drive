@@ -55,10 +55,10 @@ Mixed precision training on TuSimple with ERFNet-SCNN/ResNet18-SCNN/ResNet34-SCN
 python main_landec_as_seg.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=scnn --backbone=erfnet/resnet18/resnet34 --mixed-precision --exp-name=<whatever you like>
 ```
 
-Train ResNet50/ResNet101 Baseline or SCNN with these backbones, we recommend mixed precision training with a smaller batch size by:
+Train ResNet50/ResNet101 Baseline or SCNN with these backbones, we recommend mixed precision training with a smaller batch size by linearly scaling learning rate:
 
 ```
---lr=0.13 --batch-size=8 --workers=4
+--lr=0.08 --batch-size=8 --workers=4
 ```
 
 Mixed precision training on CULane with VGG16-SCNN:
