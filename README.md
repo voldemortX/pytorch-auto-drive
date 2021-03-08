@@ -82,15 +82,19 @@ And models from this repo are faster to train and often have better performance 
 | SCNN | ResNet101 | 360 x 640 | *yes* | TuSimple | Accuracy | 95.09% | 95.21% | 3.5h |
 | SCNN | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 96.00% | 96.12% | 1.6h |
 | Baseline | VGG16 | 288 x 800 | *yes* | CULane | F measure | 65.93 | 66.09 | 9.3h |
+| Baseline | ResNet18 | 288 x 800 | *yes* | CULane | F measure | 65.19 | 65.30 | 5.3h |
+| Baseline | ResNet34 | 288 x 800 | *yes* | CULane | F measure | 69.82 | 69.92 | 7.3h |
 | Baseline | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.40 | 73.49 | 6h |
 | SCNN | VGG16 | 288 x 800 | *yes* | CULane | F measure | 73.13 | 73.23 | 12.8h |
+| SCNN | ResNet18 | 288 x 800 | *yes* | CULane | F measure | 71.94 | 72.19 | 8.0h |
+| SCNN | ResNet34 | 288 x 800 | *yes* | CULane | F measure | 72.44 | 72.70 | 10.7h |
 | SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
 
 *All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
 
 ### Tusimple detailed performance (best):
 
-| method | backbone | accuracy | FP | FN | |
+| method | backbone | **accuracy** | FP | FN | |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | Baseline | VGG16 | 93.57% | 0.0992 | 0.1058 | [model](https://drive.google.com/file/d/1ChK0hApqLU0xUiEm4Wul-gNYQDQka151/view?usp=sharing) |
 | Baseline | ResNet18 | 93.98% | 0.0874 | 0.0921 | [model](https://drive.google.com/file/d/17VKnwsN4WMbpnD4DgaaerppjXybqn-LG/view?usp=sharing) |
@@ -107,19 +111,16 @@ And models from this repo are faster to train and often have better performance 
 
 ### CULane detailed performance (best):
 
-| category | ERFNet-Baseline | ERFNet-SCNN | VGG16-SCNN | VGG16-Baseline |
-| :---: | :---: | :---: | :---: | :---: |
-| normal | 91.48 | 91.82 | 91.17 | 85.51 |
-| crowded | 71.27 | 72.13 | 71.56 | 64.05 |
-| night | 68.09 | 69.49 | 67.83 | 61.14 |
-| no line | 46.76 | 46.68 | 45.59 | 35.96 |
-| shadow | 74.47 | 70.59 | 69.38 | 59.76 |
-| arrow | 86.09 | 87.40 | 86.56 | 78.43 |
-| dazzle light | 64.18 | 65.80 | 62.83 | 53.25 |
-| curve | 66.89 | 68.30 | 66.58 | 62.16 |
-| crossroad | 2102 | 2236 | 1809 | 2224 |
-| total | 73.49 | 74.03 | 73.23 | 66.09 |
-| | [model](https://drive.google.com/file/d/16-Q_jZYc9IIKUEHhClSTwZI4ClMeVvQS/view?usp=sharing) | [model](https://drive.google.com/file/d/1YOAuIJqh0M1RsPN5zISY7kTx9xt29IS3/view?usp=sharing) |
+| method | backbone | normal | crowded | night | no line | shadow | arrow | dazzle<br>light | curve | crossroad | total | |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Baseline | VGG16 | 85.51 | 64.05 | 61.14 | 35.96 | 59.76 | 78.43 | 53.25 | 62.16 | 2224 | 66.09 | |
+| Baseline | ResNet18 | 85.45 | 62.63 | 61.04 | 33.88 | 51.72 | 78.15 | 53.05 | 59.70 | 1915 | 65.30 | [model](https://drive.google.com/file/d/1wkaTp8v1ceXrd6AjRccqpNxxxkd_qg1U/view?usp=sharing) |
+| Baseline | ResNet34 | 89.46 | 66.66 | 65.38 | 40.43 | 62.17 | 83.18 | 58.51 | 63.00 | 1713 | 69.92 | [model](https://drive.google.com/file/d/16VIJcd3wDOjFjg3UCVekUPcAb_F1K604/view?usp=sharing) |
+| Baseline | ERFNet | 91.48 | 71.27 | 68.09 | 46.76 | 74.47 | 86.09 | 64.18 | 66.89 | 2102 | 73.49 | [model](https://drive.google.com/file/d/16-Q_jZYc9IIKUEHhClSTwZI4ClMeVvQS/view?usp=sharing) |
+| SCNN | VGG16 | 91.17 | 71.56 | 67.83 | 45.59 | 69.38 | 86.56 | 65.80 | 66.58 | 1809 | 73.23 | |
+| SCNN | ResNet18 | 90.98 | 70.17 | 66.54 | 43.12 | 66.31 | 85.62 | 62.20 | 65.58 | 1808 | 72.19 | [model](https://drive.google.com/file/d/1i08KOS3b0hOTuzn866j4oUWtw3TYcndn/view?usp=sharing) |
+| SCNN | ResNet34 | 91.06 | 70.41 | 67.75 | 44.64 | 68.98 | 86.50 | 61.57 | 65.75 | 2017 | 72.70 | [model](https://drive.google.com/file/d/1JyPJQv8gpFZbr1sh7zRRiekUuDR4Aea8/view?usp=sharing) |
+| SCNN | ERFNet | 91.82 | 72.13 | 69.49 | 46.68 | 70.59 | 87.40 | 64.18 | 68.30 | 2236 | 74.03 | [model](https://drive.google.com/file/d/1YOAuIJqh0M1RsPN5zISY7kTx9xt29IS3/view?usp=sharing) |
 
 ## Semantic segmentation performance:
 
