@@ -23,7 +23,7 @@ You should be able to see the result like this stored at `--save-path`:
 If mask is not provided, an inference will be performed by the model specified with `--model` and `--continue-from`, you can define input resolution with `--height` and `--width`, but the result will always be resized to the original image:
 
 ```
-python visualize_segmentation.py --image-path=test_images/voc_test_image.jpg --save-path=test_images/voc_pred.png --model=deeplabv2 --dataset=voc --mixed-precision --continue-from=<deeplabv2_pascalvoc_321x321_20201108.pt> --height=505 --width=505
+python visualize_segmentation.py --image-path=test_images/voc_test_image.jpg --save-path=test_images/voc_pred.png --model=deeplabv2 --dataset=voc --mixed-precision --continue-from=deeplabv2_pascalvoc_321x321_20201108.pt --height=505 --width=505
 ```
 
 ## Lane points
