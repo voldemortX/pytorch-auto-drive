@@ -8,7 +8,7 @@ Other datasets can only be downloaded in their official websites.
 
 ## Training:
 
-1. Change the `BASE_DIR` in [configs.yaml](configs.yaml) to your datasets' locations.
+1. Change the `BASE_DIR` in [configs.yaml](../configs.yaml) to your datasets' locations.
 
 2. Pre-processing:
 

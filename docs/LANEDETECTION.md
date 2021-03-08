@@ -8,7 +8,7 @@ The TuSimple dataset can be downloaded at their [github repo](https://github.com
 
 ## Training:
 
-1. Change the `BASE_DIR` in [configs.yaml](configs.yaml) to your datasets' locations.
+1. Change the `BASE_DIR` in [configs.yaml](../configs.yaml) to your datasets' locations.
 
 2. Pre-processing:
 
@@ -108,7 +108,7 @@ chmod 777 eval*
 cd -
 ```
 
-Then change `data_dir` to your CULane base directory in [eval.sh](tools/culane_evaluation/eval.sh) and [eval_validation.sh](tools/culane_evaluation/eval_validation.sh). *Mind that you need extra ../../ if relative path is used.*
+Then change `data_dir` to your CULane base directory in [eval.sh](../tools/culane_evaluation/eval.sh) and [eval_validation.sh](../tools/culane_evaluation/eval_validation.sh). *Mind that you need extra ../../ if relative path is used.*
 
 2. Predict and save lanes.
    
@@ -141,7 +141,7 @@ cd tools/tusimple_evaluation
 mkdir output
 ```
 
-Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh](autotest_tusimple.sh). *Mind that you need extra ../../ if relative path is used.*
+Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh](../autotest_tusimple.sh). *Mind that you need extra ../../ if relative path is used.*
 
 2. Predict and save lanes.
    

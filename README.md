@@ -170,9 +170,13 @@ tensorboard --logdir=runs
 
 ## Getting started
 
-Get started with [LANEDETECTION.md](LANEDETECTION.md) for lane detection.
+Get started with [LANEDETECTION.md](docs/LANEDETECTION.md) for lane detection.
 
-Get started with [SEGMENTATION.md](SEGMENTATION.md) for semantic segmentation.
+Get started with [SEGMENTATION.md](docs/SEGMENTATION.md) for semantic segmentation.
+
+## Visualization
+
+Refer to [VISUALIZATION.md](docs/VISUALIZATION.md) for a visualization tutorial.
 
 ## Contributing
 
