@@ -60,7 +60,7 @@ class Resize(object):
 
     @staticmethod
     def transform_points(points, in_size, out_size, ignore_y=-2):
-        # Resize a np.array (M x N x 2) of points (x, y), original axis start from top-left corner
+        # Resize a np.array (L x N x 2) of points (x, y), original axis start from top-left corner
         ignore_indices = points[:, 1] == ignore_y
         in_h, in_w = in_size
         out_h, out_w = out_size
@@ -364,7 +364,7 @@ class RandomRotation(object):
 
     @staticmethod
     def transform_points(points, angle, h, w, ignore_y=-2):
-        # Rotate a np.array (M x N x 2) of points (x, y) anti-clockwise, original axis start from top-left corner
+        # Rotate a np.array (L x N x 2) of points (x, y) anti-clockwise, original axis start from top-left corner
         ignore_indices = points[:, 1] == ignore_y
         offset = np.array([h / 2, w / 2])
         matrix = np.array([[math.cos(angle / 360.0 * math.pi), math.sin(angle / 360.0 * math.pi)],
