@@ -20,7 +20,7 @@
 | Baseline | ResNet18 | 288 x 800 | *yes* | CULane | F measure | 65.19 | 65.30 | 5.3h |
 | Baseline | ResNet34 | 288 x 800 | *yes* | CULane | F measure | 69.82 | 69.92 | 7.3h |
 | Baseline | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.40 | 73.49 | 6h |
-| SCNN | VGG16 | 288 x 800 | *yes* | CULane | F measure | 73.13 | 73.23 | 12.8h |
+| SCNN | VGG16 | 288 x 800 | *yes* | CULane | F measure | 74.02 | 74.29 | 12.8h |
 | SCNN | ResNet18 | 288 x 800 | *yes* | CULane | F measure | 71.94 | 72.19 | 8.0h |
 | SCNN | ResNet34 | 288 x 800 | *yes* | CULane | F measure | 72.44 | 72.70 | 10.7h |
 | SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
