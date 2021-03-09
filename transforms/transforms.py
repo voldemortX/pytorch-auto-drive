@@ -59,12 +59,16 @@ class Resize(object):
         self.size_label = size_label
 
     @staticmethod
-    def transform_points(points, in_size, out_size):
-        # Resize a np.array (N x 2) of points (x, y), original axis start from top-left corner
+    def transform_points(points, in_size, out_size, ignore_y=-2):
+        # Resize a np.array (M x N x 2) of points (x, y), original axis start from top-left corner
+        ignore_indices = points[:, 1] == ignore_y
         in_h, in_w = in_size
         out_h, out_w = out_size
         scale = np.array([out_h / in_h, out_w / in_w])
-        return points * scale
+        points = points * scale
+        points[ignore_indices][1] = -2
+
+        return points
 
     def __call__(self, image, target):
         image = F.resize(image, self.size_image, interpolation=Image.LINEAR)
@@ -359,16 +363,18 @@ class RandomRotation(object):
         return random.uniform(degrees[0], degrees[1])
 
     @staticmethod
-    def transform_points(points, angle, h, w):
-        # Rotate a np.array (N x 2) of points (x, y) anti-clockwise, original axis start from top-left corner
-        # TODO: Mask -2
+    def transform_points(points, angle, h, w, ignore_y=-2):
+        # Rotate a np.array (M x N x 2) of points (x, y) anti-clockwise, original axis start from top-left corner
+        ignore_indices = points[:, 1] == ignore_y
         offset = np.array([h / 2, w / 2])
         matrix = np.array([[math.cos(angle / 360.0 * math.pi), math.sin(angle / 360.0 * math.pi)],
                            [math.sin(-angle / 360.0 * math.pi), math.cos(angle / 360.0 * math.pi)]])
         points = np.matmul((points - offset), matrix) + offset
-        indices = (points[:, 0] < h) + (points[:, 1] < w) + (points > 0).sum(axis=1, dtype=np.bool)
+        # exceed border
+        ignore_indices += (points[:, 0] < h) + (points[:, 1] < w) + (points > 0).sum(axis=1, dtype=np.bool)
+        points[ignore_indices][1] = -2
 
-        return points[indices]
+        return points
 
     def __call__(self, image, target):
         angle = self.get_params(self.degrees)
