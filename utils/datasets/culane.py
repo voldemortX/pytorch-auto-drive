@@ -1,6 +1,8 @@
 import torchvision
 import os
+import pickle
 import numpy as np
+from tqdm import tqdm
 from PIL import Image
 
 
@@ -12,7 +14,6 @@ class CULane(torchvision.datasets.VisionDataset):
         self.ppl = ppl
         self.gap = gap
         self.start = start  # y coordinate to start annotation
-        self.test = False
 
         # Checks
         if not os.path.exists('./output'):
@@ -26,12 +27,24 @@ class CULane(torchvision.datasets.VisionDataset):
 
         # Load filenames
         if image_set == 'test' or image_set == 'val':  # Test
-            self.test = True
             self.images = [os.path.join(root, x + '.jpg') for x in contents]
             self.targets = [os.path.join('./output', x + '.lines.txt') for x in contents]
         else:  # Train
             self.images = [os.path.join(root, x[:x.find(' ')] + '.jpg') for x in contents]
-            self.targets = [os.path.join(root, x[:x.find(' ')] + '.lines.txt') for x in contents]
+            self.targets = []
+            print('Loading targets into memory...')
+            processed_file = os.path.join(root, 'train_processed_targets')
+            if os.path.exists(processed_file):
+                with open(processed_file, 'rb') as f:
+                    self.targets = pickle.load(f)
+            else:
+                print('Pre-processing will only be performed for 1 time, please wait ~10 minutes.')
+                for x in tqdm(contents):
+                    with open(os.path.join(root, x[:x.find(' ')] + '.lines.txt'), 'r') as f:
+                        self.targets.append(self._load_target(f.readlines()))
+                with open(processed_file, 'wb') as f:
+                    pickle.dump(self.targets, f)
+            print('Loading complete.')
 
         assert len(self.targets) == len(self.images)
 
@@ -41,11 +54,7 @@ class CULane(torchvision.datasets.VisionDataset):
         # If just testing,
         # y is the filename to store prediction
         img = Image.open(self.images[index]).convert('RGB')
-        if self.test is True:
-            target = self.targets[index]
-        else:
-            with open(self.targets[index], 'r') as f:
-                target = self._load_target(f.readlines())
+        target = self.targets[index]
 
         # Transforms
         if self.transforms is not None:
