@@ -19,7 +19,7 @@ if __name__ == '__main__':
                         help='Mask input path, if both mask & keypoint are None,'
                              'inference will be performed (default: None)')
     parser.add_argument('--keypoint-path', type=str, default=None,
-                        help='Keypoint input path (expect json file in CULane format, [y, x]),'
+                        help='Keypoint input path (expect json file in CULane format, [x, y]),'
                              'if both mask & keypoint are None, inference will be performed (default: None)')
     parser.add_argument('--save-path', type=str, default='test_result.png',
                         help='Result output path (default: test_result.png)')

@@ -2,6 +2,7 @@ import torchvision
 import os
 import ujson as json
 import numpy as np
+from tqdm import tqdm
 from PIL import Image
 
 
@@ -26,28 +27,32 @@ class TuSimple(torchvision.datasets.VisionDataset):
 
         # Load image filenames and lanes
         if image_set == 'test' or image_set == 'val':  # Test
-            self.images = [os.path.join(root, x + '.jpg') for x in contents]
+            self.images = [os.path.join(root, 'clips', x + '.jpg') for x in contents]
             self.targets = [os.path.join(root, 'clips', x + '.jpg') for x in contents]
         else:  # Train
-            self.images = [os.path.join(root, x[:x.find(' ')] + '.jpg') for x in contents]
+            self.images = [os.path.join(root, 'clips', x[:x.find(' ')] + '.jpg') for x in contents]
 
             # Load target lanes (small dataset, directly load all of them in the memory)
+            print('Loading targets into memory...')
             target_files = [os.path.join(root, 'label_data_0313.json'),
-                            os.path.join(root, 'label_data_0601.json'),
-                            os.path.join(root, 'label_data_0627.json')]
+                            os.path.join(root, 'label_data_0601.json')]
             json_contents = self.concat_jsons(target_files)
             self.targets = []
-            for x in contents:  # Let's not consider speed here
-                for i in range(len(json_contents)):
-                    if x in json_contents[i]['raw_file']:
-                        lines = json_contents[i]['lanes']
-                        temp = np.array([[[l[i], self.start + i * self.gap if l[i] != -2 else -2]
-                                        for i in range(self.ppl)] for l in lines], dtype=np.float32)
-                        self.targets.append(temp)
+            for i in tqdm(range(len(json_contents))):
+                lines = json_contents[i]['lanes']
+                h_samples = json_contents[i]['h_samples']
+                temp = np.array([[[-2.0, self.start + j * self.gap] for j in range(self.ppl)]
+                                for _ in range(len(lines))], dtype=np.float32)
+                for j in range(len(h_samples)):
+                    for k in range(len(lines)):
+                        temp[k][temp[k][:, 1] == h_samples[j]] = [float(lines[k][j]), h_samples[j]]
+                self.targets.append(temp)
+
+        assert len(self.targets) == len(self.images)
 
     def __getitem__(self, index):
         # Return x (input image) & y (L lane with N coordinates (x, y) as np.array (L x N x 2))
-        # Empty coordinates are marked by (-2, -2)
+        # Empty coordinates are marked by (-2, y)
         # If just testing,
         # y is the filename to store prediction
         img = Image.open(self.images[index]).convert('RGB')

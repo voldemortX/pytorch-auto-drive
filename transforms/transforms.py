@@ -2,6 +2,7 @@
 # Copied functions from fmassa/vision-1 to support multi-dimensional masks loaded from numpy ndarray
 # Update: The current torchvision github repo now supports tensor operation for all common transformations,
 # you are encouraged to check it out
+# Processing in (w, h), while providing public functions in (h, w)
 import numpy as np
 from PIL import Image
 from collections.abc import Sequence
@@ -59,20 +60,25 @@ class Resize(object):
         self.size_label = size_label
 
     @staticmethod
-    def transform_points(points, in_size, out_size):
-        # Resize a np.array (N x 2) of points (x, y), original axis start from top-left corner
+    def transform_points(points, in_size, out_size, ignore_x=-2):
+        # Resize a np.array (L x N x 2) of points (x, y), original axis start from top-left corner
+        # x <-> w, y <-> h
+        ignore_filter = (points[:, :, 0] == ignore_x)
         in_h, in_w = in_size
         out_h, out_w = out_size
-        scale = np.array([out_h / in_h, out_w / in_w])
-        return points * scale
+        scale = np.array([out_w / in_w, out_h / in_h], dtype=np.float32)
+        points = points * scale
+        points[:, :, 0] = points[:, :, 0] * ~ignore_filter + (-2) * ignore_filter
+
+        return points
 
     def __call__(self, image, target):
+        w_ori, h_ori = F._get_image_size(image)
         image = F.resize(image, self.size_image, interpolation=Image.LINEAR)
         if isinstance(target, str):
             return image, target
         elif isinstance(target, np.ndarray):
-            in_size = F._get_image_size(image)
-            target = self.transform_points(target, in_size, self.size_label)
+            target = self.transform_points(target, (h_ori, w_ori), self.size_label)
         else:
             target = F.resize(target, self.size_label, interpolation=Image.NEAREST)
 
@@ -254,9 +260,9 @@ class ToTensor(object):
         return image, target
 
     @staticmethod
-    def label_to_tensor(pic):  # 3 dimensional arrays or normal segmentation masks
+    def label_to_tensor(pic):  # segmentation masks or keypoint arrays
         if isinstance(pic, np.ndarray):
-            return torch.as_tensor(pic.transpose((2, 0, 1)), dtype=torch.float32)
+            return torch.as_tensor(pic, dtype=torch.float32)
         elif isinstance(pic, str):
             return pic
         else:
@@ -359,22 +365,24 @@ class RandomRotation(object):
         return random.uniform(degrees[0], degrees[1])
 
     @staticmethod
-    def transform_points(points, angle, h, w):
-        # Rotate a np.array (N x 2) of points (x, y) anti-clockwise, original axis start from top-left corner
-        # TODO: Mask -2
-        offset = np.array([h / 2, w / 2])
-        matrix = np.array([[math.cos(angle / 360.0 * math.pi), math.sin(angle / 360.0 * math.pi)],
-                           [math.sin(-angle / 360.0 * math.pi), math.cos(angle / 360.0 * math.pi)]])
+    def transform_points(points, angle, h, w, ignore_x=-2):
+        # Rotate a np.array (L x N x 2) of points (x, y) anti-clockwise, original axis start from top-left corner
+        ignore_filter = (points[:, :, 0] == ignore_x)
+        offset = np.array([w / 2, h / 2], dtype=np.float32)
+        matrix = np.array([[math.cos(angle / 180.0 * math.pi), math.sin(-angle / 180.0 * math.pi)],
+                           [math.sin(angle / 180.0 * math.pi), math.cos(angle / 180.0 * math.pi)]], dtype=np.float32)
         points = np.matmul((points - offset), matrix) + offset
-        indices = (points[:, 0] < h) + (points[:, 1] < w) + (points > 0).sum(axis=1, dtype=np.bool)
+        # exceed border
+        ignore_filter += ((points[:, :, 0] > w) + (points[:, :, 1] > h) + ((points > 0).sum(axis=-1) < 2))
+        points[:, :, 0] = points[:, :, 0] * ~ignore_filter + (-2) * ignore_filter
 
-        return points[indices]
+        return points
 
     def __call__(self, image, target):
         angle = self.get_params(self.degrees)
         image = F.rotate(image, angle, resample=Image.LINEAR, expand=self.expand, center=self.center, fill=0)
         if isinstance(target, np.ndarray):
-            h, w = F._get_image_size(image)
+            w, h = F._get_image_size(image)
             target = self.transform_points(target, angle, h, w)
         else:
             target = F.rotate(target, angle, resample=Image.NEAREST, expand=self.expand, center=self.center, fill=255)
