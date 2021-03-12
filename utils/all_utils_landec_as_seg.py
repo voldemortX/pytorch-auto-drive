@@ -67,6 +67,12 @@ def enet_tusimple(num_classes, encoder_only, continue_from):
                  encoder_only=encoder_only, pretrained_weights=continue_from if not encoder_only else None)
 
 
+def enet_culane(num_classes, encoder_only, continue_from):
+
+    return enet_(num_classes=num_classes, num_lanes=num_classes - 1, dropout_1=0.01, dropout_2=0.1, flattened_size=4500,
+                 encoder_only=encoder_only, pretrained_weights=continue_from if not encoder_only else None)
+
+
 def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10):
     # Return data_loaders
     # depending on whether the state is
@@ -367,6 +373,9 @@ def build_lane_detection_model(args, num_classes):
         net = resnet_culane(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
     elif args.dataset == 'tusimple' and args.backbone == 'enet':
         net = enet_tusimple(num_classes=num_classes, encoder_only=args.encoder_only,
+                            continue_from=args.continue_from)
+    elif args.dataset == 'culane' and args.backbone == 'enet':
+        net = enet_culane(num_classes=num_classes, encoder_only=args.encoder_only,
                             continue_from=args.continue_from)
     elif args.method == 'lstr':
         pass
