@@ -29,7 +29,7 @@
 
 *All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
 
-*Training times marked by + are measured on a single GTX 1080Ti*
+*Training times marked by + are measured on a single GTX 1080Ti.*
 
 ### Tusimple detailed performance (best):
 
