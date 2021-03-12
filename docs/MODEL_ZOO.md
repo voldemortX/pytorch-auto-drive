@@ -10,7 +10,7 @@
 | Baseline | ResNet50 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.67% | 94.71% | 1.5h |
 | Baseline | ResNet101 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.77% | 94.83% | 2.6h |
 | Baseline | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 95.15% | 95.24% | 0.8h |
-| Baseline | ENet | 360 x 640 | *yes* | TuSimple | Accuracy | 95.38% | 95.58% | 1h |
+| Baseline | ENet | 360 x 640 | *yes* | TuSimple | Accuracy | 95.38% | 95.58% | 1h<sup>+</sup> |
 | SCNN | VGG16 | 360 x 640 | *yes* | Tusimple | Accuracy | 94.46% | 94.65% | 2h |
 | SCNN | ResNet18 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.21% | 94.30% | 1.2h |
 | SCNN | ResNet34 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.66% | 94.76% | 1.6h |
@@ -21,14 +21,14 @@
 | Baseline | ResNet18 | 288 x 800 | *yes* | CULane | F measure | 65.19 | 65.30 | 5.3h |
 | Baseline | ResNet34 | 288 x 800 | *yes* | CULane | F measure | 69.82 | 69.92 | 7.3h |
 | Baseline | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.40 | 73.49 | 6h |
-| Baseline | ENet | 288 x 800 | *yes* | CULane | F measure | 69.39 | 69.90 | 6.4h |
+| Baseline | ENet | 288 x 800 | *yes* | CULane | F measure | 69.39 | 69.90 | 6.4h<sup>+</sup> |
 | SCNN | VGG16 | 288 x 800 | *yes* | CULane | F measure | 74.02 | 74.29 | 12.8h |
 | SCNN | ResNet18 | 288 x 800 | *yes* | CULane | F measure | 71.94 | 72.19 | 8.0h |
 | SCNN | ResNet34 | 288 x 800 | *yes* | CULane | F measure | 72.44 | 72.70 | 10.7h |
 | SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
 
 *All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
-
+*Training times marked by + are measured on a single GTX 1080Ti*
 ### Tusimple detailed performance (best):
 
 | method | backbone | accuracy | FP | FN | |
