@@ -28,7 +28,7 @@ Segmentation models (**ERFNet, ENet, DeepLab, FCN**), Lane detection models (**S
 
 Various methods tested on a wide range of backbones, modulated mIOU calculation, "poly" warmup learning rate schedule, image/keypoint loading, transformations and visualizations, also mixed precision training and tensorboard logging. **And you do not need matlab to test on CULane.**
 
-Models from this repo are faster to train and often have better performance than other implementations, see [wiki](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes) for reasons.
+Models from this repo are faster to train and often have better performance than other implementations, see [wiki](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes) for reasons and technical spefication of models.
 
 ## Supported datasets: 
 
