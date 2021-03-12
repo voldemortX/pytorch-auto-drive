@@ -10,6 +10,8 @@ Segmentation models (**ERFNet, ENet, DeepLab, FCN**), Lane detection models (**S
 
 [Rethinking Atrous Convolution for Semantic Image Segmentation](https://arxiv.org/abs/1706.05587) ArXiv preprint 2017
 
+[ENet: A Deep Neural Network Architecture for Real-Time Semantic Segmentation](https://arxiv.org/abs/1606.02147) ArXiv preprint 2016 
+
 [ERFNet: Efficient Residual Factorized ConvNet for Real-Time Semantic Segmentation](https://ieeexplore.ieee.org/abstract/document/8063438/) ITS 2017
 
 [Spatial As Deep: Spatial CNN for Traffic Scene Understanding](https://arxiv.org/abs/1712.06080) AAAI 2018
@@ -28,7 +30,7 @@ Segmentation models (**ERFNet, ENet, DeepLab, FCN**), Lane detection models (**S
 
 Various methods tested on a wide range of backbones, modulated mIOU calculation, "poly" warmup learning rate schedule, image/keypoint loading, transformations and visualizations, also mixed precision training and tensorboard logging. **And you do not need matlab to test on CULane.**
 
-Models from this repo are faster to train and often have better performance than other implementations, see [wiki](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes) for reasons.
+Models from this repo are faster to train and often have better performance than other implementations, see [wiki](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes) for reasons and technical spefication of models.
 
 ## Supported datasets: 
 
@@ -41,6 +43,7 @@ Models from this repo are faster to train and often have better performance than
 | lane detection | CULane |
 | lane detection | TuSimple |
 | lane detection | BDD100K (*In progress*) |
+| lane detection | LLAMAS (*In progress*) |
 
 \* The UDA baseline setup, with Cityscapes *val* set as validation.
 
@@ -51,6 +54,7 @@ Models from this repo are faster to train and often have better performance than
 | semantic segmentation | ResNet-101 | [FCN](https://arxiv.org/abs/1605.06211) |
 | semantic segmentation | ResNet-101 | [DeeplabV2](https://arxiv.org/abs/1606.00915) |
 | semantic segmentation | ResNet-101 | [DeeplabV3](https://arxiv.org/abs/1706.05587) |
+| semantic segmentation | - | [ENet](https://arxiv.org/abs/1606.02147) |
 | semantic segmentation | - | [ERFNet](https://ieeexplore.ieee.org/abstract/document/8063438/) |
 | lane detection | ERFNet, VGG16, ResNets (18, 34, 50, 101) | Baseline |
 | lane detection | ERFNet, VGG16, ResNets (18, 34, 50, 101) | [SCNN](https://arxiv.org/abs/1712.06080) |
