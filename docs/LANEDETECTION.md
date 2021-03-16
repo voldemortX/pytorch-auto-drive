@@ -21,7 +21,7 @@ python tools/culane_list_convertor.py
 
 For TuSimple:
 
-*First put the data lists you downloaded before in \<your tusimple base dir\>/lists .*
+*First put the data lists you downloaded before in \<your tusimple base dir\>/lists . Then:*
 
 ```
 python tools/tusimple_list_convertor.py
@@ -29,92 +29,47 @@ python tools/tusimple_list_convertor.py
 
 3. Download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
 
-4. Here are some examples for lane detection:
-
-Mixed precision training on CULane with ERFNet/ResNet18/ResNet34 Baseline:
+4. Training:
 
 ```
-python main_landec_as_seg.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=baseline --backbone=erfnet/resnet18/resnet34 --mixed-precision --exp-name=<whatever you like>
-```
-
-Mixed precision training on CULane with ENet Baseline:
-
-```
-python main_landec_as_seg.py --epochs=12 --lr=0.5 --batch-size=20 --dataset=culane --method=baseline --backbone=enet --mixed-precision --exp-name=<whatever you like>
-```
-
-Mixed precision training on TuSimple with ERFNet/ResNet18/ResNet34 Baseline:
+python main_landec_as_seg.py --epochs=<number of epochs> \
+                             --lr=<learning rate> \
+                             --batch-size=<any batch size> \ 
+                             --dataset=<dataset> \
+                             --method=<the method used> \
+                             --backbone=<the backbone used> \
+                             --exp-name=<whatever you like> \
+                             --mixed-precision  # Enable mixed precision
 
 ```
-python main_landec_as_seg.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=baseline --backbone=erfnet/resnet18/resnet34 --mixed-precision --exp-name=<whatever you like>
-```
 
-Mixed precision training on TuSimple with ENet Baseline:
+We provide directly executable shell scripts for each supported methods in [MODEL_ZOO.md](MODEL_ZOO.md). For detailed instructions, run:
 
 ```
-python main_landec_as_seg.py --epochs=50 --lr=0.4 --batch-size=20 --dataset=tusimple --method=baseline --backbone=enet --mixed-precision --exp-name=<whatever you like>
-```
 
-Mixed precision training on CULane with ERFNet-SCNN/ResNet18-SCNN/ResNet34-SCNN:
+python main_landec_as_seg.py --help
 
-```
-python main_landec_as_seg.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=scnn --backbone=erfnet/resnet18/resnet34/vgg16 --mixed-precision --exp-name=<whatever you like>
-```
-
-Mixed precision training on TuSimple with ERFNet-SCNN/ResNet18-SCNN/ResNet34-SCNN:
-
-```
-python main_landec_as_seg.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=scnn --backbone=erfnet/resnet18/resnet34 --mixed-precision --exp-name=<whatever you like>
-```
-
-Train ResNet50/ResNet101 Baseline or SCNN with these backbones, we recommend mixed precision training with a smaller batch size by linearly scaling learning rate in CULane:
-
-```
---lr=0.08 --batch-size=8 --workers=4
-```
-
-While scaling by square root works better on TuSimple:
-
-```
---lr=0.13 --batch-size=8 --workers=4
-```
-
-Mixed precision training on CULane with VGG16-SCNN:
-
-```
-python main_landec_as_seg.py --epochs=12 --lr=0.3 --batch-size=20 --dataset=culane --method=scnn --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
-```
-
-Mixed precision training on CULane with VGG16:
-
-```
-python main_landec_as_seg.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=baseline --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
-```
-
-Mixed precision training on Tusimple with VGG16-SCNN:
-
-```
-python main_landec_as_seg.py --epochs=50 --lr=0.35 --batch-size=20 --dataset=tusimple --method=scnn --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
-```
-
-Mixed precision training on Tusimple with VGG16:
-
-```
-python main_landec_as_seg.py --epochs=50 --lr=0.25 --batch-size=20 --dataset=tusimple --method=baseline --backbone=vgg16 --mixed-precision --exp-name=<whatever you like>
 ```
 
 
 ## Testing:
 
-Training contains online fast validations by using --val-num-steps=\<some number > 0\> and the best model is saved, but we find that the best checkpoint is usually the last, so probably no need for validations. For log details you can checkout tensorboard.
+Training contains online fast validations by using `--val-num-steps=\<some number\>` and the best model is saved, but we find that the best checkpoint is usually the last, so probably no need for validations. For log details you can checkout tensorboard.
 
 To validate a trained model on mean IoU, you can use either mixed-precision or fp32 for any model trained with/without mixed-precision:
 
 ```
-python main_landec_as_seg.py --state=1 --continue-from=<trained model .pt filename> --dataset=<dataset> --method=<trained method architecture> --backbone=<trained backbone> --batch-size=<any batch size> --exp-name=<whatever you like> --mixed-precision
+python main_landec_as_seg.py --state=1 \
+                             --continue-from=<path to .pt file> \
+                             --dataset=<dataset> \
+                             --method=<the method used> \
+                             --backbone=<the backbone used> \
+                             --batch-size=<any batch size> \
+                             --exp-name=<whatever you like> \
+                             --mixed-precision  # Enable mixed precision
 ```
 
-### Test a trained model with CULane:
+### Test on CULane:
 
 1. Prepare official scripts.
 
@@ -131,26 +86,30 @@ Then change `data_dir` to your CULane base directory in [eval.sh](../tools/culan
 2. Predict and save lanes.
    
 ```
-python main_landec_as_seg.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --method=<trained model architecture> --backbone=<trained backbone> --batch-size=<any batch size, recommend 80> --mixed-precision
+python main_landec_as_seg.py --state=<state> \  # 2: test set; 3: validation set           
+                             --continue-from=<path to .pt file> \
+                             --dataset=<dataset> \ 
+                             --method=<the method used> \
+                             --backbone=<the backbone used> \ 
+                             --batch-size=<any batch size> \  # Recommend 80
+                             --mixed-precision  # Enable mixed precision
 ```
 
-Use `--state=3` to predict lanes for the validation set.
-
-3. Evaluate on the test set with official scripts.
+1. Evaluate on the test set with official scripts.
 
 ```
-./autotest_culane.sh <your experiment name> test
+./autotest_culane.sh <experiment name, anything is fine> test
 ```
 
 Or evaluate on the validation set:
 
 ```
-./autotest_culane.sh <your experiment name> val
+./autotest_culane.sh <experiment name, anything is fine> val
 ```
 
-You can then check the test/validation performance at `log.txt`, and per-class performance at `tools/culane_evaluation/output` .
+You can then check the test/validation performance at `log.txt`, and per-category performance at `tools/culane_evaluation/output` .
 
-### Test a trained model with TuSimple:
+### Test on TuSimple:
 
 1. Prepare official scripts.
 
@@ -161,24 +120,18 @@ mkdir output
 
 Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh](../autotest_tusimple.sh). *Mind that you need extra ../../ if relative path is used.*
 
-2. Predict and save lanes.
-   
-```
-python main_landec_as_seg.py --state=2 --continue-from=<trained model .pt filename> --dataset=<dataset> --method=<trained model architecture> --backbone=<trained backbone> --batch-size=<any batch size, recommend 80> --mixed-precision
-```
-
-Use `--state=3` to predict lanes for the validation set.
+2. Predict and save lanes same like CULane.
 
 3. Evaluate on the test set with official scripts.
 
 ```
-./autotest_tusimple.sh <your experiment name> test
+./autotest_tusimple.sh <experiment name, anything is fine> test
 ```
 
 Or evaluate on the validation set:
 
 ```
-./autotest_tusimple.sh <your experiment name> val
+./autotest_tusimple.sh <experiment name, anything is fine> val
 ```
 
 You can then check the test/validation performance at `log.txt`, and detailed performance at `tools/tusimple_evaluation/output` .
