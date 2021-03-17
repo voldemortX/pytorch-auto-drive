@@ -51,7 +51,13 @@ python main_landec_as_seg.py --state=<state> \  # 0: normal; 2: decoder training
                              --encoder-only  # Pre-train encoder
 ```
 
-We provide directly executable shell scripts for each supported models in [MODEL_ZOO.md](MODEL_ZOO.md). For detailed instructions, run:
+We provide directly executable shell scripts for each supported models in [MODEL_ZOO.md](MODEL_ZOO.md). You can run a shell script (e.g. `xxx.sh`) by:
+
+```
+./tools/shells/xxx.sh
+```
+
+For detailed instructions, run:
 
 ```
 python main_semseg.py --help

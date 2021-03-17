@@ -71,7 +71,7 @@ Models from this repo are faster to train and often have better performance than
 
 ## Model Zoo
 
-We provide solid results (average/best/detailed), training time and trained models available for download in [MODEL_ZOO.md](docs/MODEL_ZOO.md).
+We provide solid results (average/best/detailed), training time, shell scripts and trained models available for download in [MODEL_ZOO.md](docs/MODEL_ZOO.md).
 
 ## Preparations:
 
@@ -87,7 +87,7 @@ cd pytorch-auto-drive
 3. Prepare the code:
 
 ```
-chmod 777 *.sh
+chmod 777 *.sh tools/shells/*.sh
 mkdir output
 ```
 

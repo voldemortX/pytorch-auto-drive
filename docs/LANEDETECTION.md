@@ -43,13 +43,19 @@ python main_landec_as_seg.py --epochs=<number of epochs> \
 
 ```
 
-We provide directly executable shell scripts for each supported methods in [MODEL_ZOO.md](MODEL_ZOO.md). For detailed instructions, run:
+We provide directly executable shell scripts for each supported methods in [MODEL_ZOO.md](MODEL_ZOO.md). You can run a shell script (e.g. `xxx.sh`) by:
 
 ```
+./tools/shells/xxx.sh
+```
 
+For detailed instructions, run:
+
+```
 python main_landec_as_seg.py --help
-
 ```
+
+
 
 
 ## Testing:
@@ -95,7 +101,7 @@ python main_landec_as_seg.py --state=<state> \  # 2: test set; 3: validation set
                              --mixed-precision  # Enable mixed precision
 ```
 
-1. Evaluate on the test set with official scripts.
+3. Evaluate on the test set with official scripts.
 
 ```
 ./autotest_culane.sh <experiment name, anything is fine> test
