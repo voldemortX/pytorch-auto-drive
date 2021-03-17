@@ -1,12 +1,16 @@
 # Welcome to pytorch-auto-drive visualization tutorial
 
-Use `--help` option for detailed commandline instructions. Colors can be specified in [configs.yaml](../configs.yaml) for each dataset.
+Colors can be specified in [configs.yaml](../configs.yaml) for each dataset.
 
 [vis_tools.py](../tools/vis_tools.py) contains batch-wise visualization functions to modify for your own use case.
 
 ## Segmentation mask
 
-Use [visualize_segmentation.py](../visualize_segmentation.py) to visualize segmentation results, by providing the image with `--image-path` and mask (**not the colored ones**) with `--mask-path`, also `--dataset` needs to be specified for color selection.
+Use [visualize_segmentation.py](../visualize_segmentation.py) to visualize segmentation results, by providing the image with `--image-path` and mask (**not the colored ones**) with `--mask-path`, also `--dataset` needs to be specified for color selection. For detailed instructions, run:
+
+```
+python visualize_segmentation.py --help
+```
 
 For example, visualize on PASCAL VOC 2012:
 
@@ -28,7 +32,11 @@ python visualize_segmentation.py --image-path=test_images/voc_test_image.jpg --s
 
 ## Lane points
 
-Use [visualize_lane.py](../visualize_lane.py) to visualize lane detection results.
+Use [visualize_lane.py](../visualize_lane.py) to visualize lane detection results. For detailed instructions, run:
+
+```
+python visualize_lane.py --help
+```
 
 By providing a mask with `--mask-path`, lanes will be drawn as non-transparent segmentation masks:
 
