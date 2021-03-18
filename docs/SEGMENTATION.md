@@ -4,7 +4,7 @@
 
 The PASCAL VOC 2012 dataset we use is the commonly used 10582 training set version. If you don't already have that dataset, we refer you to [Google](https://www.google.com) or this [blog](https://www.sun11.me/blog/2018/how-to-use-10582-trainaug-images-on-DeeplabV3-code/).
 
-Other datasets can only be downloaded in their official websites.
+Other datasets can only be easily downloaded in their official websites.
 
 ## Training:
 
@@ -37,56 +37,30 @@ python tools/synthia_data_list.py
 
 3. If you are using ERFNet, download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
 
-4. Here are some examples for segmentation:
-
-Mixed precision training on PASCAL VOC 2012 with DeeplabV2:
+4. Training:
 
 ```
-python main_semseg.py --epochs=30 --lr=0.002 --batch-size=8 --dataset=voc --model=deeplabv2 --mixed-precision --exp-name=<whatever you like> --workers=4
+python main_landec_as_seg.py --state=<state> \  # 0: normal; 2: decoder training
+                             --epochs=<number of epochs> \
+                             --lr=<learning rate> \
+                             --batch-size=<any batch size> \ 
+                             --dataset=<dataset> \
+                             --model=<the model used> \
+                             --exp-name=<whatever you like> \
+                             --mixed-precision \  # Enable mixed precision
+                             --encoder-only  # Pre-train encoder
 ```
 
-Full precision training on Cityscapes with DeeplabV3:
+We provide directly executable shell scripts for each supported models in [MODEL_ZOO.md](MODEL_ZOO.md). You can run a shell script (e.g. `xxx.sh`) by:
 
 ```
-python main_semseg.py --epochs=60 --lr=0.004 --batch-size=8 --dataset=city --model=deeplabv3 --exp-name=<whatever you like>
+./tools/shells/xxx.sh
 ```
 
-Mixed precision training on Cityscapes with ERFNet:
+For detailed instructions, run:
 
 ```
-python main_semseg.py --epochs=150 --lr=0.0007 --batch-size=10 --dataset=city --model=erfnet --mixed-precision --exp-name=<whatever you like>
-```
-
-Mixed precision training on Cityscapes with high resolution DeeplabV2:
-
-```
-python main_semseg.py --epochs=60 --lr=0.002 --batch-size=4 --dataset=city --model=deeplabv2-big --mixed-precision --exp-name=<whatever you like>
-```
-
-Mixed precision training on GTAV:
-
-```
-python main_semseg.py --epochs=10 --lr=0.002 --batch-size=4 --dataset=gtav --model=deeplabv2 --mixed-precision --exp-name=<whatever you like>
-```
-
-Mixed precision training on SYNTHIA:
-
-```
-python main_semseg.py --epochs=20 --lr=0.002 --batch-size=4 --dataset=synthia --model=deeplabv2 --mixed-precision --exp-name=<whatever you like>
-```
-
-Mixed precision training on Cityscapes with ENet (two steps):
-
-First pre-train the encoder to categorize downsampled labels:
-
-```
-python main_semseg.py --epochs=300 --lr=0.0008 --batch-size=16 --weight-decay=0.0002 --dataset=city --model=enet --mixed-precision --encoder-only --exp-name=<whatever you like>
-```
-
-Then train the whole network:
-
-```
-python main_semseg.py --epochs=300 --lr=0.0008 --batch-size=16 --weight-decay=0.0002 --dataset=city --model=enet --mixed-precision --state=2 --continue-from=<the name of the first step> --exp-name=<whatever you like>
+python main_semseg.py --help
 ```
 
 ## Testing:
@@ -96,7 +70,12 @@ Training contains online evaluations and the best model is saved, you can check 
 To evaluate a trained model, you can use either mixed-precision or fp32 for any model trained with/without mixed-precision:
 
 ```
-python main_semseg.py --state=1 --continue-from=<trained model .pt filename> --dataset=<dataset> --model=<trained model architecture> --batch-size=<any batch size>
+python main_semseg.py --state=1 \
+                      --continue-from=<trained model .pt filename> \
+                      --dataset=<dataset> \
+                      --model=<the model used> \ 
+                      --batch-size=<any batch size> \
+                      --mixed-precision  # Enable mixed precision
 ```
 
 Recommend `--workers=0 --batch-size=1` for high precision inference.
