@@ -7,8 +7,8 @@
 3. Pre-prcessing:
 
 ```
-cp -r <your culane base dir>/list/* <your culane base dir>/lists/
-python tools/culane_list_convertor.py
+  cp -r <your culane base dir>/list/* <your culane base dir>/lists/
+  python tools/culane_list_convertor.py
 ```
 
 ## Description
