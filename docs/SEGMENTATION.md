@@ -1,43 +1,6 @@
 # Semantic segmentation
 
-## Datasets: 
-
-The PASCAL VOC 2012 dataset we use is the commonly used 10582 training set version. If you don't already have that dataset, we refer you to [Google](https://www.google.com) or this [blog](https://www.sun11.me/blog/2018/how-to-use-10582-trainaug-images-on-DeeplabV3-code/).
-
-Other datasets can only be easily downloaded in their official websites.
-
-## Training:
-
-1. Change the `BASE_DIR` in [configs.yaml](../configs.yaml) to your datasets' locations.
-
-2. Pre-processing:
-
-For PASCAL VOC:
-
-*Don't need to do anything.*
-
-For Cityscapes:
-
-```
-python tools/cityscapes_data_list.py
-```
-
-For GTAV:
-
-```
-python tools/gtav_data_list.py
-```
-
-For SYNTHIA:
-
-```
-python tools/synthia_label_convertor.py
-python tools/synthia_data_list.py
-```
-
-3. If you are using ERFNet, download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
-
-4. Training:
+If you are using ERFNet, first download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
 
 ```
 python main_landec_as_seg.py --state=<state> \  # 0: normal; 2: decoder training
