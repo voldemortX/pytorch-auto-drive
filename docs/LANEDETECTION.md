@@ -1,35 +1,8 @@
 # Lane detection
 
-## Datasets: 
-
-The CULane dataset can be downloaded in their [official website](https://xingangpan.github.io/projects/CULane.html).
-
-The TuSimple dataset can be downloaded at their [github repo](https://github.com/TuSimple/tusimple-benchmark/issues/3). However, you'll also need [segmentation labels](https://drive.google.com/open?id=1LZDCnr79zuNH73NstZ8oIPDud0INCwb9), [list6_train.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list6/list6_train.txt), [list6_val.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list6/list6_val.txt) and [list_test.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list/list_test.txt) provided by [@cardwing](https://github.com/cardwing), thanks for their efforts.
-
 ## Training:
 
-1. Change the `BASE_DIR` in [configs.yaml](../configs.yaml) to your datasets' locations.
-
-2. Pre-processing:
-
-For CULane:
-
-```
-cp -r <your culane base dir>/list/* <your culane base dir>/lists/
-python tools/culane_list_convertor.py
-```
-
-For TuSimple:
-
-*First put the data lists you downloaded before in \<your tusimple base dir\>/lists . Then:*
-
-```
-python tools/tusimple_list_convertor.py
-```
-
-3. Download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
-
-4. Training:
+If you are using ERFNet, first download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
 
 ```
 python main_landec_as_seg.py --epochs=<number of epochs> \
