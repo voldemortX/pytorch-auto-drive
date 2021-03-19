@@ -2,11 +2,11 @@
 
 ## Prepare the dataset
 
-1. The Tusimple dataset can be downloaded at their [github repo](https://github.com/TuSimple/tusimple-benchmark/issues/3). However, you'll also need [segmentation labels](https://drive.google.com/open?id=1LZDCnr79zuNH73NstZ8oIPDud0INCwb9), [list6_train.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list6/list6_train.txt), [list6_val.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list6/list6_val.txt) and [list_test.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list/list_test.txt) provided by [@cardwing](https://github.com/cardwing), thanks for their efforts.
-2. Change the `BASE_DIR` in configs.yaml to your daatsets' locations.
-3. Pre-prcessing:
-
-   First put the data lists you downloaded before in <your tusimple base dir>/lists . Then:
+1. The TuSimple dataset can be downloaded at their [github repo](https://github.com/TuSimple/tusimple-benchmark/issues/3). However, you'll also need [segmentation labels](https://drive.google.com/open?id=1LZDCnr79zuNH73NstZ8oIPDud0INCwb9), [list6_train.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list6/list6_train.txt), [list6_val.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list6/list6_val.txt) and [list_test.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list/list_test.txt) provided by [@cardwing](https://github.com/cardwing), thanks for their efforts.
+2. Change the `TUSIMPLE.BASE_DIR` in [configs.yaml](../../configs.yaml) to your dataset's location.
+3. Pre-processing:
+   
+First put the data lists you downloaded before in `TUSIMPLE.BASE_DIR/lists`. Then:
 
 ```
   python tools/tusimple_list_convertor.py
@@ -17,17 +17,14 @@
 ### Directory Structure
 
 ```
-    Tusimple_path
+    <TUSIMPLE.BASE_DIR>
       ├─ clips
       ├─ lists
-      ├─ segGT
       ├─ segGT6
       ├─ label_data_0313.json
       ├─ label_data_0531.json
       ├─ label_data_0601.json
-      ├─ test_label.json
-      ├─ test_baseline.json
-      └─ test_label_0627.json
+      └─ test_label.json
 ```
 
 ### Label Data Format
@@ -40,7 +37,7 @@
 }
 ```
 
-There will be at most lane markings in `lanes`. The tusimple dataset expects at most 4 lane markings, current lane and left/right lanes that are essential for the control of the car. The polylines are organized by the same distance gap (`h_sample` in each label data) from the recording car. It means you can pair each element in one lane and h_samples to get position of lane marking in images.
+There will be at most 5 lane markings in `lanes`. The polylines are organized by the same distance gap (`h_sample` in each label data) from the recording car. It means you can pair each element in one lane and h_samples to get position of lane marking in images.
 
 For example,
 

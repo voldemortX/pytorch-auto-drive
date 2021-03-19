@@ -3,11 +3,11 @@
 ## Prepare the dataset
 
 1. The CULane dataset can be downloaded in their [official website](https://xingangpan.github.io/projects/CULane.html).
-2. Change the `BASE_DIR` in configs.yaml to your daatsets' locations.
-3. Pre-prcessing:
+2. Change the `CULANE.BASE_DIR` in [configs.yaml](../../configs.yaml) to your dataset's location.
+3. Pre-processing:
 
 ```
-  cp -r <your culane base dir>/list/* <your culane base dir>/lists/
+  cp -r <CULANE.BASE_DIR>/list/* <CULANE.BASE_DIR>/lists/
   python tools/culane_list_convertor.py
 ```
 
@@ -16,7 +16,7 @@
 ### Directory Structure
 
 ```
-  CULane_path
+  <CULANE.BASE_DIR>
      ├─ driver_100_30frame    
      ├─ driver_161_90frame    
      ├─ driver_182_30frame    
@@ -24,7 +24,8 @@
      ├─ driver_23_30frame
      ├─ driver_37_30frame
      ├─ laneseg_label_w16
-     └─ list
+     ├─ list
+     └─ lists
 ```
 
 ### Label Data Format

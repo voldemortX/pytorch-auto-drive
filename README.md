@@ -53,7 +53,7 @@ We provide solid results (average/best/detailed), training time, shell scripts a
 
 ## Installation
 
-Please prepare the environment and code with [INSTALL.md](docs/INSTALL.md). Then follow the instructions in [DATASET.md](docs/DATASET.md). 
+Please prepare the environment and code with [INSTALL.md](docs/INSTALL.md). Then follow the instructions in [DATASET.md](docs/DATASET.md) to set up datasets. 
 
 ## Getting Started
 
