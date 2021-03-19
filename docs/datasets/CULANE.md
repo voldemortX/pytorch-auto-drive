@@ -3,7 +3,9 @@
 ## Prepare the dataset
 
 1. The CULane dataset can be downloaded in their [official website](https://xingangpan.github.io/projects/CULane.html).
+
 2. Change the `CULANE.BASE_DIR` in [configs.yaml](../../configs.yaml) to your dataset's location.
+
 3. Pre-processing:
 
 ```
