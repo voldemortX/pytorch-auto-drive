@@ -51,29 +51,9 @@ Models from this repo are faster to train (**single card trainable**) and often 
 
 We provide solid results (average/best/detailed), training time, shell scripts and trained models available for download in [MODEL_ZOO.md](docs/MODEL_ZOO.md).
 
-## Preparations:
+## Installation
 
-1. Setup a Python (>=3.6) environment (CUDA 10), with PyTorch >= 1.6, TorchVision >= 0.7.0, tqdm, ujson, tensorboard, numpy, imageio, opencv-python, Pillow, pyyaml.
-
-2. Download the code:
-   
-```
-git clone https://github.com/voldemortX/pytorch-auto-drive.git
-cd pytorch-auto-drive
-```
-
-3. Prepare the code:
-
-```
-chmod 777 *.sh tools/shells/*.sh
-mkdir output
-```
-
-## Enable tensorboard (optional):
-
-```
-tensorboard --logdir=runs
-```
+Please prepare the environment and code with [INSTALL.md](docs/INSTALL.md). Then follow the instructions in [DATASET.md](docs/DATASET.md). 
 
 ## Getting Started
 
