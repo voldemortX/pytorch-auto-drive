@@ -216,6 +216,7 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
     best_mIoU = 0
     net.train()
     epoch = 0
+    running_loss = 0.0
     loss_num_steps = int(len(loader) / 10)
     if is_mixed_precision:
         scaler = GradScaler()
@@ -224,7 +225,6 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
     while epoch < num_epochs:
         net.train()
         conf_mat = ConfusionMatrix(num_classes)
-        running_loss = 0.0
         time_now = time.time()
         for i, data in enumerate(loader, 0):
             inputs, labels = data

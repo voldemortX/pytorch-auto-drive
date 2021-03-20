@@ -120,6 +120,7 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
     # Should be the same as segmentation, given customized loss classes
     net.train()
     epoch = 0
+    running_loss = 0.0
     loss_num_steps = int(len(loader) / 10) if len(loader) > 10 else 1
     if is_mixed_precision:
         scaler = GradScaler()
@@ -128,7 +129,6 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
     best_validation = 0
     while epoch < num_epochs:
         net.train()
-        running_loss = 0.0
         time_now = time.time()
         for i, data in enumerate(loader, 0):
             inputs, labels, lane_existence = data
