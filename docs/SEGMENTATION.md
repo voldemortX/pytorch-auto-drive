@@ -5,15 +5,15 @@
 If you are using ERFNet, first download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
 
 ```
-python main_landec_as_seg.py --state=<state> \  # 0: normal; 2: decoder training
-                             --epochs=<number of epochs> \
-                             --lr=<learning rate> \
-                             --batch-size=<any batch size> \ 
-                             --dataset=<dataset> \
-                             --model=<the model used> \
-                             --exp-name=<whatever you like> \
-                             --mixed-precision \  # Enable mixed precision
-                             --encoder-only  # Pre-train encoder
+python main_semseg.py --state=<state> \  # 0: normal; 2: decoder training
+                      --epochs=<number of epochs> \
+                      --lr=<learning rate> \
+                      --batch-size=<any batch size> \ 
+                      --dataset=<dataset> \
+                      --model=<the model used> \
+                      --exp-name=<whatever you like> \
+                      --mixed-precision \  # Enable mixed precision
+                      --encoder-only  # Pre-train encoder
 ```
 
 We provide directly executable shell scripts for each supported models in [MODEL_ZOO.md](MODEL_ZOO.md). You can run a shell script (e.g. `xxx.sh`) by:
