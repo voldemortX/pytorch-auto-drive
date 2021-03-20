@@ -11,45 +11,38 @@ from .._utils import IntermediateLayerGetter
 
 class LSTR(nn.Module):
     def __init__(self,
-                 flag=False,
-                 block=None,
-                 layers=None,
-                 res_dims=None,
-                 res_strides=None,
-                 attn_dim=None,
-                 num_queries=None,
-                 aux_loss=None,
-                 pos_type=None,
+                 expansion=1,  # Expansion rate (1x for TuSimple & 2x for CULane)
+                 num_queries=7,
+                 aux_loss=True,  # Important for transformer-based methods
+                 pos_type='sine',
                  drop_out=0.1,
-                 num_heads=None,
-                 dim_feedforward=None,
-                 enc_layers=None,
-                 dec_layers=None,
-                 pre_norm=None,
-                 return_intermediate=None,
-                 lsp_dim=None,
-                 mlp_layers=None,
-                 num_cls=None,
+                 num_heads=2,
+                 enc_layers=2,
+                 dec_layers=2,
+                 pre_norm=False,
+                 return_intermediate=True,
+                 lsp_dim=8,
+                 mlp_layers=3,
+                 num_cls=2,  # Lane or Not
                  ):
         super(LSTR, self).__init__()
-        self.flag = flag
 
         backbone = resnet18_reduced(
-            pretrained=False,
+            pretrained=False, expansion=expansion,
             replace_stride_with_dilation=[False, False, False])
         return_layers = {'layer4': 'out'}
         self.backbone = IntermediateLayerGetter(backbone, return_layers=return_layers)
 
-        hidden_dim = attn_dim
+        hidden_dim = 32 * expansion
         self.aux_loss = aux_loss
         self.position_embedding = build_position_encoding(hidden_dim=hidden_dim, position_embedding=pos_type)
         self.query_embed = nn.Embedding(num_queries, hidden_dim)
-        self.input_proj = nn.Conv2d(res_dims[-1], hidden_dim, kernel_size=1)  # the same as channel of self.layer4
+        self.input_proj = nn.Conv2d(128 * expansion, hidden_dim, kernel_size=1)  # Same channel as layer4
 
         self.transformer = build_transformer(hidden_dim=hidden_dim,
                                              dropout=drop_out,
                                              nheads=num_heads,
-                                             dim_feedforward=dim_feedforward,
+                                             dim_feedforward=128 * expansion,
                                              enc_layers=enc_layers,
                                              dec_layers=dec_layers,
                                              pre_norm=pre_norm,
@@ -59,9 +52,13 @@ class LSTR(nn.Module):
         self.specific_embed = MLP(hidden_dim, hidden_dim, lsp_dim - 4, mlp_layers)
         self.shared_embed = MLP(hidden_dim, hidden_dim, 4, mlp_layers)
 
-    def _train(self, images, interp_size):
+    def forward(self, images, interp_size):
         p = self.backbone(images)['out']
+
+        # Padding mask (transformer need fix sized input)
+        # TODO: what is this mask in LSTR?
         pmasks = F.interpolate(interp_size, size=p.shape[-2:]).to(torch.bool)[0]
+
         pos = self.position_embedding(p, pmasks)
         hs, _ = self.transformer(self.input_proj(p), pmasks, self.query_embed.weight, pos)
         output_class = self.class_embed(hs)
@@ -76,15 +73,6 @@ class LSTR(nn.Module):
             out['lane'] = self._set_aux_loss(output_class, output_specific)
 
         return out
-
-    def _test(self, images, interp_size):
-        return self._train(images, interp_size)
-
-    def forward(self, images, interp_size):
-        if self.flag:
-            return self._train(images, interp_size)
-        else:
-            return self._test(images, interp_size)
 
     @torch.jit.unused
     def _set_aux_loss(self, outputs_class, outputs_coord):

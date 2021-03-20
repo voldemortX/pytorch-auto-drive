@@ -376,7 +376,7 @@ def build_lane_detection_model(args, num_classes):
                             continue_from=args.continue_from)
     elif args.dataset == 'culane' and args.backbone == 'enet':
         net = enet_culane(num_classes=num_classes, encoder_only=args.encoder_only,
-                            continue_from=args.continue_from)
+                          continue_from=args.continue_from)
     elif args.method == 'lstr':
         pass
     else:
