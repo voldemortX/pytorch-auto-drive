@@ -336,7 +336,7 @@ def test_one_set(loader, device, net, num_classes, categories, output_size, labe
                     target = target.squeeze(0)
                 else:
                     output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear',
-                                                              align_corners=True)
+                                                             align_corners=True)
                 conf_mat.update(target.flatten(), output.argmax(1).flatten())
 
     acc_global, acc, iu = conf_mat.compute()

@@ -5,7 +5,7 @@ import yaml
 from torch.utils.tensorboard import SummaryWriter
 from utils.losses import LaneLoss, SADLoss, HungarianLoss
 from utils.all_utils_semseg import load_checkpoint
-from utils.all_utils_landec_as_seg import init, train_schedule, test_one_set, fast_evaluate, build_lane_detection_model
+from utils.all_utils_landec import init, train_schedule, test_one_set, fast_evaluate, build_lane_detection_model
 
 if __name__ == '__main__':
     # Settings

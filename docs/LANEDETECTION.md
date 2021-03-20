@@ -5,14 +5,14 @@
 If you are using ERFNet, first download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
 
 ```
-python main_landec_as_seg.py --epochs=<number of epochs> \
-                             --lr=<learning rate> \
-                             --batch-size=<any batch size> \ 
-                             --dataset=<dataset> \
-                             --method=<the method used> \
-                             --backbone=<the backbone used> \
-                             --exp-name=<whatever you like> \
-                             --mixed-precision  # Enable mixed precision
+python main_landec.py --epochs=<number of epochs> \
+                      --lr=<learning rate> \
+                      --batch-size=<any batch size> \ 
+                      --dataset=<dataset> \
+                      --method=<the method used> \
+                      --backbone=<the backbone used> \
+                      --exp-name=<whatever you like> \
+                      --mixed-precision  # Enable mixed precision
 
 ```
 
@@ -25,7 +25,7 @@ We provide directly executable shell scripts for each supported methods in [MODE
 For detailed instructions, run:
 
 ```
-python main_landec_as_seg.py --help
+python main_landec.py --help
 ```
 
 
@@ -38,14 +38,14 @@ Training contains online fast validations by using `--val-num-steps=\<some numbe
 To validate a trained model on mean IoU, you can use either mixed-precision or fp32 for any model trained with/without mixed-precision:
 
 ```
-python main_landec_as_seg.py --state=1 \
-                             --continue-from=<path to .pt file> \
-                             --dataset=<dataset> \
-                             --method=<the method used> \
-                             --backbone=<the backbone used> \
-                             --batch-size=<any batch size> \
-                             --exp-name=<whatever you like> \
-                             --mixed-precision  # Enable mixed precision
+python main_landec.py --state=1 \
+                      --continue-from=<path to .pt file> \
+                      --dataset=<dataset> \
+                      --method=<the method used> \
+                      --backbone=<the backbone used> \
+                      --batch-size=<any batch size> \
+                      --exp-name=<whatever you like> \
+                      --mixed-precision  # Enable mixed precision
 ```
 
 ### Test on CULane:
@@ -65,13 +65,13 @@ Then change `data_dir` to your CULane base directory in [eval.sh](../tools/culan
 2. Predict and save lanes.
    
 ```
-python main_landec_as_seg.py --state=<state> \  # 2: test set; 3: validation set           
-                             --continue-from=<path to .pt file> \
-                             --dataset=<dataset> \ 
-                             --method=<the method used> \
-                             --backbone=<the backbone used> \ 
-                             --batch-size=<any batch size> \  # Recommend 80
-                             --mixed-precision  # Enable mixed precision
+python main_landec.py --state=<state> \  # 2: test set; 3: validation set           
+                      --continue-from=<path to .pt file> \
+                      --dataset=<dataset> \ 
+                      --method=<the method used> \
+                      --backbone=<the backbone used> \ 
+                      --batch-size=<any batch size> \  # Recommend 80
+                      --mixed-precision  # Enable mixed precision
 ```
 
 3. Evaluate on the test set with official scripts.
