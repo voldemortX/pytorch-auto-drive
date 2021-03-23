@@ -26,9 +26,9 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='tusimple',
                         help='Train/Evaluate on TuSimple (tusimple) / CULane (culane) (default: tusimple)')
     parser.add_argument('--method', type=str, default='baseline',
-                        help='method selection (lstr/scnn/sad/baseline/enet/etc) (default: baseline)')
+                        help='method selection (lstr/scnn/sad/baseline) (default: baseline)')
     parser.add_argument('--backbone', type=str, default='erfnet',
-                        help='backbone selection (erfnet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101)'
+                        help='backbone selection (erfnet/enet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101)'
                              '(default: erfnet)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size. Recommend 4 times the training batch size in testing (default: 8)')
