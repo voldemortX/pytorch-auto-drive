@@ -27,7 +27,8 @@ if __name__ == '__main__':
                         help='Train/Evaluate on PASCAL VOC 2012(voc)/Cityscapes(city)/GTAV(gtav)/SYNTHIA(synthia)'
                              '(default: voc)')
     parser.add_argument('--model', type=str, default='deeplabv3',
-                        help='Model selection (fcn/erfnet/deeplabv2/deeplabv3/enet) (default: deeplabv3)')
+                        help='Model selection (fcn/erfnet/deeplabv2/deeplabv3/enet/deeplabv2-big/deeplabv3-big)'
+                             '(default: deeplabv3)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size (default: 8)')
     parser.add_argument('--do-not-save', action='store_false', default=True,
