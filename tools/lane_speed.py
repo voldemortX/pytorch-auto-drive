@@ -21,13 +21,14 @@ def init(input_sizes, dataset, mean, std, base, workers=0):
     return validation_loader
 
 
-def lane_speed_evaluate(net, device, loader, is_mixed_precision, output_size):
+def lane_speed_evaluate(net, device, loader, is_mixed_precision, output_size, num):
     count = 0
     net.eval()
     total_time = 0
+    t1=time.time()
     with torch.no_grad():
         for image, _ in tqdm(loader):
-            if count == 300:
+            if count == num:
                 break
             image = image.to(device)
             t_start = time.time()
@@ -37,7 +38,30 @@ def lane_speed_evaluate(net, device, loader, is_mixed_precision, output_size):
             t_end = time.time()
             total_time += (t_end - t_start)
             count += 1
-
-    fps = 300 / total_time
-    print(total_time)
+    t2 = time.time()
+    fps = num / total_time
+    # print(total_time)
+    # fps = 300 / (t2-t1)
     return fps
+
+
+def lane_speed_evaluate_simple(net, device, is_mixed_precision, var, output_size, num):
+    count = 0
+    net.eval()
+    total_time = 0
+    var = var.to(device)
+    t1 = time.time()
+    with torch.no_grad():
+        for i in range(0, num):
+            t_start = time.time()
+            with autocast(is_mixed_precision):
+                output = net(var)['out']
+                output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
+            t_end = time.time()
+            total_time += (t_end - t_start)
+            count += 1
+    t2 = time.time()
+    fps_wo_loader = num / total_time
+    #fps_wo_loader = num / (t2 - t1)
+
+    return fps_wo_loader

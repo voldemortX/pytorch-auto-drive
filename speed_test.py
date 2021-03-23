@@ -3,9 +3,9 @@ import argparse
 from utils.all_utils_landec import build_lane_detection_model as build_lane_model
 from utils.all_utils_semseg import load_checkpoint
 from tools.lane_speed import init as lane_init
-from tools.lane_speed import lane_speed_evaluate
+from tools.lane_speed import lane_speed_evaluate, lane_speed_evaluate_simple
 import torch
-
+import numpy as np
 # from torch.cuda.amp import autocast
 # from tqdm import tqdm
 # from PIL import Image
@@ -35,6 +35,8 @@ if __name__ == '__main__':
                         help='Enable mixed precision training (default: False)')
     parser.add_argument('--task', type=str, default='lane',
                         help='task selection(lane/segmentation')
+    parser.add_argument('--difficulty-level', type=str, default='simple',
+                        help='level of difficulty selection(simple/real')
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
     args = parser.parse_args()
@@ -49,16 +51,37 @@ if __name__ == '__main__':
 
     if args.task == 'lane':
         num_classes = configs[configs['LANE_DATASETS'][args.dataset]]['NUM_CLASSES']
-        base = configs[configs['LANE_DATASETS'][args.dataset]]['BASE_DIR']
         if torch.cuda.is_available():
             device = torch.device('cuda:0')
-        net = build_lane_model(args, num_classes)
-        print(device)
-        net.to(device)
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
-        input_size = (args.height, args.width)
-        val_loader = lane_init(dataset=args.dataset, input_sizes=(args.height, args.width), mean=mean, std=std, base=base)
-        fps = lane_speed_evaluate(net, device, val_loader, args.mixed_precision, input_size)
-        print("fps:"+str(fps))
+
+        if args.difficulty_level == 'simple':
+            net = build_lane_model(args, num_classes)
+            input_size = (args.height, args.width)
+            print(device)
+            net.to(device)
+            var = torch.zeros((1, 3, args.height, args.width))
+            fps_all = []
+            # for i in range(0, 2):
+            fps = lane_speed_evaluate_simple(net=net, device=device, is_mixed_precision=args.mixed_precision,
+                                             var=var, output_size=input_size, num=300)
+            print("simple fps:" + str(fps))
+            # fps_all.append(fps)
+
+            # print('average time:'+str(np.mean(fps_all)))
+            # print('max time:' + str(np.max(fps_all)))
+            # print('min time:' + str(np.min(fps_all)))
+
+        elif args.difficulty_level == 'real':
+            base = configs[configs['LANE_DATASETS'][args.dataset]]['BASE_DIR']
+
+            net = build_lane_model(args, num_classes)
+            print(device)
+            net.to(device)
+            load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
+            input_size = (args.height, args.width)
+            val_loader = lane_init(dataset=args.dataset, input_sizes=(args.height, args.width), mean=mean, std=std,
+                                   base=base)
+            fps = lane_speed_evaluate(net, device, val_loader, args.mixed_precision, input_size, num=300)
+            print("real fps:" + str(fps))
     elif args.task == 'segmentation':
         print("In progress...")
