@@ -20,15 +20,13 @@ def init(input_sizes, dataset, mean, std, base, workers=0):
 
 def lane_speed_evaluate(net, device, loader, num, count_interpolate=True):
     net.eval()
+    iterable = iter(loader)
 
     # Warm-up hardware
-    count = 0
-    for image, _ in loader:
-        if count == 10:
-            break
+    for _ in range(10):
+        image, _ = iterable.__next__()
         image = image.to(device)
         _ = net(image)['out']
-        count += 1
 
     # Timing with loading images from disk
     torch.cuda.current_stream(device).synchronize()
@@ -36,7 +34,6 @@ def lane_speed_evaluate(net, device, loader, num, count_interpolate=True):
     count = 0
     gpu_time = 0
     io_time = 0
-    iterable = iter(loader)
     with torch.no_grad():
         for _ in tqdm(range(num)):
             # I/O
@@ -55,8 +52,6 @@ def lane_speed_evaluate(net, device, loader, num, count_interpolate=True):
                 _ = torch.nn.functional.interpolate(output, size=image.shape[-2:], mode='bilinear', align_corners=True)
             torch.cuda.current_stream(device).synchronize()
             gpu_time += (time.perf_counter() - temp)
-
-            count += 1
 
     torch.cuda.current_stream(device).synchronize()
     fps = num / (time.perf_counter() - t_start)
