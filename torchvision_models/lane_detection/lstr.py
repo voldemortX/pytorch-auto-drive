@@ -52,15 +52,14 @@ class LSTR(nn.Module):
         self.specific_embed = MLP(hidden_dim, hidden_dim, lsp_dim - 4, mlp_layers)
         self.shared_embed = MLP(hidden_dim, hidden_dim, 4, mlp_layers)
 
-    def forward(self, images, interp_size):
+    def forward(self, images, padding_masks):
         p = self.backbone(images)['out']
 
-        # Padding mask (transformer need fix sized input)
-        # TODO: what is this mask in LSTR?
-        pmasks = F.interpolate(interp_size, size=p.shape[-2:]).to(torch.bool)[0]
+        # Padding mask (for paddings added in transforms)
+        padding_masks = F.interpolate(padding_masks, size=p.shape[-2:]).to(torch.bool)[0]
 
-        pos = self.position_embedding(p, pmasks)
-        hs, _ = self.transformer(self.input_proj(p), pmasks, self.query_embed.weight, pos)
+        pos = self.position_embedding(p, padding_masks)
+        hs, _ = self.transformer(self.input_proj(p), padding_masks, self.query_embed.weight, pos)
         output_class = self.class_embed(hs)
         output_specific = self.specific_embed(hs)
         output_shared = self.shared_embed(hs)
