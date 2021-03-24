@@ -59,17 +59,13 @@ if __name__ == '__main__':
             input_size = (args.height, args.width)
             print(device)
             net.to(device)
-            var = torch.zeros((1, 3, args.height, args.width))
+            dummy = torch.ones((1, 3, args.height, args.width))
+            base = configs[configs['LANE_DATASETS'][args.dataset]]['BASE_DIR']
             fps_all = []
             # for i in range(0, 2):
             fps = lane_speed_evaluate_simple(net=net, device=device, is_mixed_precision=args.mixed_precision,
-                                             var=var, output_size=input_size, num=300)
+                                             dummy=dummy, output_size=input_size, num=300)
             print("simple fps:" + str(fps))
-            # fps_all.append(fps)
-
-            # print('average time:'+str(np.mean(fps_all)))
-            # print('max time:' + str(np.max(fps_all)))
-            # print('min time:' + str(np.min(fps_all)))
 
         elif args.difficulty_level == 'real':
             base = configs[configs['LANE_DATASETS'][args.dataset]]['BASE_DIR']
