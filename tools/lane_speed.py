@@ -1,10 +1,7 @@
-import yaml
-import argparse
 import torch
-from torch.cuda.amp import autocast
 from tqdm import tqdm
-from utils.datasets import CULane, StandardLaneDetectionDataset
-from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
+from utils.datasets import StandardLaneDetectionDataset
+from transforms import ToTensor, Normalize, Resize, Compose
 import time
 
 
@@ -21,49 +18,71 @@ def init(input_sizes, dataset, mean, std, base, workers=0):
     return validation_loader
 
 
-def lane_speed_evaluate(net, device, loader, is_mixed_precision, output_size, num):
-    count = 0
+def lane_speed_evaluate(net, device, loader, num, count_interpolate=True):
     net.eval()
-    total_time = 0
-    t1 = time.time()
+
+    # Warm-up hardware
+    count = 0
+    for image, _ in loader:
+        if count == 10:
+            break
+        image = image.to(device)
+        _ = net(image)['out']
+        count += 1
+
+    # Timing with loading images from disk
+    torch.cuda.current_stream(device).synchronize()
+    t_start = time.perf_counter()
+    count = 0
+    gpu_time = 0
+    io_time = 0
+    iterable = iter(loader)
     with torch.no_grad():
-        for image, _ in tqdm(loader):
-            if count == num:
-                break
+        for _ in tqdm(range(num)):
+            # I/O
+            torch.cuda.current_stream(device).synchronize()
+            temp = time.perf_counter()
+            image, _ = iterable.__next__()
             image = image.to(device)
-            t_start = time.time()
+            torch.cuda.current_stream(device).synchronize()
+            io_time += (time.perf_counter() - temp)
+
+            # GPU
+            torch.cuda.current_stream(device).synchronize()
+            temp = time.perf_counter()
             output = net(image)['out']
-            output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
-            t_end = time.time()
-            total_time += (t_end - t_start)
-            #print(total_time)
+            if count_interpolate:
+                _ = torch.nn.functional.interpolate(output, size=image.shape[-2:], mode='bilinear', align_corners=True)
+            torch.cuda.current_stream(device).synchronize()
+            gpu_time += (time.perf_counter() - temp)
+
             count += 1
-    fps = num / total_time
-    t2 = time.time()
-    print(t2 - t1)
-    # print(total_time)
-    # fps = 300 / (t2-t1)
-    return fps
+
+    torch.cuda.current_stream(device).synchronize()
+    fps = num / (time.perf_counter() - t_start)
+    gpu_fps = num / gpu_time
+
+    return fps, gpu_fps
 
 
-def lane_speed_evaluate_simple(net, device, is_mixed_precision, dummy, output_size, num):
-    count = 0
+def lane_speed_evaluate_simple(net, device, dummy, num, count_interpolate=True):
     net.eval()
-    total_time = 0
     dummy = dummy.to(device)
-    t1 = time.time()
-    #with torch.no_grad():
-    for i in range(0, num):
-        dummy = torch.randn((1, 3, 288, 800), device=device)
-        t_start = time.time()
-        output = net(dummy)['out']
-        output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
-        t_end = time.time()
-        total_time += (t_end - t_start)
-        print(total_time)
+    output_size = dummy.shape[-2:]
 
-    fps_wo_loader = num / total_time
-    t2 = time.time()
-    print(t2 - t1)
+    # Warm-up hardware
+    for i in range(0, 10):
+        _ = net(dummy)['out']
 
-    return fps_wo_loader
+    # Timing
+    torch.cuda.current_stream(device).synchronize()
+    t_start = time.perf_counter()
+    with torch.no_grad():
+        for _ in tqdm(range(num)):
+            output = net(dummy)['out']
+            if count_interpolate:
+                _ = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
+    torch.cuda.current_stream(device).synchronize()
+    fps_gpu = num / (time.perf_counter() - t_start)
+
+    return fps_gpu
