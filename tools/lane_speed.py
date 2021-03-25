@@ -29,9 +29,6 @@ def lane_speed_evaluate(net, device, loader, num, count_interpolate=True):
         _ = net(image)['out']
 
     # Timing with loading images from disk
-    torch.cuda.current_stream(device).synchronize()
-    t_start = time.perf_counter()
-    count = 0
     gpu_time = 0
     io_time = 0
     with torch.no_grad():
@@ -53,8 +50,7 @@ def lane_speed_evaluate(net, device, loader, num, count_interpolate=True):
             torch.cuda.current_stream(device).synchronize()
             gpu_time += (time.perf_counter() - temp)
 
-    torch.cuda.current_stream(device).synchronize()
-    fps = num / (time.perf_counter() - t_start)
+    fps = num / (io_time + gpu_time)
     gpu_fps = num / gpu_time
 
     return fps, gpu_fps
