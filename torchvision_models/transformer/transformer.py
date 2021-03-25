@@ -1,5 +1,5 @@
 # Copied and modified from facebookresearch/detr and liuruijin17/LSTR
-# mainly got rid of special types and argparse
+# mainly got rid of special types and argparse, added comments
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 """
 DETR Transformer class.
@@ -45,7 +45,7 @@ class Transformer(nn.Module):
                 nn.init.xavier_uniform_(p)
 
     def forward(self, src, mask, query_embed, pos_embed):
-        # flatten NxCxHxW to HWxNxC
+        # flatten NxCxHxW to HWxNxC (a sequence of length HW)
         bs, c, h, w = src.shape
         src = src.flatten(2).permute(2, 0, 1)
         pos_embed = pos_embed.flatten(2).permute(2, 0, 1)
@@ -84,6 +84,7 @@ class TransformerEncoder(nn.Module):
 
 
 class TransformerDecoder(nn.Module):
+    # Intermediate results are stacked at dimension 0 for aux loss
     def __init__(self, decoder_layer, num_layers, norm=None, return_intermediate=False):
         super().__init__()
         self.layers = _get_clones(decoder_layer, num_layers)

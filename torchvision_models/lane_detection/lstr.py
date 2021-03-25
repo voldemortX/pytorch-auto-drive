@@ -48,9 +48,9 @@ class LSTR(nn.Module):
                                              pre_norm=pre_norm,
                                              return_intermediate_dec=return_intermediate)
 
-        self.class_embed = nn.Linear(hidden_dim, num_cls + 1)
-        self.specific_embed = MLP(hidden_dim, hidden_dim, lsp_dim - 4, mlp_layers)
-        self.shared_embed = MLP(hidden_dim, hidden_dim, 4, mlp_layers)
+        self.class_embed = nn.Linear(hidden_dim, num_cls + 1)  # A stop class?
+        self.specific_embed = MLP(hidden_dim, hidden_dim, lsp_dim - 4, mlp_layers)  # Specific for each lane
+        self.shared_embed = MLP(hidden_dim, hidden_dim, 4, mlp_layers)  # 4 shared curve coefficients
 
     def forward(self, images, padding_masks):
         p = self.backbone(images)['out']
@@ -63,19 +63,19 @@ class LSTR(nn.Module):
         output_class = self.class_embed(hs)
         output_specific = self.specific_embed(hs)
         output_shared = self.shared_embed(hs)
-        output_shared = torch.mean(output_shared, dim=-2, keepdim=True)
-        output_shared = output_shared.repeat(1, 1, output_specific.shape[2], 1)
-        output_specific = torch.cat([output_specific[:, :, :, :2],
-                                     output_shared, output_specific[:, :, :, 2:]], dim=-1)
-        out = {'logits': output_class[-1], 'curves': output_specific[-1]}
+        output_shared = torch.mean(output_shared, dim=-2, keepdim=True)  # Why not take mean on input and simply expand?
+        output_shared = output_shared.repeat(1, 1, output_specific.shape[2], 1)  # ?
+        output_curve = torch.cat([output_specific[:, :, :, :2],
+                                  output_shared, output_specific[:, :, :, 2:]], dim=-1)
+        out = {'logits': output_class[-1], 'curves': output_curve[-1]}  # Last layer result
         if self.aux_loss:
-            out['lane'] = self._set_aux_loss(output_class, output_specific)
+            out['lane'] = self._set_aux_loss(output_class, output_curve)  # All intermediate results
 
         return out
 
     @torch.jit.unused
-    def _set_aux_loss(self, outputs_class, outputs_coord):
+    def _set_aux_loss(self, output_class, output_curve):
         # this is a workaround to make torchscript happy, as torchscript
         # doesn't support dictionary with non-homogeneous values, such
         # as a dict having both a Tensor and a list.
-        return [{'logits': a, 'curves': b} for a, b in zip(outputs_class[:-1], outputs_coord[:-1])]
+        return [{'logits': a, 'curves': b} for a, b in zip(output_class[:-1], output_curve[:-1])]
