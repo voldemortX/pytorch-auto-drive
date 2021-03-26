@@ -4,8 +4,8 @@ import argparse
 from utils.all_utils_landec import build_lane_detection_model as build_lane_model
 from utils.all_utils_semseg import build_segmentation_model
 from utils.all_utils_semseg import load_checkpoint
-from tools.profiling_prepare import init_lane, init_seg
-from tools.profiling_prepare import speed_evaluate_real, speed_evaluate_simple
+from tools.profiling_utils import init_lane, init_seg
+from tools.profiling_utils import speed_evaluate_real, speed_evaluate_simple
 import torch
 
 if __name__ == '__main__':
