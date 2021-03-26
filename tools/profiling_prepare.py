@@ -1,11 +1,12 @@
 import torch
 from tqdm import tqdm
 from utils.datasets import StandardLaneDetectionDataset
-from transforms import ToTensor, Normalize, Resize, Compose
+from transforms import ToTensor, Normalize, Resize, Compose, ZeroPad, LabelMap
+from utils.datasets import StandardSegmentationDataset
 import time
 
 
-def init(input_sizes, dataset, mean, std, base, workers=0):
+def init_lane(input_sizes, dataset, mean, std, base, workers=0):
     transforms_test = Compose(
         [Resize(size_image=input_sizes, size_label=input_sizes),
          ToTensor(),
@@ -18,7 +19,40 @@ def init(input_sizes, dataset, mean, std, base, workers=0):
     return validation_loader
 
 
-def lane_speed_evaluate(net, device, loader, num, count_interpolate=True):
+def init_seg(input_sizes, std, mean, dataset, test_base=None, test_label_id_map=None, city_aug=0):
+
+    if dataset == 'voc':
+        transform_test = Compose(
+            [ToTensor(),
+             ZeroPad(size=input_sizes),
+             Normalize(mean=mean, std=std)])
+    elif dataset == 'city' or dataset == 'gtav' or dataset == 'synthia':  # All the same size
+        if city_aug == 2:  # ERFNet and ENet
+            transform_test = Compose(
+                [ToTensor(),
+                 Resize(size_image=input_sizes, size_label=input_sizes),
+                 LabelMap(test_label_id_map)])
+        elif city_aug == 1:  # City big
+            transform_test = Compose(
+                [ToTensor(),
+                 Resize(size_image=input_sizes, size_label=input_sizes),
+                 Normalize(mean=mean, std=std),
+                 LabelMap(test_label_id_map)])
+    else:
+        raise ValueError
+
+    # Not the actual test set (i.e. validation set)
+    test_set = StandardSegmentationDataset(root=test_base, image_set='val', transforms=transform_test,
+                                           data_set='city' if dataset == 'gtav' or dataset == 'synthia' else dataset)
+
+    val_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=1, num_workers=0,
+                                             shuffle=False)
+
+    # Testing
+    return val_loader
+
+
+def speed_evaluate_real(net, device, loader, num, count_interpolate=True):
     net.eval()
     iterable = iter(loader)
 
@@ -56,7 +90,7 @@ def lane_speed_evaluate(net, device, loader, num, count_interpolate=True):
     return fps, gpu_fps
 
 
-def lane_speed_evaluate_simple(net, device, dummy, num, count_interpolate=True):
+def speed_evaluate_simple(net, device, dummy, num, count_interpolate=True):
     net.eval()
     dummy = dummy.to(device)
     output_size = dummy.shape[-2:]
