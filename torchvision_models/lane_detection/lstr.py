@@ -23,7 +23,7 @@ class LSTR(nn.Module):
                  return_intermediate=True,
                  lsp_dim=8,
                  mlp_layers=3,
-                 num_cls=2,  # Lane or Not
+                 num_cls=2  # Lane or Not
                  ):
         super(LSTR, self).__init__()
 
@@ -53,10 +53,12 @@ class LSTR(nn.Module):
         self.shared_embed = MLP(hidden_dim, hidden_dim, 4, mlp_layers)  # 4 shared curve coefficients
 
     def forward(self, images, padding_masks):
+        # images: B x C x H x W
+        # padding_masks: B x H x W
         p = self.backbone(images)['out']
 
         # Padding mask (for paddings added in transforms)
-        padding_masks = F.interpolate(padding_masks, size=p.shape[-2:]).to(torch.bool)[0]
+        padding_masks = F.interpolate(padding_masks.float().unsqueeze(1), size=p.shape[-2:]).to(torch.bool).squeeze(1)
 
         pos = self.position_embedding(p, padding_masks)
         hs, _ = self.transformer(self.input_proj(p), padding_masks, self.query_embed.weight, pos)
@@ -64,7 +66,7 @@ class LSTR(nn.Module):
         output_specific = self.specific_embed(hs)
         output_shared = self.shared_embed(hs)
         output_shared = torch.mean(output_shared, dim=-2, keepdim=True)  # Why not take mean on input and simply expand?
-        output_shared = output_shared.repeat(1, 1, output_specific.shape[2], 1)  # ?
+        output_shared = output_shared.repeat(1, 1, output_specific.shape[2], 1)
         output_curve = torch.cat([output_specific[:, :, :, :2],
                                   output_shared, output_specific[:, :, :, 2:]], dim=-1)
         out = {'logits': output_class[-1], 'curves': output_curve[-1]}  # Last layer result
