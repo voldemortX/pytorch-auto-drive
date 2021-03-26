@@ -88,6 +88,7 @@
 | ERFNet | 512 x 1024 | *yes* | Cityscapes | 71.99 | 72.47 | 5h | [model](https://drive.google.com/file/d/1uzBSboKD-Xt0K6VHd2aF561Cy13q9xRe/view?usp=sharing) \| [shell](../tools/shells/erfnet_cityscapes_512x1024.sh) |
 | ENet | 512 x 1024 | *yes* | Cityscapes | 65.54 | 65.74 | 10.6h | [model](https://drive.google.com/file/d/1oK2mKCetOtY8KFaKLjs7-jOMkxZjbIQD/view?usp=sharing) \| [shell](../tools/shells/enet_cityscapes_512x1024.sh) |
 | DeeplabV2 | 512 x 1024 | *yes* | Cityscapes | 71.78 | 72.12 | 9h | [model](https://drive.google.com/file/d/1MUG3PMMlFOtiX7G-TYCZhG_8D9aLqTPE/view?usp=sharing) \| [shell](../tools/shells/deeplabv2_cityscapes_512x1024.sh) |
+| DeeplabV3 | 512 x 1024 | *yes* | Cityscapes | 74.64 | 74.67 | 20.1h | [model](https://drive.google.com/file/d/11xrX9AdNBdupSb8cOdGASiWrjYBXdQ48/view?usp=sharing) \| [shell](../tools/shells/deeplabv3_cityscapes_512x1024.sh) |
 | DeeplabV2 | 512 x 1024 | *yes* | GTAV | 32.90 | 33.88 | 13.8h | [model](https://drive.google.com/file/d/1udHozZzwka9ktMxaV0tynL1HToy0H6sI/view?usp=sharing) \| [shell](../tools/shells/deeplabv2_gtav_512x1024.sh) |
 | DeeplabV2 | 512 x 1024 | *yes* | SYNTHIA* | 33.89 | 34.86 | 10.4h | [model](https://drive.google.com/file/d/1M-CO46zjXbVo8pguISUEw3M6NoKHIN0l/view?usp=sharing) \| [shell](../tools/shells/deeplabv2_synthia_512x1024.sh) |
 

@@ -364,14 +364,14 @@ def test_one_set(loader, device, net, num_classes, categories, output_size, labe
 
 def build_segmentation_model(configs, args, num_classes, city_aug, input_sizes):
     weights = None
+    if '-big' in args.model:
+        city_aug = 1
+        input_sizes = configs['CITYSCAPES']['SIZES_BIG']
+    args.model = args.model.replace('-big', '')
     if args.model == 'deeplabv3':
         net = deeplab_v3(num_classes=num_classes)
     elif args.model == 'deeplabv2':
         net = deeplab_v2(num_classes=num_classes)
-    elif args.model == 'deeplabv2-big':
-        net = deeplab_v2(num_classes=num_classes)
-        city_aug = 1
-        input_sizes = configs['CITYSCAPES']['SIZES_BIG']
     elif args.model == 'fcn':
         net = fcn(num_classes)
     elif args.model == 'erfnet':
