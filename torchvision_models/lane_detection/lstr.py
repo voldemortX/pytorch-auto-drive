@@ -1,5 +1,4 @@
 # Adapted from liuruijin17/LSTR
-# TODO: Why no dilations and use frozen BN on first BN layer? Check implementation details of ResNet18
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -54,11 +53,11 @@ class LSTR(nn.Module):
 
     def forward(self, images, padding_masks):
         # images: B x C x H x W
-        # padding_masks: B x H x W
+        # padding_masks: B x H x W (0 or 1 -> ignored)
         p = self.backbone(images)['out']
 
         # Padding mask (for paddings added in transforms)
-        padding_masks = F.interpolate(padding_masks.float().unsqueeze(1), size=p.shape[-2:]).to(torch.bool).squeeze(1)
+        padding_masks = F.interpolate(padding_masks.unsqueeze(1), size=p.shape[-2:]).to(torch.bool).squeeze(1)
 
         pos = self.position_embedding(p, padding_masks)
         hs, _ = self.transformer(self.input_proj(p), padding_masks, self.query_embed.weight, pos)
@@ -68,10 +67,10 @@ class LSTR(nn.Module):
         output_shared = torch.mean(output_shared, dim=-2, keepdim=True)  # Why not take mean on input and simply expand?
         output_shared = output_shared.repeat(1, 1, output_specific.shape[2], 1)
         output_curve = torch.cat([output_specific[:, :, :, :2],
-                                  output_shared, output_specific[:, :, :, 2:]], dim=-1)
+                                  output_shared, output_specific[:, :, :, 2:]], dim=-1)  # Keep this for consistency
         out = {'logits': output_class[-1], 'curves': output_curve[-1]}  # Last layer result
         if self.aux_loss:
-            out['lane'] = self._set_aux_loss(output_class, output_curve)  # All intermediate results
+            out['aux'] = self._set_aux_loss(output_class, output_curve)  # All intermediate results
 
         return out
 

@@ -3,6 +3,8 @@
 # Update: The current torchvision github repo now supports tensor operation for all common transformations,
 # you are encouraged to check it out
 # Processing in (w, h), while providing public functions in (h, w)
+#######################
+# For transforms with multiple targets (masks, keypoints), target is formed as `dict{'padding_mask', 'keypoints', etc.}`
 import numpy as np
 from PIL import Image
 from collections.abc import Sequence
@@ -75,10 +77,11 @@ class Resize(object):
     def __call__(self, image, target):
         w_ori, h_ori = F._get_image_size(image)
         image = F.resize(image, self.size_image, interpolation=Image.LINEAR)
-        if isinstance(target, str):
-            return image, target
-        elif isinstance(target, np.ndarray):
-            target = self.transform_points(target, (h_ori, w_ori), self.size_label)
+        if isinstance(target, dict):  # To keep BC
+            if 'keypoints' in target:
+                target['keypoints'] = self.transform_points(target['keypoints'], (h_ori, w_ori), self.size_label)
+            if 'padding_mask' in target:
+                target['padding_mask'] = F.resize(target['padding_mask'], self.size_label, interpolation=Image.NEAREST)
         else:
             target = F.resize(target, self.size_label, interpolation=Image.NEAREST)
 
@@ -173,9 +176,12 @@ class RandomResize(object):
         image = F.resize(image, [h, w], interpolation=Image.LINEAR)
         if isinstance(target, str):
             return image, target
-        elif isinstance(target, np.ndarray):
-            in_size = F._get_image_size(image)
-            target = Resize.transform_points(target, in_size, (h, w))
+        elif isinstance(target, dict):  # To keep BC
+            if 'keypoint' in target:
+                in_size = F._get_image_size(image)
+                target['keypoint'] = Resize.transform_points(target['keypoint'], in_size, (h, w))
+            if 'padding_mask' in target:
+                target['padding_mask'] = F.resize(target['padding_mask'], [h, w], interpolation=Image.NEAREST)
         else:
             target = F.resize(target, [h, w], interpolation=Image.NEAREST)
 
@@ -261,15 +267,18 @@ class ToTensor(object):
 
     @staticmethod
     def label_to_tensor(pic):  # segmentation masks or keypoint arrays
-        if isinstance(pic, np.ndarray):
-            return torch.as_tensor(pic, dtype=torch.float32)
-        elif isinstance(pic, str):
+        if isinstance(pic, str):
             return pic
+        elif isinstance(pic, dict):
+            if 'keypoints' in pic:
+                pic['keypoints'] = torch.as_tensor(pic['keypoints'], dtype=torch.float32)
+            if 'padding_mask' in pic:
+                pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']), dtype=torch.float32)
         else:
             return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)
 
     def _pil_to_tensor(self, pic):
-        # Convert a PIL Image to tensor(a direct copy)
+        # Convert a PIL Image to tensor (a direct copy)
         if pic.mode == 'I':
             img = torch.from_numpy(np.array(pic, np.int32, copy=False))
         elif pic.mode == 'I;16':
@@ -346,7 +355,7 @@ class MatchSize(object):
         return image, target
 
 
-# TODO: Support fill color 255 for tensor inputs (supported in torchvision nightly)
+# TODO: Support fill color 255 for tensor inputs (supported in torchvision >= 0.9.0)
 # Now fill color is fixed to 0 (background for lane detection label)
 class RandomRotation(object):
     def __init__(self, degrees, expand=False, center=None, fill=None):
@@ -381,9 +390,13 @@ class RandomRotation(object):
     def __call__(self, image, target):
         angle = self.get_params(self.degrees)
         image = F.rotate(image, angle, resample=Image.LINEAR, expand=self.expand, center=self.center, fill=0)
-        if isinstance(target, np.ndarray):
-            w, h = F._get_image_size(image)
-            target = self.transform_points(target, angle, h, w)
+        if isinstance(target, dict):  # To keep BC
+            if 'keypoints' in target:
+                w, h = F._get_image_size(image)
+                target['keypoints'] = self.transform_points(target['keypoints'], angle, h, w)
+            if 'padding_mask' in target:
+                target['padding_mask'] = F.rotate(target['padding_mask'], angle, resample=Image.NEAREST,
+                                                  expand=self.expand, center=self.center, fill=1)
         else:
             target = F.rotate(target, angle, resample=Image.NEAREST, expand=self.expand, center=self.center, fill=255)
 
