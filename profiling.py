@@ -4,8 +4,7 @@ import argparse
 from utils.all_utils_landec import build_lane_detection_model as build_lane_model
 from utils.all_utils_semseg import build_segmentation_model
 from utils.all_utils_semseg import load_checkpoint
-from tools.profiling_utils import init_lane, init_seg
-from tools.profiling_utils import speed_evaluate_real, speed_evaluate_simple
+from tools.profiling_utils import init_lane, init_seg, speed_evaluate_real, speed_evaluate_simple, model_eval
 import torch
 
 if __name__ == '__main__':
@@ -30,7 +29,7 @@ if __name__ == '__main__':
                         help='Profiling mode (simple/real)')
     parser.add_argument('--model', type=str, default='deeplabv3',
                         help='Model selection (fcn/erfnet/deeplabv2/deeplabv3/enet) (default: deeplabv3)')
-    parser.add_argument('--inf-times', type=int, default=1,
+    parser.add_argument('--times', type=int, default=1,
                         help='Select test times')
     parser.add_argument('--encoder-only', action='store_true', default=False,
                         help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
@@ -56,11 +55,14 @@ if __name__ == '__main__':
         if torch.cuda.is_available():
             device = torch.device('cuda:0')
         net = build_lane_model(args, num_classes)
-        print(device)
         net.to(device)
-
+        print(device)
+        macs, params = model_eval(net, args.height, args.width, device)
+        print('FLOPs(G): {: .2f}'.format(2 * macs / 1e9))
+        print('Number of parameters: {: .2f}'.format(params / 1e6))
         print('Profiling, please clear your GPU memory before doing this.')
         if args.mode == 'simple':
+
             dummy = torch.ones((1, 3, args.height, args.width))
             fps = []
             for i in range(0, args.inf_times):
@@ -98,15 +100,19 @@ if __name__ == '__main__':
 
         net, city_aug, _, _ = build_segmentation_model(configs, args, num_classes, city_aug, input_sizes)
         net.to(device)
-
+        macs, params = model_eval(net, args.height, args.width, device)
+        print('FLOPs(G): {: .2f}'.format(2 * macs / 1e9))
+        print('Number of parameters: {: .2f}'.format(params / 1e6))
         print('Profiling, please clear your GPU memory before doing this.')
         if args.mode == 'simple':
+
             dummy = torch.ones((1, 3, args.height, args.width))
             fps = []
             for i in range(0, args.inf_times):
                 fps.append(speed_evaluate_simple(net=net, device=device, dummy=dummy, num=300, count_interpolate=True))
             print('GPU FPS: {: .2f}'.format(max(fps)))
         elif args.mode == 'real' and args.dataset in configs['SEGMENTATION_DATASETS'].keys():
+
             load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
 
             base = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['BASE_DIR']
