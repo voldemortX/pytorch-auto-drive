@@ -22,7 +22,7 @@ class LSTR(nn.Module):
                  return_intermediate=True,
                  lsp_dim=8,
                  mlp_layers=3,
-                 num_cls=2  # Lane or Not
+                 num_cls=1
                  ):
         super(LSTR, self).__init__()
 
@@ -47,7 +47,7 @@ class LSTR(nn.Module):
                                              pre_norm=pre_norm,
                                              return_intermediate_dec=return_intermediate)
 
-        self.class_embed = nn.Linear(hidden_dim, num_cls + 1)  # A stop class?
+        self.class_embed = nn.Linear(hidden_dim, num_cls + 1)  # Why 3 classes, not 2?
         self.specific_embed = MLP(hidden_dim, hidden_dim, lsp_dim - 4, mlp_layers)  # Specific for each lane
         self.shared_embed = MLP(hidden_dim, hidden_dim, 4, mlp_layers)  # 4 shared curve coefficients
 
