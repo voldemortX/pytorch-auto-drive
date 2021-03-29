@@ -1,9 +1,10 @@
 import torch
+import time
 from tqdm import tqdm
 from utils.datasets import StandardLaneDetectionDataset
 from transforms import ToTensor, Normalize, Resize, Compose, ZeroPad, LabelMap
 from utils.datasets import StandardSegmentationDataset
-import time
+from thop import profile
 
 
 def init_lane(input_sizes, dataset, mean, std, base, workers=0):
@@ -11,7 +12,6 @@ def init_lane(input_sizes, dataset, mean, std, base, workers=0):
         [Resize(size_image=input_sizes, size_label=input_sizes),
          ToTensor(),
          Normalize(mean=mean, std=std)])
-
     validation_set = StandardLaneDetectionDataset(root=base, image_set='val', transforms=transforms_test,
                                                   data_set=dataset)
     validation_loader = torch.utils.data.DataLoader(dataset=validation_set, batch_size=1, num_workers=workers,
@@ -20,7 +20,6 @@ def init_lane(input_sizes, dataset, mean, std, base, workers=0):
 
 
 def init_seg(input_sizes, std, mean, dataset, test_base=None, test_label_id_map=None, city_aug=0):
-
     if dataset == 'voc':
         transform_test = Compose(
             [ToTensor(),
@@ -57,10 +56,11 @@ def speed_evaluate_real(net, device, loader, num, count_interpolate=True):
     iterable = iter(loader)
 
     # Warm-up hardware
-    for _ in range(10):
-        image, _ = iterable.__next__()
-        image = image.to(device)
-        _ = net(image)['out']
+    with torch.no_grad():
+        for _ in range(10):
+            image, _ = iterable.__next__()
+            image = image.to(device)
+            _ = net(image)['out']
 
     # Timing with loading images from disk
     gpu_time = 0
@@ -96,8 +96,9 @@ def speed_evaluate_simple(net, device, dummy, num, count_interpolate=True):
     output_size = dummy.shape[-2:]
 
     # Warm-up hardware
-    for i in range(0, 10):
-        _ = net(dummy)['out']
+    with torch.no_grad():
+        for i in range(0, 10):
+            _ = net(dummy)['out']
 
     # Timing
     torch.cuda.current_stream(device).synchronize()
@@ -111,3 +112,11 @@ def speed_evaluate_simple(net, device, dummy, num, count_interpolate=True):
     fps_gpu = num / (time.perf_counter() - t_start)
 
     return fps_gpu
+
+
+def model_profile(net, height, width, device):
+    temp = torch.randn(1, 3, height, width).to(device)
+    macs, params = profile(net, inputs=(temp,))
+
+    return macs, params
+
