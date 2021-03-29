@@ -2,7 +2,7 @@
 
 ## Lane detection performance
 
-| method | backbone | resolution | FPS | FLOPs(G) | Params |
+| method | backbone | resolution | FPS | FLOPS(G) | Params(M) |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | Baseline | VGG16 | 360 x 640 | 56.36 | 214.50 | 20.37 | 
 | Baseline | ResNet18 | 360 x 640 | 148.59 | 85.24 | 12.04 | 
@@ -33,23 +33,23 @@
 
 ## Segmentation performance:
 
-| method | resolution  | FPS | FLOPs(G) | Params |
+| method | resolution  | FPS | FLOPS(G) | Params(M) |
 | :---: | :---: | :---: | :---: | :---: |
-| FCN | 256 x 512 | 3.06 | 216.42 | 51.95 |
+| FCN | 256 x 512 | 43.32 | 216.42 | 51.95 |
 | FCN | 512 x 1024 | 12.06 | 865.69 | 51.95 |
-| FCN | 1024 x 2048 | 43.32 | 3462.77 | 51.95 |
-| ERFNet | 256 x 512 | 21.53 | 15.03 | 2.06 |
+| FCN | 1024 x 2048 | 3.06 | 3462.77 | 51.95 |
+| ERFNet | 256 x 512 | 91.20 | 15.03 | 2.06 |
 | ERFNet | 512 x 1024 | 85.51 | 60.11 | 2.06 |
-| ERFNet | 1024 x 2048 | 91.20 | 240.44 | 2.06 |
-| ENet | 256 x 512 | 30.88 | 2.72 | 0.35 |
+| ERFNet | 1024 x 2048 | 21.53 | 240.44 | 2.06 |
+| ENet | 256 x 512 | 59.31 | 2.72 | 0.35 |
 | ENet | 512 x 1024 | 55.69 | 10.88 | 0.35 |
-| ENet | 1024 x 2048 | 59.31 | 43.53 | 0.35 |
-| DeeplabV2 | 256 x 512 | 3.23 | 180.59 | 43.20 |
+| ENet | 1024 x 2048 | 30.88 | 43.53 | 0.35 |
+| DeeplabV2 | 256 x 512 | 44.87 | 180.59 | 43.20 |
 | DeeplabV2 | 512 x 1024 | 12.93 | 722.37 | 43.20 |
-| DeeplabV2 | 1024 x 2048 | 44.87 | 2889.49 | 43.20 |
-| DeeplabV3 | 256 x 512 | 2.56 | 241.65 | 58.63 |
+| DeeplabV2 | 1024 x 2048 | 3.23 | 2889.49 | 43.20 |
+| DeeplabV3 | 256 x 512 | 35.26 | 241.65 | 58.63 |
 | DeeplabV3 | 512 x 1024 | 10.26 | 966.61 | 58.63 |
-| DeeplabV3 | 1024 x 2048 | 25.26 | 3866.45| 58.63 |
+| DeeplabV3 | 1024 x 2048 | 2.56 | 3866.45| 58.63 |
 
 *All results are the maximum value of 3 times on a RTX 2080Ti.*
 

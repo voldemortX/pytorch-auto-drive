@@ -2,8 +2,7 @@ import yaml
 import argparse
 
 from utils.all_utils_landec import build_lane_detection_model as build_lane_model
-from utils.all_utils_semseg import build_segmentation_model
-from utils.all_utils_semseg import load_checkpoint
+from utils.all_utils_semseg import build_segmentation_model, load_checkpoint
 from tools.profiling_utils import init_lane, init_seg, speed_evaluate_real, speed_evaluate_simple, model_eval
 import torch
 
@@ -21,8 +20,6 @@ if __name__ == '__main__':
     parser.add_argument('--backbone', type=str, default='erfnet',
                         help='backbone selection (erfnet/enet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101)'
                              '(default: erfnet)')
-    parser.add_argument('--mixed-precision', action='store_true', default=False,
-                        help='Enable mixed precision training (default: False)')
     parser.add_argument('--task', type=str, default='lane',
                         help='task selection (lane/seg)')
     parser.add_argument('--mode', type=str, default='simple',
