@@ -65,6 +65,9 @@ Get started with [SEGMENTATION.md](docs/SEGMENTATION.md) for semantic segmentati
 
 Refer to [VISUALIZATION.md](docs/VISUALIZATION.md) for a visualization tutorial.
 
+## Benchmark Tools
+Refer to [BENCHMARK.md](docs/BENCHMARK.md) for a benchmarking tutorial, including FPS test, FLOPs & memory count for each supported model.
+
 ## Contributing
 
 We welcome **Pull Requests** to fix bugs, update docs or implement new features etc. We also welcome **Issues** to report problems and needs, or ask questions (since your question might be more common and helpful to the community than you presume). Interested folks should checkout our [roadmap](https://github.com/voldemortX/pytorch-auto-drive/issues/4).
