@@ -62,25 +62,25 @@ For lane detection:
 
 ```
 python profiling.py  --task=lane \           
-                      --times=3 \
-                      --dataset=<dataset name> \
-                      --method=<the method used> \
-                      --backbone=<the backbone used> \
-                      --mode=simple \
-                      --height=<the height of choosing dataset> \
-                      --width=<the width of choosing dataset>
+                     --times=3 \
+                     --dataset=<dataset name> \
+                     --method=<the method used> \
+                     --backbone=<the backbone used> \
+                     --mode=simple \
+                     --height=<the height of choosing dataset> \
+                     --width=<the width of choosing dataset>
 ```
 
 For segmentation:
 
 ```
 python profiling.py  --task=seg \           
-                      --times=3 \
-                      --dataset=<dataset name> \
-                      --model=<the model used> \
-                      --mode=simple \
-                      --height=<the height of choosing dataset> \
-                      --width=<the width of choosing dataset>
+                     --times=3 \
+                     --dataset=<dataset name> \
+                     --model=<the model used> \
+                     --mode=simple \
+                     --height=<the height of choosing dataset> \
+                     --width=<the width of choosing dataset>
 ```
 
 In the setting of `mode=real`, so as to simulate that the real camera transmit frames to models, we set 'batch_size=1' and 'num_workers=0' in the DataLoader.
@@ -88,26 +88,32 @@ In the setting of `mode=real`, so as to simulate that the real camera transmit f
 For lane detection:
 
 ```
-python profiling.py   --task=lane \           
-                      --times=3 \
-                      --dataset=<dataset name> \
-                      --method=<the method used> \
-                      --backbone=<the backbone used> \
-                      --mode=real \
-                      --height=<the height of choosing dataset> \
-                      --width=<the width of choosing dataset> \
-                      --continue-from=<pre-trained model>
+python profiling.py  --task=lane \           
+                     --times=3 \
+                     --dataset=<dataset name> \
+                     --method=<the method used> \
+                     --backbone=<the backbone used> \
+                     --mode=real \
+                     --height=<the height of choosing dataset> \
+                     --width=<the width of choosing dataset> \
+                     --continue-from=<pre-trained model>
 ```
 
 For segmentation:
 
 ```
-python profiling.py   --task=seg \           
-                      --times=3 \
-                      --dataset=<dataset name> \
-                      --model=<the model used> \
-                      --mode=real \
-                      --height=<the height of choosing dataset> \
-                      --width=<the width of choosing dataset> \
-                      --continue-from=<pre-trained model>
+python profiling.py  --task=seg \           
+                     --times=3 \
+                     --dataset=<dataset name> \
+                     --model=<the model used> \
+                     --mode=real \
+                     --height=<the height of choosing dataset> \
+                     --width=<the width of choosing dataset> \
+                     --continue-from=<pre-trained model>
+```
+
+For detailed instructions, run:
+
+```
+python profiling.py --help
 ```

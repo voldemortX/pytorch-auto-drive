@@ -1,9 +1,9 @@
 import torch
+import time
 from tqdm import tqdm
 from utils.datasets import StandardLaneDetectionDataset
 from transforms import ToTensor, Normalize, Resize, Compose, ZeroPad, LabelMap
 from utils.datasets import StandardSegmentationDataset
-import time
 from thop import profile
 
 
@@ -12,7 +12,6 @@ def init_lane(input_sizes, dataset, mean, std, base, workers=0):
         [Resize(size_image=input_sizes, size_label=input_sizes),
          ToTensor(),
          Normalize(mean=mean, std=std)])
-
     validation_set = StandardLaneDetectionDataset(root=base, image_set='val', transforms=transforms_test,
                                                   data_set=dataset)
     validation_loader = torch.utils.data.DataLoader(dataset=validation_set, batch_size=1, num_workers=workers,
@@ -115,8 +114,9 @@ def speed_evaluate_simple(net, device, dummy, num, count_interpolate=True):
     return fps_gpu
 
 
-def model_eval(net, height, width, device):
-    input = torch.randn(1, 3, height, width).to(device)
-    macs, params = profile(net, inputs=(input,))
+def model_profile(net, height, width, device):
+    temp = torch.randn(1, 3, height, width).to(device)
+    macs, params = profile(net, inputs=(temp,))
+
     return macs, params
 

@@ -14,6 +14,7 @@
 - OpenCV  `pip install opencv-python`
 - pillow  `will be installed along with TorchVision`
 - Pyyaml  `pip install pyyaml`
+- thop `pip install thop`
 
 ## Download the code:
    
