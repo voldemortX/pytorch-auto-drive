@@ -83,7 +83,7 @@ python profiling.py  --task=seg \
                       --width=<the width of choosing dataset>
 ```
 
-In the setting of `mode=real`, In order to simulate that the real camera transmit frames to models, we set 'batch_size=1' and 'num_workers=0' in the DataLoader.
+In the setting of `mode=real`, so as to simulate that the real camera transmit frames to models, we set 'batch_size=1' and 'num_workers=0' in the DataLoader.
 
 For lane detection:
 
