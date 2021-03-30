@@ -1,5 +1,5 @@
 # Copied and modified from facebookresearch/detr and liuruijin17/LSTR
-# mainly got rid of special types and argparse, added comments
+# Refactored and added comments
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # Hungarian loss for LSTR
 
@@ -9,6 +9,33 @@ from typing import Optional
 from torch.nn import functional as F
 from scipy.optimize import linear_sum_assignment
 from ._utils import WeightedLoss
+
+
+def lane_normalize_in_batch(keypoints):
+    # Calculate normalization weights for lanes with different number of valid sample points,
+    # so they can produce loss in a similar scale: rather weird but it is what LSTR did
+    # https://github.com/liuruijin17/LSTR/blob/6044f7b2c5892dba7201c273ee632b4962350223/models/py_utils/matcher.py#L59
+    # keypoints: [..., N, 2], ... means arbitrary number of leading dimensions
+    valid_points = keypoints[..., 0] > 0
+    norm_weights = (valid_points.sum().float() / valid_points.sum(dim=-1).float()) ** 0.5
+    norm_weights /= norm_weights.max()
+
+    return norm_weights, valid_points  # [...], [..., N]
+
+
+def _cubic_curve_with_projection(coefficients, y):
+    # The cubic curve model from LSTR (considers projection to image plane)
+    # Return x coordinates
+    # parameters: [..., 6], ... means arbitrary number of leading dimensions
+    # 6 coefficients: [k", f", m", n", b", b''']
+    # y: [..., N]
+    x = coefficients[:, 0] / (y - coefficients[:, 1]) ** 2 \
+        + coefficients[:, 2] / (y - coefficients[:, 1]) \
+        + coefficients[:, 3] \
+        + coefficients[:, 4] * y \
+        - coefficients[:, 5]
+
+    return x  # [..., N]
 
 
 # TODO: Speed-up Hungarian on GPU with tensors
@@ -30,57 +57,47 @@ class HungarianMatcher(torch.nn.Module):
 
     @torch.no_grad()
     def forward(self, outputs, targets):
-        # Compute the matrices for an entire batch
+        # Compute the matrices for an entire batch (the computation in a way includes the real loss function)
+        # targets: each target: ['keypoints': L x N x 2, 'padding_mask': H x W, 'uppers': L, 'lowers': L, 'labels': L]
+        # B: bs; Q: max lanes per-pred, L: num lanes, N: num keypoints per-lane, G: total num ground-truth-lanes
         bs, num_queries = outputs["logits"].shape[:2]
-        out_prob = outputs["logits"].flatten(0, 1).softmax(-1)
-        tgt_ids = torch.cat([v["labels"] for v in targets])
+        out_prob = outputs["logits"].flatten(end_dim=-2).sigmoid()  # BQ x 1
+        out_lane = outputs['curves'].flatten(end_dim=-2)  # BQ x 8
+        target_uppers = torch.cat([i['uppers'] for i in targets])
+        target_lowers = torch.cat([i['lowers'] for i in targets])
+        sizes = [target['labels'].shape[0] for target in targets]
+        num_gt = sum(sizes)
 
-        # Compute the classification cost. Contrary to the loss, we don't use the NLL,
+        # 1. Compute the classification cost. Contrary to the loss, we don't use the NLL,
         # but approximate it in 1 - prob[target class].
         # Then 1 can be omitted due to it is only a constant.
-        cost_class = -out_prob[:, tgt_ids]  # [bs x max_lanes, num_GT]
+        # For binary classification, it is just prob (understand this prob as objectiveness in OD)
+        cost_class = -out_prob.repeat(1, num_gt)  # BQ x G
 
-        # 20210327
-        out_bbox = outputs["curves"]
-        tgt_uppers = torch.cat([tgt[:, 2] for tgt in targets])
-        tgt_lowers = torch.cat([tgt[:, 1] for tgt in targets])
+        # 2. Compute the L1 cost between lowers and uppers
+        cost_lower = torch.cdist(out_lane[:, 0], target_uppers.unsqueeze(-1), p=1)  # BQ x G
+        cost_upper = torch.cdist(out_lane[:, 1], target_lowers.unsqueeze(-1), p=1)  # BQ x G
 
-        # # Compute the L1 cost between lowers and uppers
-        cost_lower = torch.cdist(out_bbox[:, :, 0].view((-1, 1)), tgt_lowers.unsqueeze(-1), p=1)
-        cost_upper = torch.cdist(out_bbox[:, :, 1].view((-1, 1)), tgt_uppers.unsqueeze(-1), p=1)
+        # 3. Compute the curve cost
+        target_points = torch.cat([i['keypoints'] for i in targets], dim=0)  # G x N x 2
+        norm_weights, valid_points = lane_normalize_in_batch(target_points)  # G, G x N
+        out_x = _cubic_curve_with_projection(coefficients=out_lane[:, 2:], y=target_points[0, :, 1])  # BQ x N
 
-        # # Compute the poly cost
-        tgt_points = torch.cat([tgt[:, 3:] for tgt in targets])  # 0~20 112
-        tgt_xs = tgt_points[:, :tgt_points.shape[1] // 2]
-        valid_xs = tgt_xs >= 0
-        weights = (torch.sum(valid_xs, dtype=torch.float32) / torch.sum(valid_xs, dim=1, dtype=torch.float32))**0.5
-        weights = weights / torch.max(weights)
+        # Masked torch.cdist(p=1)
+        expand_shape = [bs * num_queries, num_gt, out_x.shape[-1]]  # BQ x G x N
+        cost_curve = ((out_x.unsqueeze(1).expand(expand_shape) -
+                      target_points[:, :, 0].unsqueeze(0).expand(expand_shape)).abs() *
+                      valid_points.unsqueeze(0).expand(expand_shape)).sum(-1)  # BQ x G
+        cost_curve *= norm_weights  # BQ x G
 
-        tgt_ys = tgt_points[:, tgt_points.shape[1] // 2:]
-        out_polys = out_bbox[:, :, 2:].view((-1, 6))
-        tgt_ys = tgt_ys.repeat(out_polys.shape[0], 1, 1)
-        tgt_ys = tgt_ys.transpose(0, 2)
-        tgt_ys = tgt_ys.transpose(0, 1)
-
-        # Calculate the predicted xs
-        out_xs = out_polys[:, 0] / (tgt_ys - out_polys[:, 1]) ** 2 + out_polys[:, 2] / (tgt_ys - out_polys[:, 1]) + \
-                 out_polys[:, 3] + out_polys[:, 4] * tgt_ys - out_polys[:, 5]
-        tgt_xs = tgt_xs.repeat(out_polys.shape[0], 1, 1)
-        tgt_xs = tgt_xs.transpose(0, 2)
-        tgt_xs = tgt_xs.transpose(0, 1)
-
-        cost_polys = torch.stack([torch.sum(torch.abs(tgt_x[valid_x] - out_x[valid_x]), dim=0) for tgt_x, out_x, valid_x in zip(tgt_xs, out_xs, valid_xs)], dim=-1)
-        cost_polys = cost_polys * weights
-
-        # # Final cost matrix
-        C = self.weight_class * cost_class + self.weight_curve * cost_polys + \
+        # Final cost matrix
+        C = self.weight_class * cost_class + self.weight_curve * cost_curve + \
             self.weight_lower * cost_lower + self.weight_upper * cost_upper
-
         C = C.view(bs, num_queries, -1).cpu()
 
-        sizes = [tgt.shape[0] for tgt in targets]
-
+        # Hungarian (weighted) on each image
         indices = [linear_sum_assignment(c[i]) for i, c in enumerate(C.split(sizes, -1))]
+
         return [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
 
 

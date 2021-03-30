@@ -11,7 +11,7 @@ from .._utils import IntermediateLayerGetter
 class LSTR(nn.Module):
     def __init__(self,
                  expansion=1,  # Expansion rate (1x for TuSimple & 2x for CULane)
-                 num_queries=7,
+                 num_queries=7,  # Maximum number of lanes
                  aux_loss=True,  # Important for transformer-based methods
                  pos_type='sine',
                  drop_out=0.1,
@@ -21,8 +21,7 @@ class LSTR(nn.Module):
                  pre_norm=False,
                  return_intermediate=True,
                  lsp_dim=8,
-                 mlp_layers=3,
-                 num_cls=1
+                 mlp_layers=3
                  ):
         super(LSTR, self).__init__()
 
@@ -47,7 +46,9 @@ class LSTR(nn.Module):
                                              pre_norm=pre_norm,
                                              return_intermediate_dec=return_intermediate)
 
-        self.class_embed = nn.Linear(hidden_dim, num_cls + 1)  # Why 3 classes, not 2?
+        # Original LSTR: 3 classes + CE (softmax), we use binary classification with sigmoid to save parameters
+        self.class_embed = nn.Linear(hidden_dim, 1)
+
         self.specific_embed = MLP(hidden_dim, hidden_dim, lsp_dim - 4, mlp_layers)  # Specific for each lane
         self.shared_embed = MLP(hidden_dim, hidden_dim, 4, mlp_layers)  # 4 shared curve coefficients
 
@@ -66,8 +67,11 @@ class LSTR(nn.Module):
         output_shared = self.shared_embed(hs)
         output_shared = torch.mean(output_shared, dim=-2, keepdim=True)  # Why not take mean on input and simply expand?
         output_shared = output_shared.repeat(1, 1, output_specific.shape[2], 1)
+
+        # Keep this for consistency with official LSTR: [upper, lower, k", f", m", n", b", b''']
         output_curve = torch.cat([output_specific[:, :, :, :2],
-                                  output_shared, output_specific[:, :, :, 2:]], dim=-1)  # Keep this for consistency
+                                  output_shared, output_specific[:, :, :, 2:]], dim=-1)
+
         out = {'logits': output_class[-1], 'curves': output_curve[-1]}  # Last layer result
         if self.aux_loss:
             out['aux'] = self._set_aux_loss(output_class, output_curve)  # All intermediate results
