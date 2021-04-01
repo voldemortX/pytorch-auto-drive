@@ -1,19 +1,15 @@
-import torchvision
 import os
 import pickle
 import numpy as np
 from tqdm import tqdm
-from PIL import Image
+from .utils import LaneKeypointDataset
 
 
 # CULane direct loading (work with the segmentation style lists)
-class CULane(torchvision.datasets.VisionDataset):
+class CULane(LaneKeypointDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None,
-                 ppl=31, gap=10, start=290):
-        super().__init__(root, transforms, transform, target_transform)
-        self.ppl = ppl
-        self.gap = gap
-        self.start = start  # y coordinate to start annotation
+                 ppl=31, gap=10, start=290, padding_mask=False, process_points=False):
+        super().__init__(root, transforms, transform, target_transform, ppl, gap, start, padding_mask, process_points)
 
         # Checks
         if not os.path.exists('./output'):
@@ -47,23 +43,6 @@ class CULane(torchvision.datasets.VisionDataset):
             print('Loading complete.')
 
         assert len(self.targets) == len(self.images)
-
-    def __getitem__(self, index):
-        # Return x (input image) & y (L lane with N coordinates (x, y) as np.array (L x N x 2))
-        # Empty coordinates are marked by (-2, y)
-        # If just testing,
-        # y is the filename to store prediction
-        img = Image.open(self.images[index]).convert('RGB')
-        target = self.targets[index]
-
-        # Transforms
-        if self.transforms is not None:
-            img, target = self.transforms(img, target)
-
-        return img, target
-
-    def __len__(self):
-        return len(self.images)
 
     def _load_target(self, lines):
         # Read file content to lists (file content could be empty or variable number of lanes)
