@@ -57,7 +57,7 @@ class HungarianMatcher(torch.nn.Module):
 
     @torch.no_grad()
     def forward(self, outputs, targets):
-        # Compute the matrices for an entire batch (the computation in a way includes the real loss function)
+        # Compute the matrices for an entire batch (computation is all pairs, in a way includes the real loss function)
         # targets: each target: ['keypoints': L x N x 2, 'padding_mask': H x W, 'uppers': L, 'lowers': L, 'labels': L]
         # B: bs; Q: max lanes per-pred, L: num lanes, N: num keypoints per-lane, G: total num ground-truth-lanes
         bs, num_queries = outputs["logits"].shape[:2]
@@ -128,5 +128,5 @@ class HungarianLoss(WeightedLoss):
         pass
 
     def classification_loss(self, inputs: Tensor, targets: Tensor) -> Tensor:
-        # Typical classification loss (2 classes for lane detection)
+        # Typical classification loss (binary classification)
         pass
