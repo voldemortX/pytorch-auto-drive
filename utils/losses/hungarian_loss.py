@@ -47,13 +47,12 @@ class HungarianMatcher(torch.nn.Module):
     while the others are un-matched (and thus treated as non-objects).
     """
 
-    def __init__(self, weight_class: float = 1, weight_curve: float = 1,
-                 weight_lower: float = 1, weight_upper: float = 1):
+    def __init__(self, upper_weight=2, lower_weight=2, curve_weight=5, label_weight=3):
         super().__init__()
-        self.weight_class = weight_class
-        self.weight_curve = weight_curve
-        self.weight_lower = weight_lower
-        self.weight_upper = weight_upper
+        self.lower_weight = lower_weight
+        self.upper_weight = upper_weight
+        self.curve_weight = curve_weight
+        self.label_weight = label_weight
 
     @torch.no_grad()
     def forward(self, outputs, targets):
@@ -72,27 +71,27 @@ class HungarianMatcher(torch.nn.Module):
         # but approximate it in 1 - prob[target class].
         # Then 1 can be omitted due to it is only a constant.
         # For binary classification, it is just prob (understand this prob as objectiveness in OD)
-        cost_class = -out_prob.repeat(1, num_gt)  # BQ x G
+        cost_label = -out_prob.repeat(1, num_gt)  # BQ x G
 
         # 2. Compute the L1 cost between lowers and uppers
         cost_lower = torch.cdist(out_lane[:, 0], target_uppers.unsqueeze(-1), p=1)  # BQ x G
         cost_upper = torch.cdist(out_lane[:, 1], target_lowers.unsqueeze(-1), p=1)  # BQ x G
 
         # 3. Compute the curve cost
-        target_points = torch.cat([i['keypoints'] for i in targets], dim=0)  # G x N x 2
-        norm_weights, valid_points = lane_normalize_in_batch(target_points)  # G, G x N
-        out_x = _cubic_curve_with_projection(coefficients=out_lane[:, 2:], y=target_points[0, :, 1])  # BQ x N
+        target_keypoints = torch.cat([i['keypoints'] for i in targets], dim=0)  # G x N x 2
+        norm_weights, valid_points = lane_normalize_in_batch(target_keypoints)  # G, G x N
+        out_x = _cubic_curve_with_projection(coefficients=out_lane[:, 2:], y=target_keypoints[0, :, 1])  # BQ x N
 
         # Masked torch.cdist(p=1)
         expand_shape = [bs * num_queries, num_gt, out_x.shape[-1]]  # BQ x G x N
         cost_curve = ((out_x.unsqueeze(1).expand(expand_shape) -
-                      target_points[:, :, 0].unsqueeze(0).expand(expand_shape)).abs() *
+                      target_keypoints[:, :, 0].unsqueeze(0).expand(expand_shape)).abs() *
                       valid_points.unsqueeze(0).expand(expand_shape)).sum(-1)  # BQ x G
         cost_curve *= norm_weights  # BQ x G
 
         # Final cost matrix
-        C = self.weight_class * cost_class + self.weight_curve * cost_curve + \
-            self.weight_lower * cost_lower + self.weight_upper * cost_upper
+        C = self.label_weight * cost_label + self.curve_weight * cost_curve + \
+            self.lower_weight * cost_lower + self.upper_weight * cost_upper
         C = C.view(bs, num_queries, -1).cpu()
 
         # Hungarian (weighted) on each image
@@ -103,30 +102,42 @@ class HungarianMatcher(torch.nn.Module):
 
 # The Hungarian loss for LSTR
 class HungarianLoss(WeightedLoss):
-    __constants__ = ['ignore_index', 'reduction']
-    ignore_index: int
+    __constants__ = ['reduction']
 
-    def __init__(self, weight: Optional[Tensor] = None, size_average=None,
-                 ignore_index: int = -100, reduce=None, reduction: str = 'mean') -> None:
+    def __init__(self, upper_weight=2, lower_weight=2, curve_weight=5, label_weight=3,
+                 weight=None, size_average=None, reduce=None, reduction='mean'):
         super(HungarianLoss, self).__init__(weight, size_average, reduce, reduction)
-        self.ignore_index = ignore_index
+        self.lower_weight = lower_weight
+        self.upper_weight = upper_weight
+        self.curve_weight = curve_weight
+        self.label_weight = label_weight
+        self.matcher = HungarianMatcher(upper_weight, lower_weight, curve_weight, label_weight)
 
     def forward(self, inputs: Tensor, targets: Tensor, net) -> Tensor:
         outputs = net(inputs)
+        
         # Match
-
+        indices = self.matcher(outputs=outputs, targets=targets)
+        
+        # Targets
+        target_lowers = torch.cat([t['lowers'] for t in targets], dim=0)
+        target_uppers = torch.cat([t['uppers'] for t in targets], dim=0)
+        target_keypoints = torch.cat([t['keypoints'] for t in targets], dim=0)
+        # target_labels = torch.cat([t['labels'] for t in targets], dim=0)
+        
         # Loss
-        pass
 
-    def curve_loss(self, inputs: Tensor, targets: Tensor) -> Tensor:
+    def curve_loss(self, inputs: Tensor, targets: Tensor, indices: Tensor) -> Tensor:
         # L1 loss on sample points, shouldn't it be direct regression?
         pass
 
-    def vertical_loss(self, upper: Tensor, lower: Tensor, upper_target: Tensor, lower_target: Tensor) -> Tensor:
+    def vertical_loss(self, inputs: Tensor, targets: Tensor, indices: Tensor) -> Tensor:
         # L1 loss on vertical start & end point,
         # corresponds to loss_lowers and loss_uppers in original LSTR code
         pass
 
-    def classification_loss(self, inputs: Tensor, targets: Tensor) -> Tensor:
+    def classification_loss(self, inputs: Tensor, targets: Tensor, indices: Tensor) -> Tensor:
         # Typical classification loss (binary classification)
-        pass
+        
+        return F.binary_cross_entropy_with_logits(inputs[indices], targets,
+                                                  weight=None, pos_weight=None, reduction=self.reduction)
