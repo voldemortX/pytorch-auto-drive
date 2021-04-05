@@ -10,7 +10,7 @@ class LaneLoss(WeightedLoss):
     __constants__ = ['ignore_index', 'reduction']
     ignore_index: int
 
-    def __init__(self, existence_weight: int = 0.1, weight: Optional[Tensor] = None, size_average=None,
+    def __init__(self, existence_weight: float = 0.1, weight: Optional[Tensor] = None, size_average=None,
                  ignore_index: int = -100, reduce=None, reduction: str = 'mean') -> None:
         super(LaneLoss, self).__init__(weight, size_average, reduce, reduction)
         self.ignore_index = ignore_index
@@ -35,7 +35,7 @@ class SADLoss(WeightedLoss):
     __constants__ = ['ignore_index', 'reduction']
     ignore_index: int
 
-    def __init__(self, existence_weight: int = 0.1, weight: Optional[Tensor] = None, size_average=None,
+    def __init__(self, existence_weight: float = 0.1, weight: Optional[Tensor] = None, size_average=None,
                  ignore_index: int = -100, reduce=None, reduction: str = 'mean') -> None:
         super(SADLoss, self).__init__(weight, size_average, reduce, reduction)
         self.ignore_index = ignore_index
