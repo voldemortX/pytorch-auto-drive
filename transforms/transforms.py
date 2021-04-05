@@ -308,8 +308,9 @@ class Normalize(object):
     @staticmethod
     def transform_points(points, h, w, ignore_x=-2):
         # Divide keypoints by h & w to 0~1
+        # A special case of resize
         points = points / torch.tensor([w, h], device=points.device, dtype=points.dtype)
-        points[points < 0] = ignore_x
+        points[points[:, :, 0] < 0][:, 0] = ignore_x
 
         return points
 
