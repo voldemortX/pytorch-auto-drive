@@ -5,7 +5,6 @@
 
 import torch
 from torch import Tensor
-from typing import Optional
 from torch.nn import functional as F
 from scipy.optimize import linear_sum_assignment
 from ._utils import WeightedLoss
@@ -97,6 +96,7 @@ class HungarianMatcher(torch.nn.Module):
         # Hungarian (weighted) on each image
         indices = [linear_sum_assignment(c[i]) for i, c in enumerate(C.split(sizes, -1))]
 
+        # Return (pred_indices, target_indices) for each image
         return [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
 
 
@@ -113,31 +113,69 @@ class HungarianLoss(WeightedLoss):
         self.label_weight = label_weight
         self.matcher = HungarianMatcher(upper_weight, lower_weight, curve_weight, label_weight)
 
+    @staticmethod
+    def _get_src_permutation_idx(indices):
+        # Permute predictions following indices
+        # 2-dim indices: (dim0 indices, dim1 indices)
+        batch_idx = torch.cat([torch.full_like(src, i) for i, (src, _) in enumerate(indices)])
+        image_idx = torch.cat([src for (src, _) in indices])
+
+        return batch_idx, image_idx
+
     def forward(self, inputs: Tensor, targets: Tensor, net) -> Tensor:
+        # Support arbitrary auxiliary losses for transformer-based methods
         outputs = net(inputs)
-        
+        loss = self.calc_full_loss(outputs=outputs, targets=targets)
+        if 'aux' in outputs:
+            for aux in outputs['aux']:
+                loss += self.calc_full_loss(outputs=aux, targets=targets)
+
+        return loss
+
+    def calc_full_loss(self, outputs, targets):
         # Match
         indices = self.matcher(outputs=outputs, targets=targets)
-        
-        # Targets
-        target_lowers = torch.cat([t['lowers'] for t in targets], dim=0)
-        target_uppers = torch.cat([t['uppers'] for t in targets], dim=0)
-        target_keypoints = torch.cat([t['keypoints'] for t in targets], dim=0)
-        # target_labels = torch.cat([t['labels'] for t in targets], dim=0)
-        
+        idx = self._get_src_permutation_idx(indices)
+
+        # Targets (rearrange each lane in the whole batch)
+        # B x N x ... -> BN x ...
+        target_lowers = torch.cat([t['lowers'][i] for t, (_, i) in zip(targets, indices)], dim=0)
+        target_uppers = torch.cat([t['uppers'][i] for t, (_, i) in zip(targets, indices)], dim=0)
+        target_keypoints = torch.cat([t['keypoints'][i] for t, (_, i) in zip(targets, indices)], dim=0)
+        target_labels = torch.zeros_like(outputs['logits'])
+        target_labels[idx] = 1.0  # Any matched lane has the same label 1
+
         # Loss
+        loss_label = self.classification_loss(inputs=outputs['logits'], targets=target_labels)
+        output_curves = outputs['curves'][idx]
+        norm_weights, valid_points = lane_normalize_in_batch(target_keypoints)
+        out_x = _cubic_curve_with_projection(coefficients=output_curves[:, 2:], y=target_keypoints[0, :, 1])
+        loss_curve = self.point_loss(inputs=out_x[valid_points], targets=target_keypoints[valid_points],
+                                     norm_weights=norm_weights)
+        loss_upper = self.point_loss(inputs=output_curves[:, 0], targets=target_uppers)
+        loss_lower = self.point_loss(inputs=output_curves[:, 1], targets=target_lowers)
+        loss = self.label_weight * loss_label + self.curve_weight * loss_curve + \
+            self.lower_weight * loss_lower + self.upper_weight * loss_upper
 
-    def curve_loss(self, inputs: Tensor, targets: Tensor, indices: Tensor) -> Tensor:
+        return loss
+
+    def point_loss(self, inputs: Tensor, targets: Tensor, norm_weights=None) -> Tensor:
         # L1 loss on sample points, shouldn't it be direct regression?
-        pass
+        # Also, loss_lowers and loss_uppers in original LSTR code can be done with this same function
+        # No need for permutation, assume target is matched to inputs
+        loss = F.l1_loss(inputs, targets, reduction='none')
+        if norm_weights is not None:
+            loss *= norm_weights
+        if self.reduction == 'mean':
+            loss = loss.sum() / targets.shape[0].item()  # Reduce only by number of curves (not number of points)
+        elif self.reduction == 'sum':  # Usually not needed, but let's have it anyway
+            loss = loss.sum()
 
-    def vertical_loss(self, inputs: Tensor, targets: Tensor, indices: Tensor) -> Tensor:
-        # L1 loss on vertical start & end point,
-        # corresponds to loss_lowers and loss_uppers in original LSTR code
-        pass
+        return loss
 
-    def classification_loss(self, inputs: Tensor, targets: Tensor, indices: Tensor) -> Tensor:
+    def classification_loss(self, inputs: Tensor, targets: Tensor) -> Tensor:
         # Typical classification loss (binary classification)
-        
-        return F.binary_cross_entropy_with_logits(inputs[indices], targets,
+        # No need for permutation, assume target is matched to inputs
+
+        return F.binary_cross_entropy_with_logits(inputs, targets,
                                                   weight=None, pos_weight=None, reduction=self.reduction)
