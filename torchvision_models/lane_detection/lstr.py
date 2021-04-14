@@ -2,6 +2,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from .. import resnet
 from ..transformer import build_transformer, build_position_encoding
 from ..resnet import resnet18_reduced
 from ..mlp import MLP
@@ -21,13 +22,20 @@ class LSTR(nn.Module):
                  pre_norm=False,
                  return_intermediate=True,
                  lsp_dim=8,
-                 mlp_layers=3
+                 mlp_layers=3,
+                 backbone_name='resnet18s'
                  ):
         super(LSTR, self).__init__()
 
-        backbone = resnet18_reduced(
-            pretrained=False, expansion=expansion,
-            replace_stride_with_dilation=[False, False, False])
+        if backbone_name == 'resnet18s':  # Original LSTR backbone
+            backbone = resnet18_reduced(
+                pretrained=False, expansion=expansion,
+                replace_stride_with_dilation=[False, False, False])
+        else:  # Common backbones
+            backbone = resnet.__dict__[backbone_name](
+                pretrained=True,
+                replace_stride_with_dilation=[False, True, True])
+
         return_layers = {'layer4': 'out'}
         self.backbone = IntermediateLayerGetter(backbone, return_layers=return_layers)
 

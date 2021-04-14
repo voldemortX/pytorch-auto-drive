@@ -22,17 +22,17 @@ def lane_normalize_in_batch(keypoints):
     return norm_weights, valid_points  # [...], [..., N]
 
 
-def _cubic_curve_with_projection(coefficients, y):
+def cubic_curve_with_projection(coefficients, y):
     # The cubic curve model from LSTR (considers projection to image plane)
     # Return x coordinates
-    # parameters: [..., 6], ... means arbitrary number of leading dimensions
+    # coefficients: [..., 6], ... means arbitrary number of leading dimensions
     # 6 coefficients: [k", f", m", n", b", b''']
     # y: [..., N]
-    x = coefficients[:, 0] / (y - coefficients[:, 1]) ** 2 \
-        + coefficients[:, 2] / (y - coefficients[:, 1]) \
-        + coefficients[:, 3] \
-        + coefficients[:, 4] * y \
-        - coefficients[:, 5]
+    x = coefficients[..., 0] / (y - coefficients[..., 1]) ** 2 \
+        + coefficients[..., 2] / (y - coefficients[..., 1]) \
+        + coefficients[..., 3] \
+        + coefficients[..., 4] * y \
+        - coefficients[..., 5]
 
     return x  # [..., N]
 
@@ -79,7 +79,7 @@ class HungarianMatcher(torch.nn.Module):
         # 3. Compute the curve cost
         target_keypoints = torch.cat([i['keypoints'] for i in targets], dim=0)  # G x N x 2
         norm_weights, valid_points = lane_normalize_in_batch(target_keypoints)  # G, G x N
-        out_x = _cubic_curve_with_projection(coefficients=out_lane[:, 2:], y=target_keypoints[0, :, 1])  # BQ x N
+        out_x = cubic_curve_with_projection(coefficients=out_lane[:, 2:], y=target_keypoints[0, :, 1])  # BQ x N
 
         # Masked torch.cdist(p=1)
         expand_shape = [bs * num_queries, num_gt, out_x.shape[-1]]  # BQ x G x N
@@ -149,7 +149,7 @@ class HungarianLoss(WeightedLoss):
         loss_label = self.classification_loss(inputs=outputs['logits'], targets=target_labels)
         output_curves = outputs['curves'][idx]
         norm_weights, valid_points = lane_normalize_in_batch(target_keypoints)
-        out_x = _cubic_curve_with_projection(coefficients=output_curves[:, 2:], y=target_keypoints[0, :, 1])
+        out_x = cubic_curve_with_projection(coefficients=output_curves[:, 2:], y=target_keypoints[0, :, 1])
         loss_curve = self.point_loss(inputs=out_x[valid_points], targets=target_keypoints[valid_points],
                                      norm_weights=norm_weights)
         loss_upper = self.point_loss(inputs=output_curves[:, 0], targets=target_uppers)

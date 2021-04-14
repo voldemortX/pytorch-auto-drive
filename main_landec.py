@@ -26,7 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='tusimple',
                         help='Train/Evaluate on TuSimple (tusimple) / CULane (culane) (default: tusimple)')
     parser.add_argument('--method', type=str, default='baseline',
-                        help='method selection (lstr/scnn/sad/baseline) (default: baseline)')
+                        help='method selection (lstr/scnn/baseline) (default: baseline)')
     parser.add_argument('--backbone', type=str, default='erfnet',
                         help='backbone selection (erfnet/enet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101)'
                              '(default: erfnet)')
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     # Testing
     if args.state == 1 or args.state == 2 or args.state == 3:
         data_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
-                           mean=mean, std=std, base=base, workers=args.workers)
+                           mean=mean, std=std, base=base, workers=args.workers, method=args.method)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
         if args.state == 1:  # Validate with mean IoU
             _, x = fast_evaluate(loader=data_loader, device=device, net=net,
@@ -92,22 +92,22 @@ if __name__ == '__main__':
                 f.write(exp_name + ' validation: ' + str(x) + '\n')
 
         else:  # Test with official scripts later (so just predict lanes here)
-            test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision,
-                         input_sizes=input_sizes, gap=gap, ppl=ppl, thresh=thresh, dataset=args.dataset)
+            test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision, gap=gap,
+                         input_sizes=input_sizes, ppl=ppl, thresh=thresh, dataset=args.dataset, method=args.method)
     else:
         if args.method == 'scnn' or args.method == 'baseline':
             criterion = LaneLoss(weight=weights, ignore_index=255)
         elif args.method == 'sad':
             criterion = SADLoss()
         elif args.method == 'lstr':
-            criterion = HungarianLoss(weight=weights, ignore_index=255)
+            criterion = HungarianLoss()
         else:
             raise ValueError
 
         writer = SummaryWriter('runs/' + exp_name)
         data_loader, validation_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
                                               input_sizes=input_sizes, mean=mean, std=std, base=base,
-                                              workers=args.workers)
+                                              workers=args.workers, method=args.method)
 
         # Warmup https://github.com/XingangPan/SCNN/issues/82
         # Use it as default also for other methods (for fair comparison)
@@ -123,7 +123,7 @@ if __name__ == '__main__':
             load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=args.continue_from)
 
         # Train
-        train_schedule(writer=writer, loader=data_loader,
+        train_schedule(writer=writer, loader=data_loader, method=args.method,
                        validation_loader=None if args.val_num_steps == 0 else validation_loader,
                        criterion=criterion, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, device=device,
                        num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, input_sizes=input_sizes,
