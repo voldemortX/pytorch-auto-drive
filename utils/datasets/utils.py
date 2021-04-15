@@ -2,6 +2,56 @@ import torch
 import torchvision
 from PIL import Image
 from transforms import functional_pil as f_pil
+from torch._six import container_abcs, string_classes, int_classes
+from torch.utils.data._utils.collate import default_collate_err_msg_format, np_str_obj_array_pattern
+
+
+def dict_collate_fn(batch):
+    # To keep each image's label as separate dictionaries, default pytorch behaviour will stack each key
+    # Only modified one line of the pytorch 1.6.0 default collate function
+
+    elem = batch[0]
+    elem_type = type(elem)
+    if isinstance(elem, torch.Tensor):
+        out = None
+        if torch.utils.data.get_worker_info() is not None:
+            # If we're in a background process, concatenate directly into a
+            # shared memory tensor to avoid an extra copy
+            numel = sum([x.numel() for x in batch])
+            storage = elem.storage()._new_shared(numel)
+            out = elem.new(storage)
+        return torch.stack(batch, 0, out=out)
+    elif elem_type.__module__ == 'numpy' and elem_type.__name__ != 'str_' \
+            and elem_type.__name__ != 'string_':
+        elem = batch[0]
+        if elem_type.__name__ == 'ndarray':
+            # array of string classes and object
+            if np_str_obj_array_pattern.search(elem.dtype.str) is not None:
+                raise TypeError(default_collate_err_msg_format.format(elem.dtype))
+
+            return dict_collate_fn([torch.as_tensor(b) for b in batch])
+        elif elem.shape == ():  # scalars
+            return torch.as_tensor(batch)
+    elif isinstance(elem, float):
+        return torch.tensor(batch, dtype=torch.float64)
+    elif isinstance(elem, int_classes):
+        return torch.tensor(batch)
+    elif isinstance(elem, string_classes):
+        return batch
+    elif isinstance(elem, container_abcs.Mapping):
+        return batch  # !Only modified this line
+    elif isinstance(elem, tuple) and hasattr(elem, '_fields'):  # namedtuple
+        return elem_type(*(dict_collate_fn(samples) for samples in zip(*batch)))
+    elif isinstance(elem, container_abcs.Sequence):
+        # check to make sure that the elements in batch have consistent size
+        it = iter(batch)
+        elem_size = len(next(it))
+        if not all(len(elem) == elem_size for elem in it):
+            raise RuntimeError('each element in list of batch should be of equal size')
+        transposed = zip(*batch)
+        return [dict_collate_fn(samples) for samples in transposed]
+
+    raise TypeError(default_collate_err_msg_format.format(elem_type))
 
 
 def generate_lane_label_dict(target):
@@ -13,8 +63,9 @@ def generate_lane_label_dict(target):
     target['keypoints'] = target['keypoints'][valid_lanes]
 
     # Append lowest & highest y coordinates, labels (all 1)
-    target['lowers'] = [l[l[:, 0] > 0][:, 1].min() for l in target['keypoints']]  # Looks better than giving MIN values
-    target['uppers'] = [l[l[:, 0] > 0][:, 1].max() for l in target['keypoints']]
+    # Looks better than giving MIN values
+    target['lowers'] = torch.stack([l[l[:, 0] > 0][:, 1].min() for l in target['keypoints']])
+    target['uppers'] = torch.stack([l[l[:, 0] > 0][:, 1].max() for l in target['keypoints']])
     target['labels'] = torch.ones(target['keypoints'].shape[0], device=target['keypoints'].device, dtype=torch.int64)
     
     return target
@@ -51,7 +102,7 @@ class LaneKeypointDataset(torchvision.datasets.VisionDataset):
 
         # Add padding mask
         if self.padding_mask:
-            target['padding_mask'] = Image.new("RGB", f_pil._get_image_size(img), (0, 0, 0))
+            target['padding_mask'] = Image.new("L", f_pil._get_image_size(img), 0)
 
         # Transforms
         if self.transforms is not None:

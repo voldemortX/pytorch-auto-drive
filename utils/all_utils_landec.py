@@ -9,7 +9,7 @@ from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
     deeplabv1_resnet50, deeplabv1_resnet101, enet_
 from torchvision_models.lane_detection import LSTR
-from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane
+from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, dict_collate_fn
 from utils.losses import cubic_curve_with_projection
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
@@ -106,44 +106,51 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
         [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
          RandomRotation(degrees=3),
          ToTensor(),
-         Normalize(mean=mean, std=std)])
+         Normalize(mean=mean, std=std, normalize_target=True if method == 'lstr' else False)])
+
+    # Batch builder
+    if method == 'lstr':
+        collate_fn = dict_collate_fn
+    else:
+        collate_fn = None
 
     if state == 0:
         if method == 'lstr':
             if dataset == 'tusimple':
-                dataset = TuSimple(root=base, image_set='train', transforms=transforms_train,
-                                   padding_mask=True, process_points=True)
+                data_set = TuSimple(root=base, image_set='train', transforms=transforms_train,
+                                    padding_mask=True, process_points=True)
             elif dataset == 'culane':
-                dataset = CULane(root=base, image_set='train', transforms=transforms_train,
-                                 padding_mask=True, process_points=True)
+                data_set = CULane(root=base, image_set='train', transforms=transforms_train,
+                                  padding_mask=True, process_points=True)
             else:
                 raise ValueError
         else:
             data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms_train,
                                                     data_set=dataset)
 
-        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
+        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size, collate_fn=collate_fn,
                                                   num_workers=workers, shuffle=True)
         validation_set = StandardLaneDetectionDataset(root=base, image_set='val',
                                                       transforms=transforms_test, data_set=dataset)
         validation_loader = torch.utils.data.DataLoader(dataset=validation_set, batch_size=batch_size * 4,
-                                                        num_workers=workers, shuffle=False)
+                                                        num_workers=workers, shuffle=False, collate_fn=collate_fn)
         return data_loader, validation_loader
 
     elif state == 1 or state == 2 or state == 3:
         image_sets = ['valfast', 'test', 'val']
         if method == 'lstr':
             if dataset == 'tusimple':
-                dataset = TuSimple(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
-                                   padding_mask=True, process_points=True)
+                data_set = TuSimple(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
+                                    padding_mask=True, process_points=True)
             elif dataset == 'culane':
-                dataset = CULane(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
-                                 padding_mask=True, process_points=True)
+                data_set = CULane(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
+                                  padding_mask=True, process_points=True)
             else:
                 raise ValueError
-        data_set = StandardLaneDetectionDataset(root=base, image_set=image_sets[state - 1],
-                                                transforms=transforms_test, data_set=dataset)
-        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
+        else:
+            data_set = StandardLaneDetectionDataset(root=base, image_set=image_sets[state - 1],
+                                                    transforms=transforms_test, data_set=dataset)
+        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size, collate_fn=collate_fn,
                                                   num_workers=workers, shuffle=False)
         return data_loader
     else:
@@ -168,7 +175,8 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
         for i, data in enumerate(loader, 0):
             if method == 'lstr':
                 inputs, labels = data
-                inputs, labels = inputs.to(device), labels.to(device)
+                inputs = inputs.to(device)
+                labels = [{k: v.to(device) for k, v in label.items()} for label in labels]  # Seems slow
             else:
                 inputs, labels, lane_existence = data
                 inputs, labels, lane_existence = inputs.to(device), labels.to(device), lane_existence.to(device)
@@ -177,7 +185,7 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
             with autocast(is_mixed_precision):
                 # To support intermediate losses for SAD
                 if method == 'lstr':
-                    loss = criterion(inputs, labels)
+                    loss = criterion(inputs, labels, net)
                 else:
                     loss = criterion(inputs, labels, lane_existence, net, input_sizes[0])
 
@@ -286,6 +294,8 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                 else:
                     raise ValueError
                 lane_coordinates_batch = cubic_curve_with_projection(coefficients=outputs['curves'][:, :, 2:], y=y)
+
+                # Delete outside points according to predicted upper & lower boundaries
             else:
                 prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
                                                            align_corners=True).softmax(dim=1)
@@ -425,6 +435,13 @@ def build_lane_detection_model(args, num_classes):
     scnn = True if args.method == 'scnn' else False
     if args.dataset == 'tusimple' and args.backbone == 'erfnet':
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
+    elif args.method == 'lstr':
+        if args.state == 1 or args.val_num_steps != 0:
+            print('Fast validation not supported for this method!')
+            raise ValueError
+        num_classes_max = 7 if args.dataset == 'tusimple' or args.dataset == 'culane' else num_classes
+        net = lstr_resnet(num_classes_max=num_classes_max, backbone_name=args.backbone,
+                          expansion=1 if args.dataset == 'tusimple' else 2, aux_loss=True if args.state == 0 else False)
     elif args.dataset == 'culane' and args.backbone == 'erfnet':
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'culane' and args.backbone == 'vgg16':
@@ -441,13 +458,6 @@ def build_lane_detection_model(args, num_classes):
     elif args.dataset == 'culane' and args.backbone == 'enet':
         net = enet_culane(num_classes=num_classes, encoder_only=args.encoder_only,
                           continue_from=args.continue_from)
-    elif args.method == 'lstr':
-        if args.state == 1 or args.val_num_step != 0:
-            print('Fast validation not supported for this method!')
-            raise ValueError
-        num_classes_max = 7 if args.dataset == 'tusimple' or args.dataset == 'culane' else num_classes
-        net = lstr_resnet(num_classes_max=num_classes_max, backbone_name=args.backbone,
-                          expansion=1 if args.dataset == 'tusimple' else 2, aux_loss=True if args.state == 0 else False)
     else:
         raise ValueError
 

@@ -1,5 +1,6 @@
 import time
 import torch
+torch.multiprocessing.set_sharing_strategy('file_system')
 import argparse
 import yaml
 from torch.utils.tensorboard import SummaryWriter
@@ -76,7 +77,10 @@ if __name__ == '__main__':
     #         {'params': net.aux_head.parameters()},
     #     ], lr=args.lr, momentum=0.9, weight_decay=1e-4)
     # else:
-    optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
+    if args.method == 'lstr':
+        optimizer = torch.optim.Adam(net.parameters(), lr=args.lr)
+    else:
+        optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
     # optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999),  eps=1e-08, weight_decay=1e-4)
 
     # Testing
@@ -116,7 +120,11 @@ if __name__ == '__main__':
                 else (1 - (t - args.warmup_steps) / (len(data_loader) * args.epochs - args.warmup_steps)) ** 0.9
             lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, l)
         else:
-            raise NotImplementedError
+            if args.method == 'lstr':
+                lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=0.1,
+                                                               step_size=len(data_loader) * args.epochs * 0.9)
+            else:
+                raise NotImplementedError
 
         # Resume training?
         if args.continue_from is not None and args.backbone != 'enet':

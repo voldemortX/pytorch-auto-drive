@@ -66,7 +66,9 @@ class Resize(object):
     def __call__(self, image, target):
         w_ori, h_ori = F._get_image_size(image)
         image = F.resize(image, self.size_image, interpolation=Image.LINEAR)
-        if isinstance(target, dict):  # To keep BC
+        if isinstance(target, str):
+            return image, target
+        elif isinstance(target, dict):  # To keep BC
             if 'keypoints' in target:
                 target['keypoints'] = self.transform_points(target['keypoints'], (h_ori, w_ori), self.size_label)
             if 'padding_mask' in target:
@@ -166,9 +168,9 @@ class RandomResize(object):
         if isinstance(target, str):
             return image, target
         elif isinstance(target, dict):  # To keep BC
-            if 'keypoint' in target:
+            if 'keypoints' in target:
                 w_ori, h_ori = F._get_image_size(image)
-                target['keypoint'] = Resize.transform_points(target['keypoint'], (h_ori, w_ori), (h, w))
+                target['keypoints'] = Resize.transform_points(target['keypoints'], (h_ori, w_ori), (h, w))
             if 'padding_mask' in target:
                 target['padding_mask'] = F.resize(target['padding_mask'], [h, w], interpolation=Image.NEAREST)
         else:
@@ -262,7 +264,8 @@ class ToTensor(object):
             if 'keypoints' in pic:
                 pic['keypoints'] = torch.as_tensor(pic['keypoints'], dtype=torch.float32)
             if 'padding_mask' in pic:
-                pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']), dtype=torch.float32)
+                pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']).copy(), dtype=torch.float32)
+            return pic
         else:
             return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)
 
@@ -301,9 +304,10 @@ class ToTensor(object):
 
 
 class Normalize(object):
-    def __init__(self, mean, std):
+    def __init__(self, mean, std, normalize_target=False):
         self.mean = mean
         self.std = std
+        self.normalize_target = normalize_target
 
     @staticmethod
     def transform_points(points, h, w, ignore_x=-2):
@@ -314,9 +318,9 @@ class Normalize(object):
 
         return points
 
-    def __call__(self, image, target, normalize_target=False):
+    def __call__(self, image, target):
         image = F.normalize(image, mean=self.mean, std=self.std)
-        if normalize_target and not isinstance(target, str):
+        if self.normalize_target and not isinstance(target, str):
             w, h = F._get_image_size(image)
             if isinstance(target, dict):
                 target['keypoints'] = self.transform_points(target['keypoints'], h, w, ignore_x=-2)
