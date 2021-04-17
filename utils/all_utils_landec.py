@@ -8,7 +8,9 @@ from tqdm import tqdm
 from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
     deeplabv1_resnet50, deeplabv1_resnet101, enet_
-from utils.datasets import StandardLaneDetectionDataset
+from torchvision_models.lane_detection import LSTR
+from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, dict_collate_fn
+from utils.losses import cubic_curve_with_projection
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
 
@@ -73,7 +75,20 @@ def enet_culane(num_classes, encoder_only, continue_from):
                  encoder_only=encoder_only, pretrained_weights=continue_from if not encoder_only else None)
 
 
-def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10):
+def lstr_resnet(num_classes_max=7, backbone_name='resnet18s', expansion=1, aux_loss=True):
+    # LSTR with ResNet backbone
+    # The original LSTR-ResNet18 modified backbone is `resnet18s`,
+    # where network width is controlled by expansion
+    # aux_loss is only used in training
+    if backbone_name in ['resnet18', 'resnet34']:
+        expansion = 4
+    elif backbone_name in ['resnet50', 'resnet101']:
+        expansion = 16
+
+    return LSTR(num_queries=num_classes_max, backbone_name=backbone_name, expansion=expansion, aux_loss=aux_loss)
+
+
+def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, method='baseline'):
     # Return data_loaders
     # depending on whether the state is
     # 0: training
@@ -91,24 +106,51 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10):
         [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
          RandomRotation(degrees=3),
          ToTensor(),
-         Normalize(mean=mean, std=std)])
+         Normalize(mean=mean, std=std, normalize_target=True if method == 'lstr' else False)])
+
+    # Batch builder
+    if method == 'lstr':
+        collate_fn = dict_collate_fn
+    else:
+        collate_fn = None
 
     if state == 0:
-        data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms_train,
-                                                data_set=dataset)
-        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
+        if method == 'lstr':
+            if dataset == 'tusimple':
+                data_set = TuSimple(root=base, image_set='train', transforms=transforms_train,
+                                    padding_mask=True, process_points=True)
+            elif dataset == 'culane':
+                data_set = CULane(root=base, image_set='train', transforms=transforms_train,
+                                  padding_mask=True, process_points=True)
+            else:
+                raise ValueError
+        else:
+            data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms_train,
+                                                    data_set=dataset)
+
+        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size, collate_fn=collate_fn,
                                                   num_workers=workers, shuffle=True)
         validation_set = StandardLaneDetectionDataset(root=base, image_set='val',
                                                       transforms=transforms_test, data_set=dataset)
         validation_loader = torch.utils.data.DataLoader(dataset=validation_set, batch_size=batch_size * 4,
-                                                        num_workers=workers, shuffle=False)
+                                                        num_workers=workers, shuffle=False, collate_fn=collate_fn)
         return data_loader, validation_loader
 
     elif state == 1 or state == 2 or state == 3:
         image_sets = ['valfast', 'test', 'val']
-        data_set = StandardLaneDetectionDataset(root=base, image_set=image_sets[state - 1],
-                                                transforms=transforms_test, data_set=dataset)
-        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size,
+        if method == 'lstr':
+            if dataset == 'tusimple':
+                data_set = TuSimple(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
+                                    padding_mask=False, process_points=False)
+            elif dataset == 'culane':
+                data_set = CULane(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
+                                  padding_mask=False, process_points=False)
+            else:
+                raise ValueError
+        else:
+            data_set = StandardLaneDetectionDataset(root=base, image_set=image_sets[state - 1],
+                                                    transforms=transforms_test, data_set=dataset)
+        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size, collate_fn=collate_fn,
                                                   num_workers=workers, shuffle=False)
         return data_loader
     else:
@@ -116,7 +158,7 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10):
 
 
 def train_schedule(writer, loader, validation_loader, val_num_steps, device, criterion, net, optimizer, lr_scheduler,
-                   num_epochs, is_mixed_precision, input_sizes, exp_name, num_classes):
+                   num_epochs, is_mixed_precision, input_sizes, exp_name, num_classes, method='baseline'):
     # Should be the same as segmentation, given customized loss classes
     net.train()
     epoch = 0
@@ -131,13 +173,21 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
         net.train()
         time_now = time.time()
         for i, data in enumerate(loader, 0):
-            inputs, labels, lane_existence = data
-            inputs, labels, lane_existence = inputs.to(device), labels.to(device), lane_existence.to(device)
+            if method == 'lstr':
+                inputs, labels = data
+                inputs = inputs.to(device)
+                labels = [{k: v.to(device) for k, v in label.items()} for label in labels]  # Seems slow
+            else:
+                inputs, labels, lane_existence = data
+                inputs, labels, lane_existence = inputs.to(device), labels.to(device), lane_existence.to(device)
             optimizer.zero_grad()
 
             with autocast(is_mixed_precision):
                 # To support intermediate losses for SAD
-                loss = criterion(inputs, labels, lane_existence, net, input_sizes[0])
+                if method == 'lstr':
+                    loss = criterion(inputs, labels, net)
+                else:
+                    loss = criterion(inputs, labels, lane_existence, net, input_sizes[0])
 
             if is_mixed_precision:
                 scaler.scale(loss).backward()
@@ -219,56 +269,72 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
 
 
 # Adapted from harryhan618/SCNN_Pytorch
-def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, thresh, dataset):
+@torch.no_grad()
+def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, thresh, dataset, method='baseline'):
     # Predict on 1 data_loader and save predictions for the official script
+    # sizes: [input size, test original size, ...]
 
     all_lanes = []
     net.eval()
-    with torch.no_grad():
-        for images, filenames in tqdm(loader):
-            images = images.to(device)
+    for images, filenames in tqdm(loader):
+        images = images.to(device)
 
-            with autocast(is_mixed_precision):
-                outputs = net(images)
+        with autocast(is_mixed_precision):
+            outputs = net(images)
+
+            if method == 'lstr':
+                existence = (outputs['logits'].sigmoid() > 0.5)
+            else:
                 prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
                                                            align_corners=True).softmax(dim=1)
                 existence = (outputs['lane'].sigmoid() > 0.5)
-                if dataset == 'tusimple':  # At most 5 lanes
-                    indices = (existence.sum(dim=1, keepdim=True) > 5).expand_as(existence) * \
-                              (existence == existence.min(dim=1, keepdim=True).values)
-                    existence[indices] = 0
 
-            # To CPU
+            if dataset == 'tusimple':  # At most 5 lanes
+                indices = (existence.sum(dim=1, keepdim=True) > 5).expand_as(existence) * \
+                          (existence == existence.min(dim=1, keepdim=True).values)
+                existence[indices] = 0
+
+        # To CPU
+        if method == 'lstr':
+            existence = existence.cpu().numpy()  # For perfect BC
+        else:
             prob_map = prob_map.cpu().numpy()
             existence = existence.cpu().numpy()
 
-            # Get coordinates for lanes
-            for j in range(existence.shape[0]):
+        # Get coordinates for lanes
+        for j in range(existence.shape[0]):
+            if method == 'lstr':
+                lane_coordinates = coefficients_to_coordinates(outputs['curves'][j, :, 2:], existence[j],
+                                                               resize_shape=input_sizes[1], dataset=dataset, ppl=ppl,
+                                                               gap=gap, curve_function=cubic_curve_with_projection,
+                                                               upper_bound=outputs['curves'][j, :, 0],
+                                                               lower_bound=outputs['curves'][j, :, 1])
+            else:
                 lane_coordinates = prob_to_lines(prob_map[j], existence[j], resize_shape=input_sizes[1],
                                                  gap=gap, ppl=ppl, thresh=thresh, dataset=dataset)
 
-                if dataset == 'culane':
-                    # Save each lane to disk
-                    dir_name = filenames[j][:filenames[j].rfind('/')]
-                    if not os.path.exists(dir_name):
-                        os.makedirs(dir_name)
-                    with open(filenames[j], "w") as f:
-                        for lane in lane_coordinates:
-                            if lane:  # No printing for []
-                                for (x, y) in lane:
-                                    print("{} {}".format(x, y), end=" ", file=f)
-                                print(file=f)
-                elif dataset == 'tusimple':
-                    # Save lanes to a single file
-                    formatted = {
-                        "h_samples": [160 + y * 10 for y in range(ppl)],
-                        "lanes": lane_coordinates,
-                        "run_time": 0,
-                        "raw_file": filenames[j]
-                    }
-                    all_lanes.append(json.dumps(formatted))
-                else:
-                    raise ValueError
+            if dataset == 'culane':
+                # Save each lane to disk
+                dir_name = filenames[j][:filenames[j].rfind('/')]
+                if not os.path.exists(dir_name):
+                    os.makedirs(dir_name)
+                with open(filenames[j], "w") as f:
+                    for lane in lane_coordinates:
+                        if lane:  # No printing for []
+                            for (x, y) in lane:
+                                print("{} {}".format(x, y), end=" ", file=f)
+                            print(file=f)
+            elif dataset == 'tusimple':
+                # Save lanes to a single file
+                formatted = {
+                    "h_samples": [160 + y * 10 for y in range(ppl)],
+                    "lanes": lane_coordinates,
+                    "run_time": 0,
+                    "raw_file": filenames[j]
+                }
+                all_lanes.append(json.dumps(formatted))
+            else:
+                raise ValueError
 
     if dataset == 'tusimple':
         with open('./output/tusimple_pred.json', 'w') as f:
@@ -357,10 +423,49 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
     return coordinates
 
 
+def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, ppl, gap, curve_function,
+                                upper_bound, lower_bound):
+    # For methods that predict coefficients of polynomials,
+    # works with normalized coordinates (in range 0.0 ~ 1.0).
+    # Restricted to single image to align with other methods' codes
+    H, W = resize_shape
+    if dataset == 'tusimple':  # Annotation start at 10 pixel away from bottom
+        y = torch.tensor([1.0 - (ppl - i) * gap / H for i in range(ppl)],
+                         dtype=coefficients.dtype, device=coefficients.device)
+    elif dataset == 'culane':  # Annotation start at bottom
+        y = torch.tensor([1.0 - i * gap / H for i in range(ppl)],
+                         dtype=coefficients.dtype, device=coefficients.device)
+    else:
+        raise ValueError
+    coords = curve_function(coefficients=coefficients, y=y).cpu().numpy()
+
+    # Delete outside points according to predicted upper & lower boundaries
+    coordinates = []
+    for i in range(existence.shape[0]):
+        if existence[i]:
+            if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
+                coordinates.append([coords[i][j] * W if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]
+                                    else -2 for j in range(ppl)])
+            elif dataset == 'culane':
+                coordinates.append([[coords[i][j] * W, H - j * gap] for j in range(ppl)
+                                    if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]])
+            else:
+                raise ValueError
+
+    return coordinates
+
+
 def build_lane_detection_model(args, num_classes):
     scnn = True if args.method == 'scnn' else False
     if args.dataset == 'tusimple' and args.backbone == 'erfnet':
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
+    elif args.method == 'lstr':
+        if args.state == 1 or args.val_num_steps != 0:
+            print('Fast validation not supported for this method!')
+            raise ValueError
+        num_classes_max = 7 if args.dataset == 'tusimple' or args.dataset == 'culane' else num_classes
+        net = lstr_resnet(num_classes_max=num_classes_max, backbone_name=args.backbone,
+                          expansion=1 if args.dataset == 'tusimple' else 2, aux_loss=True if args.state == 0 else False)
     elif args.dataset == 'culane' and args.backbone == 'erfnet':
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'culane' and args.backbone == 'vgg16':
@@ -376,9 +481,7 @@ def build_lane_detection_model(args, num_classes):
                             continue_from=args.continue_from)
     elif args.dataset == 'culane' and args.backbone == 'enet':
         net = enet_culane(num_classes=num_classes, encoder_only=args.encoder_only,
-                            continue_from=args.continue_from)
-    elif args.method == 'lstr':
-        pass
+                          continue_from=args.continue_from)
     else:
         raise ValueError
 

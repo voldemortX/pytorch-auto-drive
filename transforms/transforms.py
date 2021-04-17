@@ -3,6 +3,8 @@
 # Update: The current torchvision github repo now supports tensor operation for all common transformations,
 # you are encouraged to check it out
 # Processing in (w, h), while providing public functions in (h, w)
+#######################
+# For transforms with multiple targets (masks, keypoints), target is formed as `dict{'padding_mask', 'keypoints', etc.}`
 import numpy as np
 from PIL import Image
 from collections.abc import Sequence
@@ -11,17 +13,6 @@ import random
 import torch
 import math
 from . import functional as F
-
-
-# For 2/3 dimensional tensors only
-def get_tensor_image_size(img):
-    if img.dim() == 2:
-        h, w = img.size()
-    else:
-        h = img.size()[1]
-        w = img.size()[2]
-
-    return h, w
 
 
 def _check_sequence_input(x, name, req_sizes):
@@ -77,8 +68,11 @@ class Resize(object):
         image = F.resize(image, self.size_image, interpolation=Image.LINEAR)
         if isinstance(target, str):
             return image, target
-        elif isinstance(target, np.ndarray):
-            target = self.transform_points(target, (h_ori, w_ori), self.size_label)
+        elif isinstance(target, dict):  # To keep BC
+            if 'keypoints' in target:
+                target['keypoints'] = self.transform_points(target['keypoints'], (h_ori, w_ori), self.size_label)
+            if 'padding_mask' in target:
+                target['padding_mask'] = F.resize(target['padding_mask'], self.size_label, interpolation=Image.NEAREST)
         else:
             target = F.resize(target, self.size_label, interpolation=Image.NEAREST)
 
@@ -105,7 +99,7 @@ class ZeroPad(object):
 
     @staticmethod
     def zero_pad(image, target, h, w):
-        oh, ow = get_tensor_image_size(target)
+        ow, oh = F._get_image_size(target)
         pad_h = h - oh if oh < h else 0
         pad_w = w - ow if ow < w else 0
         image = F.pad(image, [0, 0, pad_w, pad_h], fill=0)
@@ -125,7 +119,7 @@ class RandomTranslation(object):
         self.trans_w = trans_w
 
     def __call__(self, image, target):
-        th, tw = get_tensor_image_size(image)
+        tw, th = F._get_image_size(image)
         image = F.pad(image, [self.trans_w, self.trans_h, self.trans_w, self.trans_h], fill=0)
         target = F.pad(target, [self.trans_w, self.trans_h, self.trans_w, self.trans_h], fill=255)
         i, j, h, w = RandomCrop.get_params(image, (th, tw))
@@ -173,9 +167,12 @@ class RandomResize(object):
         image = F.resize(image, [h, w], interpolation=Image.LINEAR)
         if isinstance(target, str):
             return image, target
-        elif isinstance(target, np.ndarray):
-            in_size = F._get_image_size(image)
-            target = Resize.transform_points(target, in_size, (h, w))
+        elif isinstance(target, dict):  # To keep BC
+            if 'keypoints' in target:
+                w_ori, h_ori = F._get_image_size(image)
+                target['keypoints'] = Resize.transform_points(target['keypoints'], (h_ori, w_ori), (h, w))
+            if 'padding_mask' in target:
+                target['padding_mask'] = F.resize(target['padding_mask'], [h, w], interpolation=Image.NEAREST)
         else:
             target = F.resize(target, [h, w], interpolation=Image.NEAREST)
 
@@ -191,7 +188,7 @@ class RandomScale(object):
 
     def __call__(self, image, target):
         scale = random.uniform(self.min_scale, self.max_scale)
-        h, w = get_tensor_image_size(image)
+        w, h = F._get_image_size(image)
         h = int(scale * h)
         w = int(scale * w)
         image = F.resize(image, [h, w], interpolation=Image.LINEAR)
@@ -206,7 +203,7 @@ class RandomCrop(object):
 
     @staticmethod
     def get_params(img, output_size):
-        h, w = get_tensor_image_size(img)
+        w, h = F._get_image_size(img)
         th, tw = output_size
         if w <= tw and h <= th:
             return 0, 0, h, w
@@ -217,7 +214,7 @@ class RandomCrop(object):
 
     def __call__(self, image, target):
         # Pad if needed
-        ih, iw = get_tensor_image_size(image)
+        iw, ih = F._get_image_size(image)
         if ih < self.size[0] or iw < self.size[1]:
             # print(image.size())
             # print(self.size)
@@ -247,9 +244,9 @@ class RandomHorizontalFlip(object):
 class ToTensor(object):
     def __init__(self, keep_scale=False, reverse_channels=False):
         # keep_scale = True => Images or whatever are not divided by 255
-        # reverse_channels = True => RGB images are changed to BGR(the default behavior of openCV & Caffe,
-        #                                                          let's wish them all go to heaven,
-        #                                                          for they wasted me days!)
+        # reverse_channels = True => RGB images are changed to BGR (the default behavior of openCV & Caffe,
+        #                                                           let's wish them all go to heaven,
+        #                                                           for they wasted me days!)
         self.keep_scale = keep_scale
         self.reverse_channels = reverse_channels
 
@@ -261,15 +258,19 @@ class ToTensor(object):
 
     @staticmethod
     def label_to_tensor(pic):  # segmentation masks or keypoint arrays
-        if isinstance(pic, np.ndarray):
-            return torch.as_tensor(pic, dtype=torch.float32)
-        elif isinstance(pic, str):
+        if isinstance(pic, str):
+            return pic
+        elif isinstance(pic, dict):
+            if 'keypoints' in pic:
+                pic['keypoints'] = torch.as_tensor(pic['keypoints'], dtype=torch.float32)
+            if 'padding_mask' in pic:
+                pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']).copy(), dtype=torch.float32)
             return pic
         else:
             return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)
 
     def _pil_to_tensor(self, pic):
-        # Convert a PIL Image to tensor(a direct copy)
+        # Convert a PIL Image to tensor (a direct copy)
         if pic.mode == 'I':
             img = torch.from_numpy(np.array(pic, np.int32, copy=False))
         elif pic.mode == 'I;16':
@@ -303,17 +304,33 @@ class ToTensor(object):
 
 
 class Normalize(object):
-    def __init__(self, mean, std):
+    def __init__(self, mean, std, normalize_target=False):
         self.mean = mean
         self.std = std
+        self.normalize_target = normalize_target
+
+    @staticmethod
+    def transform_points(points, h, w, ignore_x=-2):
+        # Divide keypoints by h & w to 0~1
+        # A special case of resize
+        points = points / torch.tensor([w, h], device=points.device, dtype=points.dtype)
+        points[points[:, :, 0] < 0][:, 0] = ignore_x
+
+        return points
 
     def __call__(self, image, target):
         image = F.normalize(image, mean=self.mean, std=self.std)
+        if self.normalize_target and not isinstance(target, str):
+            w, h = F._get_image_size(image)
+            if isinstance(target, dict):
+                target['keypoints'] = self.transform_points(target['keypoints'], h, w, ignore_x=-2)
+            else:
+                target = self.transform_points(target, h, w, ignore_x=-2)
 
         return image, target
 
 
-# Init with a python list as the map(mainly for cityscapes's id -> train_id)
+# Init with a python list as the map (mainly for cityscapes's id -> train_id)
 class LabelMap(object):
     def __init__(self, label_id_map, outlier=False):
         self.label_id_map = torch.tensor(label_id_map)
@@ -333,8 +350,8 @@ class MatchSize(object):
         self.l2i = l2i  # Match (l)abel to (i)mage
 
     def __call__(self, image, target):
-        hi, wi = get_tensor_image_size(image)
-        hl, wl = get_tensor_image_size(target)
+        wi, hi = F._get_image_size(image)
+        wl, hl = F._get_image_size(target)
         if hi == hl and wi == wl:
             return image, target
 
@@ -346,7 +363,7 @@ class MatchSize(object):
         return image, target
 
 
-# TODO: Support fill color 255 for tensor inputs (supported in torchvision nightly)
+# TODO: Support fill color 255 for tensor inputs (supported in torchvision >= 0.9.0)
 # Now fill color is fixed to 0 (background for lane detection label)
 class RandomRotation(object):
     def __init__(self, degrees, expand=False, center=None, fill=None):
@@ -381,9 +398,13 @@ class RandomRotation(object):
     def __call__(self, image, target):
         angle = self.get_params(self.degrees)
         image = F.rotate(image, angle, resample=Image.LINEAR, expand=self.expand, center=self.center, fill=0)
-        if isinstance(target, np.ndarray):
-            w, h = F._get_image_size(image)
-            target = self.transform_points(target, angle, h, w)
+        if isinstance(target, dict):  # To keep BC
+            if 'keypoints' in target:
+                w, h = F._get_image_size(image)
+                target['keypoints'] = self.transform_points(target['keypoints'], angle, h, w)
+            if 'padding_mask' in target:
+                target['padding_mask'] = F.rotate(target['padding_mask'], angle, resample=Image.NEAREST,
+                                                  expand=self.expand, center=self.center, fill=1)
         else:
             target = F.rotate(target, angle, resample=Image.NEAREST, expand=self.expand, center=self.center, fill=255)
 
