@@ -34,7 +34,7 @@ if __name__ == '__main__':
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
     args = parser.parse_args()
-    lane_need_interpolate = ['vgg16', 'resnet18s', 'resnet18', 'resnet34', 'resnet50', 'resnet101']
+    lane_need_interpolate = ['baseline', 'scnn', 'sad', 'resa']
     seg_need_interpolate = ['fcn', 'deeplabv2', 'deeplabv3']
     with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
         configs = yaml.load(f, Loader=yaml.Loader)
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     if args.task == 'lane':
         num_classes = configs[configs['LANE_DATASETS'][args.dataset]]['NUM_CLASSES']
         count_interpolate = False
-        if args.backbone in lane_need_interpolate:
+        if args.method in lane_need_interpolate:
             count_interpolate = True
         if torch.cuda.is_available():
             device = torch.device('cuda:0')
@@ -57,8 +57,9 @@ if __name__ == '__main__':
         if args.mode == 'simple':
             dummy = torch.ones((1, 3, args.height, args.width))
             fps = []
-            for i in range(0, args.inf_times):
-                fps.append(speed_evaluate_simple(net=net, device=device, dummy=dummy, num=300, count_interpolate=True))
+            for i in range(0, args.times):
+                fps.append(speed_evaluate_simple(net=net, device=device, dummy=dummy, num=300,
+                                                 count_interpolate=count_interpolate))
             print('GPU FPS: {: .2f}'.format(max(fps)))
         elif args.mode == 'real' and args.dataset in configs['LANE_DATASETS'].keys():
             load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
@@ -67,9 +68,9 @@ if __name__ == '__main__':
                                    base=base)
             fps = []
             gpu_fps = []
-            for i in range(0, args.inf_times):
+            for i in range(0, args.times):
                 fps_item, gpu_fps_item = speed_evaluate_real(net=net, device=device, loader=val_loader, num=300,
-                                                             count_interpolate=True)
+                                                             count_interpolate=count_interpolate)
                 fps.append(fps_item)
                 gpu_fps.append(gpu_fps_item)
             print('Real FPS: {: .2f}'.format(max(fps)))
@@ -95,8 +96,9 @@ if __name__ == '__main__':
         if args.mode == 'simple':
             dummy = torch.ones((1, 3, args.height, args.width))
             fps = []
-            for i in range(0, args.inf_times):
-                fps.append(speed_evaluate_simple(net=net, device=device, dummy=dummy, num=300, count_interpolate=True))
+            for i in range(0, args.times):
+                fps.append(speed_evaluate_simple(net=net, device=device, dummy=dummy, num=300,
+                                                 count_interpolate=count_interpolate))
             print('GPU FPS: {: .2f}'.format(max(fps)))
         elif args.mode == 'real' and args.dataset in configs['SEGMENTATION_DATASETS'].keys():
             load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
@@ -108,7 +110,7 @@ if __name__ == '__main__':
                                   std=std, test_base=base, city_aug=city_aug, test_label_id_map=train_label_id_map)
             fps = []
             gpu_fps = []
-            for i in range(0, args.inf_times):
+            for i in range(0, args.times):
                 fps_item, gpu_fps_item = speed_evaluate_real(net=net, device=device, loader=val_loader, num=300,
                                                              count_interpolate=count_interpolate)
                 fps.append(fps_item)
