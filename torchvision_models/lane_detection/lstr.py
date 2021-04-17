@@ -60,13 +60,16 @@ class LSTR(nn.Module):
         self.specific_embed = MLP(hidden_dim, hidden_dim, lsp_dim - 4, mlp_layers)  # Specific for each lane
         self.shared_embed = MLP(hidden_dim, hidden_dim, 4, mlp_layers)  # 4 shared curve coefficients
 
-    def forward(self, images, padding_masks):
+    def forward(self, images, padding_masks=None):
         # images: B x C x H x W
         # padding_masks: B x H x W (0 or 1 -> ignored)
         p = self.backbone(images)['out']
 
         # Padding mask (for paddings added in transforms)
-        padding_masks = F.interpolate(padding_masks.unsqueeze(1), size=p.shape[-2:]).to(torch.bool).squeeze(1)
+        if padding_masks is None:  # Make things easier for testing (assume no padding)
+            padding_masks = torch.zeros((p.shape[0], p.shape[2], p.shape[3]), dtype=torch.bool, device=p.device)
+        else:
+            padding_masks = F.interpolate(padding_masks.unsqueeze(1), size=p.shape[-2:]).to(torch.bool).squeeze(1)
 
         pos = self.position_embedding(p, padding_masks)
         hs, _ = self.transformer(self.input_proj(p), padding_masks, self.query_embed.weight, pos)

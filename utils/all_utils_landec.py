@@ -141,10 +141,10 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
         if method == 'lstr':
             if dataset == 'tusimple':
                 data_set = TuSimple(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
-                                    padding_mask=True, process_points=True)
+                                    padding_mask=False, process_points=False)
             elif dataset == 'culane':
                 data_set = CULane(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
-                                  padding_mask=True, process_points=True)
+                                  padding_mask=False, process_points=False)
             else:
                 raise ValueError
         else:
@@ -283,19 +283,6 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
 
             if method == 'lstr':
                 existence = (outputs['logits'].sigmoid() > 0.5)
-                _, h, w = images.shape
-                H, W = input_sizes[1]
-                if dataset == 'tusimple':  # Annotation start at 10 pixel away from bottom
-                    y = torch.tensor([h - (ppl - i) * gap / H * h for i in range(ppl)],
-                                     dtype=outputs['curve'].dtype, device=outputs['curve'].device)
-                elif dataset == 'culane':  # Annotation start at bottom
-                    y = torch.tensor([h - i * gap / H * h for i in range(ppl)],
-                                     dtype=outputs['curve'].dtype, device=outputs['curve'].device)
-                else:
-                    raise ValueError
-                lane_coordinates_batch = cubic_curve_with_projection(coefficients=outputs['curves'][:, :, 2:], y=y)
-
-                # Delete outside points according to predicted upper & lower boundaries
             else:
                 prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
                                                            align_corners=True).softmax(dim=1)
@@ -308,15 +295,20 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
 
         # To CPU
         if method == 'lstr':
-            lane_coordinates_batch = lane_coordinates_batch.cpu().numpy()
+            existence = existence.cpu().numpy()  # For perfect BC
         else:
             prob_map = prob_map.cpu().numpy()
-        existence = existence.cpu().numpy()
+            existence = existence.cpu().numpy()
 
         # Get coordinates for lanes
         for j in range(existence.shape[0]):
             if method == 'lstr':
-                lane_coordinates = lane_coordinates_batch[j]
+                lane_coordinates = coefficients_to_coordinates(outputs['curves'][j, :, 2:], existence[j],
+                                                               image_shape=input_sizes[0], resize_shape=input_sizes[1],
+                                                               dataset=dataset, ppl=ppl, gap=gap,
+                                                               curve_function=cubic_curve_with_projection,
+                                                               upper_bound=outputs['curves'][j, :, 0],
+                                                               lower_bound=outputs['curves'][j, :, 1])
             else:
                 lane_coordinates = prob_to_lines(prob_map[j], existence[j], resize_shape=input_sizes[1],
                                                  gap=gap, ppl=ppl, thresh=thresh, dataset=dataset)
@@ -425,6 +417,38 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
                 coordinates.append([coords[j] if coords[j] > 0 else -2 for j in range(ppl)])
             elif dataset == 'culane':
                 coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
+            else:
+                raise ValueError
+
+    return coordinates
+
+
+def coefficients_to_coordinates(coefficients, existence, image_shape, resize_shape, dataset, ppl, gap, curve_function,
+                                upper_bound, lower_bound):
+    # For methods that predict coefficients of polynomials
+    # Restricted to single image to align with other methods' codes
+    h, w = image_shape
+    H, W = resize_shape
+    if dataset == 'tusimple':  # Annotation start at 10 pixel away from bottom
+        y = torch.tensor([h - (ppl - i) * gap / H * h for i in range(ppl)],
+                         dtype=coefficients.dtype, device=coefficients.device)
+    elif dataset == 'culane':  # Annotation start at bottom
+        y = torch.tensor([h - i * gap / H * h for i in range(ppl)],
+                         dtype=coefficients.dtype, device=coefficients.device)
+    else:
+        raise ValueError
+    coords = curve_function(coefficients=coefficients, y=y).cpu().numpy()
+
+    # Delete outside points according to predicted upper & lower boundaries
+    coordinates = []
+    for i in range(existence.shape[0]):
+        if existence[i]:
+            if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
+                coordinates.append([coords[i][j] / w * W if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]
+                                    else -2 for j in range(ppl)])
+            elif dataset == 'culane':
+                coordinates.append([[coords[i][j] / w * W, H - j * gap] for j in range(ppl)
+                                    if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]])
             else:
                 raise ValueError
 

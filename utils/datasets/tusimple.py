@@ -24,7 +24,7 @@ class TuSimple(LaneKeypointDataset):
         # Load image filenames and lanes
         if image_set == 'test' or image_set == 'val':  # Test
             self.images = [os.path.join(root, 'clips', x + '.jpg') for x in contents]
-            self.targets = [os.path.join(root, 'clips', x + '.jpg') for x in contents]
+            self.targets = [os.path.join('clips', x + '.jpg') for x in contents]
         else:  # Train
             self.images = [os.path.join(root, 'clips', x[:x.find(' ')] + '.jpg') for x in contents]
 

@@ -109,7 +109,8 @@ class LaneKeypointDataset(torchvision.datasets.VisionDataset):
             img, target = self.transforms(img, target)
 
         # Post-process
-        target = generate_lane_label_dict(target)
+        if self.process_points:
+            target = generate_lane_label_dict(target)
 
         return img, target
 
