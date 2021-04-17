@@ -272,6 +272,7 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
 @torch.no_grad()
 def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, thresh, dataset, method='baseline'):
     # Predict on 1 data_loader and save predictions for the official script
+    # sizes: [input size, test original size, ...]
 
     all_lanes = []
     net.eval()
@@ -304,9 +305,8 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
         for j in range(existence.shape[0]):
             if method == 'lstr':
                 lane_coordinates = coefficients_to_coordinates(outputs['curves'][j, :, 2:], existence[j],
-                                                               image_shape=input_sizes[0], resize_shape=input_sizes[1],
-                                                               dataset=dataset, ppl=ppl, gap=gap,
-                                                               curve_function=cubic_curve_with_projection,
+                                                               resize_shape=input_sizes[1], dataset=dataset, ppl=ppl,
+                                                               gap=gap, curve_function=cubic_curve_with_projection,
                                                                upper_bound=outputs['curves'][j, :, 0],
                                                                lower_bound=outputs['curves'][j, :, 1])
             else:
@@ -423,17 +423,17 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
     return coordinates
 
 
-def coefficients_to_coordinates(coefficients, existence, image_shape, resize_shape, dataset, ppl, gap, curve_function,
+def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, ppl, gap, curve_function,
                                 upper_bound, lower_bound):
-    # For methods that predict coefficients of polynomials
+    # For methods that predict coefficients of polynomials,
+    # works with normalized coordinates (in range 0.0 ~ 1.0).
     # Restricted to single image to align with other methods' codes
-    h, w = image_shape
     H, W = resize_shape
     if dataset == 'tusimple':  # Annotation start at 10 pixel away from bottom
-        y = torch.tensor([h - (ppl - i) * gap / H * h for i in range(ppl)],
+        y = torch.tensor([1.0 - (ppl - i) * gap / H for i in range(ppl)],
                          dtype=coefficients.dtype, device=coefficients.device)
     elif dataset == 'culane':  # Annotation start at bottom
-        y = torch.tensor([h - i * gap / H * h for i in range(ppl)],
+        y = torch.tensor([1.0 - i * gap / H for i in range(ppl)],
                          dtype=coefficients.dtype, device=coefficients.device)
     else:
         raise ValueError
@@ -444,10 +444,10 @@ def coefficients_to_coordinates(coefficients, existence, image_shape, resize_sha
     for i in range(existence.shape[0]):
         if existence[i]:
             if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
-                coordinates.append([coords[i][j] / w * W if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]
+                coordinates.append([coords[i][j] * W if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]
                                     else -2 for j in range(ppl)])
             elif dataset == 'culane':
-                coordinates.append([[coords[i][j] / w * W, H - j * gap] for j in range(ppl)
+                coordinates.append([[coords[i][j] * W, H - j * gap] for j in range(ppl)
                                     if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]])
             else:
                 raise ValueError
