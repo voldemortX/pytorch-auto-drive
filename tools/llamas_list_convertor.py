@@ -1,8 +1,26 @@
+import argparse
 from llamas_utils import generate_spline_annotation, generate_original_pixel_annotation
 
 if __name__ == '__main__':
-    #generate_spline_annotation()
-    generate_original_pixel_annotation()
+    # parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
+    # parser.add_argument('--annotation-type', type=str, default='tusimple',
+    #                     help='')
+    generate_spline_annotation()
+    # generate_original_pixel_annotation()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 """
 验证图像和label的匹配：

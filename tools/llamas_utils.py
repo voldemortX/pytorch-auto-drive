@@ -30,6 +30,7 @@
 import json
 import os
 import numpy as np
+import tqdm
 
 
 def _extend_lane(lane, projection_matrix):
@@ -357,6 +358,7 @@ def ir(some_value):
     return int(round(some_value))
 
 
+# base = "/home/guoshaohua/dataset/llamas/"
 base = "/home/guoshaohua/dataset/llamas/"
 list_path = os.path.join(base, 'lists')
 image_path = os.path.join(base, 'color_images')
@@ -364,7 +366,7 @@ label_path = os.path.join(base, 'labels')
 LLAMAS_H = 717
 if os.path.exists(list_path) is False:
     os.makedirs(list_path)
-file_names = ['train.txt', 'val.txt', 'test.txt']
+file_names = ['train', 'val', 'valfast', 'test']
 
 
 def get_file_paths(dir, type):
@@ -379,7 +381,7 @@ def get_file_paths(dir, type):
 def coords2str(lane):
     s = ""
     for coords in lane:
-        s = s + str(coords[0]) + " "
+        s = s + str(round(coords[0], 3)) + " "
         s = s + str(coords[1]) + " "
     s = s + '\n'
     return s
@@ -399,26 +401,34 @@ def existence2str(exist):
     return s
 
 
-def get_spline(filetype, filename):
-    json_list = get_file_paths(os.path.join(label_path, filetype), ".json")
-    images_list = get_file_paths(os.path.join(image_path, filetype), ".png")
-    json_list.sort()
-    images_list.sort()
-    for idx in range(0, len(json_list)):
-        spline_lanes = get_horizontal_values_for_four_lanes(json_list[idx])
-        lanes = [[(x, y) for x, y in zip(lane, range(LLAMAS_H)) if x >= 0] for lane in spline_lanes]
-        lanes_exist = [1 if len(lane) > 0 else 0 for lane in lanes]
-        lanes = [lane for lane in lanes if len(lane) > 0]
-        txt_path = json_list[idx].replace('labels', 'color_images')
-        txt_path = txt_path.replace('.json', '.splines.txt')
+def spline_annotation(json_name, image_name, get_txt):
+    spline_lanes = get_horizontal_values_for_four_lanes(json_name)
+    lanes = [[(x, y) for x, y in zip(lane, range(LLAMAS_H)) if x >= 0] for lane in spline_lanes]
+    lanes_exist = [1 if len(lane) > 0 else 0 for lane in lanes]
+    lanes = [lane for lane in lanes if len(lane) > 0]
+    if get_txt is True:
+        txt_path = image_name.replace('.png', '.lines.txt')
         get_txtfile(txt_path, lanes)
+    return lanes_exist
 
+
+def get_spline(filetype, filename, get_txt=False, existence=False, ant_exist=True):
+    images_list = get_file_paths(os.path.join(image_path, filetype), ".png")
+    images_list.sort()
+    json_list = get_file_paths(os.path.join(label_path, filetype), ".json")
+    if len(json_list) != 0:
+        json_list.sort()
+    length_of_list = len(images_list)
+    for idx in range(0, length_of_list):
+        lanes_exist = []
+        if ant_exist:
+            lanes_exist = spline_annotation(json_list[idx], images_list[idx], get_txt)
         with open(os.path.join(list_path, filename), 'a') as f:
-            f.writelines(images_list[idx] + " " + txt_path + " " + existence2str(lanes_exist) + "\n")
-        print(images_list[idx])
-        print(txt_path)
-        quit(0)
-
+            if existence is True:
+                f.writelines(
+                    images_list[idx][len(base) - 1:].replace('.png', '') + " " + existence2str(lanes_exist) + "\n")
+            else:
+                f.writelines(images_list[idx][len(base) - 1:].replace('.png', '') + "\n")
     return 0
 
 
@@ -432,7 +442,7 @@ def get_pixel_annotation(filetype, filename):
             lane_attri = json.load(f)
         lanes = lane_attri['lanes']
         lanes_list = []
-        laneid=[]
+        laneid = []
         for lane in lanes:
 
             lanecoords = []
@@ -444,28 +454,30 @@ def get_pixel_annotation(filetype, filename):
             lanes_list.append(lanecoords)
             laneid.append(lane['lane_id'])
 
-        # lanes_exist = [1 if len(lanecoord) > 0 else 0 for lanecoord in lanes_list]
-        # if len(lanes_exist) > count:
-        #     count = len(lanes_exist)
-        print(lanes_list)
-        print(laneid)
-
     return 0
 
 
-
 def generate_spline_annotation():
-    for file_name in file_names[0:2]:
-        if file_name == 'train.txt':
-            get_spline('train', 'spline_train.txt')
-        elif file_name == 'val.txt':
-            get_spline('valid', 'spline_val.txt')
+    for file_name in file_names:
+        if file_name == 'train':
+            get_spline(file_name, file_name + '.txt', True, True)
+            print(file_name+" completed...")
+        elif file_name == 'valfast':
+            get_spline('valid', file_name + '.txt', True, True)
+            print(file_name + " completed...")
+        elif file_name == 'val':
+            get_spline('valid', file_name + '.txt', False, False)
+            print(file_name + " completed...")
+        elif file_name == 'test':
+            get_spline(file_name, file_name + '.txt', False, False)
+            print(file_name + " completed...")
+
     return 0
 
 
 def generate_original_pixel_annotation():
     for file_name in file_names[0:2]:
-        if file_name == 'train.txt':
+        if file_name == 'train':
             get_pixel_annotation('train', 'pixel_train.txt')
         # elif file_name == 'val.txt':
         #     get_pixel_annotation('valid', 'pixel_val.txt')
