@@ -1,4 +1,4 @@
-# Trained weights: resnet101_baseline_tusimple_20210217.pt
+# Trained weights: resnet101_baseline_tusimple_20210424.pt
 # Training, scale lr by square root on 11G GPU
 python main_landec.py --epochs=50 --lr=0.13 --batch-size=8 --dataset=tusimple --method=baseline --backbone=resnet101 --workers=4 --warmup-steps=500 --mixed-precision --exp-name=resnet101_baseline_tusimple
 # Predicting lane points for testing
