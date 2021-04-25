@@ -4,14 +4,14 @@
 
 | method | backbone | resolution | mixed precision? | dataset | metric | average | best | training time <br> *(2080 Ti)* |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Baseline | VGG16 | 360 x 640 | *yes* | TuSimple | Accuracy | 93.39% | 93.57% | 1.5h |
+| Baseline | VGG16 | 360 x 640 | *yes* | TuSimple | Accuracy | 93.79% | 93.94% | 1.5h |
 | Baseline | ResNet18 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.18% | 94.25% | 0.7h |
 | Baseline | ResNet34 | 360 x 640 | *yes* | TuSimple | Accuracy | 95.23% | 95.31% | 1.1h |
 | Baseline | ResNet50 | 360 x 640 | *yes* | TuSimple | Accuracy | 95.07% | 95.12% | 1.5h |
 | Baseline | ResNet101 | 360 x 640 | *yes* | TuSimple | Accuracy | 95.15% | 95.19% | 2.6h |
 | Baseline | ERFNet | 360 x 640 | *yes* | TuSimple | Accuracy | 96.02% | 96.04% | 0.8h |
-| Baseline | ENet<sup>#</sup> | 360 x 640 | *yes* | TuSimple | Accuracy | 95.38% | 95.58% | 1h<sup>+</sup> |
-| SCNN | VGG16 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.46% | 94.65% | 2h |
+| Baseline | ENet<sup>#</sup> | 360 x 640 | *yes* | TuSimple | Accuracy | 95.55% | 95.61% | 1h<sup>+</sup> |
+| SCNN | VGG16 | 360 x 640 | *yes* | TuSimple | Accuracy | 95.01% | 95.17% | 2h |
 | SCNN | ResNet18 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.69% | 94.77% | 1.2h |
 | SCNN | ResNet34 | 360 x 640 | *yes* | TuSimple | Accuracy | 95.19% | 95.25% | 1.6h |
 | SCNN | ResNet50 | 360 x 640 | *yes* | TuSimple | Accuracy | 95.43% | 95.56% | 2.4h |
