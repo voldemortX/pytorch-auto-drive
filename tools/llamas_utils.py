@@ -432,44 +432,19 @@ def get_spline(filetype, filename, get_txt=False, existence=False, ant_exist=Tru
     return 0
 
 
-def get_pixel_annotation(filetype, filename):
-    json_list = get_file_paths(os.path.join(label_path, filetype), ".json")
-    images_list = get_file_paths(os.path.join(image_path, filetype), ".png")
-    json_list.sort()
-    images_list.sort()
-    for idx in range(0, len(json_list)):
-        with open(json_list[idx]) as f:
-            lane_attri = json.load(f)
-        lanes = lane_attri['lanes']
-        lanes_list = []
-        laneid = []
-        for lane in lanes:
-
-            lanecoords = []
-            for marker in lane['markers']:
-                lanecoords.append(float(marker['pixel_start']['x']))
-                lanecoords.append(float(marker['pixel_start']['y']))
-                lanecoords.append(float(marker['pixel_end']['x']))
-                lanecoords.append(float(marker['pixel_end']['y']))
-            lanes_list.append(lanecoords)
-            laneid.append(lane['lane_id'])
-
-    return 0
-
-
 def generate_spline_annotation():
     for file_name in file_names:
         if file_name == 'train':
-            get_spline(file_name, file_name + '.txt', True, True)
+            get_spline(file_name, file_name + '.txt', get_txt=True, existence=True, ant_exist=True)
             print(file_name+" completed...")
         elif file_name == 'valfast':
-            get_spline('valid', file_name + '.txt', True, True)
+            get_spline('valid', file_name + '.txt', get_txt=True, existence=True, ant_exist=True)
             print(file_name + " completed...")
         elif file_name == 'val':
-            get_spline('valid', file_name + '.txt', False, False)
+            get_spline('valid', file_name + '.txt', get_txt=False, existence=False, ant_exist=False)
             print(file_name + " completed...")
         elif file_name == 'test':
-            get_spline(file_name, file_name + '.txt', False, False)
+            get_spline(file_name, file_name + '.txt', get_txt=False, existence=False, ant_exist=False)
             print(file_name + " completed...")
 
     return 0
