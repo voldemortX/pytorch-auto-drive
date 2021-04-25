@@ -450,10 +450,4 @@ def generate_spline_annotation():
     return 0
 
 
-def generate_original_pixel_annotation():
-    for file_name in file_names[0:2]:
-        if file_name == 'train':
-            get_pixel_annotation('train', 'pixel_train.txt')
-        # elif file_name == 'val.txt':
-        #     get_pixel_annotation('valid', 'pixel_val.txt')
-    return 0
+

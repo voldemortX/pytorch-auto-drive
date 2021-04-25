@@ -26,6 +26,13 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             self.output_suffix = '.lines.txt'
             if not os.path.exists(self.output_prefix):
                 os.makedirs(self.output_prefix)
+        elif data_set == 'llamas':
+            self.image_dir = os.path.join(root, 'color_images')
+            self.mask_dir = os.path.join(root, 'laneseg_labels')
+            self.output_prefix = './output'
+            self.output_suffix = '.lines.txt'
+            if not os.path.exists(self.output_prefix):
+                os.makedirs(self.output_prefix)
         else:
             raise ValueError
         self.data_set = data_set
