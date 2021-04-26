@@ -37,7 +37,7 @@
 
 *<sup>#</sup> No pre-training.*
 
-### Tusimple detailed performance (best):
+### TuSimple detailed performance (best):
 
 | method | backbone | accuracy | FP | FN | |
 | :---: | :---: | :---: | :---: | :---: | :---: |
