@@ -8,20 +8,6 @@ if __name__ == '__main__':
     generate_spline_annotation()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 """
 验证图像和label的匹配：
             img_num = images_list[idx].split('/')[-1].split('_')[0:2]

@@ -19,11 +19,13 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             self.mask_dir = os.path.join(root, 'segGT6')
             self.output_prefix = 'clips'
             self.output_suffix = '.jpg'
+            self.image_suffix = '.jpg'
         elif data_set == 'culane':
             self.image_dir = root
             self.mask_dir = os.path.join(root, 'laneseg_label_w16')
             self.output_prefix = './output'
             self.output_suffix = '.lines.txt'
+            self.image_suffix = '.jpg'
             if not os.path.exists(self.output_prefix):
                 os.makedirs(self.output_prefix)
         elif data_set == 'llamas':
@@ -31,6 +33,7 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             self.mask_dir = os.path.join(root, 'laneseg_labels')
             self.output_prefix = './output'
             self.output_suffix = '.lines.txt'
+            self.image_suffix = '.png'
             if not os.path.exists(self.output_prefix):
                 os.makedirs(self.output_prefix)
         else:
@@ -74,12 +77,12 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             contents = [x.strip() for x in f.readlines()]
 
         if self.test == 2:  # Test
-            self.images = [os.path.join(self.image_dir, x + '.jpg') for x in contents]
+            self.images = [os.path.join(self.image_dir, x + self.image_suffix) for x in contents]
             self.masks = [os.path.join(self.output_prefix, x + self.output_suffix) for x in contents]
         elif self.test == 1:  # Val
-            self.images = [os.path.join(self.image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
+            self.images = [os.path.join(self.image_dir, x[:x.find(' ')] + self.image_suffix) for x in contents]
             self.masks = [os.path.join(self.mask_dir, x[:x.find(' ')] + '.png') for x in contents]
         else:  # Train
-            self.images = [os.path.join(self.image_dir, x[:x.find(' ')] + '.jpg') for x in contents]
+            self.images = [os.path.join(self.image_dir, x[:x.find(' ')] + self.image_suffix) for x in contents]
             self.masks = [os.path.join(self.mask_dir, x[:x.find(' ')] + '.png') for x in contents]
             self.lane_existences = [list(map(int, x[x.find(' '):].split())) for x in contents]

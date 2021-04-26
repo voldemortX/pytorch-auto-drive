@@ -426,9 +426,9 @@ def get_spline(filetype, filename, get_txt=False, existence=False, ant_exist=Tru
         with open(os.path.join(list_path, filename), 'a') as f:
             if existence is True:
                 f.writelines(
-                    images_list[idx][len(base) - 1:].replace('.png', '') + " " + existence2str(lanes_exist) + "\n")
+                    images_list[idx][len(image_path) + 1:].replace('.png', '') + " " + existence2str(lanes_exist) + "\n")
             else:
-                f.writelines(images_list[idx][len(base) - 1:].replace('.png', '') + "\n")
+                f.writelines(images_list[idx][len(image_path) + 1:].replace('.png', '') + "\n")
     return 0
 
 
