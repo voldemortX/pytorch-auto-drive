@@ -1,4 +1,4 @@
-# Trained weights: erfnet_baseline_tusimple_20210201.pt
+# Trained weights: erfnet_baseline_tusimple_20210424.pt
 # Training
 python main_landec.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=baseline --backbone=erfnet --mixed-precision --exp-name=erfnet_baseline_tusimple
 # Predicting lane points for testing

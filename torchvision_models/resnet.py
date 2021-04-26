@@ -240,7 +240,7 @@ def resnet18(pretrained=False, progress=True, **kwargs):
 
 
 def resnet18_reduced(pretrained=False, progress=True, expansion=1, **kwargs):
-    r"""Reduced ResNet18 (LSTR implementation)
+    r"""Reduced ResNet18 (LSTR modification, a 4x expansion yields some kind of ResNet-17)
 
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
@@ -248,7 +248,7 @@ def resnet18_reduced(pretrained=False, progress=True, expansion=1, **kwargs):
         expansion (int): Expansion rate for reduced ResNet18
     """
     channels = [channel * expansion for channel in [16, 32, 64, 128]]
-    return _resnet('resnet18', BasicBlock, [2, 2, 2, 2], pretrained, progress, channels=channels,
+    return _resnet('resnet18', BasicBlock, [1, 2, 2, 2], pretrained, progress, channels=channels,
                    **kwargs)
 
 

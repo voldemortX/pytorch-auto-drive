@@ -2,7 +2,7 @@
 
 *pytorch-auto-drive* is a **pure Python** codebase includes semantic segmentation models, lane detection models, based on **PyTorch** with mixed precision training. For example, *you do not need matlab to test on CULane.*
 
-*This repository is under active development, results with models uploaded are stable.*
+*This repository is under active development, results with models uploaded are stable. For legacy code users, please check [deprecations](https://github.com/voldemortX/pytorch-auto-drive/issues/14) for changes.*
 
 ## Highlights
 
