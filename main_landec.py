@@ -61,6 +61,7 @@ if __name__ == '__main__':
     thresh = configs[configs['LANE_DATASETS'][args.dataset]]['THRESHOLD']
     weights = configs[configs['LANE_DATASETS'][args.dataset]]['WEIGHTS']
     base = configs[configs['LANE_DATASETS'][args.dataset]]['BASE_DIR']
+    max_lane = configs[configs['LANE_DATASETS'][args.dataset]]['MAX_LANE']
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
@@ -97,7 +98,8 @@ if __name__ == '__main__':
 
         else:  # Test with official scripts later (so just predict lanes here)
             test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision, gap=gap,
-                         input_sizes=input_sizes, ppl=ppl, thresh=thresh, dataset=args.dataset, method=args.method)
+                         input_sizes=input_sizes, ppl=ppl, thresh=thresh, dataset=args.dataset, method=args.method,
+                         max_lane=max_lane)
     else:
         if args.method == 'scnn' or args.method == 'baseline':
             criterion = LaneLoss(weight=weights, ignore_index=255)

@@ -270,9 +270,11 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
 
 # Adapted from harryhan618/SCNN_Pytorch
 @torch.no_grad()
-def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, thresh, dataset, method='baseline'):
+def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, thresh, dataset,
+                 method='baseline', max_lane=0):
     # Predict on 1 data_loader and save predictions for the official script
     # sizes: [input size, test original size, ...]
+    # max_lane = 0 -> unlimited number of lanes
 
     all_lanes = []
     net.eval()
@@ -283,16 +285,22 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
             outputs = net(images)
 
             if method == 'lstr':
-                existence = (outputs['logits'].sigmoid() > 0.5)
+                existence_conf = outputs['logits'].sigmoid()
             else:
                 prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
                                                            align_corners=True).softmax(dim=1)
-                existence = (outputs['lane'].sigmoid() > 0.5)
+                existence_conf = outputs['lane'].sigmoid()
 
-            if dataset == 'tusimple':  # At most 5 lanes
-                indices = (existence.sum(dim=1, keepdim=True) > 5).expand_as(existence) * \
-                          (existence == existence.min(dim=1, keepdim=True).values)
-                existence[indices] = 0
+            existence = existence_conf > 0.5
+
+            if max_lane != 0:  # Lane max number prior for testing
+                # Maybe too slow (but should be faster than topk/sort),
+                # consider batch size >> max number of lanes
+                while (existence.sum(dim=1) > max_lane).sum() > 0:
+                    indices = (existence.sum(dim=1, keepdim=True) > max_lane).expand_as(existence) * \
+                              (existence_conf == existence_conf.min(dim=1, keepdim=True).values)
+                    existence[indices] = 0
+                    existence_conf[indices] = 1.1  # So we can keep using min
 
         # To CPU
         if method == 'lstr':
