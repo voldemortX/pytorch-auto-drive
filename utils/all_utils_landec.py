@@ -27,6 +27,12 @@ def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pr
                          dropout_1=0.1, dropout_2=0.1, flattened_size=4500, scnn=scnn)
 
 
+def erfnet_llamas(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
+    # Define ERFNet for CULane (With only ImageNet pretraining)
+    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
+                         dropout_1=0.3, dropout_2=0.3, flattened_size=4400, scnn=scnn)
+
+
 def vgg16_tusimple(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
     # Define Vgg16 for Tusimple (With only ImageNet pretraining)
     return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
@@ -64,13 +70,11 @@ def resnet_culane(num_classes, backbone_name='resnet18', scnn=False):
 
 
 def enet_tusimple(num_classes, encoder_only, continue_from):
-
     return enet_(num_classes=num_classes, num_lanes=num_classes - 1, dropout_1=0.01, dropout_2=0.1, flattened_size=4400,
                  encoder_only=encoder_only, pretrained_weights=continue_from if not encoder_only else None)
 
 
 def enet_culane(num_classes, encoder_only, continue_from):
-
     return enet_(num_classes=num_classes, num_lanes=num_classes - 1, dropout_1=0.01, dropout_2=0.1, flattened_size=4500,
                  encoder_only=encoder_only, pretrained_weights=continue_from if not encoder_only else None)
 
@@ -341,6 +345,12 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                     "raw_file": filenames[j]
                 }
                 all_lanes.append(json.dumps(formatted))
+            elif dataset == 'llamas':
+                # save each lane in images in xxx.lines.txt
+                # 仿照culane的格式，等来服务器连接后可以运行
+                pass
+
+
             else:
                 raise ValueError
 
@@ -490,6 +500,9 @@ def build_lane_detection_model(args, num_classes):
     elif args.dataset == 'culane' and args.backbone == 'enet':
         net = enet_culane(num_classes=num_classes, encoder_only=args.encoder_only,
                           continue_from=args.continue_from)
+    elif args.dataset == 'llamas' and args.backbone == 'erfnet':
+        net = erfnet_llamas(num_classes=num_classes, scnn=scnn)
+
     else:
         raise ValueError
 
