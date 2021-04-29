@@ -29,8 +29,9 @@
 # Start code under the previous license
 import json
 import os
+import yaml
 import numpy as np
-import tqdm
+from tqdm import tqdm
 
 
 def _extend_lane(lane, projection_matrix):
@@ -358,12 +359,40 @@ def ir(some_value):
     return int(round(some_value))
 
 
-# base = "/home/guoshaohua/dataset/llamas/"
-base = "/home/guoshaohua/dataset/llamas/"
+def get_files_from_folder(directory, extension=None):
+    """Get all files within a folder that fit the extension """
+    # NOTE Can be replaced by glob for newer python versions
+    label_files = []
+    for root, _, files in os.walk(directory):
+        for some_file in files:
+            label_files.append(os.path.abspath(os.path.join(root, some_file)))
+    if extension is not None:
+        label_files = list(filter(lambda x: x.endswith(extension), label_files))
+    return label_files
+
+
+def get_label_base(label_path):
+    """ Gets directory independent label path """
+    return '/'.join(label_path.split('/')[-2:])
+
+
+def get_labels(split='test'):
+    """ Gets label files of specified dataset split """
+    label_paths = get_files_from_folder(
+        os.path.join(label_path, split), '.json')
+    return label_paths
+
+
+with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
+    configs = yaml.load(f, Loader=yaml.Loader)
+base = configs['LLAMAS']['BASE_DIR']
+LLAMAS_H = configs['LLAMAS']['SIZES'][1][0]
+
+#
 list_path = os.path.join(base, 'lists')
 image_path = os.path.join(base, 'color_images')
 label_path = os.path.join(base, 'labels')
-LLAMAS_H = 717
+
 if os.path.exists(list_path) is False:
     os.makedirs(list_path)
 file_names = ['train', 'val', 'valfast', 'test']
@@ -419,7 +448,7 @@ def get_spline(filetype, filename, get_txt=False, existence=False, ant_exist=Tru
     if len(json_list) != 0:
         json_list.sort()
     length_of_list = len(images_list)
-    for idx in range(0, length_of_list):
+    for idx in tqdm(range(0, length_of_list)):
         lanes_exist = []
         if ant_exist:
             lanes_exist = spline_annotation(json_list[idx], images_list[idx], get_txt)
@@ -435,17 +464,17 @@ def get_spline(filetype, filename, get_txt=False, existence=False, ant_exist=Tru
 def generate_spline_annotation():
     for file_name in file_names:
         if file_name == 'train':
+            print(file_name+".txt is processing...")
             get_spline(file_name, file_name + '.txt', get_txt=True, existence=True, ant_exist=True)
-            print(file_name+" completed...")
         elif file_name == 'valfast':
+            print(file_name + ".txt is processing...")
             get_spline('valid', file_name + '.txt', get_txt=True, existence=True, ant_exist=True)
-            print(file_name + " completed...")
         elif file_name == 'val':
+            print(file_name + ".txt is processing...")
             get_spline('valid', file_name + '.txt', get_txt=False, existence=False, ant_exist=False)
-            print(file_name + " completed...")
         elif file_name == 'test':
+            print(file_name + ".txt is processing...")
             get_spline(file_name, file_name + '.txt', get_txt=False, existence=False, ant_exist=False)
-            print(file_name + " completed...")
 
     return 0
 

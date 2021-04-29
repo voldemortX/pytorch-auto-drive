@@ -46,7 +46,8 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
         self.splits_dir = os.path.join(root, 'lists')
 
         self._init_all()
-        assert (self.test_set and (len(self.images) == len(self.masks)))
+        if self.test_set:
+            assert (len(self.images) == len(self.masks))
 
     def __getitem__(self, index):
         # Return x (input image) & y (mask image, i.e. pixel-wise supervision) & lane existence (a list),
