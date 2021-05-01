@@ -284,7 +284,6 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
     net.eval()
     for images, filenames in tqdm(loader):
         images = images.to(device)
-
         with autocast(is_mixed_precision):
             outputs = net(images)
 
@@ -347,10 +346,16 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                 all_lanes.append(json.dumps(formatted))
             elif dataset == 'llamas':
                 # save each lane in images in xxx.lines.txt
-                # 仿照culane的格式，等来服务器连接后可以运行
-                pass
-
-
+                dir_name = filenames[j][:filenames[j].rfind('/')]
+                file_path = filenames[j].replace("_color_rect", "")
+                if not os.path.exists(dir_name):
+                    os.makedirs(dir_name)
+                with open(file_path, "w") as f:
+                    for lane in lane_coordinates:
+                        if lane:  # No printing for []
+                            for (x, y) in lane:
+                                print("{} {}".format(x, y), end=" ", file=f)
+                            print(file=f)
             else:
                 raise ValueError
 
@@ -377,13 +382,14 @@ def get_lane(prob_map, gap, ppl, thresh, resize_shape=None, dataset='culane'):
         resize_shape = prob_map.shape
     h, w = prob_map.shape
     H, W = resize_shape
-
     coords = np.zeros(ppl)
     for i in range(ppl):
         if dataset == 'tusimple':  # Annotation start at 10 pixel away from bottom
             y = int(h - (ppl - i) * gap / H * h)
         elif dataset == 'culane':  # Annotation start at bottom
             y = int(h - i * gap / H * h - 1)  # Same as original SCNN code
+        elif dataset == 'llamas':  # Annotation start at bottom
+            y = int(h - i * gap / H * h - 1)  # Same as culane format
         else:
             raise ValueError
         if y < 0:
@@ -435,6 +441,8 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
                 coordinates.append([coords[j] if coords[j] > 0 else -2 for j in range(ppl)])
             elif dataset == 'culane':
                 coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
+            elif dataset == 'llamas':
+                coordinates.append([[coords[j], H - j * gap] for j in range(ppl) if coords[j] > 0])
             else:
                 raise ValueError
 
