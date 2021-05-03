@@ -130,7 +130,7 @@ CULANE:  # CULane
     THRESHOLD: 0.3  # Threshold for lane generation from segmentation mask
 
 LLAMAS:  # llamas
-    BASE_DIR: '/home/guoshaohua/dataset/llamas'
+    BASE_DIR: '../../dataset/llamas'
     # training size/original size
     SIZES: [!!python/tuple [360, 640], !!python/tuple [ 717, 1276]]
     MAX_LANE: 4

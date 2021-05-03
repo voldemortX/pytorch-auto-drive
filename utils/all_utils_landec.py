@@ -442,6 +442,7 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
             elif dataset == 'culane':
                 coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
             elif dataset == 'llamas':
+                # 是否减一还不确定
                 coordinates.append([[coords[j], H - j * gap] for j in range(ppl) if coords[j] > 0])
             else:
                 raise ValueError

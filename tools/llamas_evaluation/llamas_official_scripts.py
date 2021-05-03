@@ -24,13 +24,11 @@
 # SOFTWARE.
 
 # ##### End License ######
-
+# copy from https://github.com/karstenBehrendt/unsupervised_llamas/tree/master/label_scripts
 # Start code under the previous license
 import json
 import os
-import yaml
 import numpy as np
-from tqdm import tqdm
 
 
 def _extend_lane(lane, projection_matrix):

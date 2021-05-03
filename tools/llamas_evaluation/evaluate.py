@@ -18,7 +18,6 @@ metric is used.
 
 import os
 import argparse
-import yaml
 from functools import partial
 import cv2
 import numpy as np
@@ -27,10 +26,7 @@ from scipy.interpolate import splprep, splev
 from scipy.optimize import linear_sum_assignment
 from shapely.geometry import LineString, Polygon
 from llamas_official_scripts import get_files_from_folder, get_horizontal_values_for_four_lanes, get_label_base
-import sys
 
-# with open('configs.yaml', 'r') as f:
-#     configs = yaml.load(f, Loader=yaml.Loader)
 
 LLAMAS_IMG_RES = [717, 1276]
 IMAGE_HEIGHT, IMAGE_WIDTH = LLAMAS_IMG_RES[0], LLAMAS_IMG_RES[1]
