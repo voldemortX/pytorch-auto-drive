@@ -140,6 +140,6 @@ LLAMAS:  # llamas
               [ 0, 0, 0 ] ]
     WEIGHTS: [ 0.4, 1, 1, 1, 1 ]
     GAP: 1  # Y pixel gap per sampling point
-    PPL: 418  # Points per lane
+    PPL: 417  # Points per lane
     THRESHOLD: 0.3  # Threshold for lane generation from segmentation mask
 

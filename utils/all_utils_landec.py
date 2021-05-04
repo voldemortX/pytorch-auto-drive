@@ -9,7 +9,7 @@ from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
     deeplabv1_resnet50, deeplabv1_resnet101, enet_
 from torchvision_models.lane_detection import LSTR
-from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, dict_collate_fn
+from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, LLAMAS, dict_collate_fn
 from utils.losses import cubic_curve_with_projection
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
@@ -126,6 +126,9 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
             elif dataset == 'culane':
                 data_set = CULane(root=base, image_set='train', transforms=transforms_train,
                                   padding_mask=True, process_points=True)
+            elif dataset == 'llamas':
+                data_set = LLAMAS(root=base, image_set='train', transforms=transforms_train,
+                                  padding_mask=True, process_points=True)
             else:
                 raise ValueError
         else:
@@ -149,6 +152,10 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
             elif dataset == 'culane':
                 data_set = CULane(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
                                   padding_mask=False, process_points=False)
+            elif dataset == 'llamas':
+                data_set = LLAMAS(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
+                                  padding_mask=False, process_points=False)
+
             else:
                 raise ValueError
         else:
@@ -442,8 +449,7 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
             elif dataset == 'culane':
                 coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
             elif dataset == 'llamas':
-                # 是否减一还不确定
-                coordinates.append([[coords[j], H - j * gap] for j in range(ppl) if coords[j] > 0])
+                coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
             else:
                 raise ValueError
 
@@ -462,6 +468,9 @@ def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, 
     elif dataset == 'culane':  # Annotation start at bottom
         y = torch.tensor([1.0 - i * gap / H for i in range(ppl)],
                          dtype=coefficients.dtype, device=coefficients.device)
+    elif dataset == 'llamas':  # Annotation start at bottom
+        y = torch.tensor([1.0 - i * gap / H for i in range(ppl)],
+                         dtype=coefficients.dtype, device=coefficients.device)
     else:
         raise ValueError
     coords = curve_function(coefficients=coefficients, y=y).cpu().numpy()
@@ -474,6 +483,9 @@ def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, 
                 coordinates.append([coords[i][j] * W if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]
                                     else -2 for j in range(ppl)])
             elif dataset == 'culane':
+                coordinates.append([[coords[i][j] * W, H - j * gap] for j in range(ppl)
+                                    if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]])
+            elif dataset == 'llamas':
                 coordinates.append([[coords[i][j] * W, H - j * gap] for j in range(ppl)
                                     if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]])
             else:
