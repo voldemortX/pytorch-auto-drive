@@ -24,7 +24,7 @@
 # SOFTWARE.
 
 # ##### End License ######
-# copy from https://github.com/karstenBehrendt/unsupervised_llamas/tree/master/label_scripts
+# copied from https://github.com/karstenBehrendt/unsupervised_llamas/tree/master/label_scripts
 # Start code under the previous license
 import json
 import os
@@ -372,9 +372,3 @@ def get_label_base(label_path):
     """ Gets directory independent label path """
     return '/'.join(label_path.split('/')[-2:])
 
-#
-# def get_labels(split='test'):
-#     """ Gets label files of specified dataset split """
-#     label_paths = get_files_from_folder(
-#         os.path.join(label_path, split), '.json')
-#     return label_paths

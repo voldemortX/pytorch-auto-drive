@@ -15,6 +15,8 @@
 - pillow  `will be installed along with TorchVision`
 - Pyyaml  `pip install pyyaml`
 - thop `pip install thop`
+- Shapely `pip install Shapely`
+- p-tqdm `pip install p-tqdm`
 
 ## Download the code:
    

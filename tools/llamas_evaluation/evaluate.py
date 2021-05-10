@@ -1,5 +1,5 @@
 """
-Copy from https://github.com/karstenBehrendt/unsupervised_llamas/blob/master/culane_metric/evaluate.py
+Copied from https://github.com/karstenBehrendt/unsupervised_llamas/blob/master/culane_metric/evaluate.py
 Evaluation script for the CULane metric on the LLAMAS dataset.
 This script will compute the F1, precision and recall metrics as described in the CULane benchmark.
 The predictions format is the same one used in the CULane benchmark.

@@ -20,14 +20,12 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             self.output_prefix = 'clips'
             self.output_suffix = '.jpg'
             self.image_suffix = '.jpg'
-            self.test_set = True
         elif data_set == 'culane':
             self.image_dir = root
             self.mask_dir = os.path.join(root, 'laneseg_label_w16')
             self.output_prefix = './output'
             self.output_suffix = '.lines.txt'
             self.image_suffix = '.jpg'
-            self.test_set = True
             if not os.path.exists(self.output_prefix):
                 os.makedirs(self.output_prefix)
         elif data_set == 'llamas':
@@ -36,7 +34,6 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             self.output_prefix = './output'
             self.output_suffix = '.lines.txt'
             self.image_suffix = '.png'
-            self.test_set = False
             if not os.path.exists(self.output_prefix):
                 os.makedirs(self.output_prefix)
         else:
@@ -46,8 +43,8 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
         self.splits_dir = os.path.join(root, 'lists')
 
         self._init_all()
-        if self.test_set:
-            assert (len(self.images) == len(self.masks))
+
+        assert (len(self.images) == len(self.masks))
 
     def __getitem__(self, index):
         # Return x (input image) & y (mask image, i.e. pixel-wise supervision) & lane existence (a list),

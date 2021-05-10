@@ -12,7 +12,7 @@
   python tools/llamas_list_convertor.py
 ```
 
-*\* Note: llamas dataset provides both color and gray images. We use color images in our framework.*
+LLAMAS dataset provides both color and gray images. We use color images in our framework.
 
 ## Description
 
@@ -33,9 +33,7 @@
      └─ lists
 ```
 
-*\* Note: The test set' s annotations are not public.*
-
-### Label Data Format
+The test set' s annotations are not public.
 
 ### Label Data Format
 
@@ -62,11 +60,13 @@
 }
 ```
 
-llamas dataset employs json files to save annotations. Each image corresponds to a json file. 
+LLAMAS dataset employs json files to save annotations. Each image corresponds to a json file. 
 
-We utilize [the format of culane](CULANE.md) to reformat llamas dataset. 
+We utilize [the format of culane](CULANE.md) to reformat LLAMAS dataset. 
 
-We use the [script](https://github.com/XingangPan/seg_label_generate) provided by Xingang Pan to generate per-pixel labels, which can be downloaded from [Google Drive](https://drive.google.com/file/d/1XA4nRLuAzsjJUSUs4HCjz7dksI9dHDNd/view?usp=sharing).
+We use the [script](https://github.com/XingangPan/seg_label_generate) provided by Xingang Pan to generate per-pixel labels.
+
+The generated labels can be downloaded from [Google Drive](https://drive.google.com/file/d/1XA4nRLuAzsjJUSUs4HCjz7dksI9dHDNd/view?usp=sharing).
 
 
 
