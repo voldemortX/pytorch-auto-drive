@@ -167,14 +167,15 @@ class Decoder(nn.Module):
 # ERFNet
 class ERFNet(nn.Module):
     def __init__(self, num_classes, encoder=None, num_lanes=0, dropout_1=0.03, dropout_2=0.3, flattened_size=3965,
-                 scnn=False):
+                 scnn=False, encoder_only=False):
         super().__init__()
         if encoder is None:
             self.encoder = Encoder(num_classes=num_classes, dropout_1=dropout_1, dropout_2=dropout_2)
         else:
             self.encoder = encoder
 
-        self.decoder = Decoder(num_classes)
+        # Only encoder (to be used as backbone)
+        self.decoder = None if encoder_only else Decoder(num_classes)
 
         if scnn:
             self.spatial_conv = SpatialConv()
@@ -187,16 +188,23 @@ class ERFNet(nn.Module):
         else:
             self.lane_classifier = None
 
-    def forward(self, input, only_encode=False):
+    def forward(self, inputs, only_encode=False):
+        # only_encode=True is for the pre-training step of 2-step segmentation training,
+        # in order to match with the original implementation.
+        # If encoder is used as feature extractor, set encoder_only=True in class init, but do not change this variable
         out = OrderedDict()
         if only_encode:
-            return self.encoder.forward(input, predict=True)
+            return self.encoder.forward(inputs, predict=True)
         else:
-            output = self.encoder(input)    # predict=False by default
+            output = self.encoder(inputs)    # predict=False by default
+
             if self.spatial_conv is not None:
                 output = self.spatial_conv(output)
-            out['out'] = self.decoder.forward(output)
+
+            if self.decoder is not None:
+                out['out'] = self.decoder.forward(output)
 
             if self.lane_classifier is not None:
                 out['lane'] = self.lane_classifier(output)
+
             return out

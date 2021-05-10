@@ -228,14 +228,16 @@ def deeplabv3_resnet101(pretrained=False, progress=True,
 
 
 def erfnet_resnet(pretrained_weights='erfnet_encoder_pretrained.pth.tar', num_classes=19, num_lanes=0,
-                  dropout_1=0.03, dropout_2=0.3, flattened_size=3965, scnn=False):
+                  dropout_1=0.03, dropout_2=0.3, flattened_size=3965, scnn=False, encoder_only=False):
     """Constructs a ERFNet model with ResNet-style backbone.
 
     Args:
         pretrained_weights (str): If not None, load ImageNet pre-trained weights from this filename
+        encoder_only (bool): If True, only encoder is returned as a feature extractor, ImageNet weights loading
+                             will not be affected
     """
     net = ERFNet(num_classes=num_classes, encoder=None, num_lanes=num_lanes, dropout_1=dropout_1, dropout_2=dropout_2,
-                 flattened_size=flattened_size, scnn=scnn)
+                 flattened_size=flattened_size, scnn=scnn, encoder_only=encoder_only)
     if pretrained_weights is not None:  # Load ImageNet pre-trained weights
         saved_weights = load(pretrained_weights)['state_dict']
         original_weights = net.state_dict()
