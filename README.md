@@ -20,8 +20,8 @@ Models from this repo are faster to train (**single card trainable**) and often 
 | semantic segmentation | SYNTHIA* |
 | lane detection | CULane |
 | lane detection | TuSimple |
+| lane detection | LLAMAS |
 | lane detection | BDD100K (*In progress*) |
-| lane detection | LLAMAS (*In progress*) |
 
 \* The UDA baseline setup, with Cityscapes *val* set as validation.
 
