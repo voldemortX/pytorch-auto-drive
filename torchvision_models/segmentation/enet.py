@@ -7,6 +7,7 @@ from torch.nn import functional as F
 from torch.nn.parameter import Parameter
 from ..lane_detection.common_models import EDLaneExist
 
+
 class InitialBlock(nn.Module):
     """The initial block is composed of two branches:
     1. a main branch which performs a regular convolution with stride 2;
@@ -695,7 +696,6 @@ class ENet(nn.Module):
             x = self.decoder.forward(x, max_indices1_0, stage1_input_size, max_indices2_0,
                                      stage2_input_size, input_size)
         out['out'] = x
-
 
         return out
 
