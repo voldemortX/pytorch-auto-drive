@@ -11,7 +11,7 @@ from .._utils import IntermediateLayerGetter
 # One convolution layer for each branch
 # The kernel size 3x3 is an educated guess, the 3 branches are implemented separately for future flexibility
 class PolynomialBranch(nn.Module):
-    def __init__(self, in_channels, order=3):
+    def __init__(self, in_channels, order=2):
         super(PolynomialBranch, self).__init__()
         self.conv = nn.Conv2d(in_channels, order + 1, kernel_size=3, stride=1, padding=1, bias=False)
 
@@ -37,8 +37,9 @@ class HeightBranch(nn.Module):
         return self.conv(inputs)
 
 
+# Currently supported backbones: ERFNet, ResNets
 class PRNet(nn.Module):
-    def __init__(self, backbone_name, dropout_1=0.3, dropout_2=0.03, order=3):
+    def __init__(self, backbone_name, dropout_1=0.3, dropout_2=0.03, order=2):
         super(PRNet, self).__init__()
         if backbone_name == 'erfnet':
             self.backbone = erfnet_resnet(dropout_1=dropout_1, dropout_2=dropout_2, encoder_only=True)
