@@ -55,7 +55,7 @@ class LSTR(nn.Module):
                                              return_intermediate_dec=return_intermediate)
 
         # Original LSTR: 3 classes + CE (softmax), we use binary classification with sigmoid to save parameters
-        self.class_embed = nn.Linear(hidden_dim, 1)
+        self.class_embed = nn.Linear(hidden_dim, 2)
 
         self.specific_embed = MLP(hidden_dim, hidden_dim, lsp_dim - 4, mlp_layers)  # Specific for each lane
         self.shared_embed = MLP(hidden_dim, hidden_dim, 4, mlp_layers)  # 4 shared curve coefficients
@@ -69,7 +69,7 @@ class LSTR(nn.Module):
         if padding_masks is None:  # Make things easier for testing (assume no padding)
             padding_masks = torch.zeros((p.shape[0], p.shape[2], p.shape[3]), dtype=torch.bool, device=p.device)
         else:
-            padding_masks = F.interpolate(padding_masks.unsqueeze(1), size=p.shape[-2:]).to(torch.bool).squeeze(1)
+            padding_masks = F.interpolate(padding_masks[None].float(), size=p.shape[-2:]).to(torch.bool)[0]
 
         pos = self.position_embedding(p, padding_masks)
         hs, _ = self.transformer(self.input_proj(p), padding_masks, self.query_embed.weight, pos)

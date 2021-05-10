@@ -300,7 +300,7 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
             outputs = net(images)
 
             if method == 'lstr':
-                existence_conf = outputs['logits'].sigmoid()
+                existence_conf = outputs['logits'].softmax(dim=-1)[..., 1]
             else:
                 prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
                                                            align_corners=True).softmax(dim=1)

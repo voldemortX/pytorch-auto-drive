@@ -264,7 +264,7 @@ class ToTensor(object):
             if 'keypoints' in pic:
                 pic['keypoints'] = torch.as_tensor(pic['keypoints'], dtype=torch.float32)
             if 'padding_mask' in pic:
-                pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']).copy(), dtype=torch.float32)
+                pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']).copy(), dtype=torch.uint8)
             return pic
         else:
             return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)

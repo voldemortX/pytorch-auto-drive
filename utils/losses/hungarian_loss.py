@@ -62,7 +62,7 @@ class HungarianMatcher(torch.nn.Module):
         # targets: each target: ['keypoints': L x N x 2, 'padding_mask': H x W, 'uppers': L, 'lowers': L, 'labels': L]
         # B: bs; Q: max lanes per-pred, L: num lanes, N: num keypoints per-lane, G: total num ground-truth-lanes
         bs, num_queries = outputs["logits"].shape[:2]
-        out_prob = outputs["logits"].flatten(end_dim=-2).sigmoid()  # BQ x 1
+        out_prob = outputs["logits"].softmax(dim=-1)  # BQ x 2
         out_lane = outputs['curves'].flatten(end_dim=-2)  # BQ x 8
         target_uppers = torch.cat([i['uppers'] for i in targets])
         target_lowers = torch.cat([i['lowers'] for i in targets])
@@ -73,7 +73,7 @@ class HungarianMatcher(torch.nn.Module):
         # but approximate it in 1 - prob[target class].
         # Then 1 can be omitted due to it is only a constant.
         # For binary classification, it is just prob (understand this prob as objectiveness in OD)
-        cost_label = -out_prob.repeat(1, num_gt)  # BQ x G
+        cost_label = -out_prob[..., 1].unsqueeze(-1).flatten(end_dim=-2).repeat(1, num_gt)  # BQ x G
 
         # 2. Compute the L1 cost between lowers and uppers
         cost_upper = torch.cdist(out_lane[:, 0:1], target_uppers.unsqueeze(-1), p=1)  # BQ x G
@@ -147,11 +147,11 @@ class HungarianLoss(WeightedLoss):
         target_lowers = torch.cat([t['lowers'][i] for t, (_, i) in zip(targets, indices)], dim=0)
         target_uppers = torch.cat([t['uppers'][i] for t, (_, i) in zip(targets, indices)], dim=0)
         target_keypoints = torch.cat([t['keypoints'][i] for t, (_, i) in zip(targets, indices)], dim=0)
-        target_labels = torch.zeros_like(outputs['logits'])
-        target_labels[idx] = 1.0  # Any matched lane has the same label 1
+        target_labels = torch.zeros(outputs['logits'].shape[:-1], dtype=torch.int64, device=outputs['logits'].device)
+        target_labels[idx] = 1  # Any matched lane has the same label 1
 
         # Loss
-        loss_label = self.classification_loss(inputs=outputs['logits'], targets=target_labels)
+        loss_label = self.classification_loss(inputs=outputs['logits'].permute(0, 2, 1), targets=target_labels)
         output_curves = outputs['curves'][idx]
         norm_weights, valid_points = lane_normalize_in_batch(target_keypoints)
         out_x = cubic_curve_with_projection(coefficients=output_curves[:, 2:], y=y)
@@ -182,8 +182,6 @@ class HungarianLoss(WeightedLoss):
         return loss
 
     def classification_loss(self, inputs: Tensor, targets: Tensor) -> Tensor:
-        # Typical classification loss (binary classification)
+        # Typical classification loss (cross entropy)
         # No need for permutation, assume target is matched to inputs
-
-        return F.binary_cross_entropy_with_logits(inputs, targets,
-                                                  weight=None, pos_weight=None, reduction=self.reduction)
+        return F.cross_entropy(inputs, targets, reduction=self.reduction)
