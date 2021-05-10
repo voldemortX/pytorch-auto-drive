@@ -9,7 +9,7 @@ from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
     deeplabv1_resnet50, deeplabv1_resnet101, enet_
 from torchvision_models.lane_detection import LSTR
-from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, dict_collate_fn
+from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, LLAMAS, dict_collate_fn
 from utils.losses import cubic_curve_with_projection
 from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
@@ -27,10 +27,21 @@ def erfnet_culane(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pr
                          dropout_1=0.1, dropout_2=0.1, flattened_size=4500, scnn=scnn)
 
 
+def erfnet_llamas(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
+    # Define ERFNet for CULane (With only ImageNet pretraining)
+    return erfnet_resnet(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
+                         dropout_1=0.3, dropout_2=0.3, flattened_size=4400, scnn=scnn)
+
+
 def vgg16_tusimple(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
     # Define Vgg16 for Tusimple (With only ImageNet pretraining)
     return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
                            dropout_1=0.1, flattened_size=6160, scnn=scnn)
+
+def vgg16_llamas(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
+    # Define Vgg16 for Tusimple (With only ImageNet pretraining)
+    return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
+                           dropout_1=0.1, flattened_size=4400, scnn=scnn)
 
 
 def vgg16_culane(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
@@ -64,13 +75,11 @@ def resnet_culane(num_classes, backbone_name='resnet18', scnn=False):
 
 
 def enet_tusimple(num_classes, encoder_only, continue_from):
-
     return enet_(num_classes=num_classes, num_lanes=num_classes - 1, dropout_1=0.01, dropout_2=0.1, flattened_size=4400,
                  encoder_only=encoder_only, pretrained_weights=continue_from if not encoder_only else None)
 
 
 def enet_culane(num_classes, encoder_only, continue_from):
-
     return enet_(num_classes=num_classes, num_lanes=num_classes - 1, dropout_1=0.01, dropout_2=0.1, flattened_size=4500,
                  encoder_only=encoder_only, pretrained_weights=continue_from if not encoder_only else None)
 
@@ -122,6 +131,9 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
             elif dataset == 'culane':
                 data_set = CULane(root=base, image_set='train', transforms=transforms_train,
                                   padding_mask=True, process_points=True)
+            elif dataset == 'llamas':
+                data_set = LLAMAS(root=base, image_set='train', transforms=transforms_train,
+                                  padding_mask=True, process_points=True)
             else:
                 raise ValueError
         else:
@@ -145,6 +157,10 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
             elif dataset == 'culane':
                 data_set = CULane(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
                                   padding_mask=False, process_points=False)
+            elif dataset == 'llamas':
+                data_set = LLAMAS(root=base, image_set=image_sets[state - 1], transforms=transforms_test,
+                                  padding_mask=False, process_points=False)
+
             else:
                 raise ValueError
         else:
@@ -280,7 +296,6 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
     net.eval()
     for images, filenames in tqdm(loader):
         images = images.to(device)
-
         with autocast(is_mixed_precision):
             outputs = net(images)
 
@@ -341,6 +356,18 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                     "raw_file": filenames[j]
                 }
                 all_lanes.append(json.dumps(formatted))
+            elif dataset == 'llamas':
+                # save each lane in images in xxx.lines.txt
+                dir_name = filenames[j][:filenames[j].rfind('/')]
+                file_path = filenames[j].replace("_color_rect", "")
+                if not os.path.exists(dir_name):
+                    os.makedirs(dir_name)
+                with open(file_path, "w") as f:
+                    for lane in lane_coordinates:
+                        if lane:  # No printing for []
+                            for (x, y) in lane:
+                                print("{} {}".format(x, y), end=" ", file=f)
+                            print(file=f)
             else:
                 raise ValueError
 
@@ -367,13 +394,14 @@ def get_lane(prob_map, gap, ppl, thresh, resize_shape=None, dataset='culane'):
         resize_shape = prob_map.shape
     h, w = prob_map.shape
     H, W = resize_shape
-
     coords = np.zeros(ppl)
     for i in range(ppl):
         if dataset == 'tusimple':  # Annotation start at 10 pixel away from bottom
             y = int(h - (ppl - i) * gap / H * h)
-        elif dataset == 'culane':  # Annotation start at bottom
+        elif dataset in ['culane', 'llamas']:  # Annotation start at bottom
             y = int(h - i * gap / H * h - 1)  # Same as original SCNN code
+        # elif dataset == 'llamas':  # Annotation start at bottom
+        #     y = int(h - i * gap / H * h - 1)  # Same as culane format
         else:
             raise ValueError
         if y < 0:
@@ -423,8 +451,10 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
                 continue
             if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
                 coordinates.append([coords[j] if coords[j] > 0 else -2 for j in range(ppl)])
-            elif dataset == 'culane':
+            elif dataset in ['culane', 'llamas']:
                 coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
+            # elif dataset == 'llamas':
+            #     coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
             else:
                 raise ValueError
 
@@ -440,9 +470,12 @@ def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, 
     if dataset == 'tusimple':  # Annotation start at 10 pixel away from bottom
         y = torch.tensor([1.0 - (ppl - i) * gap / H for i in range(ppl)],
                          dtype=coefficients.dtype, device=coefficients.device)
-    elif dataset == 'culane':  # Annotation start at bottom
+    elif dataset in ['culane', 'llamas']:  # Annotation start at bottom
         y = torch.tensor([1.0 - i * gap / H for i in range(ppl)],
                          dtype=coefficients.dtype, device=coefficients.device)
+    # elif dataset == 'llamas':  # Annotation start at bottom
+    #     y = torch.tensor([1.0 - i * gap / H for i in range(ppl)],
+    #                      dtype=coefficients.dtype, device=coefficients.device)
     else:
         raise ValueError
     coords = curve_function(coefficients=coefficients, y=y).cpu().numpy()
@@ -454,9 +487,12 @@ def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, 
             if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
                 coordinates.append([coords[i][j] * W if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]
                                     else -2 for j in range(ppl)])
-            elif dataset == 'culane':
+            elif dataset in ['culane', 'llamas']:
                 coordinates.append([[coords[i][j] * W, H - j * gap] for j in range(ppl)
                                     if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]])
+            # elif dataset == 'llamas':
+            #     coordinates.append([[coords[i][j] * W, H - j * gap] for j in range(ppl)
+            #                         if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]])
             else:
                 raise ValueError
 
@@ -471,7 +507,7 @@ def build_lane_detection_model(args, num_classes):
         if args.state == 1 or args.val_num_steps != 0:
             print('Fast validation not supported for this method!')
             raise ValueError
-        num_classes_max = 7 if args.dataset == 'tusimple' or args.dataset == 'culane' else num_classes
+        num_classes_max = 7 if args.dataset in ['culane', 'llamas', 'tusimple'] else num_classes
         net = lstr_resnet(num_classes_max=num_classes_max, backbone_name=args.backbone,
                           expansion=1 if args.dataset == 'tusimple' else 2, aux_loss=True if args.state == 0 else False)
     elif args.dataset == 'culane' and args.backbone == 'erfnet':
@@ -490,6 +526,10 @@ def build_lane_detection_model(args, num_classes):
     elif args.dataset == 'culane' and args.backbone == 'enet':
         net = enet_culane(num_classes=num_classes, encoder_only=args.encoder_only,
                           continue_from=args.continue_from)
+    elif args.dataset == 'llamas' and args.backbone == 'erfnet':
+        net = erfnet_llamas(num_classes=num_classes, scnn=scnn)
+    elif args.dataset == 'llamas' and args.backbone == 'vgg16':
+        net = vgg16_llamas(num_classes=num_classes, scnn=scnn)
     else:
         raise ValueError
 

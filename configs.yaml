@@ -1,6 +1,6 @@
 # Supported datasets
 SEGMENTATION_DATASETS: {'voc': 'PASCAL_VOC', 'city': 'CITYSCAPES', 'synthia': 'SYNTHIA', 'gtav': 'GTAV'}
-LANE_DATASETS: {'tusimple': 'TUSIMPLE', 'culane': 'CULANE'}
+LANE_DATASETS: {'tusimple': 'TUSIMPLE', 'culane': 'CULANE', 'llamas': 'LLAMAS'}
 
 GENERAL:  # ImageNet pre-trained model's general statistics
     MEAN: [0.485, 0.456, 0.406]
@@ -128,3 +128,18 @@ CULANE:  # CULane
     GAP: 20  # Y pixel gap per sampling point
     PPL: 18  # Points per lane
     THRESHOLD: 0.3  # Threshold for lane generation from segmentation mask
+
+LLAMAS:  # llamas
+    BASE_DIR: '../../dataset/llamas'
+    # training size/original size
+    SIZES: [!!python/tuple [360, 640], !!python/tuple [ 717, 1276]]
+    MAX_LANE: 4
+    NUM_CLASSES: 5
+    COLORS: [ [ 0, 0, 0 ],
+              [ 0, 255, 0 ], [ 0, 0, 255 ], [ 255, 0, 0 ], [ 255, 255, 0 ],
+              [ 0, 0, 0 ] ]
+    WEIGHTS: [ 0.4, 1, 1, 1, 1 ]
+    GAP: 1  # Y pixel gap per sampling point
+    PPL: 417  # Points per lane
+    THRESHOLD: 0.3  # Threshold for lane generation from segmentation mask
+

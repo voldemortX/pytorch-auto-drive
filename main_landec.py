@@ -25,7 +25,8 @@ if __name__ == '__main__':
                         help='Number of workers (threads) when loading data.'
                              'Recommend value for training: batch_size / 2 (default: 10)')
     parser.add_argument('--dataset', type=str, default='tusimple',
-                        help='Train/Evaluate on TuSimple (tusimple) / CULane (culane) (default: tusimple)')
+                        help='Train/Evaluate on TuSimple (tusimple) / CULane (culane) / LLAMAS (llamas) (default: '
+                             'tusimple)')
     parser.add_argument('--method', type=str, default='baseline',
                         help='method selection (lstr/scnn/baseline) (default: baseline)')
     parser.add_argument('--backbone', type=str, default='erfnet',

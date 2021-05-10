@@ -6,6 +6,9 @@
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | CULane | 88880 | 9675 | 34680 | 590 x 1640 | <=4 | [instruction](./datasets/CULANE.md)|
 | TuSimple | 3268 | 358 | 2782 | 720 x 1280 | <=5 | [instruction](./datasets/TUSIMPLE.md) |
+| LLAMAS* | 58269 | 20844 | 20929 | 717 x 1276 | <= 4 | [instruction](./datasets/LLAMAS.md) |
+
+*\* The number of lanes in llamas dataset is more than 4, but most methods & evaluation metrics only use 4 lanes.*
 
 ## Basic information of semantic segmentation datasets
 
