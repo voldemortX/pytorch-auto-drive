@@ -125,16 +125,19 @@ class HungarianLoss(WeightedLoss):
 
         return batch_idx, image_idx
 
-    def forward(self, inputs: Tensor, targets: Tensor, net) -> Tensor:
+    def forward(self, inputs: Tensor, targets: Tensor, net):
         # Support arbitrary auxiliary losses for transformer-based methods
         padding_masks = torch.stack([i['padding_mask'] for i in targets])
         outputs = net(inputs, padding_masks)
-        loss = self.calc_full_loss(outputs=outputs, targets=targets)
+        loss, log_dict = self.calc_full_loss(outputs=outputs, targets=targets)
         if 'aux' in outputs:
-            for aux in outputs['aux']:
-                loss += self.calc_full_loss(outputs=aux, targets=targets)
+            for i in range(len(outputs['aux'])):
+                aux_loss, aux_log_dict = self.calc_full_loss(outputs=outputs['aux'][i], targets=targets)
+                loss += aux_loss
+                for k in list(log_dict):  # list(dict) is needed for Python3, since .keys() does not copy like Python2
+                    log_dict[k + ' aux' + str(i)] = aux_log_dict[k]
 
-        return loss
+        return loss, log_dict
 
     def calc_full_loss(self, outputs, targets):
         # Match
@@ -162,7 +165,8 @@ class HungarianLoss(WeightedLoss):
         loss = self.label_weight * loss_label + self.curve_weight * loss_curve + \
             self.lower_weight * loss_lower + self.upper_weight * loss_upper
 
-        return loss
+        return loss, {'training loss': loss.item(), 'loss label': loss_label.item(), 'loss curve': loss_curve.item(),
+                      'loss upper': loss_upper.item(), 'loss lower': loss_lower.item()}
 
     def point_loss(self, inputs: Tensor, targets: Tensor, norm_weights=None, valid_points=None) -> Tensor:
         # L1 loss on sample points, shouldn't it be direct regression?

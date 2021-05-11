@@ -11,12 +11,12 @@ class LaneLoss(WeightedLoss):
     ignore_index: int
 
     def __init__(self, existence_weight: float = 0.1, weight: Optional[Tensor] = None, size_average=None,
-                 ignore_index: int = -100, reduce=None, reduction: str = 'mean') -> None:
+                 ignore_index: int = -100, reduce=None, reduction: str = 'mean'):
         super(LaneLoss, self).__init__(weight, size_average, reduce, reduction)
         self.ignore_index = ignore_index
         self.existence_weight = existence_weight
 
-    def forward(self, inputs: Tensor, targets: Tensor, lane_existence: Tensor, net, interp_size) -> Tensor:
+    def forward(self, inputs: Tensor, targets: Tensor, lane_existence: Tensor, net, interp_size):
         outputs = net(inputs)
         prob_maps = torch.nn.functional.interpolate(outputs['out'], size=interp_size, mode='bilinear',
                                                     align_corners=True)
@@ -27,7 +27,8 @@ class LaneLoss(WeightedLoss):
                                                             weight=None, pos_weight=None, reduction=self.reduction)
         total_loss = segmentation_loss + self.existence_weight * existence_loss
 
-        return total_loss
+        return total_loss, {'training loss': total_loss.item(), 'loss seg': segmentation_loss.item(),
+                            'loss exist': existence_loss.item()}
 
 
 # Loss function for SAD
@@ -36,10 +37,10 @@ class SADLoss(WeightedLoss):
     ignore_index: int
 
     def __init__(self, existence_weight: float = 0.1, weight: Optional[Tensor] = None, size_average=None,
-                 ignore_index: int = -100, reduce=None, reduction: str = 'mean') -> None:
+                 ignore_index: int = -100, reduce=None, reduction: str = 'mean'):
         super(SADLoss, self).__init__(weight, size_average, reduce, reduction)
         self.ignore_index = ignore_index
         self.existence_weight = existence_weight
 
-    def forward(self, inputs: Tensor, targets: Tensor) -> Tensor:
+    def forward(self, inputs: Tensor, targets: Tensor):
         pass
