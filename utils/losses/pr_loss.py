@@ -4,6 +4,21 @@ from torch.nn import functional as F
 from ._utils import WeightedLoss
 
 
+def polynomial_curve_without_projection(coefficients, y):
+    # Polynomial curve model (arbitrary order)
+    # Return x coordinates
+    # coefficients: [..., m], ... means arbitrary number of leading dimensions
+    # m: number of coefficients, order increasing
+    # y: [N]
+    original_shape = coefficients.shape
+    coefficients = coefficients.unsqueeze(-1).expand(*original_shape, y.shape[0])
+    x = coefficients[..., 0, :]
+    for i in range(1, len(original_shape[-1])):
+        x += coefficients[..., i, :] * y ** i
+
+    return x  # [..., N]
+
+
 class PRLoss(WeightedLoss):
     __constants__ = ['reduction']
     ignore_index: int
@@ -17,8 +32,10 @@ class PRLoss(WeightedLoss):
         self.beta = beta  # Beta for smoothed L1 loss
         self.m = m  # Number of sample points to calculate polynomial regression loss
 
-    def forward(self, inputs, targets, net):
+    def forward(self, inputs, targets, masks, net):
+        # masks: True for polynomial points (which have height & polynomial regression losses)
         outputs = net(inputs)
+
         pass
 
     @staticmethod
