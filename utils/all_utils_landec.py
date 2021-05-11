@@ -178,7 +178,7 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
     # Should be the same as segmentation, given customized loss classes
     net.train()
     epoch = 0
-    running_loss = 0.0
+    running_loss = None  # Dict logging for every loss (too many losses in this task)
     loss_num_steps = int(len(loader) / 10) if len(loader) > 10 else 1
     if is_mixed_precision:
         scaler = GradScaler()
@@ -201,9 +201,9 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
             with autocast(is_mixed_precision):
                 # To support intermediate losses for SAD
                 if method == 'lstr':
-                    loss = criterion(inputs, labels, net)
+                    loss, log_dict = criterion(inputs, labels, net)
                 else:
-                    loss = criterion(inputs, labels, lane_existence, net, input_sizes[0])
+                    loss, log_dict = criterion(inputs, labels, lane_existence, net, input_sizes[0])
 
             if is_mixed_precision:
                 scaler.scale(loss).backward()
@@ -214,16 +214,18 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
                 optimizer.step()
 
             lr_scheduler.step()
-            running_loss += loss.item()
+            if running_loss is None:  # Because different methods may have different values to log
+                running_loss = {k: 0.0 for k in log_dict.keys()}
+            for k in log_dict.keys():
+                running_loss[k] += log_dict[k]
             current_step_num = int(epoch * len(loader) + i + 1)
 
             # Record losses
             if current_step_num % loss_num_steps == (loss_num_steps - 1):
-                print('[%d, %d] loss: %.4f' % (epoch + 1, i + 1, running_loss / loss_num_steps))
-                writer.add_scalar('training loss',
-                                  running_loss / loss_num_steps,
-                                  current_step_num)
-                running_loss = 0.0
+                for k in running_loss.keys():
+                    print('[%d, %d] %s: %.4f' % (epoch + 1, i + 1, k, running_loss[k] / loss_num_steps))
+                    writer.add_scalar(k, running_loss[k] / loss_num_steps, current_step_num)
+                    running_loss[k] = 0.0
 
             # Record checkpoints
             if validation_loader is not None:
