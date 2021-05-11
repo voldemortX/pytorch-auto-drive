@@ -473,26 +473,21 @@ def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, 
     elif dataset in ['culane', 'llamas']:  # Annotation start at bottom
         y = torch.tensor([1.0 - i * gap / H for i in range(ppl)],
                          dtype=coefficients.dtype, device=coefficients.device)
-    # elif dataset == 'llamas':  # Annotation start at bottom
-    #     y = torch.tensor([1.0 - i * gap / H for i in range(ppl)],
-    #                      dtype=coefficients.dtype, device=coefficients.device)
     else:
         raise ValueError
-    coords = curve_function(coefficients=coefficients, y=y).cpu().numpy()
+    coords = curve_function(coefficients=coefficients, y=y)
 
     # Delete outside points according to predicted upper & lower boundaries
     coordinates = []
     for i in range(existence.shape[0]):
         if existence[i]:
+            valid_points = (coords[i] >= 0) * (coords[i] <= 1) * (y > lower_bound[i]) * (y < upper_bound[i])
+            if valid_points.sum() < 2:  # Same post-processing technique as segmentation methods
+                continue
             if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
-                coordinates.append([coords[i][j] * W if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]
-                                    else -2 for j in range(ppl)])
+                coordinates.append([(coords[i][j] * W).item() if valid_points[j] else -2 for j in range(ppl)])
             elif dataset in ['culane', 'llamas']:
-                coordinates.append([[coords[i][j] * W, H - j * gap] for j in range(ppl)
-                                    if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]])
-            # elif dataset == 'llamas':
-            #     coordinates.append([[coords[i][j] * W, H - j * gap] for j in range(ppl)
-            #                         if coords[i][j] > 0 and lower_bound[i] < y[j] < upper_bound[i]])
+                coordinates.append([[(coords[i][j] * W).item(), H - j * gap] for j in range(ppl) if valid_points[j]])
             else:
                 raise ValueError
 
