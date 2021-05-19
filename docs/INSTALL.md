@@ -17,6 +17,7 @@
 - thop `pip install thop`
 - Shapely `pip install Shapely`
 - p-tqdm `pip install p-tqdm`
+- scipy `pip install scipy`
 
 ## Download the code:
    
