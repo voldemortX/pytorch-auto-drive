@@ -381,7 +381,7 @@ def build_segmentation_model(configs, args, num_classes, city_aug, input_sizes):
         city_aug = 2
     elif args.model == 'enet':
         net = enet(num_classes=num_classes, encoder_only=args.encoder_only,
-                   continue_from=args.continue_from if args.state != 1 else None)
+                   continue_from=args.continue_from if hasattr(args, 'state') and args.state != 1 else None)
         input_sizes = configs['CITYSCAPES']['SIZES_ERFNET']
         city_aug = 2
     else:

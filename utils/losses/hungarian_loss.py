@@ -26,18 +26,17 @@ def lane_normalize_in_batch(keypoints):
 def cubic_curve_with_projection(coefficients, y):
     # The cubic curve model from LSTR (considers projection to image plane)
     # Return x coordinates
-    # coefficients: [..., 6], ... means arbitrary number of leading dimensions
+    # coefficients: [d1, d2, ..., 6]
     # 6 coefficients: [k", f", m", n", b", b''']
-    # y: [N]
-    original_shape = coefficients.shape
-    coefficients = coefficients.unsqueeze(-1).expand(*original_shape, y.shape[0])
-    x = coefficients[..., 0, :] / (y - coefficients[..., 1, :]) ** 2 \
-        + coefficients[..., 2, :] / (y - coefficients[..., 1, :]) \
-        + coefficients[..., 3, :] \
-        + coefficients[..., 4, :] * y \
-        - coefficients[..., 5, :]
+    # y: [d1, d2, ..., N]
+    y = y.permute(-1, *[i for i in range(len(y.shape) - 1)])  # -> [N, d1, d2, ...]
+    x = coefficients[..., 0] / (y - coefficients[..., 1]) ** 2 \
+        + coefficients[..., 2] / (y - coefficients[..., 1]) \
+        + coefficients[..., 3] \
+        + coefficients[..., 4] * y \
+        - coefficients[..., 5]
 
-    return x  # [..., N]
+    return x.permute(*[i + 1 for i in range(len(x.shape) - 1)], 0)  # [d1, d2, ... , N]
 
 
 # TODO: Speed-up Hungarian on GPU with tensors
@@ -82,12 +81,13 @@ class HungarianMatcher(torch.nn.Module):
         # 3. Compute the curve cost
         target_keypoints = torch.cat([i['keypoints'] for i in targets], dim=0)  # G x N x 2
         norm_weights, valid_points = lane_normalize_in_batch(target_keypoints)  # G, G x N
-        out_x = cubic_curve_with_projection(coefficients=out_lane[:, 2:], y=target_keypoints[0, :, 1])  # BQ x N
 
         # Masked torch.cdist(p=1)
-        expand_shape = [bs * num_queries, num_gt, out_x.shape[-1]]  # BQ x G x N
-        cost_curve = ((out_x.unsqueeze(1).expand(expand_shape) -
-                      target_keypoints[:, :, 0].unsqueeze(0).expand(expand_shape)).abs() *
+        expand_shape = [bs * num_queries, num_gt, target_keypoints.shape[-2]]  # BQ x G x N
+        coefficients = out_lane[:, 2:].unsqueeze(1).expand(*expand_shape[:-1], -1)  # BQ x G x 6
+        out_x = cubic_curve_with_projection(y=target_keypoints[:, :, 1].unsqueeze(0).expand(expand_shape),
+                                            coefficients=coefficients)  # BQ x G x N
+        cost_curve = ((out_x - target_keypoints[:, :, 0].unsqueeze(0).expand(expand_shape)).abs() *
                       valid_points.unsqueeze(0).expand(expand_shape)).sum(-1)  # BQ x G
         cost_curve *= norm_weights  # BQ x G
 
@@ -146,7 +146,6 @@ class HungarianLoss(WeightedLoss):
 
         # Targets (rearrange each lane in the whole batch)
         # B x N x ... -> BN x ...
-        y = targets[0]['keypoints'][0][:, 1].clone().detach()  # Safer
         target_lowers = torch.cat([t['lowers'][i] for t, (_, i) in zip(targets, indices)], dim=0)
         target_uppers = torch.cat([t['uppers'][i] for t, (_, i) in zip(targets, indices)], dim=0)
         target_keypoints = torch.cat([t['keypoints'][i] for t, (_, i) in zip(targets, indices)], dim=0)
@@ -157,7 +156,8 @@ class HungarianLoss(WeightedLoss):
         loss_label = self.classification_loss(inputs=outputs['logits'].permute(0, 2, 1), targets=target_labels)
         output_curves = outputs['curves'][idx]
         norm_weights, valid_points = lane_normalize_in_batch(target_keypoints)
-        out_x = cubic_curve_with_projection(coefficients=output_curves[:, 2:], y=y)
+        out_x = cubic_curve_with_projection(coefficients=output_curves[:, 2:],
+                                            y=target_keypoints[:, :, 1].clone().detach())
         loss_curve = self.point_loss(inputs=out_x, targets=target_keypoints[:, :, 0],
                                      norm_weights=norm_weights, valid_points=valid_points)
         loss_upper = self.point_loss(inputs=output_curves[:, 0], targets=target_uppers)

@@ -1,5 +1,8 @@
+import warnings
 import torch
 import torch.nn as nn
+from torch import Tensor
+from typing import List, Optional
 from .utils import load_state_dict_from_url
 
 
@@ -19,6 +22,63 @@ model_urls = {
     'wide_resnet50_2': 'https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth',
     'wide_resnet101_2': 'https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth',
 }
+
+
+class FrozenBatchNorm2d(torch.nn.Module):
+    """
+    BatchNorm2d where the batch statistics and the affine parameters
+    are fixed
+    """
+
+    def __init__(
+        self,
+        num_features: int,
+        eps: float = 1e-5,
+        n: Optional[int] = None,
+    ):
+        # n=None for backward-compatibility
+        if n is not None:
+            warnings.warn("`n` argument is deprecated and has been renamed `num_features`",
+                          DeprecationWarning)
+            num_features = n
+        super(FrozenBatchNorm2d, self).__init__()
+        self.eps = eps
+        self.register_buffer("weight", torch.ones(num_features))
+        self.register_buffer("bias", torch.zeros(num_features))
+        self.register_buffer("running_mean", torch.zeros(num_features))
+        self.register_buffer("running_var", torch.ones(num_features))
+
+    def _load_from_state_dict(
+        self,
+        state_dict: dict,
+        prefix: str,
+        local_metadata: dict,
+        strict: bool,
+        missing_keys: List[str],
+        unexpected_keys: List[str],
+        error_msgs: List[str],
+    ):
+        num_batches_tracked_key = prefix + 'num_batches_tracked'
+        if num_batches_tracked_key in state_dict:
+            del state_dict[num_batches_tracked_key]
+
+        super(FrozenBatchNorm2d, self)._load_from_state_dict(
+            state_dict, prefix, local_metadata, strict,
+            missing_keys, unexpected_keys, error_msgs)
+
+    def forward(self, x: Tensor) -> Tensor:
+        # move reshapes to the beginning
+        # to make it fuser-friendly
+        w = self.weight.reshape(1, -1, 1, 1)
+        b = self.bias.reshape(1, -1, 1, 1)
+        rv = self.running_var.reshape(1, -1, 1, 1)
+        rm = self.running_mean.reshape(1, -1, 1, 1)
+        scale = w * (rv + self.eps).rsqrt()
+        bias = b - rm * scale
+        return x * scale + bias
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.weight.shape[0]}, eps={self.eps})"
 
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
@@ -132,7 +192,7 @@ class ResNet(nn.Module):
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
 
-        self.inplanes = 64
+        self.inplanes = channels[0]
         self.dilation = 1
         if replace_stride_with_dilation is None:
             # each element in the tuple indicates if we should replace
@@ -248,8 +308,7 @@ def resnet18_reduced(pretrained=False, progress=True, expansion=1, **kwargs):
         expansion (int): Expansion rate for reduced ResNet18
     """
     channels = [channel * expansion for channel in [16, 32, 64, 128]]
-    return _resnet('resnet18', BasicBlock, [1, 2, 2, 2], pretrained, progress, channels=channels,
-                   **kwargs)
+    return _resnet('resnet18', BasicBlock, [1, 2, 2, 2], pretrained, progress, channels=channels, **kwargs)
 
 
 def resnet34(pretrained=False, progress=True, **kwargs):

@@ -477,13 +477,14 @@ def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, 
                          dtype=coefficients.dtype, device=coefficients.device)
     else:
         raise ValueError
-    coords = curve_function(coefficients=coefficients, y=y)
+    coords = curve_function(coefficients=coefficients, y=y.unsqueeze(0).expand(coefficients.shape[0], -1))
 
     # Delete outside points according to predicted upper & lower boundaries
     coordinates = []
     for i in range(existence.shape[0]):
         if existence[i]:
-            valid_points = (coords[i] >= 0) * (coords[i] <= 1) * (y > lower_bound[i]) * (y < upper_bound[i])
+            # Note that in image coordinate system, (0, 0) is the top-left corner
+            valid_points = (coords[i] >= 0) * (coords[i] <= 1) * (y < lower_bound[i]) * (y > upper_bound[i])
             if valid_points.sum() < 2:  # Same post-processing technique as segmentation methods
                 continue
             if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
@@ -501,12 +502,13 @@ def build_lane_detection_model(args, num_classes):
     if args.dataset == 'tusimple' and args.backbone == 'erfnet':
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
     elif args.method == 'lstr':
-        if args.state == 1 or args.val_num_steps != 0:
+        if (hasattr(args, 'state') and args.state == 1) or (hasattr(args, 'val_num_steps') and args.val_num_steps != 0):
             print('Fast validation not supported for this method!')
             raise ValueError
         num_classes_max = 7 if args.dataset in ['culane', 'llamas', 'tusimple'] else num_classes
         net = lstr_resnet(num_classes_max=num_classes_max, backbone_name=args.backbone,
-                          expansion=1 if args.dataset == 'tusimple' else 2, aux_loss=True if args.state == 0 else False)
+                          expansion=1 if args.dataset == 'tusimple' else 2,
+                          aux_loss=True if hasattr(args, 'state') and args.state == 0 else False)
     elif args.dataset == 'culane' and args.backbone == 'erfnet':
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'culane' and args.backbone == 'vgg16':
