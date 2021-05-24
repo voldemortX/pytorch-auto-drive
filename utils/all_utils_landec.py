@@ -73,6 +73,17 @@ def resnet_culane(num_classes, backbone_name='resnet18', scnn=False):
     return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
                                     channel_reduce=128, flattened_size=4500, scnn=scnn)
 
+def resnet_llamas(num_classes, backbone_name='resnet18', scnn=False):
+    # Define ResNets for CULane (With only ImageNet pretraining)
+    model_map = {
+        'resnet18': deeplabv1_resnet18,
+        'resnet34': deeplabv1_resnet34,
+        'resnet50': deeplabv1_resnet50,
+        'resnet101': deeplabv1_resnet101,
+    }
+    return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
+                                    channel_reduce=128, flattened_size=4400, scnn=scnn)
+
 
 def enet_tusimple(num_classes, encoder_only, continue_from):
     return enet_(num_classes=num_classes, num_lanes=num_classes - 1, dropout_1=0.01, dropout_2=0.1, flattened_size=4400,
@@ -529,6 +540,8 @@ def build_lane_detection_model(args, num_classes):
         net = erfnet_llamas(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'llamas' and args.backbone == 'vgg16':
         net = vgg16_llamas(num_classes=num_classes, scnn=scnn)
+    elif args.dataset == 'llamas' and 'resnet' in args.backbone:
+        net = resnet_llamas(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
     else:
         raise ValueError
 
