@@ -90,15 +90,11 @@ class LaneKeypointDataset(torchvision.datasets.VisionDataset):
         # If just testing,
         # y is the filename to store prediction
         img = Image.open(self.images[index]).convert('RGB')
-        target = self.targets[index]
+        target = {'keypoints': self.targets[index]}  # Load as dict
 
-        # Load as dict
-        if self.padding_mask or self.process_points:
-            if type(target) == str:
-                print('Testing does not require target padding_mask or process_point!')
-                raise ValueError
-            else:
-                target = {'keypoints': target}
+        if (self.padding_mask or self.process_points) and type(target) == str:
+            print('Testing does not require target padding_mask or process_point!')
+            raise ValueError
 
         # Add padding mask
         if self.padding_mask:

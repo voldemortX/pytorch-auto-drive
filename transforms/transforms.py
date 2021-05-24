@@ -232,11 +232,31 @@ class RandomHorizontalFlip(object):
     def __init__(self, flip_prob):
         self.flip_prob = flip_prob
 
+    @staticmethod
+    def transform_points(points, mid_x, ignore_x=-2):
+        # Flip a np.array (L x N x 2) of points (x, y) horizontally, original axis start from top-left corner
+        ignore_filter = (points[:, :, 0] == ignore_x)
+        points[:, :, 0] = 2 * mid_x - points[:, :, 0]
+        points[:, :, 0] = points[:, :, 0] * ~ignore_filter + (-2) * ignore_filter
+
+        return points
+
     def __call__(self, image, target):
         t = random.random()
         if t < self.flip_prob:
             image = F.hflip(image)
-        target = target if (isinstance(target, str) or t >= self.flip_prob) else F.hflip(target)
+            if isinstance(target, str):
+                return image, target
+            elif isinstance(target, dict):  # To keep BC
+                if 'keypoints' in target:
+                    target['keypoints'] = self.transform_points(target['keypoints'],
+                                                                mid_x=F._get_image_size(image)[0] / 2)
+                if 'padding_mask' in target:
+                    target['padding_mask'] = F.hflip(target['padding_mask'])
+            else:
+                target = F.hflip(target)
+        else:
+            return image, target
 
         return image, target
 
@@ -262,7 +282,7 @@ class ToTensor(object):
             return pic
         elif isinstance(pic, dict):
             if 'keypoints' in pic:
-                pic['keypoints'] = torch.as_tensor(pic['keypoints'], dtype=torch.float32)
+                pic['keypoints'] = torch.as_tensor(pic['keypoints'].copy(), dtype=torch.float32)
             if 'padding_mask' in pic:
                 pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']).copy(), dtype=torch.uint8)
             return pic
