@@ -13,6 +13,7 @@ import random
 import torch
 import math
 from . import functional as F
+from . import functional_keypoints as F_kp
 
 
 def _check_sequence_input(x, name, req_sizes):
@@ -84,11 +85,24 @@ class Crop(object):
     def __init__(self, size):
         self.h, self.w = size
 
-    def __call__(self, image, target):
-        image = F.crop(image, 0, 0, self.h, self.w)
-        target = F.crop(target, 0, 0, self.h, self.w)
+    @staticmethod
+    def parse_crop(image, target, top, left, height, width):
+        # Crop with 4 degrees of freedom (top, left, height, width)
+        image = F.crop(image, top, left, height, width)
+        if isinstance(target, str):
+            return image, target
+        elif isinstance(target, dict):  # To keep BC
+            if 'keypoints' in target:
+                target['keypoints'] = F_kp.crop(target['keypoints'], top, left, height, width)
+            if 'padding_mask' in target:
+                target['padding_mask'] = F.crop(target['padding_mask'], top, left, height, width)
+        else:
+            target = F.crop(target, top, left, height, width)
 
         return image, target
+
+    def __call__(self, image, target):
+        return self.parse_crop(image, target, 0, 0, self.h, self.w)
 
 
 # Pad image with zeros, yet pad target with 255 (ignore label) on bottom & right if
@@ -99,11 +113,18 @@ class ZeroPad(object):
 
     @staticmethod
     def zero_pad(image, target, h, w):
-        ow, oh = F._get_image_size(target)
+        ow, oh = F._get_image_size(image)
         pad_h = h - oh if oh < h else 0
         pad_w = w - ow if ow < w else 0
         image = F.pad(image, [0, 0, pad_w, pad_h], fill=0)
-        target = F.pad(target, [0, 0, pad_w, pad_h], fill=255)
+        if isinstance(target, str):
+            return image, target
+        elif isinstance(target, dict):  # To keep BC
+            # Conveniently, since padding is on right & bottom, nothing needs to be done for keypoints
+            if 'padding_mask' in target:
+                target['padding_mask'] = F.pad(target['padding_mask'], [0, 0, pad_w, pad_h], fill=1)
+        else:
+            target = F.pad(target, [0, 0, pad_w, pad_h], fill=255)
 
         return image, target
 
@@ -222,10 +243,8 @@ class RandomCrop(object):
                                              max(self.size[0], ih),
                                              max(self.size[1], iw))
         i, j, h, w = self.get_params(image, self.size)
-        image = F.crop(image, i, j, h, w)
-        target = F.crop(target, i, j, h, w)
 
-        return image, target
+        return Crop.parse_crop(image, target, i, j, h, w)
 
 
 class RandomHorizontalFlip(object):
