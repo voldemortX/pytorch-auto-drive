@@ -5,18 +5,17 @@ from ._utils import WeightedLoss
 
 
 def polynomial_curve_without_projection(coefficients, y):
-    # Polynomial curve model (arbitrary order)
+    # Arbitrary polynomial curve function
     # Return x coordinates
-    # coefficients: [..., m], ... means arbitrary number of leading dimensions
+    # coefficients: [d1, d2, ... , m]
     # m: number of coefficients, order increasing
-    # y: [N]
-    original_shape = coefficients.shape
-    coefficients = coefficients.unsqueeze(-1).expand(*original_shape, y.shape[0])
-    x = coefficients[..., 0, :]
-    for i in range(1, len(original_shape[-1])):
-        x += coefficients[..., i, :] * y ** i
+    # y: [d1, d2, ... , N]
+    y = y.permute(-1, *[i for i in range(len(y.shape) - 1)])
+    x = coefficients[..., 0]
+    for i in range(1, coefficients.shape[-1]):
+        x += coefficients[..., i] * y ** i
 
-    return x  # [..., N]
+    return x.permute(*[i + 1 for i in range(len(x.shape) - 1)], 0)  # [d1, d2, ... , N]
 
 
 class PRLoss(WeightedLoss):
