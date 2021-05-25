@@ -60,7 +60,7 @@ def speed_evaluate_real(net, device, loader, num, count_interpolate=True):
         for _ in range(10):
             image, _ = iterable.__next__()
             image = image.to(device)
-            _ = net(image)['out']
+            _ = net(image)
 
     # Timing with loading images from disk
     gpu_time = 0
@@ -78,9 +78,10 @@ def speed_evaluate_real(net, device, loader, num, count_interpolate=True):
             # GPU
             torch.cuda.current_stream(device).synchronize()
             temp = time.perf_counter()
-            output = net(image)['out']
+            output = net(image)
             if count_interpolate:
-                _ = torch.nn.functional.interpolate(output, size=image.shape[-2:], mode='bilinear', align_corners=True)
+                _ = torch.nn.functional.interpolate(output['out'], size=image.shape[-2:],
+                                                    mode='bilinear', align_corners=True)
             torch.cuda.current_stream(device).synchronize()
             gpu_time += (time.perf_counter() - temp)
 
@@ -98,16 +99,17 @@ def speed_evaluate_simple(net, device, dummy, num, count_interpolate=True):
     # Warm-up hardware
     with torch.no_grad():
         for i in range(0, 10):
-            _ = net(dummy)['out']
+            _ = net(dummy)
 
     # Timing
     torch.cuda.current_stream(device).synchronize()
     t_start = time.perf_counter()
     with torch.no_grad():
         for _ in tqdm(range(num)):
-            output = net(dummy)['out']
+            output = net(dummy)
             if count_interpolate:
-                _ = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
+                _ = torch.nn.functional.interpolate(output['out'], size=output_size,
+                                                    mode='bilinear', align_corners=True)
     torch.cuda.current_stream(device).synchronize()
     fps_gpu = num / (time.perf_counter() - t_start)
 

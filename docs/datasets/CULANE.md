@@ -9,7 +9,10 @@
 3. Pre-processing:
 
 ```
-  cp -r <CULANE.BASE_DIR>/list/* <CULANE.BASE_DIR>/lists/
+  cd <CULANE.BASE_DIR>
+  mkdir lists
+  cp -r ./list/* ./lists/
+  cd -
   python tools/culane_list_convertor.py
 ```
 

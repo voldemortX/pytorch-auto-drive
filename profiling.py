@@ -29,8 +29,6 @@ if __name__ == '__main__':
                         help='Select test times')
     parser.add_argument('--encoder-only', action='store_true', default=False,
                         help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
-    parser.add_argument('--state', type=int, default=1,
-                        help='train the whole enet(2)/Conduct final test(1)/normal training(0) (default: 0)')
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
     args = parser.parse_args()
@@ -56,6 +54,7 @@ if __name__ == '__main__':
         print('Profiling, please clear your GPU memory before doing this.')
         if args.mode == 'simple':
             dummy = torch.ones((1, 3, args.height, args.width))
+            print(dummy.dtype)
             fps = []
             for i in range(0, args.times):
                 fps.append(speed_evaluate_simple(net=net, device=device, dummy=dummy, num=300,

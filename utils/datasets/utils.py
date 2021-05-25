@@ -62,10 +62,10 @@ def generate_lane_label_dict(target):
     valid_lanes = (target['keypoints'][:, :, 0] > 0).sum(dim=-1) >= 2
     target['keypoints'] = target['keypoints'][valid_lanes]
 
-    # Append lowest & highest y coordinates, labels (all 1)
+    # Append lowest & highest y coordinates (coordinates start at top-left corner), labels (all 1)
     # Looks better than giving MIN values
-    target['lowers'] = torch.stack([l[l[:, 0] > 0][:, 1].min() for l in target['keypoints']])
-    target['uppers'] = torch.stack([l[l[:, 0] > 0][:, 1].max() for l in target['keypoints']])
+    target['lowers'] = torch.stack([l[l[:, 0] > 0][:, 1].max() for l in target['keypoints']])
+    target['uppers'] = torch.stack([l[l[:, 0] > 0][:, 1].min() for l in target['keypoints']])
     target['labels'] = torch.ones(target['keypoints'].shape[0], device=target['keypoints'].device, dtype=torch.int64)
     
     return target
@@ -90,15 +90,14 @@ class LaneKeypointDataset(torchvision.datasets.VisionDataset):
         # If just testing,
         # y is the filename to store prediction
         img = Image.open(self.images[index]).convert('RGB')
-        target = self.targets[index]
+        if type(self.targets[index]) == str:  # Load as paths
+            target = self.targets[index]
+        else:  # Load as dict
+            target = {'keypoints': self.targets[index]}
 
-        # Load as dict
-        if self.padding_mask or self.process_points:
-            if type(target) == str:
-                print('Testing does not require target padding_mask or process_point!')
-                raise ValueError
-            else:
-                target = {'keypoints': target}
+        if (self.padding_mask or self.process_points) and type(target) == str:
+            print('Testing does not require target padding_mask or process_point!')
+            raise ValueError
 
         # Add padding mask
         if self.padding_mask:

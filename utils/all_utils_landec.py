@@ -11,7 +11,8 @@ from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deep
 from torchvision_models.lane_detection import LSTR
 from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, LLAMAS, dict_collate_fn
 from utils.losses import cubic_curve_with_projection
-from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
+from transforms import ToTensor, Normalize, Resize, RandomRotation, RandomCrop, RandomHorizontalFlip, \
+    RandomApply, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
 
 
@@ -73,6 +74,17 @@ def resnet_culane(num_classes, backbone_name='resnet18', scnn=False):
     return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
                                     channel_reduce=128, flattened_size=4500, scnn=scnn)
 
+def resnet_llamas(num_classes, backbone_name='resnet18', scnn=False):
+    # Define ResNets for CULane (With only ImageNet pretraining)
+    model_map = {
+        'resnet18': deeplabv1_resnet18,
+        'resnet34': deeplabv1_resnet34,
+        'resnet50': deeplabv1_resnet50,
+        'resnet101': deeplabv1_resnet101,
+    }
+    return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
+                                    channel_reduce=128, flattened_size=4400, scnn=scnn)
+
 
 def enet_tusimple(num_classes, encoder_only, continue_from):
     return enet_(num_classes=num_classes, num_lanes=num_classes - 1, dropout_1=0.01, dropout_2=0.1, flattened_size=4400,
@@ -97,13 +109,16 @@ def lstr_resnet(num_classes_max=7, backbone_name='resnet18s', expansion=1, aux_l
     return LSTR(num_queries=num_classes_max, backbone_name=backbone_name, expansion=expansion, aux_loss=aux_loss)
 
 
-def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, method='baseline'):
+def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, method='baseline', aug_level=0):
     # Return data_loaders
     # depending on whether the state is
     # 0: training
     # 1: fast validation by mean IoU (validation set)
     # 2: just testing (test set)
     # 3: just testing (validation set)
+    # aug_level (implemented as a int instead of bool, for future extensions):
+    # 0: Standard resize + small random rotation (3 degrees)
+    # 1: PolyLaneNet/LSTR augmentation
 
     # Transformations
     # ! Can't use torchvision.Transforms.Compose
@@ -111,11 +126,24 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
         [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
          ToTensor(),
          Normalize(mean=mean, std=std)])
-    transforms_train = Compose(
-        [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-         RandomRotation(degrees=3),
-         ToTensor(),
-         Normalize(mean=mean, std=std, normalize_target=True if method == 'lstr' else False)])
+    if aug_level == 0:
+        transforms_train = Compose(
+            [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
+             RandomRotation(degrees=3),
+             ToTensor(),
+             Normalize(mean=mean, std=std, normalize_target=True if method == 'lstr' else False)])
+    elif aug_level == 1:
+        transforms_train = Compose(
+            [RandomApply([
+                RandomRotation(degrees=10),
+                RandomHorizontalFlip(flip_prob=0.5),
+                RandomCrop(size=(int(input_sizes[1][0] * 0.9), int(input_sizes[1][1] * 0.9)))
+             ], apply_prob=10/11),
+             Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
+             ToTensor(),
+             Normalize(mean=mean, std=std, normalize_target=True if method == 'lstr' else False)])
+    else:
+        raise ValueError
 
     # Batch builder
     if method == 'lstr':
@@ -477,13 +505,14 @@ def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, 
                          dtype=coefficients.dtype, device=coefficients.device)
     else:
         raise ValueError
-    coords = curve_function(coefficients=coefficients, y=y)
+    coords = curve_function(coefficients=coefficients, y=y.unsqueeze(0).expand(coefficients.shape[0], -1))
 
     # Delete outside points according to predicted upper & lower boundaries
     coordinates = []
     for i in range(existence.shape[0]):
         if existence[i]:
-            valid_points = (coords[i] >= 0) * (coords[i] <= 1) * (y > lower_bound[i]) * (y < upper_bound[i])
+            # Note that in image coordinate system, (0, 0) is the top-left corner
+            valid_points = (coords[i] >= 0) * (coords[i] <= 1) * (y < lower_bound[i]) * (y > upper_bound[i])
             if valid_points.sum() < 2:  # Same post-processing technique as segmentation methods
                 continue
             if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
@@ -501,12 +530,13 @@ def build_lane_detection_model(args, num_classes):
     if args.dataset == 'tusimple' and args.backbone == 'erfnet':
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
     elif args.method == 'lstr':
-        if args.state == 1 or args.val_num_steps != 0:
+        if (hasattr(args, 'state') and args.state == 1) or (hasattr(args, 'val_num_steps') and args.val_num_steps != 0):
             print('Fast validation not supported for this method!')
             raise ValueError
         num_classes_max = 7 if args.dataset in ['culane', 'llamas', 'tusimple'] else num_classes
         net = lstr_resnet(num_classes_max=num_classes_max, backbone_name=args.backbone,
-                          expansion=1 if args.dataset == 'tusimple' else 2, aux_loss=True if args.state == 0 else False)
+                          expansion=1 if args.dataset == 'tusimple' else 2,
+                          aux_loss=True if hasattr(args, 'state') and args.state == 0 else False)
     elif args.dataset == 'culane' and args.backbone == 'erfnet':
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'culane' and args.backbone == 'vgg16':
@@ -527,6 +557,8 @@ def build_lane_detection_model(args, num_classes):
         net = erfnet_llamas(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'llamas' and args.backbone == 'vgg16':
         net = vgg16_llamas(num_classes=num_classes, scnn=scnn)
+    elif args.dataset == 'llamas' and 'resnet' in args.backbone:
+        net = resnet_llamas(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
     else:
         raise ValueError
 

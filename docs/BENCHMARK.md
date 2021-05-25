@@ -1,5 +1,7 @@
 # Welcome to pytorch-auto-drive benchmark
 
+*The current benchmark's FLOPs & Param count is entirely based on [thop](https://github.com/Lyken17/pytorch-OpCounter) to identify underlying basic ops, which might be inaccurate. But FLOPs count is an [estimate](https://discuss.pytorch.org/t/correct-way-to-calculate-flops-in-model/67198/6) to begin with. What we are doing here, is simply providing a relatively fair benchmark for comparing different methods.*
+
 ## Lane detection performance
 
 | method | backbone | resolution | FPS | FLOPS(G) | Params(M) |
@@ -16,7 +18,10 @@
 | SCNN | ResNet34 | 360 x 640 | 20.77 | 163.74 | 22.74 | 
 | SCNN | ResNet50 | 360 x 640 | 19.59 | 181.76 | 25.16 |
 | SCNN | ResNet101 | 360 x 640 | 13.50 | 318.50 | 44.15 | 
-| SCNN | ERFNet | 360 x 640 | 18.40 | 30.46 | 3.25 | 
+| SCNN | ERFNet | 360 x 640 | 18.40 | 30.46 | 3.25 |
+| LSTR | ResNet18s | 360 x 640 | 92.45 | 1.15 | 0.74 |
+| LSTR | ResNet18s | 1080 x 1920 | 91.23 | 10.20 | 0.74 |
+| LSTR | ResNet18s | 2160 x 4320 | 23.60 | 40.75 | 0.74 |
 | Baseline | VGG16 | 288 x 800 | 55.31 | 214.50 | 20.15 | 
 | Baseline | ResNet18 | 288 x 800 | 136.28 | 85.22 | 11.82 | 
 | Baseline | ResNet34 | 288 x 800 | 72.42 | 159.60 | 21.93 | 

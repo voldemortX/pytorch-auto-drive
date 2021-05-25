@@ -54,7 +54,7 @@ class LSTR(nn.Module):
                                              pre_norm=pre_norm,
                                              return_intermediate_dec=return_intermediate)
 
-        # Original LSTR: 3 classes + CE (softmax), we use binary classification with sigmoid to save parameters
+        # Original LSTR: 3 classes + CE (softmax), we use 2
         self.class_embed = nn.Linear(hidden_dim, 2)
 
         self.specific_embed = MLP(hidden_dim, hidden_dim, lsp_dim - 4, mlp_layers)  # Specific for each lane

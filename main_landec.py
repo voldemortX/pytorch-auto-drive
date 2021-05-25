@@ -1,6 +1,6 @@
 import time
 import torch
-# torch.multiprocessing.set_sharing_strategy('file_system')
+torch.multiprocessing.set_sharing_strategy('file_system')
 import argparse
 import yaml
 from torch.utils.tensorboard import SummaryWriter
@@ -36,6 +36,8 @@ if __name__ == '__main__':
                         help='input batch size. Recommend 4 times the training batch size in testing (default: 8)')
     parser.add_argument('--mixed-precision', action='store_true', default=False,
                         help='Enable mixed precision training (default: False)')
+    parser.add_argument('--aug', action='store_true', default=False,
+                        help='Enable strong data augmentation (default: False)')
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
     parser.add_argument('--state', type=int, default=0,
@@ -114,7 +116,7 @@ if __name__ == '__main__':
         writer = SummaryWriter('runs/' + exp_name)
         data_loader, validation_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
                                               input_sizes=input_sizes, mean=mean, std=std, base=base,
-                                              workers=args.workers, method=args.method)
+                                              workers=args.workers, method=args.method, aug_level=1 if args.aug else 0)
 
         # Warmup https://github.com/XingangPan/SCNN/issues/82
         # Use it as default also for other methods (for fair comparison)
