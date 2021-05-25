@@ -11,7 +11,8 @@ from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deep
 from torchvision_models.lane_detection import LSTR
 from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, LLAMAS, dict_collate_fn
 from utils.losses import cubic_curve_with_projection
-from transforms import ToTensor, Normalize, Resize, RandomRotation, Compose
+from transforms import ToTensor, Normalize, Resize, RandomRotation, RandomCrop, RandomHorizontalFlip, \
+    RandomApply, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
 
 
@@ -108,13 +109,16 @@ def lstr_resnet(num_classes_max=7, backbone_name='resnet18s', expansion=1, aux_l
     return LSTR(num_queries=num_classes_max, backbone_name=backbone_name, expansion=expansion, aux_loss=aux_loss)
 
 
-def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, method='baseline'):
+def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, method='baseline', aug_level=0):
     # Return data_loaders
     # depending on whether the state is
     # 0: training
     # 1: fast validation by mean IoU (validation set)
     # 2: just testing (test set)
     # 3: just testing (validation set)
+    # aug_level (implemented as a int instead of bool, for future extensions):
+    # 0: Standard resize + small random rotation (3 degrees)
+    # 1: PolyLaneNet/LSTR augmentation
 
     # Transformations
     # ! Can't use torchvision.Transforms.Compose
@@ -122,11 +126,24 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
         [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
          ToTensor(),
          Normalize(mean=mean, std=std)])
-    transforms_train = Compose(
-        [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-         RandomRotation(degrees=3),
-         ToTensor(),
-         Normalize(mean=mean, std=std, normalize_target=True if method == 'lstr' else False)])
+    if aug_level == 0:
+        transforms_train = Compose(
+            [Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
+             RandomRotation(degrees=3),
+             ToTensor(),
+             Normalize(mean=mean, std=std, normalize_target=True if method == 'lstr' else False)])
+    elif aug_level == 1:
+        transforms_train = Compose(
+            [RandomApply([
+                RandomRotation(degrees=10),
+                RandomHorizontalFlip(flip_prob=0.5),
+                RandomCrop(size=(int(input_sizes[1][0] * 0.9), int(input_sizes[1][1] * 0.9)))
+             ], apply_prob=10/11),
+             Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
+             ToTensor(),
+             Normalize(mean=mean, std=std, normalize_target=True if method == 'lstr' else False)])
+    else:
+        raise ValueError
 
     # Batch builder
     if method == 'lstr':
