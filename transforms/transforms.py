@@ -84,9 +84,30 @@ class Crop(object):
     def __init__(self, size):
         self.h, self.w = size
 
+    @staticmethod
+    def transform_points(points, top, left, height, width, ignore_x=-2):
+        # Crop a np.array (L x N x 2) of points (x, y), original axis start from top-left corner
+        # Essentially a translation with filtering, consider only crop area within the image
+        ignore_filter = (points[:, :, 0] == ignore_x)
+        points -= np.array([left, top], dtype=points.dtype)  # translation
+        ignore_by_crop = (points[:, :, 0] < 0) * (points[:, :, 0] > width) \
+            * (points[:, :, 1] < 0) * (points[:, :, 1] > height)  # filtering
+        ignore_filter += ignore_by_crop
+        points[:, :, 0] = points[:, :, 0] * ~ignore_filter + (-2) * ignore_filter
+
+        return points
+
     def __call__(self, image, target):
         image = F.crop(image, 0, 0, self.h, self.w)
-        target = F.crop(target, 0, 0, self.h, self.w)
+        if isinstance(target, str):
+            return image, target
+        elif isinstance(target, dict):  # To keep BC
+            if 'keypoints' in target:
+                target['keypoints'] = self.transform_points(target['keypoints'], 0, 0, self.h, self.w)
+            if 'padding_mask' in target:
+                target['padding_mask'] = F.crop(target['padding_mask'], 0, 0, self.h, self.w)
+        else:
+            target = F.crop(target, 0, 0, self.h, self.w)
 
         return image, target
 
