@@ -11,7 +11,6 @@ from collections.abc import Sequence
 import numbers
 import random
 import torch
-import math
 from . import functional as F
 from . import functional_keypoints as F_kp
 
@@ -46,38 +45,44 @@ class Compose(object):
         return image, target
 
 
+class RandomApply(object):
+    def __init__(self, transforms, apply_prob=0.5):
+        self.transforms = transforms
+        self.apply_prob = apply_prob
+
+    def __call__(self, image, target):
+        t = random.random()
+        if t < self.apply_prob:
+            for t in self.transforms:
+                image, target = t(image, target)
+
+        return image, target
+
+
 class Resize(object):
     def __init__(self, size_image, size_label):
         self.size_image = size_image
         self.size_label = size_label
 
     @staticmethod
-    def transform_points(points, in_size, out_size, ignore_x=-2):
-        # Resize a np.array (L x N x 2) of points (x, y), original axis start from top-left corner
-        # x <-> w, y <-> h
-        ignore_filter = (points[:, :, 0] == ignore_x)
-        in_h, in_w = in_size
-        out_h, out_w = out_size
-        scale = np.array([out_w / in_w, out_h / in_h], dtype=np.float32)
-        points = points * scale
-        points[:, :, 0] = points[:, :, 0] * ~ignore_filter + (-2) * ignore_filter
-
-        return points
-
-    def __call__(self, image, target):
-        w_ori, h_ori = F._get_image_size(image)
-        image = F.resize(image, self.size_image, interpolation=Image.LINEAR)
+    def parse_resize(image, target, size_image, size_label, ori_size):
+        image = F.resize(image, size_image, interpolation=Image.LINEAR)
         if isinstance(target, str):
             return image, target
         elif isinstance(target, dict):  # To keep BC
-            if 'keypoints' in target:
-                target['keypoints'] = self.transform_points(target['keypoints'], (h_ori, w_ori), self.size_label)
-            if 'padding_mask' in target:
-                target['padding_mask'] = F.resize(target['padding_mask'], self.size_label, interpolation=Image.NEAREST)
+            if 'keypoints' in target.keys():
+                target['keypoints'] = F_kp.resize(target['keypoints'], ori_size, size_label)
+            if 'padding_mask' in target.keys():
+                target['padding_mask'] = F.resize(target['padding_mask'], size_label, interpolation=Image.NEAREST)
         else:
-            target = F.resize(target, self.size_label, interpolation=Image.NEAREST)
+            target = F.resize(target, size_label, interpolation=Image.NEAREST)
 
         return image, target
+
+    def __call__(self, image, target):
+        w_ori, h_ori = F._get_image_size(image)
+
+        return self.parse_resize(image, target, self.size_image, self.size_label, (h_ori, w_ori))
 
 
 # Crop from up-left corner
@@ -92,9 +97,9 @@ class Crop(object):
         if isinstance(target, str):
             return image, target
         elif isinstance(target, dict):  # To keep BC
-            if 'keypoints' in target:
+            if 'keypoints' in target.keys():
                 target['keypoints'] = F_kp.crop(target['keypoints'], top, left, height, width)
-            if 'padding_mask' in target:
+            if 'padding_mask' in target.keys():
                 target['padding_mask'] = F.crop(target['padding_mask'], top, left, height, width)
         else:
             target = F.crop(target, top, left, height, width)
@@ -121,7 +126,7 @@ class ZeroPad(object):
             return image, target
         elif isinstance(target, dict):  # To keep BC
             # Conveniently, since padding is on right & bottom, nothing needs to be done for keypoints
-            if 'padding_mask' in target:
+            if 'padding_mask' in target.keys():
                 target['padding_mask'] = F.pad(target['padding_mask'], [0, 0, pad_w, pad_h], fill=1)
         else:
             target = F.pad(target, [0, 0, pad_w, pad_h], fill=255)
@@ -185,19 +190,9 @@ class RandomResize(object):
         max_h, max_w = self.max_size
         h = random.randint(min_h, max_h)
         w = random.randint(min_w, max_w)
-        image = F.resize(image, [h, w], interpolation=Image.LINEAR)
-        if isinstance(target, str):
-            return image, target
-        elif isinstance(target, dict):  # To keep BC
-            if 'keypoints' in target:
-                w_ori, h_ori = F._get_image_size(image)
-                target['keypoints'] = Resize.transform_points(target['keypoints'], (h_ori, w_ori), (h, w))
-            if 'padding_mask' in target:
-                target['padding_mask'] = F.resize(target['padding_mask'], [h, w], interpolation=Image.NEAREST)
-        else:
-            target = F.resize(target, [h, w], interpolation=Image.NEAREST)
+        w_ori, h_ori = F._get_image_size(image)
 
-        return image, target
+        return Resize.parse_resize(image, target, [h, w], [h, w], (h_ori, w_ori))
 
 
 class RandomScale(object):
@@ -251,15 +246,6 @@ class RandomHorizontalFlip(object):
     def __init__(self, flip_prob):
         self.flip_prob = flip_prob
 
-    @staticmethod
-    def transform_points(points, mid_x, ignore_x=-2):
-        # Flip a np.array (L x N x 2) of points (x, y) horizontally, original axis start from top-left corner
-        ignore_filter = (points[:, :, 0] == ignore_x)
-        points[:, :, 0] = 2 * mid_x - points[:, :, 0]
-        points[:, :, 0] = points[:, :, 0] * ~ignore_filter + (-2) * ignore_filter
-
-        return points
-
     def __call__(self, image, target):
         t = random.random()
         if t < self.flip_prob:
@@ -267,10 +253,10 @@ class RandomHorizontalFlip(object):
             if isinstance(target, str):
                 return image, target
             elif isinstance(target, dict):  # To keep BC
-                if 'keypoints' in target:
-                    target['keypoints'] = self.transform_points(target['keypoints'],
-                                                                mid_x=F._get_image_size(image)[0] / 2)
-                if 'padding_mask' in target:
+                if 'keypoints' in target.keys():
+                    target['keypoints'] = F_kp.hflip(target['keypoints'],
+                                                     mid_x=F._get_image_size(image)[0] / 2)
+                if 'padding_mask' in target.keys():
                     target['padding_mask'] = F.hflip(target['padding_mask'])
             else:
                 target = F.hflip(target)
@@ -348,23 +334,13 @@ class Normalize(object):
         self.std = std
         self.normalize_target = normalize_target
 
-    @staticmethod
-    def transform_points(points, h, w, ignore_x=-2):
-        # Divide keypoints by h & w to 0~1
-        # A special case of resize
-        points = points / torch.tensor([w, h], device=points.device, dtype=points.dtype)
-        points[points[:, :, 0] < 0][:, 0] = ignore_x
-
-        return points
-
     def __call__(self, image, target):
         image = F.normalize(image, mean=self.mean, std=self.std)
         if self.normalize_target and not isinstance(target, str):
-            w, h = F._get_image_size(image)
             if isinstance(target, dict):
-                target['keypoints'] = self.transform_points(target['keypoints'], h, w, ignore_x=-2)
-            else:
-                target = self.transform_points(target, h, w, ignore_x=-2)
+                if 'keypoints' in target.keys():
+                    w, h = F._get_image_size(image)
+                    target['keypoints'] = F_kp.normalize(target['keypoints'], h, w, ignore_x=-2)
 
         return image, target
 
@@ -420,28 +396,14 @@ class RandomRotation(object):
 
         return random.uniform(degrees[0], degrees[1])
 
-    @staticmethod
-    def transform_points(points, angle, h, w, ignore_x=-2):
-        # Rotate a np.array (L x N x 2) of points (x, y) anti-clockwise, original axis start from top-left corner
-        ignore_filter = (points[:, :, 0] == ignore_x)
-        offset = np.array([w / 2, h / 2], dtype=np.float32)
-        matrix = np.array([[math.cos(angle / 180.0 * math.pi), math.sin(-angle / 180.0 * math.pi)],
-                           [math.sin(angle / 180.0 * math.pi), math.cos(angle / 180.0 * math.pi)]], dtype=np.float32)
-        points = np.matmul((points - offset), matrix) + offset
-        # exceed border
-        ignore_filter += ((points[:, :, 0] > w) + (points[:, :, 1] > h) + ((points > 0).sum(axis=-1) < 2))
-        points[:, :, 0] = points[:, :, 0] * ~ignore_filter + (-2) * ignore_filter
-
-        return points
-
     def __call__(self, image, target):
         angle = self.get_params(self.degrees)
         image = F.rotate(image, angle, resample=Image.LINEAR, expand=self.expand, center=self.center, fill=0)
         if isinstance(target, dict):  # To keep BC
-            if 'keypoints' in target:
+            if 'keypoints' in target.keys():
                 w, h = F._get_image_size(image)
-                target['keypoints'] = self.transform_points(target['keypoints'], angle, h, w)
-            if 'padding_mask' in target:
+                target['keypoints'] = F_kp.rotate(target['keypoints'], angle, h, w)
+            if 'padding_mask' in target.keys():
                 target['padding_mask'] = F.rotate(target['padding_mask'], angle, resample=Image.NEAREST,
                                                   expand=self.expand, center=self.center, fill=1)
         else:
