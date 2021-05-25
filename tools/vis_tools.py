@@ -63,7 +63,7 @@ def lane_detection_visualize_batched(images, filenames, masks=None, keypoints=No
         images = images.clamp_(0.0, 1.0) * 255.0
         images = images[..., [2, 1, 0]].cpu().numpy().astype(np.uint8)
         if keypoint_color is None:
-            keypoint_color = [0, 0, 0]  # Black (sits well with lane colors)
+            keypoint_color = [0, 0, 255]  # BGR: Red (sits well with lane colors)
         for i in range(len(filenames)):
             for j in range(len(keypoints[i])):
                 temp = keypoints[i][j][(keypoints[i][j][:, 0] > 0) * (keypoints[i][j][:, 1] > 0)]
