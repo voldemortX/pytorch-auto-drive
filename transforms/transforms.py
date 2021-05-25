@@ -45,6 +45,20 @@ class Compose(object):
         return image, target
 
 
+class RandomApply(object):
+    def __init__(self, transforms, apply_prob=0.5):
+        self.transforms = transforms
+        self.apply_prob = apply_prob
+
+    def __call__(self, image, target):
+        t = random.random()
+        if t < self.apply_prob:
+            for t in self.transforms:
+                image, target = t(image, target)
+
+        return image, target
+
+
 class Resize(object):
     def __init__(self, size_image, size_label):
         self.size_image = size_image
