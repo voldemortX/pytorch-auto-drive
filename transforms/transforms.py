@@ -120,11 +120,18 @@ class ZeroPad(object):
 
     @staticmethod
     def zero_pad(image, target, h, w):
-        ow, oh = F._get_image_size(target)
+        ow, oh = F._get_image_size(image)
         pad_h = h - oh if oh < h else 0
         pad_w = w - ow if ow < w else 0
         image = F.pad(image, [0, 0, pad_w, pad_h], fill=0)
-        target = F.pad(target, [0, 0, pad_w, pad_h], fill=255)
+        if isinstance(target, str):
+            return image, target
+        elif isinstance(target, dict):  # To keep BC
+            # Conveniently, since padding is on right & bottom, nothing needs to be done for keypoints
+            if 'padding_mask' in target:
+                target['padding_mask'] = F.pad(target['padding_mask'], [0, 0, pad_w, pad_h], fill=1)
+        else:
+            target = F.pad(target, [0, 0, pad_w, pad_h], fill=255)
 
         return image, target
 
