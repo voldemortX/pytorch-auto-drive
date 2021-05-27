@@ -1,6 +1,7 @@
 import time
 import torch
-torch.multiprocessing.set_sharing_strategy('file_system')
+# torch.multiprocessing.set_sharing_strategy('file_system')
+import resource
 import argparse
 import yaml
 from torch.utils.tensorboard import SummaryWriter
@@ -9,6 +10,10 @@ from utils.all_utils_semseg import load_checkpoint
 from utils.all_utils_landec import init, train_schedule, test_one_set, fast_evaluate, build_lane_detection_model
 
 if __name__ == '__main__':
+    # ulimit
+    rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
+    resource.setrlimit(resource.RLIMIT_NOFILE, (4096, rlimit[1]))
+
     # Settings
     parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
     parser.add_argument('--exp-name', type=str, default='',
