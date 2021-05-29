@@ -12,7 +12,7 @@ from torchvision_models.lane_detection import LSTR
 from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, LLAMAS, dict_collate_fn
 from utils.losses import cubic_curve_with_projection
 from transforms import ToTensor, Normalize, Resize, RandomRotation, RandomCrop, RandomHorizontalFlip, \
-    RandomApply, Compose
+    ColorJitter, RandomApply, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
 
 
@@ -38,6 +38,7 @@ def vgg16_tusimple(num_classes, scnn=False, pretrained_weights='pytorch-pretrain
     # Define Vgg16 for Tusimple (With only ImageNet pretraining)
     return deeplabv1_vgg16(pretrained_weights=pretrained_weights, num_classes=num_classes, num_lanes=num_classes - 1,
                            dropout_1=0.1, flattened_size=6160, scnn=scnn)
+
 
 def vgg16_llamas(num_classes, scnn=False, pretrained_weights='pytorch-pretrained'):
     # Define Vgg16 for Tusimple (With only ImageNet pretraining)
@@ -73,6 +74,7 @@ def resnet_culane(num_classes, backbone_name='resnet18', scnn=False):
     }
     return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
                                     channel_reduce=128, flattened_size=4500, scnn=scnn)
+
 
 def resnet_llamas(num_classes, backbone_name='resnet18', scnn=False):
     # Define ResNets for CULane (With only ImageNet pretraining)
@@ -140,6 +142,7 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
                 RandomCrop(size=(int(input_sizes[1][0] * 0.9), int(input_sizes[1][1] * 0.9)))
              ], apply_prob=10/11),
              Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
+             ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.2),  # Add hue & pass lighting
              ToTensor(),
              Normalize(mean=mean, std=std, normalize_target=True if method == 'lstr' else False)])
     else:
@@ -331,12 +334,12 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
 
             if method == 'lstr':
                 existence_conf = outputs['logits'].softmax(dim=-1)[..., 1]
+                existence = outputs['logits'].max(dim=-1).indices == 1
             else:
                 prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
                                                            align_corners=True).softmax(dim=1)
                 existence_conf = outputs['lane'].sigmoid()
-
-            existence = existence_conf > 0.5
+                existence = existence_conf > 0.5
 
             if max_lane != 0:  # Lane max number prior for testing
                 # Maybe too slow (but should be faster than topk/sort),
