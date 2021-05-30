@@ -158,13 +158,13 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
         if method == 'lstr':
             if dataset == 'tusimple':
                 data_set = TuSimple(root=base, image_set='train', transforms=transforms_train,
-                                    padding_mask=True, process_points=True)
+                                    padding_mask=False, process_points=True)
             elif dataset == 'culane':
                 data_set = CULane(root=base, image_set='train', transforms=transforms_train,
-                                  padding_mask=True, process_points=True)
+                                  padding_mask=False, process_points=True)
             elif dataset == 'llamas':
                 data_set = LLAMAS(root=base, image_set='train', transforms=transforms_train,
-                                  padding_mask=True, process_points=True)
+                                  padding_mask=False, process_points=True)
             else:
                 raise ValueError
         else:

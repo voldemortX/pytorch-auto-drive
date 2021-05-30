@@ -127,8 +127,11 @@ class HungarianLoss(WeightedLoss):
 
     def forward(self, inputs: Tensor, targets: Tensor, net):
         # Support arbitrary auxiliary losses for transformer-based methods
-        padding_masks = torch.stack([i['padding_mask'] for i in targets])
-        outputs = net(inputs, padding_masks)
+        if 'padding_mask' in targets[0].keys():  # For multi-scale training support
+            padding_masks = torch.stack([i['padding_mask'] for i in targets])
+            outputs = net(inputs, padding_masks)
+        else:
+            outputs = net(inputs)
         loss, log_dict = self.calc_full_loss(outputs=outputs, targets=targets)
         if 'aux' in outputs:
             for i in range(len(outputs['aux'])):

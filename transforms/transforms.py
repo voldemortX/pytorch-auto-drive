@@ -72,8 +72,8 @@ class Resize(object):
         elif isinstance(target, dict):  # To keep BC
             if 'keypoints' in target.keys():
                 target['keypoints'] = F_kp.resize(target['keypoints'], ori_size, size_label)
-            if 'padding_mask' in target.keys():
-                target['padding_mask'] = F.resize(target['padding_mask'], size_label, interpolation=Image.NEAREST)
+            # if 'padding_mask' in target.keys():
+            #     target['padding_mask'] = F.resize(target['padding_mask'], size_label, interpolation=Image.NEAREST)
         else:
             target = F.resize(target, size_label, interpolation=Image.NEAREST)
 
@@ -99,8 +99,8 @@ class Crop(object):
         elif isinstance(target, dict):  # To keep BC
             if 'keypoints' in target.keys():
                 target['keypoints'] = F_kp.crop(target['keypoints'], top, left, height, width)
-            if 'padding_mask' in target.keys():
-                target['padding_mask'] = F.crop(target['padding_mask'], top, left, height, width)
+            # if 'padding_mask' in target.keys():
+            #     target['padding_mask'] = F.crop(target['padding_mask'], top, left, height, width)
         else:
             target = F.crop(target, top, left, height, width)
 
@@ -256,8 +256,8 @@ class RandomHorizontalFlip(object):
                 if 'keypoints' in target.keys():
                     target['keypoints'] = F_kp.hflip(target['keypoints'],
                                                      mid_x=F._get_image_size(image)[0] / 2)
-                if 'padding_mask' in target.keys():
-                    target['padding_mask'] = F.hflip(target['padding_mask'])
+                # if 'padding_mask' in target.keys():
+                #     target['padding_mask'] = F.hflip(target['padding_mask'])
             else:
                 target = F.hflip(target)
         else:
@@ -403,9 +403,9 @@ class RandomRotation(object):
             if 'keypoints' in target.keys():
                 w, h = F._get_image_size(image)
                 target['keypoints'] = F_kp.rotate(target['keypoints'], angle, h, w)
-            if 'padding_mask' in target.keys():
-                target['padding_mask'] = F.rotate(target['padding_mask'], angle, resample=Image.NEAREST,
-                                                  expand=self.expand, center=self.center, fill=1)
+            # if 'padding_mask' in target.keys():
+            #     target['padding_mask'] = F.rotate(target['padding_mask'], angle, resample=Image.NEAREST,
+            #                                       expand=self.expand, center=self.center, fill=1)
         else:
             target = F.rotate(target, angle, resample=Image.NEAREST, expand=self.expand, center=self.center, fill=255)
 
