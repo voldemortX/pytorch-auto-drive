@@ -507,3 +507,18 @@ class ColorJitter(object):
                 image = F.adjust_hue(image, hue_factor)
 
         return image, target
+
+
+# Lighting adjustment with eigen vectors from LSTR:
+# https://github.com/liuruijin17/LSTR/blob/6044f7b2c5892dba7201c273ee632b4962350223/utils/image.py#L12
+class RandomLighting(object):
+    def __init__(self, mean, std, eigen_value, eigen_vector):
+        self.mean = mean
+        self.std = std
+        self.eigen_value = torch.tensor(eigen_value, dtype=torch.float32)
+        self.eigen_vector = torch.tensor(eigen_vector, dtype=torch.float32)
+
+    def __call__(self, image, target):
+        alpha = torch.normal(self.mean, self.std, (3, ), dtype=torch.float32)
+
+        return F.adjust_lighting(image, alpha, self.eigen_value, self.eigen_vector), target

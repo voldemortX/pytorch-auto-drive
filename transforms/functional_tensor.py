@@ -1176,3 +1176,30 @@ def gaussian_blur(img: Tensor, kernel_size: List[int], sigma: List[float]) -> Te
 
     img = _cast_squeeze_out(img, need_cast, need_squeeze, out_dtype)
     return img
+
+
+def adjust_lighting(img: Tensor, lighting_factor: Tensor, eigen_value: Tensor, eigen_vector: Tensor) -> Tensor:
+    """PRIVATE METHOD. Adjust lighting of an RGB image.
+    https://github.com/liuruijin17/LSTR/blob/6044f7b2c5892dba7201c273ee632b4962350223/utils/image.py#L12
+
+    .. warning::
+
+        Module ``transforms.functional_tensor`` is private and should not be used in user application.
+        Please, consider instead using methods from `transforms.functional` module.
+
+    Args:
+        img (Tensor): Image (CHW) to be adjusted.
+        lighting_factor (Tensor): How much to adjust the lighting. Meaning unclear,
+                                  numerically it is from a normal distribution, with same shape as eigen_value.
+        eigen_value (Tensor): Eigen values for the light source? [3] for RGB.
+        eigen_vector (Tensor): Eigen vectors corresponding the the eigen values.
+
+    Returns:
+        Tensor: Lighting adjusted image.
+    """
+
+    if not _is_tensor_a_torch_image(img):
+        raise TypeError('tensor is not a torch image.')
+
+    # PyTorch dot expects 1D tensors only
+    return img + (eigen_vector * (eigen_value * lighting_factor)).sum(-1)[:, None, None]

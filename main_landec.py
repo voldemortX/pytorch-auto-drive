@@ -109,6 +109,8 @@ if __name__ == '__main__':
                          input_sizes=input_sizes, ppl=ppl, thresh=thresh, dataset=args.dataset, method=args.method,
                          max_lane=max_lane)
     else:
+        eigen_value = configs['GENERAL']['LIGHT_EIGEN_VALUE']
+        eigen_vector = configs['GENERAL']['LIGHT_EIGEN_VECTOR']
         if args.method == 'scnn' or args.method == 'baseline':
             criterion = LaneLoss(weight=weights, ignore_index=255)
         elif args.method == 'sad':
@@ -121,7 +123,8 @@ if __name__ == '__main__':
         writer = SummaryWriter('runs/' + exp_name)
         data_loader, validation_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
                                               input_sizes=input_sizes, mean=mean, std=std, base=base,
-                                              workers=args.workers, method=args.method, aug_level=1 if args.aug else 0)
+                                              workers=args.workers, method=args.method, aug_level=1 if args.aug else 0,
+                                              eigen_value=eigen_value, eigen_vector=eigen_vector)
 
         # Warmup https://github.com/XingangPan/SCNN/issues/82
         # Use it as default also for other methods (for fair comparison)

@@ -1048,3 +1048,24 @@ def gaussian_blur(img: Tensor, kernel_size: List[int], sigma: Optional[List[floa
     if not isinstance(img, torch.Tensor):
         output = to_pil_image(output)
     return output
+
+
+def adjust_lighting(img: Tensor, lighting_factor: Tensor, eigen_value: Tensor, eigen_vector: Tensor) -> Tensor:
+    """Adjust lighting of an RGB image.
+    https://github.com/liuruijin17/LSTR/blob/6044f7b2c5892dba7201c273ee632b4962350223/utils/image.py#L12
+
+    Args:
+        img (Tensor): Tensor image to be adjusted, PIL is not yet supported for this op.
+        lighting_factor (Tensor): How much to adjust the lighting. Meaning unclear,
+                                  numerically it is from a normal distribution, with same shape as eigen_value.
+        eigen_value (Tensor): Eigen values for the light source? [3] for RGB.
+        eigen_vector (Tensor): Eigen vectors corresponding the the eigen values.
+
+    Returns:
+        Tensor: Lighting adjusted image.
+    """
+
+    if not isinstance(img, torch.Tensor):
+        raise TypeError('img should be Tensor Image. Got {}'.format(type(img)))
+
+    return F_t.adjust_lighting(img, lighting_factor, eigen_value, eigen_vector)

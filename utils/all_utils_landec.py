@@ -12,7 +12,7 @@ from torchvision_models.lane_detection import LSTR
 from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, LLAMAS, dict_collate_fn
 from utils.losses import cubic_curve_with_projection
 from transforms import ToTensor, Normalize, Resize, RandomRotation, RandomCrop, RandomHorizontalFlip, \
-    ColorJitter, RandomApply, Compose
+    RandomLighting, ColorJitter, RandomApply, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
 
 
@@ -111,7 +111,8 @@ def lstr_resnet(num_classes_max=7, backbone_name='resnet18s', expansion=1, aux_l
     return LSTR(num_queries=num_classes_max, backbone_name=backbone_name, expansion=expansion, aux_loss=aux_loss)
 
 
-def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, method='baseline', aug_level=0):
+def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, method='baseline',
+         aug_level=0, eigen_value=None, eigen_vector=None):
     # Return data_loaders
     # depending on whether the state is
     # 0: training
@@ -142,8 +143,9 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
                 RandomCrop(size=(int(input_sizes[1][0] * 0.9), int(input_sizes[1][1] * 0.9)))
              ], apply_prob=10/11),
              Resize(size_image=input_sizes[0], size_label=input_sizes[0]),
-             ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.2),  # Add hue & pass lighting
+             ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.2),
              ToTensor(),
+             RandomLighting(mean=0.0, std=0.1, eigen_value=eigen_value, eigen_vector=eigen_vector),
              Normalize(mean=mean, std=std, normalize_target=True if method == 'lstr' else False)])
     else:
         raise ValueError
