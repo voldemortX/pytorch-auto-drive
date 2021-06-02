@@ -175,7 +175,7 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
 
         data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size, collate_fn=collate_fn,
                                                   num_workers=workers, shuffle=True)
-        validation_set = StandardLaneDetectionDataset(root=base, image_set='val',
+        validation_set = StandardLaneDetectionDataset(root=base, image_set='valfast',
                                                       transforms=transforms_test, data_set=dataset)
         validation_loader = torch.utils.data.DataLoader(dataset=validation_set, batch_size=batch_size * 4,
                                                         num_workers=workers, shuffle=False, collate_fn=collate_fn)
