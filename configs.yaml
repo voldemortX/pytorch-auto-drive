@@ -6,7 +6,10 @@ GENERAL:
     # ImageNet pre-trained model's general statistics
     MEAN: [0.485, 0.456, 0.406]
     STD: [0.229, 0.224, 0.225]
-    # https://github.com/liuruijin17/LSTR/blob/6044f7b2c5892dba7201c273ee632b4962350223/db/tusimple.py#L87
+    # Probably PCA intensity results from COCO dataset:
+    # https://github.com/princeton-vl/CornerNet/issues/163
+    # Maybe better performance can be achieved if it is calculated for each datasets:
+    # https://github.com/liuruijin17/LSTR/issues/51
     LIGHT_EIGEN_VALUE: [0.00341571, 0.01817699, 0.2141788]
     LIGHT_EIGEN_VECTOR: [ [0.41340352, -0.69563484, -0.58752847],
                           [-0.81221408, 0.00994535, -0.5832747],
