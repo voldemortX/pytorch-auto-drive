@@ -6,6 +6,8 @@ import numpy as np
 def crop(points, top, left, height, width, ignore_x=-2):
     # Crop a np.array (L x N x 2) of points (x, y), original axis start from top-left corner
     # Essentially a translation with filtering, consider only crop area within the image
+    if sum(points.shape) == 0:
+        return points
     ignore_filter = (points[:, :, 0] == ignore_x)
     points -= np.array([left, top], dtype=points.dtype)  # translation
     ignore_by_crop = (points[:, :, 0] < 0) + (points[:, :, 0] > width) \
@@ -19,6 +21,8 @@ def crop(points, top, left, height, width, ignore_x=-2):
 def resize(points, in_size, out_size, ignore_x=-2):
     # Resize a np.array (L x N x 2) of points (x, y), original axis start from top-left corner
     # x <-> w, y <-> h
+    if sum(points.shape) == 0:
+        return points
     ignore_filter = (points[:, :, 0] == ignore_x)
     in_h, in_w = in_size
     out_h, out_w = out_size
@@ -31,6 +35,8 @@ def resize(points, in_size, out_size, ignore_x=-2):
 
 def hflip(points, mid_x, ignore_x=-2):
     # Flip a np.array (L x N x 2) of points (x, y) horizontally, original axis start from top-left corner
+    if sum(points.shape) == 0:
+        return points
     ignore_filter = (points[:, :, 0] == ignore_x)
     points[:, :, 0] = 2 * mid_x - points[:, :, 0]
     points[:, :, 0] = points[:, :, 0] * ~ignore_filter + (-2) * ignore_filter
@@ -40,6 +46,8 @@ def hflip(points, mid_x, ignore_x=-2):
 
 def rotate(points, angle, h, w, ignore_x=-2):
     # Rotate a np.array (L x N x 2) of points (x, y) anti-clockwise, original axis start from top-left corner
+    if sum(points.shape) == 0:
+        return points
     ignore_filter = (points[:, :, 0] == ignore_x)
     offset = np.array([w / 2, h / 2], dtype=np.float32)
     matrix = np.array([[math.cos(angle / 180.0 * math.pi), math.sin(-angle / 180.0 * math.pi)],
@@ -56,6 +64,8 @@ def normalize(points, h, w, ignore_x=-2):
     # Divide keypoints by h & w to 0~1
     # Note that normalize works with tensors (L x N x 2)
     # A special case of resize
+    if sum(points.shape) == 0:
+        return points
     points = points / torch.tensor([w, h], device=points.device, dtype=points.dtype)
     points[points[:, :, 0] < 0][:, 0] = ignore_x
 
