@@ -60,18 +60,19 @@ class RandomApply(object):
 
 
 class Resize(object):
-    def __init__(self, size_image, size_label):
+    def __init__(self, size_image, size_label, ignore_x=-2):
         self.size_image = size_image
         self.size_label = size_label
+        self.ignore_x = ignore_x
 
     @staticmethod
-    def parse_resize(image, target, size_image, size_label, ori_size):
+    def parse_resize(image, target, size_image, size_label, ori_size, ignore_x):
         image = F.resize(image, size_image, interpolation=Image.LINEAR)
         if isinstance(target, str):
             return image, target
         elif isinstance(target, dict):  # To keep BC
             if 'keypoints' in target.keys():
-                target['keypoints'] = F_kp.resize(target['keypoints'], ori_size, size_label)
+                target['keypoints'] = F_kp.resize(target['keypoints'], ori_size, size_label, ignore_x)
             # if 'padding_mask' in target.keys():
             #     target['padding_mask'] = F.resize(target['padding_mask'], size_label, interpolation=Image.NEAREST)
         else:
@@ -82,23 +83,24 @@ class Resize(object):
     def __call__(self, image, target):
         w_ori, h_ori = F._get_image_size(image)
 
-        return self.parse_resize(image, target, self.size_image, self.size_label, (h_ori, w_ori))
+        return self.parse_resize(image, target, self.size_image, self.size_label, (h_ori, w_ori), self.ignore_x)
 
 
 # Crop from up-left corner
 class Crop(object):
-    def __init__(self, size):
+    def __init__(self, size, ignore_x=-2):
         self.h, self.w = size
+        self.ignore_x = ignore_x
 
     @staticmethod
-    def parse_crop(image, target, top, left, height, width):
+    def parse_crop(image, target, top, left, height, width, ignore_x):
         # Crop with 4 degrees of freedom (top, left, height, width)
         image = F.crop(image, top, left, height, width)
         if isinstance(target, str):
             return image, target
         elif isinstance(target, dict):  # To keep BC
             if 'keypoints' in target.keys():
-                target['keypoints'] = F_kp.crop(target['keypoints'], top, left, height, width)
+                target['keypoints'] = F_kp.crop(target['keypoints'], top, left, height, width, ignore_x)
             # if 'padding_mask' in target.keys():
             #     target['padding_mask'] = F.crop(target['padding_mask'], top, left, height, width)
         else:
@@ -107,7 +109,7 @@ class Crop(object):
         return image, target
 
     def __call__(self, image, target):
-        return self.parse_crop(image, target, 0, 0, self.h, self.w)
+        return self.parse_crop(image, target, 0, 0, self.h, self.w, self.ignore_x)
 
 
 # Pad image with zeros, yet pad target with 255 (ignore label) on bottom & right if
@@ -179,11 +181,12 @@ class RandomZeroPad(object):
 
 
 class RandomResize(object):
-    def __init__(self, min_size, max_size=None):
+    def __init__(self, min_size, max_size=None, ignore_x=-2):
         self.min_size = min_size
         if max_size is None:
             max_size = min_size
         self.max_size = max_size
+        self.ignore_x = ignore_x
 
     def __call__(self, image, target):
         min_h, min_w = self.min_size
@@ -192,7 +195,7 @@ class RandomResize(object):
         w = random.randint(min_w, max_w)
         w_ori, h_ori = F._get_image_size(image)
 
-        return Resize.parse_resize(image, target, [h, w], [h, w], (h_ori, w_ori))
+        return Resize.parse_resize(image, target, [h, w], [h, w], (h_ori, w_ori), self.ignore_x)
 
 
 class RandomScale(object):
@@ -214,8 +217,9 @@ class RandomScale(object):
 
 
 class RandomCrop(object):
-    def __init__(self, size):
+    def __init__(self, size, ignore_x=-2):
         self.size = size
+        self.ignore_x = ignore_x
 
     @staticmethod
     def get_params(img, output_size):
@@ -239,12 +243,13 @@ class RandomCrop(object):
                                              max(self.size[1], iw))
         i, j, h, w = self.get_params(image, self.size)
 
-        return Crop.parse_crop(image, target, i, j, h, w)
+        return Crop.parse_crop(image, target, i, j, h, w, self.ignore_x)
 
 
 class RandomHorizontalFlip(object):
-    def __init__(self, flip_prob):
+    def __init__(self, flip_prob, ignore_x):
         self.flip_prob = flip_prob
+        self.ignore_x = -2
 
     def __call__(self, image, target):
         t = random.random()
@@ -255,7 +260,7 @@ class RandomHorizontalFlip(object):
             elif isinstance(target, dict):  # To keep BC
                 if 'keypoints' in target.keys():
                     target['keypoints'] = F_kp.hflip(target['keypoints'],
-                                                     mid_x=F._get_image_size(image)[0] / 2)
+                                                     F._get_image_size(image)[0] / 2, self.ignore_x)
                 # if 'padding_mask' in target.keys():
                 #     target['padding_mask'] = F.hflip(target['padding_mask'])
             else:
@@ -329,10 +334,11 @@ class ToTensor(object):
 
 
 class Normalize(object):
-    def __init__(self, mean, std, normalize_target=False):
+    def __init__(self, mean, std, normalize_target=False, ignore_x=-2):
         self.mean = mean
         self.std = std
         self.normalize_target = normalize_target
+        self.ignore_x = ignore_x
 
     def __call__(self, image, target):
         image = F.normalize(image, mean=self.mean, std=self.std)
@@ -340,7 +346,7 @@ class Normalize(object):
             if isinstance(target, dict):
                 if 'keypoints' in target.keys():
                     w, h = F._get_image_size(image)
-                    target['keypoints'] = F_kp.normalize(target['keypoints'], h, w, ignore_x=-2)
+                    target['keypoints'] = F_kp.normalize(target['keypoints'], h, w, self.ignore_x)
 
         return image, target
 
@@ -381,7 +387,7 @@ class MatchSize(object):
 # TODO: Support fill color 255 for tensor inputs (supported in torchvision >= 0.9.0)
 # Now fill color is fixed to 0 (background for lane detection label)
 class RandomRotation(object):
-    def __init__(self, degrees, expand=False, center=None, fill=None):
+    def __init__(self, degrees, expand=False, center=None, fill=None, ignore_x=-2):
         self.degrees = _setup_angle(degrees, name="degrees", req_sizes=(2, ))
 
         if center is not None:
@@ -390,6 +396,7 @@ class RandomRotation(object):
         self.center = center
         self.expand = expand
         self.fill = fill
+        self.ignore_x = ignore_x
 
     @staticmethod
     def get_params(degrees):
@@ -402,7 +409,7 @@ class RandomRotation(object):
         if isinstance(target, dict):  # To keep BC
             if 'keypoints' in target.keys():
                 w, h = F._get_image_size(image)
-                target['keypoints'] = F_kp.rotate(target['keypoints'], angle, h, w)
+                target['keypoints'] = F_kp.rotate(target['keypoints'], angle, h, w, self.ignore_x)
             # if 'padding_mask' in target.keys():
             #     target['padding_mask'] = F.rotate(target['padding_mask'], angle, resample=Image.NEAREST,
             #                                       expand=self.expand, center=self.center, fill=1)
