@@ -247,9 +247,9 @@ class RandomCrop(object):
 
 
 class RandomHorizontalFlip(object):
-    def __init__(self, flip_prob, ignore_x):
+    def __init__(self, flip_prob, ignore_x=-2):
         self.flip_prob = flip_prob
-        self.ignore_x = -2
+        self.ignore_x = ignore_x
 
     def __call__(self, image, target):
         t = random.random()
