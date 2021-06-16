@@ -6,18 +6,10 @@
 - CUDA 10
 - PyTorch >= 1.6 
 - TorchVision >= 0.7.0
-- tqdm  `pip install tqdm`
-- ujson  `pip install ujson`
-- tensorboard  `pip install tensorboard`
-- numpy  `will be installed along with PyTorch`
-- imageio  `pip install imageio`
-- OpenCV  `pip install opencv-python`
-- pillow  `will be installed along with TorchVision`
-- Pyyaml  `pip install pyyaml`
-- thop `pip install thop`
-- Shapely `pip install Shapely`
-- p-tqdm `pip install p-tqdm`
-- scipy `pip install scipy`
+
+```
+pip install tqdm ujson tensorboard imageio opencv-python pyyaml thop Shapely p-tqdm scipy sklearn
+```
 
 ## Download the code:
    
@@ -31,6 +23,13 @@ cd pytorch-auto-drive
 ```
 chmod 777 *.sh tools/shells/*.sh
 mkdir output
+```
+
+## Improve training speed with [Pillow-SIMD](https://github.com/uploadcare/pillow-simd) (optional):
+
+```
+pip uninstall pillow
+CC="cc -mavx2" pip install -U --force-reinstall pillow-simd
 ```
 
 ## Enable tensorboard (optional):
