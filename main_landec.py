@@ -12,7 +12,7 @@ from utils.all_utils_landec import init, train_schedule, test_one_set, fast_eval
 if __name__ == '__main__':
     # ulimit
     rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
-    resource.setrlimit(resource.RLIMIT_NOFILE, (4096, rlimit[1]))
+    resource.setrlimit(resource.RLIMIT_NOFILE, (8192, rlimit[1]))
 
     # Settings
     parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
@@ -33,7 +33,7 @@ if __name__ == '__main__':
                         help='Train/Evaluate on TuSimple (tusimple) / CULane (culane) / LLAMAS (llamas) (default: '
                              'tusimple)')
     parser.add_argument('--method', type=str, default='baseline',
-                        help='method selection (lstr/scnn/baseline) (default: baseline)')
+                        help='method selection (resa/lstr/scnn/baseline) (default: baseline)')
     parser.add_argument('--backbone', type=str, default='erfnet',
                         help='backbone selection (erfnet/enet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101)'
                              '(default: erfnet)')

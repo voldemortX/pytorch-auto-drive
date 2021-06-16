@@ -30,6 +30,16 @@ class SCNNDecoder(nn.Module):
         return x
 
 
+# Bilateral Up-Sampling Decoder in RESA paper
+class BUSD(nn.Module):
+    def __init__(self, in_channels=128, num_classes=5):
+        super(BUSD, self).__init__()
+        pass
+
+    def forward(self, x):
+        pass
+
+
 # Reduce channel (typically to 128)
 class RESAReducer(nn.Module):
     def __init__(self, in_channels=512, reduce=128):
@@ -82,6 +92,16 @@ class SpatialConv(nn.Module):
             output[:, :, :, i:i + 1].add_(F.relu(self.conv_l(output[:, :, :, i + 1:i + 2])))
 
         return output
+
+
+# REcurrent Feature-Shift Aggregator
+class RESA(nn.Module):
+    def __init__(self, num_channels=128):
+        super(RESA, self).__init__()
+        pass
+
+    def forward(self, x):
+        pass
 
 
 # Typical lane existence head originated from the SCNN paper
