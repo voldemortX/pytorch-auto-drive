@@ -67,8 +67,8 @@ class BilateralUpsamplerBlock(nn.Module):
 
 
 # Bilateral Up-Sampling Decoder in RESA paper,
-# make it work for arbitrary input channels.
-# One more block than ERFNet
+# make it work for arbitrary input channels (8x up-sample then predict).
+# Drops transposed prediction layer in ERFNet, while adds an extra up-sampling block.
 class BUSD(nn.Module):
     def __init__(self, in_channels=128, num_classes=5):
         super(BUSD, self).__init__()
