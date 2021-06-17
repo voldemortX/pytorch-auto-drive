@@ -9,9 +9,9 @@ from .fcn import FCN, FCNHead
 from .erfnet import ERFNet
 from .deeplab_vgg import DeepLabV1
 from .enet import ENet, Encoder
-from ..lane_detection import SpatialConv, SimpleLaneExist, RESAReducer
+from ..common_models import SpatialConv, SimpleLaneExist, RESAReducer
 from torch import load
-import torch
+
 
 __all__ = ['fcn_resnet50', 'fcn_resnet101', 'deeplabv2_resnet101', 'deeplabv3_resnet50', 'deeplabv3_resnet101',
            'erfnet_resnet', 'deeplabv1_vgg16', 'enet_',

@@ -5,7 +5,8 @@ import torch.nn as nn
 import torch
 from torch.nn import functional as F
 from torch.nn.parameter import Parameter
-from ..lane_detection.common_models import EDLaneExist
+from ..common_models import EDLaneExist
+
 
 class InitialBlock(nn.Module):
     """The initial block is composed of two branches:
