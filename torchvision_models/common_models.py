@@ -38,12 +38,9 @@ class SCNNDecoder(nn.Module):
 class BilateralUpsamplerBlock(nn.Module):
     def __init__(self, ninput, noutput):
         super(BilateralUpsamplerBlock, self).__init__()
-        self.conv = nn.ConvTranspose2d(
-            ninput, noutput, 3, stride=2, padding=1, output_padding=1, bias=True)
+        self.conv = nn.ConvTranspose2d(ninput, noutput, 3, stride=2, padding=1, output_padding=1, bias=True)
         self.bn = nn.BatchNorm2d(noutput, eps=1e-3, track_running_stats=True)
-        self.follows = nn.ModuleList()
-        self.follows.append(non_bottleneck_1d(noutput, 0, 1))
-        self.follows.append(non_bottleneck_1d(noutput, 0, 1))
+        self.follows = nn.ModuleList(non_bottleneck_1d(noutput, 0, 1) for _ in range(2))
 
         # interpolate
         self.interpolate_conv = nn.Conv2d(ninput, noutput, kernel_size=1, bias=False)
