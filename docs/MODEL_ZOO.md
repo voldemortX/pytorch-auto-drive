@@ -31,11 +31,11 @@
 | SCNN | ResNet101 | 288 x 800 | *yes* | CULane | F measure | 73.29 | 73.58 | 25.7h |
 | SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
 | Baseline | ERFNet | 360 x 640 | *yes* | LLAMAS | F measure | 95.94 | 96.13 | 10.9<sup>+</sup> |
-| Baseline | VGG16 | 360 x 640 | *yes* | LLAMAS | F measure | 95.05 | 95.11 |  |
-| Baseline | ResNet34 | 360 x 640 | *yes* | LLAMAS | F measure | 95.90 | 95.91 |  |
+| Baseline | VGG16 | 360 x 640 | *yes* | LLAMAS | F measure | 95.05 | 95.11 | 9.3 |
+| Baseline | ResNet34 | 360 x 640 | *yes* | LLAMAS | F measure | 95.90 | 95.91 | 7 |
 | SCNN | ERFNet | 360 x 640 | *yes* | LLAMAS | F measure | 95.89 | 95.94 | 14.2<sup>+</sup> |
-| SCNN | VGG16 | 360 x 640 | *yes* | LLAMAS | F measure | 96.39 | 96.42 |  |
-| SCNN | ResNet34 | 360 x 640 | *yes* | LLAMAS | F measure | 96.17 | 96.19 |  |
+| SCNN | VGG16 | 360 x 640 | *yes* | LLAMAS | F measure | 96.39 | 96.42 | 12.5 |
+| SCNN | ResNet34 | 360 x 640 | *yes* | LLAMAS | F measure | 96.17 | 96.19 | 10.1 |
 
 *All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
 
@@ -80,6 +80,19 @@
 | SCNN | ResNet50 | 91.38 | 70.60 | 67.62 | 45.02 | 71.24 | 86.90 | 66.03 | 66.17 | 1958 | 73.03 | [model](https://drive.google.com/file/d/1DxqUONEpT47RvJlCg7kDWIsdkYH0Fv8E/view?usp=sharing) \| [shell](../tools/shells/resnet50_scnn_culane.sh) |
 | SCNN | ResNet101 | 91.10 | 71.43 | 68.53 | 46.39 | 72.61 | 86.87 | 61.95 | 67.01 | 1720 | 73.58 | [model](https://drive.google.com/file/d/11O4ZDvNqQsKodnl9kJar6Mx1UKnB70L9/view?usp=sharing) \| [shell](../tools/shells/resnet101_scnn_culane.sh) |
 | SCNN | ERFNet | 91.82 | 72.13 | 69.49 | 46.68 | 70.59 | 87.40 | 64.18 | 68.30 | 2236 | 74.03 | [model](https://drive.google.com/file/d/1YOAuIJqh0M1RsPN5zISY7kTx9xt29IS3/view?usp=sharing) \| [shell](../tools/shells/erfnet_scnn_culane.sh) |
+
+### LLAMAS detailed performance (best):
+
+| method | backbone | F1 | TP | FP | FN | Precision | Recall | val / test |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | 
+| Baseline | VGG16 | 95.11 | 70263 | 3460 | 3772 | 95.31 | 94.91 | val |
+| SCNN | VGG16 | 96.42 | 71274 | 2526 | 2761 | 96.27 | 96.42 | val |
+| Baseline | ResNet34 | 95.91 | 70841 | 2847 | 3194 | 96.14 | 95.69 | val |
+| SCNN | ResNet34 | 96.19 | 71109 | 2705 | 2926 | 96.34 | 96.05 | val |
+| Baseline | ERFNet | 96.13 | 71136 | 2830 | 2899 | 96.17 | 96.08 | val |
+| SCNN | ERFNet | 95.94 | 71036 | 3019 | 2999 | 95.92 | 95.95 | val |
+
+
 
 ## Semantic segmentation performance:
 
