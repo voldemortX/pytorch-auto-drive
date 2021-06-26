@@ -1,4 +1,4 @@
-# Trained weights:
+# Trained weights: vgg16_scnn_llamas_20210625.pt
 # Training
 python main_landec.py --epochs=18 --lr=0.3 --batch-size=20 --dataset=llamas --method=scnn --backbone=vgg16 --mixed-precision --exp-name=vgg16_scnn_llamas
 # Predicting lane points for testing

@@ -83,14 +83,14 @@
 
 ### LLAMAS detailed performance (best):
 
-| method | backbone | F1 | TP | FP | FN | Precision | Recall | val / test |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | 
-| Baseline | VGG16 | 95.11 | 70263 | 3460 | 3772 | 95.31 | 94.91 | val |
-| SCNN | VGG16 | 96.42 | 71274 | 2526 | 2761 | 96.27 | 96.42 | val |
-| Baseline | ResNet34 | 95.91 | 70841 | 2847 | 3194 | 96.14 | 95.69 | val |
-| SCNN | ResNet34 | 96.19 | 71109 | 2705 | 2926 | 96.34 | 96.05 | val |
-| Baseline | ERFNet | 96.13 | 71136 | 2830 | 2899 | 96.17 | 96.08 | val |
-| SCNN | ERFNet | 95.94 | 71036 | 3019 | 2999 | 95.92 | 95.95 | val |
+| method | backbone | F1 | TP | FP | FN | Precision | Recall | val / test | | 
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | 
+| Baseline | VGG16 | 95.11 | 70263 | 3460 | 3772 | 95.31 | 94.91 | val | [model](https://drive.google.com/file/d/1k2b7iRw3_YMJDMUsKVjtdOXRdZsXNXnO/view?usp=sharing) \| [shell](../tools/shells/vgg16_baseline_llamas.sh) |
+| SCNN | VGG16 | 96.42 | 71274 | 2526 | 2761 | 96.27 | 96.42 | val | [model](https://drive.google.com/file/d/1qE-euGGMZTxcHED_VDUW6eR-SKPkUDD-/view?usp=sharing) \| [shell](../tools/shells/vgg16_scnn_llamas.sh) |
+| Baseline | ResNet34 | 95.91 | 70841 | 2847 | 3194 | 96.14 | 95.69 | val | [model](https://drive.google.com/file/d/1YXNgwhQqwxoMkHDbRqAdnuAXIe1IdLSm/view?usp=sharing) \| [shell](../tools/shells/resnet34_baseline_llamas.sh) |
+| SCNN | ResNet34 | 96.19 | 71109 | 2705 | 2926 | 96.34 | 96.05 | val | [model](https://drive.google.com/file/d/1-vribu32iXViBqYumApmKQK4mjQd6BEp/view?usp=sharing) \| [shell](../tools/shells/resnet34_scnn_llamas.sh) |
+| Baseline | ERFNet | 96.13 | 71136 | 2830 | 2899 | 96.17 | 96.08 | val | [model](https://drive.google.com/file/d/15oNU4iffIPYTuKSCH2j0boRkYmm3-uSh/view?usp=sharing) \| [shell](../tools/shells/erfnet_baseline_llamas.sh) |
+| SCNN | ERFNet | 95.94 | 71036 | 3019 | 2999 | 95.92 | 95.95 | val | [model](https://drive.google.com/file/d/1oTdmP_tsguqa1-6bBIikT4gPThUVdXCr/view?usp=sharing) \| [shell](../tools/shells/erfnet_scnn_llamas.sh) |
 
 
 
