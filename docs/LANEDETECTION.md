@@ -114,3 +114,24 @@ Or evaluate on the validation set:
 ```
 
 You can then check the test/validation performance at `log.txt`, and detailed performance at `tools/tusimple_evaluation/output` .
+
+### Test on LLAMAS:
+
+1. Prepare official scripts.
+
+```
+cd tools/llamas_evaluation
+mkdir output
+```
+
+Then change `data_dir` to your TuSimple base directory in [autotest_llamas.sh](../autotest_llamas.sh). *Mind that you need extra ../../ if relative path is used.*
+
+2. Predict and save lanes same like CULane.
+
+3. Evaluate on the validation set with official scripts.
+
+```
+./autotest_llamas.sh <experiment name, anything is fine> val
+```
+
+You can then check the validation performance at `log.txt`, and detailed performance at `tools/llamas_evaluation/output` .
