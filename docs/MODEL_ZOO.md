@@ -30,16 +30,16 @@
 | SCNN | ResNet50 | 288 x 800 | *yes* | CULane | F measure | 72.95 | 73.03 | 17.9h |
 | SCNN | ResNet101 | 288 x 800 | *yes* | CULane | F measure | 73.29 | 73.58 | 25.7h |
 | SCNN | ERFNet | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
-| Baseline | ERFNet | 360 x 640 | *yes* | LLAMAS | F measure | 95.94 | 96.13 | 10.9<sup>+</sup> |
-| Baseline | VGG16 | 360 x 640 | *yes* | LLAMAS | F measure | 95.05 | 95.11 | 9.3 |
-| Baseline | ResNet34 | 360 x 640 | *yes* | LLAMAS | F measure | 95.90 | 95.91 | 7 |
-| SCNN | ERFNet | 360 x 640 | *yes* | LLAMAS | F measure | 95.89 | 95.94 | 14.2<sup>+</sup> |
-| SCNN | VGG16 | 360 x 640 | *yes* | LLAMAS | F measure | 96.39 | 96.42 | 12.5 |
-| SCNN | ResNet34 | 360 x 640 | *yes* | LLAMAS | F measure | 96.17 | 96.19 | 10.1 |
+| Baseline | ERFNet | 360 x 640 | *yes* | LLAMAS | F measure | 95.94 | 96.13 | 10.9h<sup>+</sup> |
+| Baseline | VGG16 | 360 x 640 | *yes* | LLAMAS | F measure | 95.05 | 95.11 | 9.3h |
+| Baseline | ResNet34 | 360 x 640 | *yes* | LLAMAS | F measure | 95.90 | 95.91 | 7.0h |
+| SCNN | ERFNet | 360 x 640 | *yes* | LLAMAS | F measure | 95.89 | 95.94 | 14.2h<sup>+</sup> |
+| SCNN | VGG16 | 360 x 640 | *yes* | LLAMAS | F measure | 96.39 | 96.42 | 12.5h |
+| SCNN | ResNet34 | 360 x 640 | *yes* | LLAMAS | F measure | 96.17 | 96.19 | 10.1h |
 
 *All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
 
-*The test set annotations of LLAMAS are not public, so we provide valid result in this table.*
+*The test set annotations of LLAMAS are not public, so we provide validation set result in this table.*
 
 *<sup>+</sup> Measured on a single GTX 1080Ti.*
 
