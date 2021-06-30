@@ -84,6 +84,30 @@ class SpatialConv(nn.Module):
         return output
 
 
+# SCNN_D (more efficient and used by a lot of people nowadays)
+class SCNN_D(nn.Module):
+    def __init__(self, num_channels=128):
+        super().__init__()
+        self.conv_d = nn.Conv2d(num_channels, num_channels, (1, 9), padding=(0, 4))
+        self._adjust_initializations(num_channels=num_channels)
+
+    def _adjust_initializations(self, num_channels=128):
+        # https://github.com/XingangPan/SCNN/issues/82
+        bound = math.sqrt(2.0 / (num_channels * 9 * 5))
+        nn.init.uniform_(self.conv_d.weight, -bound, bound)
+
+    def forward(self, input):
+        output = input
+
+        # First one remains unchanged (according to the original paper), why not add a relu afterwards?
+        # Update and send to next
+        # Down
+        for i in range(1, output.shape[2]):
+            output[:, :, i:i + 1, :].add_(F.relu(self.conv_d(output[:, :, i - 1:i, :])))
+
+        return output
+
+
 # Typical lane existence head originated from the SCNN paper
 class SimpleLaneExist(nn.Module):
     def __init__(self, num_output, flattened_size=4500):
