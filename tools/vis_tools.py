@@ -1,5 +1,5 @@
 import numpy as np
-import transforms.functional as F
+from transforms import ToTensor, Resize, ZeroPad, Normalize, Compose
 import cv2
 import torch
 from PIL import Image
@@ -76,19 +76,20 @@ def lane_detection_visualize_batched(images, filenames, masks=None, keypoints=No
         save_images(images=images, filenames=filenames)
 
 
-def simple_segmentation_transform(images, resize_shape, mean, std, dataset='voc', city_aug=0):
+def simple_segmentation_transform(resize_shape, mean, std, dataset='voc', city_aug=0):
     # city_aug correspond to city_aug in init()
     # Assume images in B x C x H x W
     # resize_shape: list[int]
+    transforms = [ToTensor()]
     if dataset == 'voc':
-        images = F.pad(images, [0, 0, resize_shape[1] - images.shape[-1], resize_shape[0] - images.shape[-2]], fill=0)
+        transforms.append(ZeroPad(size=resize_shape))
     else:
-        images = F.resize(images, resize_shape, interpolation=Image.LINEAR)
+        transforms.append(Resize(size_image=resize_shape, size_label=resize_shape))
 
     if city_aug != 2:  # No normalization for ERFNet
-        images = F.normalize(images, mean=mean, std=std)
+        transforms.append(Normalize(mean=mean, std=std))
 
-    return images
+    return Compose(transforms)
 
 
 def simple_lane_detection_transform(images, resize_shape, mean, std):
