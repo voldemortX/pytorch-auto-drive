@@ -12,7 +12,7 @@ from utils.all_utils_landec import init, train_schedule, test_one_set, fast_eval
 if __name__ == '__main__':
     # ulimit
     rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
-    resource.setrlimit(resource.RLIMIT_NOFILE, (4096, rlimit[1]))
+    resource.setrlimit(resource.RLIMIT_NOFILE, (8192, rlimit[1]))
 
     # Settings
     parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
