@@ -68,7 +68,7 @@ class Resize(object):
     @staticmethod
     def parse_resize(image, target, size_image, size_label, ori_size, ignore_x):
         image = F.resize(image, size_image, interpolation=Image.LINEAR)
-        if isinstance(target, str):
+        if target is None or isinstance(target, str):
             return image, target
         elif isinstance(target, dict):  # To keep BC
             if 'keypoints' in target.keys():
@@ -80,7 +80,7 @@ class Resize(object):
 
         return image, target
 
-    def __call__(self, image, target):
+    def __call__(self, image, target=None):
         w_ori, h_ori = F._get_image_size(image)
 
         return self.parse_resize(image, target, self.size_image, self.size_label, (h_ori, w_ori), self.ignore_x)
@@ -96,7 +96,7 @@ class Crop(object):
     def parse_crop(image, target, top, left, height, width, ignore_x):
         # Crop with 4 degrees of freedom (top, left, height, width)
         image = F.crop(image, top, left, height, width)
-        if isinstance(target, str):
+        if target is None or isinstance(target, str):
             return image, target
         elif isinstance(target, dict):  # To keep BC
             if 'keypoints' in target.keys():
@@ -108,7 +108,7 @@ class Crop(object):
 
         return image, target
 
-    def __call__(self, image, target):
+    def __call__(self, image, target=None):
         return self.parse_crop(image, target, 0, 0, self.h, self.w, self.ignore_x)
 
 
@@ -124,7 +124,7 @@ class ZeroPad(object):
         pad_h = h - oh if oh < h else 0
         pad_w = w - ow if ow < w else 0
         image = F.pad(image, [0, 0, pad_w, pad_h], fill=0)
-        if isinstance(target, str):
+        if target is None or isinstance(target, str):
             return image, target
         elif isinstance(target, dict):  # To keep BC
             # Conveniently, since padding is on right & bottom, nothing needs to be done for keypoints
@@ -135,7 +135,7 @@ class ZeroPad(object):
 
         return image, target
 
-    def __call__(self, image, target):
+    def __call__(self, image, target=None):
         return self.zero_pad(image, target, self.h, self.w)
 
 
@@ -251,11 +251,11 @@ class RandomHorizontalFlip(object):
         self.flip_prob = flip_prob
         self.ignore_x = ignore_x
 
-    def __call__(self, image, target):
+    def __call__(self, image, target=None):
         t = random.random()
         if t < self.flip_prob:
             image = F.hflip(image)
-            if isinstance(target, str):
+            if target is None or isinstance(target, str):
                 return image, target
             elif isinstance(target, dict):  # To keep BC
                 if 'keypoints' in target.keys():
@@ -340,9 +340,9 @@ class Normalize(object):
         self.normalize_target = normalize_target
         self.ignore_x = ignore_x
 
-    def __call__(self, image, target):
+    def __call__(self, image, target=None):
         image = F.normalize(image, mean=self.mean, std=self.std)
-        if self.normalize_target and not isinstance(target, str):
+        if self.normalize_target and not (target is None or isinstance(target, str)):
             if isinstance(target, dict):
                 if 'keypoints' in target.keys():
                     w, h = F._get_image_size(image)

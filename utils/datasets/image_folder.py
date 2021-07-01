@@ -1,5 +1,6 @@
 import torchvision
 import os
+from transforms import functional as F
 from PIL import Image
 
 
@@ -18,12 +19,13 @@ class ImageFolderDataset(torchvision.datasets.VisionDataset):
         # Return x (input image) & y (filename for prediction results)
         img = Image.open(self.images[index]).convert('RGB')
         filename = os.path.join(self.output_dir, self.filenames[index])
+        original_img = F.to_tensor(img).clone()
 
         # Transforms
         if self.transforms is not None:
             img = self.transforms(img)
 
-        return img, filename
+        return img, original_img, filename
 
     def __len__(self):
         return len(self.images)

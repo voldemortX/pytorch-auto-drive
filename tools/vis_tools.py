@@ -1,8 +1,19 @@
+import os
+import filetype
 import numpy as np
-from transforms import ToTensor, Resize, ZeroPad, Normalize, Compose
 import cv2
 import torch
+from enum import Enum
 from PIL import Image
+from transforms import ToTensor, Resize, ZeroPad, Normalize, Compose
+from transforms import functional as F
+
+
+# File mode statics
+class FileType(Enum):
+    DIR = 1
+    IMAGE = 2
+    VIDEO = 3
 
 
 def save_images(images, filenames):
@@ -92,7 +103,34 @@ def simple_segmentation_transform(resize_shape, mean, std, dataset='voc', city_a
     return Compose(transforms)
 
 
+# Segmentation methods have simple and unified output formats,
+# same simple post-process will suffice
+def unified_segmentation_label_formatting(labels, original_size, args):
+    if args.dataset == 'voc':
+        labels = torch.nn.functional.interpolate(labels, size=(args.height, args.width),
+                                                 mode='bilinear', align_corners=True)
+        labels = F.crop(labels, 0, 0, original_size[0], original_size[1])
+    else:
+        labels = torch.nn.functional.interpolate(labels, size=original_size, mode='bilinear',
+                                                 align_corners=True)
+    return labels.argmax(1)
+
+
 def simple_lane_detection_transform(images, resize_shape, mean, std):
     # Assume images in B x C x H x W
     # resize_shape: list[int]
     pass
+
+
+# Return file type (directory-1/image-2/video-3) based on suffix
+def check_file_type(filename, image_suffixes, video_suffixes):
+    if os.path.isdir(filename):
+        return FileType.DIR
+    else:
+        filetype_str = filetype.get_type(filename)
+        if filetype_str in image_suffixes:
+            return FileType.IMAGE
+        elif filetype_str in video_suffixes:
+            return FileType.VIDEO
+        else:
+            raise ValueError('File must be an image, a video, or a directory!')
