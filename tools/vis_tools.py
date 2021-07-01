@@ -87,11 +87,11 @@ def lane_detection_visualize_batched(images, filenames, masks=None, keypoints=No
         save_images(images=images, filenames=filenames)
 
 
-def simple_segmentation_transform(resize_shape, mean, std, dataset='voc', city_aug=0):
+def simple_segmentation_transform(resize_shape, mean, std, dataset='voc', city_aug=0, to_tensor=True):
     # city_aug correspond to city_aug in init()
     # Assume images in B x C x H x W
     # resize_shape: list[int]
-    transforms = [ToTensor()]
+    transforms = [ToTensor()] if to_tensor else []
     if dataset == 'voc':
         transforms.append(ZeroPad(size=resize_shape))
     else:

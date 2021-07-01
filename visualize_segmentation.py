@@ -2,6 +2,9 @@
 import yaml
 import argparse
 import torch
+import cv2
+from cv2 import VideoWriter_fourcc
+from mmcv import VideoReader
 from torch.cuda.amp import autocast
 from PIL import Image
 from tqdm import tqdm
@@ -42,7 +45,7 @@ if __name__ == '__main__':
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
     parser.add_argument('--batch-size', type=int, default=1,
-                        help='Batch size for inference with image folder (default: 1)')
+                        help='Batch size for inference with video/image folder (default: 1)')
     parser.add_argument('--workers', type=int, default=0,
                         help='Number of workers (default: 0)')
     args = parser.parse_args()
@@ -82,7 +85,8 @@ if __name__ == '__main__':
         num_classes = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['NUM_CLASSES']
         net, city_aug, _, weights = build_segmentation_model(configs, args, num_classes, 0, input_sizes)
         images_trans = simple_segmentation_transform(mean=mean, std=std, resize_shape=[args.height, args.width],
-                                                     dataset=args.dataset, city_aug=city_aug)
+                                                     dataset=args.dataset, city_aug=city_aug,
+                                                     to_tensor=False if image_type == FileType.VIDEO else True)
         device = torch.device('cpu')
         if torch.cuda.is_available():
             device = torch.device('cuda:0')
@@ -101,6 +105,8 @@ if __name__ == '__main__':
                                                  num_workers=args.workers, shuffle=False)
             with torch.no_grad():
                 for images, original_images, filenames in tqdm(loader):
+                    images = images.to(device)
+                    original_images = original_images.to(device)
                     with autocast(args.mixed_precision):
                         labels = net(images)['out']
                     original_size = (original_images.shape[-2], original_images.shape[-1])
@@ -122,6 +128,22 @@ if __name__ == '__main__':
                                                      colors=colors, mean=None, std=None)
             save_images(results, filenames=[args.save_path])
         elif image_type == FileType.VIDEO:  # Single video
-            pass
+            video = VideoReader(args.image_path)
+            writer = cv2.VideoWriter(args.save_path,
+                                     VideoWriter_fourcc(*'XVID'), video.fps, video.resolution)
+            original_size = video.resolution
+            print('Total frames: {:d}'.format(len(video)))
+            with torch.no_grad():
+                for i in tqdm(range(len(video) // args.batch_size)):
+                    images_numpy = video[i * args.batch_size: (i + 1) * args.batch_size]  # Numpy can suffer a index OOB
+                    images = torch.from_numpy(images_numpy)
+                    images = images[..., [2, 1, 0]].permute(0, 3, 2, 1)  # BWHC-bgr -> BCHW-rgb
+                    original_images = images.clone()
+                    images = images_trans(images)
+                    with autocast(args.mixed_precision):
+                        labels = net[images]['out']
+                    labels = unified_segmentation_label_formatting(labels, original_size=original_size, args=args)
+                    for label in labels:
+                        writer.write(label)
         else:
             raise ValueError('File must be an image, a video, or a directory!')
