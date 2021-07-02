@@ -17,7 +17,7 @@
 | SCNN | ResNet50 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.43% | 95.56% | 2.4h |
 | SCNN | ResNet101 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.56% | 95.69% | 3.5h |
 | SCNN | ERFNet | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 96.18% | 96.29% | 1.6h |
-| LSTR | ResNet18s<sup>#</sup> | simple | 360 x 640 | *no* | TuSimple | Accuracy | | | |
+| LSTR | ResNet18s<sup>#</sup> | simple | 360 x 640 | *no* | TuSimple | Accuracy | 91.91% | 92.40% | 14.2h |
 | LSTR | ResNet18s<sup>#</sup> | strong | 360 x 640 | *no* | TuSimple | Accuracy | 94.91% | 95.06% | 15.5h |
 | Baseline | VGG16 | simple | 288 x 800 | *yes* | CULane | F measure | 65.93 | 66.09 | 9.3h |
 | Baseline | ResNet18 | simple | 288 x 800 | *yes* | CULane | F measure | 65.19 | 65.30 | 5.3h |
@@ -64,7 +64,8 @@
 | SCNN | ResNet50 | simple | 95.56% | 0.0561 | 0.0556 | [model](https://drive.google.com/file/d/1YK-PzdE9q8zn48isiBxwaZEdRsFw_oHe/view?usp=sharing) \| [shell](../tools/shells/resnet50_scnn_tusimple.sh) |
 | SCNN | ResNet101 | simple | 95.69% | 0.0519 | 0.0504 | [model](https://drive.google.com/file/d/13qk5rIHqhDlwylZP9S-8fN53DexPTBQy/view?usp=sharing) \| [shell](../tools/shells/resnet101_scnn_tusimple.sh) |
 | SCNN | ERFNet | simple | 96.29% | 0.0470 | 0.0318 | [model](https://drive.google.com/file/d/1rzE2fZ5mQswMIm6ICK1lWH-rsQyjRbxL/view?usp=sharing) \| [shell](../tools/shells/erfnet_scnn_tusimple.sh) |
-| LSTR | ResNet18s | strong | 95.06% | 0.0486 | 0.0418 | [model](https://drive.google.com/file/d/1z1ikrcgboyLFO3ysJUIf8qlBv7zEUvjK/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_tusimple.sh) |
+| LSTR | ResNet18s | simple | 95.06% | 0.0486 | 0.0418 | [model](https://drive.google.com/file/d/1z1ikrcgboyLFO3ysJUIf8qlBv7zEUvjK/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_tusimple.sh) |
+| LSTR | ResNet18s | strong | 92.40% | 0.1289 | 0.1127 | [model](https://drive.google.com/file/d/1iHArGHnOlSbS01RPFlLYI1mPJSX7o4sR/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_tusimple.sh) |
 
 ### CULane detailed performance (best):
 
