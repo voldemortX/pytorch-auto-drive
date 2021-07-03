@@ -1,8 +1,6 @@
 # Welcome to pytorch-auto-drive visualization tutorial
 
-<div align="left">
-  <img src="https://user-images.githubusercontent.com/32259501/124349679-1ccb8c80-dc23-11eb-9864-46978138c9bd.mp4" width="800"/>
-</div>
+https://user-images.githubusercontent.com/32259501/124349793-a0857900-dc23-11eb-84a0-4936a8e47b33.mp4
 
 Colors can be specified in [configs.yaml](../configs.yaml) for each dataset.
 
