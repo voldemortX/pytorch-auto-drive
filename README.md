@@ -4,6 +4,8 @@
 
 *This repository is under active development, results with models uploaded are stable. For legacy code users, please check [deprecations](https://github.com/voldemortX/pytorch-auto-drive/issues/14) for changes.*
 
+https://user-images.githubusercontent.com/32259501/124349793-a0857900-dc23-11eb-84a0-4936a8e47b33.mp4
+
 ## Highlights
 
 Various methods tested on a wide range of backbones, **modulated** and **easily understood** codes, image/keypoint loading, transformations and visualizations, **mixed precision training** and tensorboard logging.
