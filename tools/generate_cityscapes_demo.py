@@ -9,10 +9,10 @@ with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
 base = os.path.join(configs['CITYSCAPES']['BASE_DIR'], 'all_demoVideo', 'leftImg8bit', 'demoVideo')
 
 # Get image file list
-sub_dirs = [os.path.join(base, sub_dir) for sub_dir in sorted(os.listdir(base))]
+sub_dirs = sorted(os.listdir(base))
 
 for sub_dir in sub_dirs:
-    filenames = sorted(os.listdir(sub_dir))
+    filenames = sorted(os.listdir(os.path.join(base, sub_dir)))
 
     # Save video
-    frames2video(base, sub_dir + '.avi', filenames, fps=30)
+    frames2video(os.path.join(base, sub_dir), sub_dir + '.avi', filenames, fps=24)

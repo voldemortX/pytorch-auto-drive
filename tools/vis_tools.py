@@ -16,11 +16,16 @@ class FileType(Enum):
     VIDEO = 3
 
 
+def tensor_image_to_numpy(images):
+
+    return (images * 255.0).cpu().numpy().astype(np.uint8)
+
+
 def save_images(images, filenames):
     # Save tensor images in range [0.0, 1.0]
     # filenames: List[str]
     assert images.shape[0] == len(filenames)
-    np_results = (images * 255.0).cpu().numpy().astype(np.uint8)
+    np_results = tensor_image_to_numpy(images)
     for i in range(len(filenames)):
         Image.fromarray(np_results[i]).save(filenames[i])
 
@@ -127,7 +132,7 @@ def check_file_type(filename, image_suffixes, video_suffixes):
     if os.path.isdir(filename):
         return FileType.DIR
     else:
-        filetype_str = filetype.get_type(filename)
+        filetype_str = filetype.guess(filename).extension
         if filetype_str in image_suffixes:
             return FileType.IMAGE
         elif filetype_str in video_suffixes:

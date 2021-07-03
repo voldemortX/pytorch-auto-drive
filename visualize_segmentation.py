@@ -11,7 +11,7 @@ from tqdm import tqdm
 from utils.all_utils_semseg import load_checkpoint, build_segmentation_model
 from utils.datasets import ImageFolderDataset
 from tools.vis_tools import segmentation_visualize_batched, simple_segmentation_transform, save_images, \
-    check_file_type, FileType, unified_segmentation_label_formatting
+    check_file_type, FileType, unified_segmentation_label_formatting, tensor_image_to_numpy
 from transforms import functional as F
 from transforms.transforms import ToTensor
 
@@ -59,8 +59,6 @@ if __name__ == '__main__':
     image_suffix = configs['VIS']['IMAGE_SUFFIX']
     video_suffix = configs['VIS']['VIDEO_SUFFIX']
     image_type = check_file_type(args.image_path, image_suffix, video_suffix)
-    if check_file_type(args.save_path, image_suffix, video_suffix) != image_type:
-        raise ValueError('Save path\'s file type is not the same as input!')
 
     if args.mask_path is not None:  # User provided mask (no need for inference)
         if image_type != FileType.IMAGE:
@@ -100,6 +98,8 @@ if __name__ == '__main__':
 
         # Inference
         if image_type == FileType.DIR:  # Image folder (depth 1)
+            if check_file_type(args.save_path, image_suffix, video_suffix) != FileType.DIR:
+                raise ValueError('Must use a folder to save folder inference results!')
             dataset = ImageFolderDataset(root=args.image_path, output_dir=args.save_path, transforms=images_trans)
             loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=args.batch_size,
                                                  num_workers=args.workers, shuffle=False)
@@ -129,21 +129,26 @@ if __name__ == '__main__':
             save_images(results, filenames=[args.save_path])
         elif image_type == FileType.VIDEO:  # Single video
             video = VideoReader(args.image_path)
-            writer = cv2.VideoWriter(args.save_path,
-                                     VideoWriter_fourcc(*'XVID'), video.fps, video.resolution)
-            original_size = video.resolution
+            writer = cv2.VideoWriter(args.save_path, VideoWriter_fourcc(*'XVID'), video.fps, video.resolution)
+            original_size = (video.resolution[1], video.resolution[0])
             print('Total frames: {:d}'.format(len(video)))
             with torch.no_grad():
                 for i in tqdm(range(len(video) // args.batch_size)):
                     images_numpy = video[i * args.batch_size: (i + 1) * args.batch_size]  # Numpy can suffer a index OOB
-                    images = torch.from_numpy(images_numpy)
-                    images = images[..., [2, 1, 0]].permute(0, 3, 2, 1)  # BWHC-bgr -> BCHW-rgb
+                    images = torch.stack([torch.from_numpy(img) for img in images_numpy])
+                    images = images[..., [2, 1, 0]].permute(0, 3, 1, 2) / 255.0  # BHWC-bgr uint8 -> BCHW-rgb float
                     original_images = images.clone()
                     images = images_trans(images)
+                    images = images.to(device)
+                    original_images = original_images.to(device)
                     with autocast(args.mixed_precision):
-                        labels = net[images]['out']
+                        labels = net(images)['out']
                     labels = unified_segmentation_label_formatting(labels, original_size=original_size, args=args)
-                    for label in labels:
-                        writer.write(label)
+                    results = segmentation_visualize_batched(images=original_images, labels=labels,
+                                                             colors=colors, mean=None, std=None)
+                    np_results = tensor_image_to_numpy(results)
+                    for j in range(np_results.shape[0]):
+                        writer.write(np_results[j])
+            writer.release()
         else:
             raise ValueError('File must be an image, a video, or a directory!')
