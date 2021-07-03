@@ -1,10 +1,12 @@
 # Welcome to pytorch-auto-drive visualization tutorial
 
+https://user-images.githubusercontent.com/32259501/124349793-a0857900-dc23-11eb-84a0-4936a8e47b33.mp4
+
 Colors can be specified in [configs.yaml](../configs.yaml) for each dataset.
 
 [vis_tools.py](../tools/vis_tools.py) contains batch-wise visualization functions to modify for your own use case.
 
-## Segmentation mask
+## Segmentation mask (Image/Video/Folder)
 
 Use [visualize_segmentation.py](../visualize_segmentation.py) to visualize segmentation results, by providing the image with `--image-path` and mask (**not the colored ones**) with `--mask-path`, also `--dataset` needs to be specified for color selection. For detailed instructions, run:
 
@@ -12,7 +14,7 @@ Use [visualize_segmentation.py](../visualize_segmentation.py) to visualize segme
 python visualize_segmentation.py --help
 ```
 
-For example, visualize on PASCAL VOC 2012:
+For example, visualize with PASCAL VOC 2012 setting:
 
 ```
 python visualize_segmentation.py --image-path=test_images/voc_test_image.jpg --mask-path=test_images/voc_test_mask.png --save-path=test_images/voc_test.png --dataset=voc
@@ -28,6 +30,16 @@ If mask is not provided, an inference will be performed by the model specified w
 
 ```
 python visualize_segmentation.py --image-path=test_images/voc_test_image.jpg --save-path=test_images/voc_pred.png --model=deeplabv2 --dataset=voc --mixed-precision --continue-from=deeplabv2_pascalvoc_321x321_20201108.pt --height=505 --width=505
+```
+
+### Image folder or videos
+
+`--image-path` and `--save-path` can also be image folder or video. You can try a demo video we made from Cityscapes: [link](https://drive.google.com/file/d/1IuDESvUgaTUHQ7Vw_V29_Jty3eqkOvcL/view?usp=sharing).
+
+To generate more demo videos like that on Cityscapes, you can download the official demo files, and run:
+
+```
+python tools/generate_cityscapes_demo.py
 ```
 
 ## Lane points

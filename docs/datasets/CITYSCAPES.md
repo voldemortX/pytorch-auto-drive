@@ -20,7 +20,9 @@ python tools/cityscapes_data_list.py
     ├── <CITYSCAPES.BASE_DIR>                    
         ├── data_lists
         ├── gtFine
-        └── leftImage8bit
+        ├── leftImage8bit
+        ├── all_demoVideo
+        └── ...
 ```
 
 *More details are coming soon.*

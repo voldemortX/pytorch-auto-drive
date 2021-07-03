@@ -1,15 +1,31 @@
+import os
+import filetype
 import numpy as np
-import transforms.functional as F
 import cv2
 import torch
+from enum import Enum
 from PIL import Image
+from transforms import ToTensor, Resize, ZeroPad, Normalize, Compose
+from transforms import functional as F
+
+
+# File mode statics
+class FileType(Enum):
+    DIR = 1
+    IMAGE = 2
+    VIDEO = 3
+
+
+def tensor_image_to_numpy(images):
+
+    return (images * 255.0).cpu().numpy().astype(np.uint8)
 
 
 def save_images(images, filenames):
     # Save tensor images in range [0.0, 1.0]
     # filenames: List[str]
     assert images.shape[0] == len(filenames)
-    np_results = (images * 255.0).cpu().numpy().astype(np.uint8)
+    np_results = tensor_image_to_numpy(images)
     for i in range(len(filenames)):
         Image.fromarray(np_results[i]).save(filenames[i])
 
@@ -76,22 +92,50 @@ def lane_detection_visualize_batched(images, filenames, masks=None, keypoints=No
         save_images(images=images, filenames=filenames)
 
 
-def simple_segmentation_transform(images, resize_shape, mean, std, dataset='voc', city_aug=0):
+def simple_segmentation_transform(resize_shape, mean, std, dataset='voc', city_aug=0, to_tensor=True):
     # city_aug correspond to city_aug in init()
     # Assume images in B x C x H x W
     # resize_shape: list[int]
+    transforms = [ToTensor()] if to_tensor else []
     if dataset == 'voc':
-        images = F.pad(images, [0, 0, resize_shape[1] - images.shape[-1], resize_shape[0] - images.shape[-2]], fill=0)
+        transforms.append(ZeroPad(size=resize_shape))
     else:
-        images = F.resize(images, resize_shape, interpolation=Image.LINEAR)
+        transforms.append(Resize(size_image=resize_shape, size_label=resize_shape))
 
     if city_aug != 2:  # No normalization for ERFNet
-        images = F.normalize(images, mean=mean, std=std)
+        transforms.append(Normalize(mean=mean, std=std))
 
-    return images
+    return Compose(transforms)
+
+
+# Segmentation methods have simple and unified output formats,
+# same simple post-process will suffice
+def unified_segmentation_label_formatting(labels, original_size, args):
+    if args.dataset == 'voc':
+        labels = torch.nn.functional.interpolate(labels, size=(args.height, args.width),
+                                                 mode='bilinear', align_corners=True)
+        labels = F.crop(labels, 0, 0, original_size[0], original_size[1])
+    else:
+        labels = torch.nn.functional.interpolate(labels, size=original_size, mode='bilinear',
+                                                 align_corners=True)
+    return labels.argmax(1)
 
 
 def simple_lane_detection_transform(images, resize_shape, mean, std):
     # Assume images in B x C x H x W
     # resize_shape: list[int]
     pass
+
+
+# Return file type (directory-1/image-2/video-3) based on suffix
+def check_file_type(filename, image_suffixes, video_suffixes):
+    if os.path.isdir(filename):
+        return FileType.DIR
+    else:
+        filetype_str = filetype.guess(filename).extension
+        if filetype_str in image_suffixes:
+            return FileType.IMAGE
+        elif filetype_str in video_suffixes:
+            return FileType.VIDEO
+        else:
+            raise ValueError('File must be an image, a video, or a directory!')
