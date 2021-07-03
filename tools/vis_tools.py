@@ -25,9 +25,10 @@ def save_images(images, filenames):
     # Save tensor images in range [0.0, 1.0]
     # filenames: List[str]
     assert images.shape[0] == len(filenames)
-    np_results = tensor_image_to_numpy(images)
+    if type(images) != np.ndarray:  # Flexible
+        images = tensor_image_to_numpy(images)
     for i in range(len(filenames)):
-        Image.fromarray(np_results[i]).save(filenames[i])
+        Image.fromarray(images[i]).save(filenames[i])
 
 
 def segmentation_visualize_batched(images, labels, colors, std=None, mean=None, trans=0.3, ignore_color=None):
@@ -59,7 +60,7 @@ def segmentation_visualize_batched(images, labels, colors, std=None, mean=None, 
     return results
 
 
-def lane_detection_visualize_batched(images, filenames, masks=None, keypoints=None,
+def lane_detection_visualize_batched(images, masks=None, keypoints=None,
                                      mask_colors=None, keypoint_color=None, std=None, mean=None):
     # Draw images + lanes from tensors (batched)
     # None masks/keypoints and keypoints (x < 0 or y < 0) will be ignored
@@ -71,7 +72,6 @@ def lane_detection_visualize_batched(images, filenames, masks=None, keypoints=No
         images = segmentation_visualize_batched(images, masks, mask_colors, std, mean,
                                                 trans=0, ignore_color=mask_colors[0])
     if keypoints is not None:
-        # TODO: Get rid of cv2
         if masks is None:
             images = images.permute(0, 2, 3, 1)
         if std is not None and mean is not None:
@@ -79,17 +79,15 @@ def lane_detection_visualize_batched(images, filenames, masks=None, keypoints=No
         images = images.clamp_(0.0, 1.0) * 255.0
         images = images[..., [2, 1, 0]].cpu().numpy().astype(np.uint8)
         if keypoint_color is None:
-            keypoint_color = [0, 0, 255]  # BGR: Red (sits well with lane colors)
-        for i in range(len(filenames)):
+            keypoint_color = [0, 0, 0]  # BGR: Red (sits well with lane colors)
+        for i in range(images.shape[0]):
             for j in range(len(keypoints[i])):
                 temp = keypoints[i][j][(keypoints[i][j][:, 0] > 0) * (keypoints[i][j][:, 1] > 0)]
                 # Draw solid keypoints
                 for k in range(temp.shape[0]):
                     cv2.circle(images[i], (int(temp[k][0]), int(temp[k][1])),
-                               radius=3, color=keypoint_color, thickness=-1)
-            cv2.imwrite(filenames[i], images[i])
-    else:
-        save_images(images=images, filenames=filenames)
+                               radius=5, color=keypoint_color, thickness=-1)
+    return images
 
 
 def simple_segmentation_transform(resize_shape, mean, std, dataset='voc', city_aug=0, to_tensor=True):
@@ -121,9 +119,19 @@ def unified_segmentation_label_formatting(labels, original_size, args):
     return labels.argmax(1)
 
 
-def simple_lane_detection_transform(images, resize_shape, mean, std):
+def simple_lane_detection_transform(resize_shape, mean, std, to_tensor=True):
     # Assume images in B x C x H x W
     # resize_shape: list[int]
+    transforms = [ToTensor()] if to_tensor else []
+    transforms.append(Resize(size_image=resize_shape, size_label=resize_shape))
+    transforms.append(Normalize(mean=mean, std=std))
+
+    return Compose(transforms)
+
+
+def lane_label_formatting(labels, original_size, args, configs):
+    # labels: Lane detection model's predictions (dict)
+    # Return masks (optional), keypoints (optional)
     pass
 
 
