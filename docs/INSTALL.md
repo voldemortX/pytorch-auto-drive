@@ -6,7 +6,7 @@
 - CUDA 10
 - PyTorch >= 1.6 
 - TorchVision >= 0.7.0
-- mmcv-full (according to PyTorch/CUDA version)
+- [mmcv-full](https://github.com/open-mmlab/mmcv) (according to PyTorch/CUDA version)
 
 ```
 pip install tqdm ujson tensorboard imageio opencv-python pyyaml thop Shapely p-tqdm scipy sklearn filetype
