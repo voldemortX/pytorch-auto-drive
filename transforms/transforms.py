@@ -282,7 +282,7 @@ class ToTensor(object):
         self.keep_scale = keep_scale
         self.reverse_channels = reverse_channels
 
-    def __call__(self, image, target):
+    def __call__(self, image, target=None):
         image = self._pil_to_tensor(image)
         target = self.label_to_tensor(target)
 
@@ -290,7 +290,7 @@ class ToTensor(object):
 
     @staticmethod
     def label_to_tensor(pic):  # segmentation masks or keypoint arrays
-        if isinstance(pic, str):
+        if pic is None or isinstance(pic, str):
             return pic
         elif isinstance(pic, dict):
             if 'keypoints' in pic:
