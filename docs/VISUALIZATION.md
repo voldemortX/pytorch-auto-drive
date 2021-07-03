@@ -1,5 +1,7 @@
 # Welcome to pytorch-auto-drive visualization tutorial
 
+https://user-images.githubusercontent.com/32259501/124349679-1ccb8c80-dc23-11eb-9864-46978138c9bd.mp4
+
 Colors can be specified in [configs.yaml](../configs.yaml) for each dataset.
 
 [vis_tools.py](../tools/vis_tools.py) contains batch-wise visualization functions to modify for your own use case.
