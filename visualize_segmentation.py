@@ -91,6 +91,7 @@ if __name__ == '__main__':
         if weights is not None:
             weights = weights.to(device)
         net = net.to(device)
+        net.eval()
         colors = colors.to(device)
         mean = torch.tensor(mean, device=device)
         std = torch.tensor(std, device=device)
@@ -117,7 +118,7 @@ if __name__ == '__main__':
         elif image_type == FileType.IMAGE:  # Single image
             images = Image.open(args.image_path).convert('RGB')
             original_images = F.to_tensor(images).clone().unsqueeze(0)
-            original_size = (images.shape[-2], images.shape[-1])
+            original_size = (original_images.shape[-2], original_images.shape[-1])
             images = images_trans(images).unsqueeze(0)
             images = images.to(device)
             original_images = original_images.to(device)
