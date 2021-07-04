@@ -4,6 +4,8 @@
 
 *This repository is under active development, results with models uploaded are stable. For legacy code users, please check [deprecations](https://github.com/voldemortX/pytorch-auto-drive/issues/14) for changes.*
 
+**A demo video from ERFNet:**
+
 https://user-images.githubusercontent.com/32259501/124389349-3e0ea480-dd19-11eb-8947-cf5e9c95721a.mp4
 
 ## Highlights
@@ -65,7 +67,7 @@ Get started with [SEGMENTATION.md](docs/SEGMENTATION.md) for semantic segmentati
 
 ## Visualization Tools
 
-Refer to [VISUALIZATION.md](docs/VISUALIZATION.md) for a visualization tutorial.
+Refer to [VISUALIZATION.md](docs/VISUALIZATION.md) for a visualization & inference tutorial, for image and video inputs.
 
 ## Benchmark Tools
 Refer to [BENCHMARK.md](docs/BENCHMARK.md) for a benchmarking tutorial, including FPS test, FLOPs & memory count for each supported model.
