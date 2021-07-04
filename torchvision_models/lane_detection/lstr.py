@@ -107,8 +107,8 @@ class LSTR(nn.Module):
         return out
 
     @torch.no_grad()
-    def inference(self, images, input_sizes, gap, ppl, dataset, max_lane=0):
-        outputs = self.forward(images)
+    def inference(self, inputs, input_sizes, gap, ppl, dataset, max_lane=0, forward=True):
+        outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function
         existence_conf = outputs['logits'].softmax(dim=-1)[..., 1]
         existence = outputs['logits'].max(dim=-1).indices == 1
         if max_lane != 0:  # Lane max number prior for testing
@@ -152,7 +152,8 @@ class LSTR(nn.Module):
                 if valid_points.sum() < 2:  # Same post-processing technique as segmentation methods
                     continue
                 if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
-                    coordinates.append([(coords[i][j] * W).item() if valid_points[j] else -2 for j in range(ppl)])
+                    coordinates.append([[(coords[i][j] * W).item(), H - (ppl - j) * gap]
+                                        if valid_points[j] else [-2, H - (ppl - j) * gap] for j in range(ppl)])
                 elif dataset in ['culane', 'llamas']:
                     coordinates.append([[(coords[i][j] * W).item(), H - j * gap]
                                         for j in range(ppl) if valid_points[j]])

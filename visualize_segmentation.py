@@ -137,7 +137,7 @@ if __name__ == '__main__':
                 for i in tqdm(range(len(video) // args.batch_size)):
                     images_numpy = video[i * args.batch_size: (i + 1) * args.batch_size]  # Numpy can suffer a index OOB
                     images = torch.stack([torch.from_numpy(img) for img in images_numpy])
-                    images = images[..., [2, 1, 0]].permute(0, 3, 1, 2) / 255.0  # BHWC-bgr uint8 -> BCHW-rgb float
+                    images = images.permute(0, 3, 1, 2) / 255.0  # BHWC-rgb uint8 -> BCHW-rgb float
                     original_images = images.clone()
                     images = images_trans(images)
                     images = images.to(device)

@@ -18,6 +18,7 @@ GENERAL:
 VIS:
     IMAGE_SUFFIX: ['jpg', 'png', 'bmp']
     VIDEO_SUFFIX: ['avi', 'mp4', 'flv', 'mpg', 'wmv']
+    LANE_KEYPOINT_COLOR: [0, 0, 0]
 
 PASCAL_VOC:  # PASCAL VOC 2012
     BASE_DIR: 'data/VOCtrainval_11-May-2012/VOCdevkit/VOC2012'
