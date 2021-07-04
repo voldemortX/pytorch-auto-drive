@@ -8,6 +8,7 @@ from torch import Tensor
 from torch.nn import functional as F
 from scipy.optimize import linear_sum_assignment
 from ._utils import WeightedLoss
+from torchvision_models.lane_detection import cubic_curve_with_projection
 
 
 @torch.no_grad()
@@ -21,22 +22,6 @@ def lane_normalize_in_batch(keypoints):
     norm_weights /= norm_weights.max()
 
     return norm_weights, valid_points  # [...], [..., N]
-
-
-def cubic_curve_with_projection(coefficients, y):
-    # The cubic curve model from LSTR (considers projection to image plane)
-    # Return x coordinates
-    # coefficients: [d1, d2, ..., 6]
-    # 6 coefficients: [k", f", m", n", b", b''']
-    # y: [d1, d2, ..., N]
-    y = y.permute(-1, *[i for i in range(len(y.shape) - 1)])  # -> [N, d1, d2, ...]
-    x = coefficients[..., 0] / (y - coefficients[..., 1]) ** 2 \
-        + coefficients[..., 2] / (y - coefficients[..., 1]) \
-        + coefficients[..., 3] \
-        + coefficients[..., 4] * y \
-        - coefficients[..., 5]
-
-    return x.permute(*[i + 1 for i in range(len(x.shape) - 1)], 0)  # [d1, d2, ... , N]
 
 
 # TODO: Speed-up Hungarian on GPU with tensors

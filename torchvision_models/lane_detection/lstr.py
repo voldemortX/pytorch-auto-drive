@@ -2,11 +2,28 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from .utils import lane_pruning
 from .. import resnet
 from ..transformer import build_transformer, build_position_encoding
 from ..resnet import resnet18_reduced
 from ..mlp import MLP
 from .._utils import IntermediateLayerGetter
+
+
+def cubic_curve_with_projection(coefficients, y):
+    # The cubic curve model from LSTR (considers projection to image plane)
+    # Return x coordinates
+    # coefficients: [d1, d2, ..., 6]
+    # 6 coefficients: [k", f", m", n", b", b''']
+    # y: [d1, d2, ..., N]
+    y = y.permute(-1, *[i for i in range(len(y.shape) - 1)])  # -> [N, d1, d2, ...]
+    x = coefficients[..., 0] / (y - coefficients[..., 1]) ** 2 \
+        + coefficients[..., 2] / (y - coefficients[..., 1]) \
+        + coefficients[..., 3] \
+        + coefficients[..., 4] * y \
+        - coefficients[..., 5]
+
+    return x.permute(*[i + 1 for i in range(len(x.shape) - 1)], 0)  # [d1, d2, ... , N]
 
 
 class LSTR(nn.Module):
@@ -88,6 +105,61 @@ class LSTR(nn.Module):
             out['aux'] = self._set_aux_loss(output_class, output_curve)  # All intermediate results
 
         return out
+
+    @torch.no_grad()
+    def inference(self, images, input_sizes, gap, ppl, dataset, max_lane=0):
+        outputs = self.forward(images)
+        existence_conf = outputs['logits'].softmax(dim=-1)[..., 1]
+        existence = outputs['logits'].max(dim=-1).indices == 1
+        if max_lane != 0:  # Lane max number prior for testing
+            existence, _ = lane_pruning(existence, existence_conf, max_lane=max_lane)
+
+        existence = existence.cpu().numpy()
+        # Get coordinates for lanes
+        lane_coordinates = []
+        for j in range(existence.shape[0]):
+            lane_coordinates.append(self.coefficients_to_coordinates(outputs['curves'][j, :, 2:], existence[j],
+                                    resize_shape=input_sizes[1], dataset=dataset, ppl=ppl,
+                                    gap=gap, curve_function=cubic_curve_with_projection,
+                                    upper_bound=outputs['curves'][j, :, 0],
+                                    lower_bound=outputs['curves'][j, :, 1]))
+
+        return lane_coordinates
+
+    @staticmethod
+    def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, ppl, gap, curve_function,
+                                    upper_bound, lower_bound):
+        # For methods that predict coefficients of polynomials,
+        # works with normalized coordinates (in range 0.0 ~ 1.0).
+        # Restricted to single image to align with other methods' codes
+        H, W = resize_shape
+        if dataset == 'tusimple':  # Annotation start at 10 pixel away from bottom
+            y = torch.tensor([1.0 - (ppl - i) * gap / H for i in range(ppl)],
+                             dtype=coefficients.dtype, device=coefficients.device)
+        elif dataset in ['culane', 'llamas']:  # Annotation start at bottom
+            y = torch.tensor([1.0 - i * gap / H for i in range(ppl)],
+                             dtype=coefficients.dtype, device=coefficients.device)
+        else:
+            raise ValueError
+        coords = curve_function(coefficients=coefficients, y=y.unsqueeze(0).expand(coefficients.shape[0], -1))
+
+        # Delete outside points according to predicted upper & lower boundaries
+        coordinates = []
+        for i in range(existence.shape[0]):
+            if existence[i]:
+                # Note that in image coordinate system, (0, 0) is the top-left corner
+                valid_points = (coords[i] >= 0) * (coords[i] <= 1) * (y < lower_bound[i]) * (y > upper_bound[i])
+                if valid_points.sum() < 2:  # Same post-processing technique as segmentation methods
+                    continue
+                if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
+                    coordinates.append([(coords[i][j] * W).item() if valid_points[j] else -2 for j in range(ppl)])
+                elif dataset in ['culane', 'llamas']:
+                    coordinates.append([[(coords[i][j] * W).item(), H - j * gap]
+                                        for j in range(ppl) if valid_points[j]])
+                else:
+                    raise ValueError
+
+        return coordinates
 
     @torch.jit.unused
     def _set_aux_loss(self, output_class, output_curve):

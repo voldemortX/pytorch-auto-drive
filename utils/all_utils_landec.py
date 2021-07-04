@@ -9,8 +9,8 @@ from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
     deeplabv1_resnet50, deeplabv1_resnet101, enet_
 from torchvision_models.lane_detection import LSTR
+from torchvision_models.lane_detection.utils import lane_pruning
 from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, LLAMAS, dict_collate_fn
-from utils.losses import cubic_curve_with_projection
 from transforms import ToTensor, Normalize, Resize, RandomRotation, RandomCrop, RandomHorizontalFlip, \
     RandomLighting, ColorJitter, RandomApply, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
@@ -319,6 +319,32 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
     return acc_global.item() * 100, iu.mean().item() * 100
 
 
+# A unified inference function, for segmentation-based lane detection methods
+@torch.no_grad()
+def lane_as_segmentation_inference(net, images, input_sizes, gap, ppl, thresh, dataset, max_lane=0):
+    # Assume net and images are on the same device
+    # images: B x C x H x W
+    # Return: a list of lane predictions on each image
+    outputs = net(images)
+    prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
+                                               align_corners=True).softmax(dim=1)
+    existence_conf = outputs['lane'].sigmoid()
+    existence = existence_conf > 0.5
+    if max_lane != 0:  # Lane max number prior for testing
+        existence, existence_conf = lane_pruning(existence, existence_conf, max_lane=max_lane)
+
+    prob_map = prob_map.cpu().numpy()
+    existence = existence.cpu().numpy()
+
+    # Get coordinates for lanes
+    lane_coordinates = []
+    for j in range(existence.shape[0]):
+        lane_coordinates.append(prob_to_lines(prob_map[j], existence[j], resize_shape=input_sizes[1],
+                                              gap=gap, ppl=ppl, thresh=thresh, dataset=dataset))
+
+    return lane_coordinates
+
+
 # Adapted from harryhan618/SCNN_Pytorch
 @torch.no_grad()
 def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, thresh, dataset,
@@ -332,45 +358,15 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
     for images, filenames in tqdm(loader):
         images = images.to(device)
         with autocast(is_mixed_precision):
-            outputs = net(images)
-
-            if method == 'lstr':
-                existence_conf = outputs['logits'].softmax(dim=-1)[..., 1]
-                existence = outputs['logits'].max(dim=-1).indices == 1
+            if method in ['baseline', 'scnn', 'resa']:
+                batch_coordinates = lane_as_segmentation_inference(net, images, input_sizes, gap, ppl, thresh, dataset,
+                                                                   max_lane)
             else:
-                prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
-                                                           align_corners=True).softmax(dim=1)
-                existence_conf = outputs['lane'].sigmoid()
-                existence = existence_conf > 0.5
+                batch_coordinates = net.inference(images, input_sizes, gap, ppl, dataset, max_lane)
 
-            if max_lane != 0:  # Lane max number prior for testing
-                # Maybe too slow (but should be faster than topk/sort),
-                # consider batch size >> max number of lanes
-                while (existence.sum(dim=1) > max_lane).sum() > 0:
-                    indices = (existence.sum(dim=1, keepdim=True) > max_lane).expand_as(existence) * \
-                              (existence_conf == existence_conf.min(dim=1, keepdim=True).values)
-                    existence[indices] = 0
-                    existence_conf[indices] = 1.1  # So we can keep using min
-
-        # To CPU
-        if method == 'lstr':
-            existence = existence.cpu().numpy()  # For perfect BC
-        else:
-            prob_map = prob_map.cpu().numpy()
-            existence = existence.cpu().numpy()
-
-        # Get coordinates for lanes
-        for j in range(existence.shape[0]):
-            if method == 'lstr':
-                lane_coordinates = coefficients_to_coordinates(outputs['curves'][j, :, 2:], existence[j],
-                                                               resize_shape=input_sizes[1], dataset=dataset, ppl=ppl,
-                                                               gap=gap, curve_function=cubic_curve_with_projection,
-                                                               upper_bound=outputs['curves'][j, :, 0],
-                                                               lower_bound=outputs['curves'][j, :, 1])
-            else:
-                lane_coordinates = prob_to_lines(prob_map[j], existence[j], resize_shape=input_sizes[1],
-                                                 gap=gap, ppl=ppl, thresh=thresh, dataset=dataset)
-
+        # Parse coordinates
+        for j in range(len(batch_coordinates)):
+            lane_coordinates = batch_coordinates[j]
             if dataset == 'culane':
                 # Save each lane to disk
                 dir_name = filenames[j][:filenames[j].rfind('/')]
@@ -490,40 +486,6 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
                 coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
             # elif dataset == 'llamas':
             #     coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
-            else:
-                raise ValueError
-
-    return coordinates
-
-
-def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, ppl, gap, curve_function,
-                                upper_bound, lower_bound):
-    # For methods that predict coefficients of polynomials,
-    # works with normalized coordinates (in range 0.0 ~ 1.0).
-    # Restricted to single image to align with other methods' codes
-    H, W = resize_shape
-    if dataset == 'tusimple':  # Annotation start at 10 pixel away from bottom
-        y = torch.tensor([1.0 - (ppl - i) * gap / H for i in range(ppl)],
-                         dtype=coefficients.dtype, device=coefficients.device)
-    elif dataset in ['culane', 'llamas']:  # Annotation start at bottom
-        y = torch.tensor([1.0 - i * gap / H for i in range(ppl)],
-                         dtype=coefficients.dtype, device=coefficients.device)
-    else:
-        raise ValueError
-    coords = curve_function(coefficients=coefficients, y=y.unsqueeze(0).expand(coefficients.shape[0], -1))
-
-    # Delete outside points according to predicted upper & lower boundaries
-    coordinates = []
-    for i in range(existence.shape[0]):
-        if existence[i]:
-            # Note that in image coordinate system, (0, 0) is the top-left corner
-            valid_points = (coords[i] >= 0) * (coords[i] <= 1) * (y < lower_bound[i]) * (y > upper_bound[i])
-            if valid_points.sum() < 2:  # Same post-processing technique as segmentation methods
-                continue
-            if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
-                coordinates.append([(coords[i][j] * W).item() if valid_points[j] else -2 for j in range(ppl)])
-            elif dataset in ['culane', 'llamas']:
-                coordinates.append([[(coords[i][j] * W).item(), H - j * gap] for j in range(ppl) if valid_points[j]])
             else:
                 raise ValueError
 
