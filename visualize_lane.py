@@ -96,6 +96,7 @@ if __name__ == '__main__':
         if torch.cuda.is_available():
             device = torch.device('cuda:0')
         net = net.to(device)
+        net.eval()
         mask_colors = mask_colors.to(device)
         keypoint_color = keypoint_color.to(device)
         mean = torch.tensor(mean, device=device)
