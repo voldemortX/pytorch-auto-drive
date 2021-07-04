@@ -321,11 +321,11 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
 
 # A unified inference function, for segmentation-based lane detection methods
 @torch.no_grad()
-def lane_as_segmentation_inference(net, images, input_sizes, gap, ppl, thresh, dataset, max_lane=0):
+def lane_as_segmentation_inference(net, inputs, input_sizes, gap, ppl, thresh, dataset, max_lane=0, forward=True):
     # Assume net and images are on the same device
     # images: B x C x H x W
     # Return: a list of lane predictions on each image
-    outputs = net(images)
+    outputs = net(inputs) if forward else inputs  # Support no forwarding inside this function
     prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
                                                align_corners=True).softmax(dim=1)
     existence_conf = outputs['lane'].sigmoid()

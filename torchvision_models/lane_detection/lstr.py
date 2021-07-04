@@ -107,8 +107,8 @@ class LSTR(nn.Module):
         return out
 
     @torch.no_grad()
-    def inference(self, images, input_sizes, gap, ppl, dataset, max_lane=0):
-        outputs = self.forward(images)
+    def inference(self, inputs, input_sizes, gap, ppl, dataset, max_lane=0, forward=True):
+        outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function
         existence_conf = outputs['logits'].softmax(dim=-1)[..., 1]
         existence = outputs['logits'].max(dim=-1).indices == 1
         if max_lane != 0:  # Lane max number prior for testing
