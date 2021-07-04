@@ -4,7 +4,7 @@
 
 *This repository is under active development, results with models uploaded are stable. For legacy code users, please check [deprecations](https://github.com/voldemortX/pytorch-auto-drive/issues/14) for changes.*
 
-https://user-images.githubusercontent.com/32259501/124371591-d3784d00-dcb5-11eb-8d49-74a6185b2074.mp4
+https://user-images.githubusercontent.com/32259501/124389349-3e0ea480-dd19-11eb-8947-cf5e9c95721a.mp4
 
 ## Highlights
 
