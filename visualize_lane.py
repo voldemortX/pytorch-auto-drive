@@ -117,7 +117,7 @@ if __name__ == '__main__':
                     with autocast(args.mixed_precision):
                         labels = net(images)['out']
                     original_size = (original_images.shape[-2], original_images.shape[-1])
-                    masks, keypoints = lane_label_formatting(labels, original_size=original_size, args=args)
+                    masks, keypoints = lane_label_formatting(labels, original_size, args, configs)
                     results = lane_detection_visualize_batched(original_images, masks=masks, keypoints=keypoints,
                                                                mask_colors=mask_colors, keypoint_color=keypoint_color,
                                                                std=None, mean=None)
@@ -131,7 +131,7 @@ if __name__ == '__main__':
             original_images = original_images.to(device)
             with autocast(args.mixed_precision):
                 labels = net(images)['out']
-                masks, keypoints = lane_label_formatting(labels, original_size=original_size, args=args)
+                masks, keypoints = lane_label_formatting(labels, original_size, args, configs)
                 results = lane_detection_visualize_batched(original_images, masks=masks, keypoints=keypoints,
                                                            mask_colors=mask_colors, keypoint_color=keypoint_color,
                                                            std=None, mean=None)
@@ -152,7 +152,7 @@ if __name__ == '__main__':
                     original_images = original_images.to(device)
                     with autocast(args.mixed_precision):
                         labels = net(images)['out']
-                    masks, keypoints = lane_label_formatting(labels, original_size=original_size, args=args)
+                    masks, keypoints = lane_label_formatting(labels, original_size, args, configs)
                     results = lane_detection_visualize_batched(original_images, masks=masks, keypoints=keypoints,
                                                                mask_colors=mask_colors, keypoint_color=keypoint_color,
                                                                std=None, mean=None)
