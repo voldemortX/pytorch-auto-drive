@@ -13,7 +13,7 @@ from utils.all_utils_semseg import load_checkpoint
 from utils.all_utils_landec import build_lane_detection_model
 from utils.datasets import ImageFolderDataset
 from tools.vis_tools import lane_detection_visualize_batched, simple_lane_detection_transform, \
-    check_file_type, FileType, save_images, lane_label_formatting
+    check_file_type, FileType, save_images, lane_inference
 from transforms import functional as F
 from transforms.transforms import ToTensor
 
@@ -114,27 +114,25 @@ if __name__ == '__main__':
                 for images, original_images, filenames in tqdm(loader):
                     images = images.to(device)
                     original_images = original_images.to(device)
-                    with autocast(args.mixed_precision):
-                        labels = net(images)['out']
                     original_size = (original_images.shape[-2], original_images.shape[-1])
-                    masks, keypoints = lane_label_formatting(labels, original_size, args, configs)
-                    results = lane_detection_visualize_batched(original_images, masks=masks, keypoints=keypoints,
+                    inference_size = (images.shape[-2], images.shape[-1])
+                    keypoints = lane_inference(net, images, inference_size, original_size, args, configs)
+                    results = lane_detection_visualize_batched(original_images, masks=None, keypoints=keypoints,
                                                                mask_colors=mask_colors, keypoint_color=keypoint_color,
                                                                std=None, mean=None)
                     save_images(results, filenames=filenames)
         elif image_type == FileType.IMAGE:  # Single image
             images = Image.open(args.image_path).convert('RGB')
             original_images = F.to_tensor(images).clone().unsqueeze(0)
-            original_size = (images.shape[-2], images.shape[-1])
+            original_size = (original_images.shape[-2], original_images.shape[-1])
             images = images_trans(images).unsqueeze(0)
+            inference_size = (images.shape[-2], images.shape[-1])
             images = images.to(device)
             original_images = original_images.to(device)
-            with autocast(args.mixed_precision):
-                labels = net(images)['out']
-                masks, keypoints = lane_label_formatting(labels, original_size, args, configs)
-                results = lane_detection_visualize_batched(original_images, masks=masks, keypoints=keypoints,
-                                                           mask_colors=mask_colors, keypoint_color=keypoint_color,
-                                                           std=None, mean=None)
+            keypoints = lane_inference(net, images, inference_size, original_size, args, configs)
+            results = lane_detection_visualize_batched(original_images, masks=None, keypoints=keypoints,
+                                                       mask_colors=mask_colors, keypoint_color=keypoint_color,
+                                                       std=None, mean=None)
             save_images(results, filenames=[args.save_path])
         elif image_type == FileType.VIDEO:  # Single video
             video = VideoReader(args.image_path)
@@ -148,12 +146,11 @@ if __name__ == '__main__':
                     images = images[..., [2, 1, 0]].permute(0, 3, 1, 2) / 255.0  # BHWC-bgr uint8 -> BCHW-rgb float
                     original_images = images.clone()
                     images = images_trans(images)
+                    inference_size = (images.shape[-2], images.shape[-1])
                     images = images.to(device)
                     original_images = original_images.to(device)
-                    with autocast(args.mixed_precision):
-                        labels = net(images)['out']
-                    masks, keypoints = lane_label_formatting(labels, original_size, args, configs)
-                    results = lane_detection_visualize_batched(original_images, masks=masks, keypoints=keypoints,
+                    keypoints = lane_inference(net, images, inference_size, original_size, args, configs)
+                    results = lane_detection_visualize_batched(original_images, masks=None, keypoints=keypoints,
                                                                mask_colors=mask_colors, keypoint_color=keypoint_color,
                                                                std=None, mean=None)
                     for j in range(results.shape[0]):

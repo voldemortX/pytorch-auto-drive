@@ -3,10 +3,12 @@ import filetype
 import numpy as np
 import cv2
 import torch
+from torch.cuda.amp import autocast
 from enum import Enum
 from PIL import Image
 from transforms import ToTensor, Resize, ZeroPad, Normalize, Compose
 from transforms import functional as F
+from utils.all_utils_landec import lane_as_segmentation_inference
 
 
 # File mode statics
@@ -129,10 +131,24 @@ def simple_lane_detection_transform(resize_shape, mean, std, to_tensor=True):
     return Compose(transforms)
 
 
-def lane_label_formatting(labels, original_size, args, configs):
-    # labels: Lane detection model's predictions (dict)
-    # Return masks (optional), keypoints (optional)
-    pass
+def lane_inference(net, images, inference_size, original_size, args, configs):
+    # Return keypoints List[List[np.array(N x 2)]]
+    with autocast(args.mixed_precision):
+        if args.method in ['baseline', 'scnn', 'resa']:
+            coordinates = lane_as_segmentation_inference(net, images, [inference_size, original_size],
+                                                         configs[configs['LANE_DATASETS'][args.dataset]]['GAP'],
+                                                         configs[configs['LANE_DATASETS'][args.dataset]]['PPL'],
+                                                         configs[configs['LANE_DATASETS'][args.dataset]]['THRESHOLD'],
+                                                         args.dataset,
+                                                         configs[configs['LANE_DATASETS'][args.dataset]]['MAX_LANE'])
+        else:
+            coordinates = net.inference(images, original_size,
+                                        configs[configs['LANE_DATASETS'][args.dataset]]['GAP'],
+                                        configs[configs['LANE_DATASETS'][args.dataset]]['PPL'],
+                                        args.dataset,
+                                        configs[configs['LANE_DATASETS'][args.dataset]]['MAX_LANE'])
+
+    return [[[np.array(lane)] for lane in image] for image in coordinates]
 
 
 # Return file type (directory-1/image-2/video-3) based on suffix

@@ -382,7 +382,7 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                 # Save lanes to a single file
                 formatted = {
                     "h_samples": [160 + y * 10 for y in range(ppl)],
-                    "lanes": lane_coordinates,
+                    "lanes": [[c[0] for c in lane] for lane in lane_coordinates],
                     "run_time": 0,
                     "raw_file": filenames[j]
                 }
@@ -481,7 +481,8 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
             if coords.sum() == 0:
                 continue
             if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
-                coordinates.append([coords[j] if coords[j] > 0 else -2 for j in range(ppl)])
+                coordinates.append([[coords[j], H - (ppl - j) * gap] if coords[j] > 0 else [-2,  H - (ppl - j) * gap]
+                                    for j in range(ppl)])
             elif dataset in ['culane', 'llamas']:
                 coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
             # elif dataset == 'llamas':

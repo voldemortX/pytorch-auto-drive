@@ -152,7 +152,8 @@ class LSTR(nn.Module):
                 if valid_points.sum() < 2:  # Same post-processing technique as segmentation methods
                     continue
                 if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
-                    coordinates.append([(coords[i][j] * W).item() if valid_points[j] else -2 for j in range(ppl)])
+                    coordinates.append([[(coords[i][j] * W).item(), H - (ppl - j) * gap]
+                                        if valid_points[j] else [-2, H - (ppl - j) * gap] for j in range(ppl)])
                 elif dataset in ['culane', 'llamas']:
                     coordinates.append([[(coords[i][j] * W).item(), H - j * gap]
                                         for j in range(ppl) if valid_points[j]])
