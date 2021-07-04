@@ -50,6 +50,10 @@ if __name__ == '__main__':
                         help='Enable mixed precision training (default: False)')
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
+    parser.add_argument('--batch-size', type=int, default=1,
+                        help='Batch size for inference with video/image folder (default: 1)')
+    parser.add_argument('--workers', type=int, default=0,
+                        help='Number of workers (default: 0)')
     args = parser.parse_args()
     with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
         configs = yaml.load(f, Loader=yaml.Loader)
@@ -98,7 +102,6 @@ if __name__ == '__main__':
         net = net.to(device)
         net.eval()
         mask_colors = mask_colors.to(device)
-        keypoint_color = keypoint_color.to(device)
         mean = torch.tensor(mean, device=device)
         std = torch.tensor(std, device=device)
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
@@ -143,7 +146,7 @@ if __name__ == '__main__':
                 for i in tqdm(range(len(video) // args.batch_size)):
                     images_numpy = video[i * args.batch_size: (i + 1) * args.batch_size]  # Numpy can suffer a index OOB
                     images = torch.stack([torch.from_numpy(img) for img in images_numpy])
-                    images = images[..., [2, 1, 0]].permute(0, 3, 1, 2) / 255.0  # BHWC-bgr uint8 -> BCHW-rgb float
+                    images = images.permute(0, 3, 1, 2) / 255.0  # BHWC-bgr uint8 -> BCHW-rgb float
                     original_images = images.clone()
                     images = images_trans(images)
                     inference_size = (images.shape[-2], images.shape[-1])

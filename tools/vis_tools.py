@@ -89,7 +89,7 @@ def lane_detection_visualize_batched(images, masks=None, keypoints=None,
                 for k in range(temp.shape[0]):
                     cv2.circle(images[i], (int(temp[k][0]), int(temp[k][1])),
                                radius=5, color=keypoint_color, thickness=-1)
-    return images
+    return images[..., [2, 1, 0]]
 
 
 def simple_segmentation_transform(resize_shape, mean, std, dataset='voc', city_aug=0, to_tensor=True):
@@ -148,7 +148,7 @@ def lane_inference(net, images, inference_size, original_size, args, configs):
                                         args.dataset,
                                         configs[configs['LANE_DATASETS'][args.dataset]]['MAX_LANE'])
 
-    return [[[np.array(lane)] for lane in image] for image in coordinates]
+    return [[np.array(lane) for lane in image] for image in coordinates]
 
 
 # Return file type (directory-1/image-2/video-3) based on suffix
