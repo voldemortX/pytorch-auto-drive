@@ -8,8 +8,8 @@ from .deeplab import DeepLabV3Head, DeepLabV2Head, DeepLabV1Head, DeepLab, Recon
 from .fcn import FCN, FCNHead
 from .erfnet import ERFNet
 from .deeplab_vgg import DeepLabV1
-from .enet import ENet, Encoder
-from ..lane_detection import SpatialConv, SimpleLaneExist, RESAReducer
+from .enet import ENet
+from ..common_models import SpatialConv, SimpleLaneExist, RESAReducer
 from torch import load
 import torch
 

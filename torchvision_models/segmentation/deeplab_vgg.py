@@ -2,7 +2,7 @@
 import torch.nn as nn
 import torchvision
 from collections import OrderedDict
-from ..lane_detection.common_models import SpatialConv, SimpleLaneExist
+from ..common_models import SpatialConv, SimpleLaneExist
 
 
 # Modified VGG16 backbone in DeepLab-LargeFOV

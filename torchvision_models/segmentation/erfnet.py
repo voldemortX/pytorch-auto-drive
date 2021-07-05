@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
 
-from ..lane_detection.common_models import SpatialConv, EDLaneExist
+from ..common_models import SpatialConv, EDLaneExist
 
 
 class DownsamplerBlock(nn.Module):
