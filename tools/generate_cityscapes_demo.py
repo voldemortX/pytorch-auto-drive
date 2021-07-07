@@ -15,4 +15,4 @@ for sub_dir in sub_dirs:
     filenames = sorted(os.listdir(os.path.join(base, sub_dir)))
 
     # Save video
-    frames2video(os.path.join(base, sub_dir), sub_dir + '.avi', filenames, fps=24)
+    frames2video(os.path.join(base, sub_dir), sub_dir + '.avi', filenames, fps=17)
