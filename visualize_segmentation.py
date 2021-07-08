@@ -5,7 +5,6 @@ import torch
 import cv2
 from cv2 import VideoWriter_fourcc
 from mmcv import VideoReader
-from torch.cuda.amp import autocast
 from PIL import Image
 from tqdm import tqdm
 from utils.all_utils_semseg import load_checkpoint, build_segmentation_model
@@ -108,8 +107,7 @@ if __name__ == '__main__':
                 for images, original_images, filenames in tqdm(loader):
                     images = images.to(device)
                     original_images = original_images.to(device)
-                    with autocast(args.mixed_precision):
-                        labels = net(images)['out']
+                    labels = net(images)['out']
                     original_size = (original_images.shape[-2], original_images.shape[-1])
                     labels = unified_segmentation_label_formatting(labels, original_size=original_size, args=args)
                     results = segmentation_visualize_batched(images=original_images, labels=labels,
@@ -122,8 +120,7 @@ if __name__ == '__main__':
             images = images_trans(images).unsqueeze(0)
             images = images.to(device)
             original_images = original_images.to(device)
-            with autocast(args.mixed_precision):
-                labels = net(images)['out']
+            labels = net(images)['out']
             labels = unified_segmentation_label_formatting(labels, original_size, args)
             results = segmentation_visualize_batched(images=original_images, labels=labels,
                                                      colors=colors, mean=None, std=None)
@@ -142,8 +139,7 @@ if __name__ == '__main__':
                     images = images_trans(images)
                     images = images.to(device)
                     original_images = original_images.to(device)
-                    with autocast(args.mixed_precision):
-                        labels = net(images)['out']
+                    labels = net(images)['out']
                     labels = unified_segmentation_label_formatting(labels, original_size=original_size, args=args)
                     results = segmentation_visualize_batched(images=original_images, labels=labels,
                                                              colors=colors, mean=None, std=None)

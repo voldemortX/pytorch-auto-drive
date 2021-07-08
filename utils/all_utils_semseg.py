@@ -2,7 +2,6 @@ import time
 from collections import OrderedDict
 import torch
 import warnings
-from torch.cuda.amp import autocast, GradScaler
 from tqdm import tqdm
 from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet, \
     enet_
@@ -218,8 +217,6 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
     epoch = 0
     running_loss = 0.0
     loss_num_steps = int(len(loader) / 10)
-    if is_mixed_precision:
-        scaler = GradScaler()
 
     # Training
     while epoch < num_epochs:
@@ -231,29 +228,23 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
 
-            with autocast(is_mixed_precision):
-                outputs = net(inputs)['out']
+            outputs = net(inputs)['out']
 
-                if encoder_only:
-                    labels = labels.unsqueeze(0)
-                    if labels.dtype not in (torch.float32, torch.float64):
-                        labels = labels.to(torch.float32)
-                    labels = torch.nn.functional.interpolate(labels, size=input_sizes[1], mode='nearest')
-                    labels = labels.to(torch.int64)
-                    labels = labels.squeeze(0)
-                else:
-                    outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear',
-                                                              align_corners=True)
-                conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
-                loss = criterion(outputs, labels)
-
-            if is_mixed_precision:
-                scaler.scale(loss).backward()
-                scaler.step(optimizer)
-                scaler.update()
+            if encoder_only:
+                labels = labels.unsqueeze(0)
+                if labels.dtype not in (torch.float32, torch.float64):
+                    labels = labels.to(torch.float32)
+                labels = torch.nn.functional.interpolate(labels, size=input_sizes[1], mode='nearest')
+                labels = labels.to(torch.int64)
+                labels = labels.squeeze(0)
             else:
-                loss.backward()
-                optimizer.step()
+                outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear',
+                                                          align_corners=True)
+            conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
+            loss = criterion(outputs, labels)
+
+            loss.backward()
+            optimizer.step()
 
             lr_scheduler.step()
             running_loss += loss.item()
@@ -289,8 +280,7 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
                     save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
         # Evaluate training accuracies (same metric as validation, but must be on-the-fly to save time)
-        with autocast(is_mixed_precision):
-            acc_global, acc, iu = conf_mat.compute()
+        acc_global, acc, iu = conf_mat.compute()
         print(categories)
         print((
             'global correct: {:.2f}\n'
@@ -325,19 +315,19 @@ def test_one_set(loader, device, net, num_classes, categories, output_size, labe
     with torch.no_grad():
         for image, target in tqdm(loader):
             image, target = image.to(device), target.to(device)
-            with autocast(is_mixed_precision):
-                output = net(image)['out']
-                if encoder_only:
-                    target = target.unsqueeze(0)
-                    if target.dtype not in (torch.float32, torch.float64):
-                        target = target.to(torch.float32)
-                    target = torch.nn.functional.interpolate(target, size=labels_size, mode='nearest')
-                    target = target.to(torch.int64)
-                    target = target.squeeze(0)
-                else:
-                    output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear',
-                                                             align_corners=True)
-                conf_mat.update(target.flatten(), output.argmax(1).flatten())
+
+            output = net(image)['out']
+            if encoder_only:
+                target = target.unsqueeze(0)
+                if target.dtype not in (torch.float32, torch.float64):
+                    target = target.to(torch.float32)
+                target = torch.nn.functional.interpolate(target, size=labels_size, mode='nearest')
+                target = target.to(torch.int64)
+                target = target.squeeze(0)
+            else:
+                output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear',
+                                                         align_corners=True)
+            conf_mat.update(target.flatten(), output.argmax(1).flatten())
 
     acc_global, acc, iu = conf_mat.compute()
     print(categories)

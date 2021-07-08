@@ -3,7 +3,6 @@ import yaml
 import argparse
 import torch
 import cv2
-from torch.cuda.amp import autocast
 from tqdm import tqdm
 from cv2 import VideoWriter_fourcc
 from mmcv import VideoReader

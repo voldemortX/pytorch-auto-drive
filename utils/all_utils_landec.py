@@ -5,7 +5,6 @@ import time
 import ujson as json
 import numpy as np
 from tqdm import tqdm
-from torch.cuda.amp import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
     deeplabv1_resnet50, deeplabv1_resnet101, enet_
 from torchvision_models.lane_detection import LSTR
@@ -213,8 +212,6 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
     epoch = 0
     running_loss = None  # Dict logging for every loss (too many losses in this task)
     loss_num_steps = int(len(loader) / 10) if len(loader) > 10 else 1
-    if is_mixed_precision:
-        scaler = GradScaler()
 
     # Training
     best_validation = 0
@@ -231,20 +228,14 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
                 inputs, labels, lane_existence = inputs.to(device), labels.to(device), lane_existence.to(device)
             optimizer.zero_grad()
 
-            with autocast(is_mixed_precision):
-                # To support intermediate losses for SAD
-                if method == 'lstr':
-                    loss, log_dict = criterion(inputs, labels, net)
-                else:
-                    loss, log_dict = criterion(inputs, labels, lane_existence, net, input_sizes[0])
-
-            if is_mixed_precision:
-                scaler.scale(loss).backward()
-                scaler.step(optimizer)
-                scaler.update()
+            # To support intermediate losses for SAD
+            if method == 'lstr':
+                loss, log_dict = criterion(inputs, labels, net)
             else:
-                loss.backward()
-                optimizer.step()
+                loss, log_dict = criterion(inputs, labels, lane_existence, net, input_sizes[0])
+
+            loss.backward()
+            optimizer.step()
 
             lr_scheduler.step()
             if running_loss is None:  # Because different methods may have different values to log
@@ -299,10 +290,9 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
     with torch.no_grad():
         for image, target in tqdm(loader):
             image, target = image.to(device), target.to(device)
-            with autocast(is_mixed_precision):
-                output = net(image)['out']
-                output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
-                conf_mat.update(target.flatten(), output.argmax(1).flatten())
+            output = net(image)['out']
+            output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
+            conf_mat.update(target.flatten(), output.argmax(1).flatten())
 
     acc_global, acc, iu = conf_mat.compute()
     print((
@@ -357,12 +347,11 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
     net.eval()
     for images, filenames in tqdm(loader):
         images = images.to(device)
-        with autocast(is_mixed_precision):
-            if method in ['baseline', 'scnn', 'resa']:
-                batch_coordinates = lane_as_segmentation_inference(net, images, input_sizes, gap, ppl, thresh, dataset,
+        if method in ['baseline', 'scnn', 'resa']:
+            batch_coordinates = lane_as_segmentation_inference(net, images, input_sizes, gap, ppl, thresh, dataset,
                                                                    max_lane)
-            else:
-                batch_coordinates = net.inference(images, input_sizes, gap, ppl, dataset, max_lane)
+        else:
+            batch_coordinates = net.inference(images, input_sizes, gap, ppl, dataset, max_lane)
 
         # Parse coordinates
         for j in range(len(batch_coordinates)):
