@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: enet_baseline_tusimple_20210312.pt
 # Training
 python main_landec.py --epochs=50 --lr=0.4 --batch-size=20 --dataset=tusimple --method=baseline --backbone=enet --mixed-precision --exp-name=enet_baseline_tusimple

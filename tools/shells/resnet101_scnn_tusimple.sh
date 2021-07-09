@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: resnet101_scnn_tusimple_20210218.pt
 # Training, scale lr by square root on 11G GPU
 python main_landec.py --epochs=50 --lr=0.13 --batch-size=8 --dataset=tusimple --method=scnn --backbone=resnet101 --workers=4 --warmup-steps=500 --mixed-precision --exp-name=resnet101_scnn_tusimple

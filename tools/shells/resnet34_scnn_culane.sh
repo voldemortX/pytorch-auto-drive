@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: resnet34_scnn_culane_20210220.pt
 # Training
 python main_landec.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=scnn --backbone=resnet34 --mixed-precision --exp-name=resnet34_scnn_culane

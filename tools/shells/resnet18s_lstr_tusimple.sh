@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: resnet18s_lstr_tusimple_20210701.pt
 # Training
 python main_landec.py --epochs=2000 --lr=0.00025 --batch-size=20 --dataset=tusimple --method=lstr --backbone=resnet18s --workers=16 --exp-name=resnet18s_lstr

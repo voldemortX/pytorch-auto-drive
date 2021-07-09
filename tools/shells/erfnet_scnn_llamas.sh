@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: erfnet_scnn_llamas_20210625.pt
 # Training
 python main_landec.py --epochs=10 --lr=0.5 --batch-size=20 --dataset=llamas --method=scnn --backbone=erfnet --mixed-precision --exp-name=erfnet_scnn_llamas

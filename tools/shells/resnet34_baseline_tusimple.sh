@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: resnet34_baseline_tusimple_20210424.pt
 # Training
 python main_landec.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=baseline --backbone=resnet34 --mixed-precision --exp-name=resnet34_baseline_tusimple

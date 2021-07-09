@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: enet_baseline_culane_20210312.pt
 # Training
 python main_landec.py --epochs=12 --lr=0.5 --batch-size=20 --dataset=culane --method=baseline --backbone=enet --mixed-precision --exp-name=enet_baseline_culane

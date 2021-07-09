@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: vgg16_baseline_culane_20210309.pt
 # Training
 python main_landec.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=baseline --backbone=vgg16 --mixed-precision --exp-name=vgg16_baseline_culane
