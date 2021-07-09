@@ -348,7 +348,7 @@ def lane_as_segmentation_inference(net, inputs, input_sizes, gap, ppl, thresh, d
 # Adapted from harryhan618/SCNN_Pytorch
 @torch.no_grad()
 def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, thresh, dataset,
-                 method='baseline', max_lane=0):
+                 method='baseline', max_lane=0, exp_name=None):
     # Predict on 1 data_loader and save predictions for the official script
     # sizes: [input size, test original size, ...]
     # max_lane = 0 -> unlimited number of lanes
@@ -403,7 +403,7 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                 raise ValueError
 
     if dataset == 'tusimple':
-        with open('./output/tusimple_pred.json', 'w') as f:
+        with open('./output/' + exp_name + '.json', 'w') as f:
             for lane in all_lanes:
                 print(lane, end="\n", file=f)
 

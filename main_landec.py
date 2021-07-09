@@ -4,6 +4,7 @@ import torch
 import resource
 import argparse
 import yaml
+import fcntl
 from torch.utils.tensorboard import SummaryWriter
 from utils.losses import LaneLoss, SADLoss, HungarianLoss
 from utils.all_utils_semseg import load_checkpoint
@@ -102,7 +103,10 @@ if __name__ == '__main__':
                                  num_classes=num_classes, output_size=input_sizes[0],
                                  is_mixed_precision=args.mixed_precision)
             with open('log.txt', 'a') as f:
+                # Safe writing with locks
+                fcntl.flock(f, fcntl.LOCK_EX)
                 f.write(exp_name + ' validation: ' + str(x) + '\n')
+                fcntl.flock(f, fcntl.LOCK_UN)
 
         else:  # Test with official scripts later (so just predict lanes here)
             test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision, gap=gap,

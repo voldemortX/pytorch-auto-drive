@@ -4,6 +4,7 @@ import torch
 import argparse
 import math
 import yaml
+import fcntl
 from torch.utils.tensorboard import SummaryWriter
 from utils.all_utils_semseg import init, train_schedule, test_one_set, load_checkpoint, build_segmentation_model
 
@@ -31,8 +32,8 @@ if __name__ == '__main__':
                              '(default: deeplabv3)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size (default: 8)')
-    parser.add_argument('--do-not-save', action='store_false', default=True,
-                        help='save model (default: True)')
+    parser.add_argument('--do-not-save', action='store_true', default=False,
+                        help='save model (default: False)')
     parser.add_argument('--mixed-precision', action='store_true', default=False,
                         help='Enable mixed precision training (default: False)')
     parser.add_argument('--continue-from', type=str, default=None,
@@ -132,22 +133,22 @@ if __name__ == '__main__':
                        num_epochs=args.epochs, is_mixed_precision=args.mixed_precision,
                        validation_loader=val_loader, device=device, criterion=criterion, categories=categories,
                        num_classes=num_classes, input_sizes=input_sizes, val_num_steps=args.val_num_steps,
-                       classes=classes, selector=selector, encoder_only=args.encoder_only)
+                       classes=classes, selector=selector, encoder_only=args.encoder_only, exp_name=args.exp_name)
 
         # Final evaluations
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename='temp.pt')
+        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.exp_name + '.pt')
         _, x = test_one_set(loader=val_loader, device=device, net=net, is_mixed_precision=args.mixed_precision,
                             categories=categories, num_classes=num_classes, labels_size=input_sizes[1],
                             output_size=input_sizes[2], encoder_only=args.encoder_only,
                             classes=classes, selector=selector)
 
-        # --do-not-save => args.do_not_save = False
-        if args.do_not_save:  # Rename the checkpoint with timestamp
-            os.rename('temp.pt', exp_name + '.pt')
-        else:  # Since the checkpoint is already saved, it should be deleted
-            os.remove('temp.pt')
+        if args.do_not_save:
+            os.remove(args.exp_name + '.pt')
 
         writer.close()
 
     with open('log.txt', 'a') as f:
+        # Safe writing with locks
+        fcntl.flock(f, fcntl.LOCK_EX)
         f.write(exp_name + ': ' + str(x) + '\n')
+        fcntl.flock(f, fcntl.LOCK_UN)
