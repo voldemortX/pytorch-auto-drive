@@ -209,7 +209,7 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_l
 
 def train_schedule(writer, loader, val_num_steps, validation_loader, device, criterion, net, optimizer, lr_scheduler,
                    num_epochs, is_mixed_precision, num_classes, categories, input_sizes, selector, classes,
-                   encoder_only):
+                   encoder_only, exp_name):
     # Poly training schedule
     # Validate and find the best snapshot
     best_mIoU = 0
@@ -277,7 +277,7 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
                 # Record best model (straight to disk)
                 if test_mIoU > best_mIoU:
                     best_mIoU = test_mIoU
-                    save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler)
+                    save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=exp_name + '.pt')
 
         # Evaluate training accuracies (same metric as validation, but must be on-the-fly to save time)
         acc_global, acc, iu = conf_mat.compute()

@@ -19,6 +19,7 @@ metric is used.
 import os
 import argparse
 import cv2
+import fcntl
 import ujson as json
 import numpy as np
 from p_tqdm import t_map, p_map
@@ -206,7 +207,9 @@ def main():
         else:
             print('{}: {}'.format(metric, value))
     with open('../../log.txt', 'a') as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
         f.write(args.exp_name + ': ' + str(results['F1']) + '\n')
+        fcntl.flock(f, fcntl.LOCK_UN)
     print('=' * len(header))
 
     with open('./output/' + args.exp_name + '.json', 'w') as f:

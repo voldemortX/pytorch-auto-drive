@@ -1,6 +1,7 @@
 # Accumulate and calculate whole F1 score on CULane
 
 import argparse
+import fcntl
 
 if __name__ == '__main__':
     # Settings
@@ -31,4 +32,6 @@ if __name__ == '__main__':
     # Log
     print('F1 score: ' + str(f1))
     with open('../../log.txt', 'a') as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
         f.write(args.exp_name + ': ' + str(f1) + '\n')
+        fcntl.flock(f, fcntl.LOCK_UN)
