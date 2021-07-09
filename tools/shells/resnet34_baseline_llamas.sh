@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: resnet34_baseline_llamas_20210625.pt
 # Training
 python main_landec.py --epochs=18 --lr=0.5 --batch-size=20 --dataset=llamas --method=baseline --backbone=resnet34 --mixed-precision --exp-name=resnet34_baseline_llamas

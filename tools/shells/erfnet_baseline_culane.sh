@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: erfnet_baseline_culane_20210204.pt
 # Training
 python main_landec.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=baseline --backbone=erfnet --mixed-precision --exp-name=erfnet_baseline_culane

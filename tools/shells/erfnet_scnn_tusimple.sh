@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: erfnet_scnn_tusimple_20210202.pt
 # Training
 python main_landec.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=scnn --backbone=erfnet --mixed-precision --exp-name=erfnet_scnn_tusimple

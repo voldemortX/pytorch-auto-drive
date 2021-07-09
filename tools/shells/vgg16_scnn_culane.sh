@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: vgg16_scnn_culane_20210309.pt
 # Training
 python main_landec.py --epochs=12 --lr=0.3 --batch-size=20 --dataset=culane --method=scnn --backbone=vgg16 --mixed-precision --exp-name=vgg16_scnn_culane

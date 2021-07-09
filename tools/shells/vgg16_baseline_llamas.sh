@@ -1,3 +1,4 @@
+#!/bin/bash
 # Trained weights: vgg16_baseline_llamas_20210625.pt
 # Training
 python main_landec.py --epochs=18 --lr=0.3 --batch-size=20 --dataset=llamas --method=baseline --backbone=vgg16 --mixed-precision --exp-name=vgg16_baseline_llamas
