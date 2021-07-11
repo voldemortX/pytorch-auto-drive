@@ -111,7 +111,7 @@ if __name__ == '__main__':
         else:  # Test with official scripts later (so just predict lanes here)
             test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision, gap=gap,
                          input_sizes=input_sizes, ppl=ppl, thresh=thresh, dataset=args.dataset, method=args.method,
-                         max_lane=max_lane)
+                         max_lane=max_lane, exp_name=args.exp_name)
     else:
         eigen_value = configs['GENERAL']['LIGHT_EIGEN_VALUE']
         eigen_vector = configs['GENERAL']['LIGHT_EIGEN_VECTOR']
