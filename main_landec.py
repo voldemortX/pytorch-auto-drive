@@ -1,5 +1,6 @@
 import time
 import torch
+torch.backends.cudnn.benchmark = True
 # torch.multiprocessing.set_sharing_strategy('file_system')
 import resource
 import argparse

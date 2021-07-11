@@ -1,6 +1,7 @@
 import os
 import time
 import torch
+torch.backends.cudnn.benchmark = True
 import argparse
 import math
 import yaml
