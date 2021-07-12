@@ -3,7 +3,6 @@ import yaml
 import argparse
 import torch
 import cv2
-from torch.cuda.amp import autocast
 from tqdm import tqdm
 from cv2 import VideoWriter_fourcc
 from mmcv import VideoReader
@@ -55,6 +54,8 @@ if __name__ == '__main__':
     parser.add_argument('--workers', type=int, default=0,
                         help='Number of workers (default: 0)')
     args = parser.parse_args()
+    if args.mixed_precision and torch.__version__ < '1.6.0':
+        print('PyTorch version too low, mixed precision training is not available.')
     with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
         configs = yaml.load(f, Loader=yaml.Loader)
 

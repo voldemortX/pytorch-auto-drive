@@ -5,7 +5,10 @@ import time
 import ujson as json
 import numpy as np
 from tqdm import tqdm
-from torch.cuda.amp import autocast, GradScaler
+if torch.__version__ >= '1.6.0':
+    from torch.cuda.amp import autocast, GradScaler
+else:
+    from .torch_amp_dummy import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
     deeplabv1_resnet50, deeplabv1_resnet101, enet_
 from torchvision_models.lane_detection import LSTR
