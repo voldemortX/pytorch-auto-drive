@@ -255,18 +255,18 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
             with autocast(is_mixed_precision):
                 outputs = net(inputs)['out']
 
-            if encoder_only:
-                labels = labels.unsqueeze(0)
-                if labels.dtype not in (torch.float32, torch.float64):
-                    labels = labels.to(torch.float32)
-                labels = torch.nn.functional.interpolate(labels, size=input_sizes[1], mode='nearest')
-                labels = labels.to(torch.int64)
-                labels = labels.squeeze(0)
-            else:
-                outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear',
-                                                          align_corners=True)
-            conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
-            loss = criterion(outputs, labels)
+                if encoder_only:
+                    labels = labels.unsqueeze(0)
+                    if labels.dtype not in (torch.float32, torch.float64):
+                        labels = labels.to(torch.float32)
+                    labels = torch.nn.functional.interpolate(labels, size=input_sizes[1], mode='nearest')
+                    labels = labels.to(torch.int64)
+                    labels = labels.squeeze(0)
+                else:
+                    outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear',
+                                                              align_corners=True)
+                conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
+                loss = criterion(outputs, labels)
 
             if is_mixed_precision:
                 scaler.scale(loss).backward()

@@ -28,8 +28,15 @@ For detailed instructions, run:
 python main_landec.py --help
 ```
 
+## Distributed Training
 
+We support multi-GPU training with Distributed Data Parallel (DDP):
 
+```
+python -m torch.distributed.launch --nproc_per_node=<number of GPU per-node> --use_env main_landec.py --world-size=<total GPU> --dist-url=<socket url like tcp://localhost:23456> <your normal args>
+```
+
+With DDP, `--batch-size` means batch size per-GPU, and more dataloader threads should be used with `--workers`.
 
 ## Testing:
 
