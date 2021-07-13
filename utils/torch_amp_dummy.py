@@ -34,3 +34,6 @@ class GradScaler(object):
 
     def step(self, optimizer, *args, **kwargs):
         return optimizer.step(*args, **kwargs)
+
+    def update(self):
+        pass
