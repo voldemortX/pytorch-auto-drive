@@ -3,6 +3,6 @@
 # Training
 python main_landec.py --epochs=50 --lr=0.2 --batch-size=20 --dataset=tusimple --method=scnn --backbone=resnet34 --mixed-precision --exp-name=resnet34_scnn_tusimple
 # Predicting lane points for testing
-python main_landec.py --state=2 --batch-size=80 --continue-from=resnet34_scnn_tusimple.pt --dataset=tusimple --method=scnn --backbone=resnet34 --mixed-precision
+python main_landec.py --state=2 --batch-size=80 --continue-from=resnet34_scnn_tusimple.pt --dataset=tusimple --method=scnn --backbone=resnet34 --mixed-precision --exp-name=resnet34_scnn_tusimple
 # Testing with official scripts
 ./autotest_tusimple.sh resnet34_scnn_tusimple test
