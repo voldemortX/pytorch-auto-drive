@@ -1,5 +1,7 @@
 import time
 import torch
+if torch.backends.cudnn.version() < 8000:
+    torch.backends.cudnn.benchmark = True
 # torch.multiprocessing.set_sharing_strategy('file_system')
 import resource
 import argparse
@@ -51,6 +53,8 @@ if __name__ == '__main__':
     parser.add_argument('--encoder-only', action='store_true', default=False,
                         help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
     args = parser.parse_args()
+    if args.mixed_precision and torch.__version__ < '1.6.0':
+        print('PyTorch version too low, mixed precision training is not available.')
     exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
     states = ['train', 'valfast', 'test', 'val']
     with open(exp_name + '_' + states[args.state] + '_cfg.txt', 'w') as f:

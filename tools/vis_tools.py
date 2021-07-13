@@ -3,7 +3,10 @@ import filetype
 import numpy as np
 import cv2
 import torch
-from torch.cuda.amp import autocast
+if torch.__version__ >= '1.6.0':
+    from torch.cuda.amp import autocast
+else:
+    from utils.torch_amp_dummy import autocast
 from enum import Enum
 from PIL import Image
 from transforms import ToTensor, Resize, ZeroPad, Normalize, Compose

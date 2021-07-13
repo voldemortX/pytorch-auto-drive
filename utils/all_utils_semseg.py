@@ -2,7 +2,10 @@ import time
 from collections import OrderedDict
 import torch
 import warnings
-from torch.cuda.amp import autocast, GradScaler
+if torch.__version__ >= '1.6.0':
+    from torch.cuda.amp import autocast, GradScaler
+else:
+    from .torch_amp_dummy import autocast, GradScaler
 from tqdm import tqdm
 from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resnet101, fcn_resnet101, erfnet_resnet, \
     enet_
