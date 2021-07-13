@@ -3,7 +3,7 @@
 ## Requirements
 
 - Python >= 3.6
-- CUDA >= 9.2 (CUDA 10 is preferred, for CUDA version < 9.2, refer to [cu90torch13](https://github.com/voldemortX/pytorch-auto-drive/tree/cu90torch13) branch: PyTorch 1.3 & CUDA 9.0 & CuDNN 7.6.0)
+- CUDA >= 9.2 (for CUDA version < 9.2, the code is tested only with PyTorch 1.3 & CUDA 9.0 & CuDNN 7.6.0)
 - PyTorch >= 1.6 
 - TorchVision >= 0.7.0
 - [mmcv-full](https://github.com/open-mmlab/mmcv) (according to PyTorch/CUDA version)
