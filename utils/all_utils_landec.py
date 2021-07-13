@@ -17,6 +17,7 @@ from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, LLAMA
 from transforms import ToTensor, Normalize, Resize, RandomRotation, RandomCrop, RandomHorizontalFlip, \
     RandomLighting, ColorJitter, RandomApply, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
+from .ddp_utils import reduce_dict, is_main_process
 
 
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
@@ -115,7 +116,7 @@ def lstr_resnet(num_classes_max=7, backbone_name='resnet18s', expansion=1, aux_l
 
 
 def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, method='baseline',
-         aug_level=0, eigen_value=None, eigen_vector=None):
+         aug_level=0, eigen_value=None, eigen_vector=None, ddp=False):
     # Return data_loaders
     # depending on whether the state is
     # 0: training
@@ -175,14 +176,19 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
         else:
             data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms_train,
                                                     data_set=dataset)
-
-        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size, collate_fn=collate_fn,
-                                                  num_workers=workers, shuffle=True)
         validation_set = StandardLaneDetectionDataset(root=base, image_set='valfast',
                                                       transforms=transforms_test, data_set=dataset)
+        # DDP
+        if ddp:
+            train_sampler = torch.utils.data.distributed.DistributedSampler(data_set)
+        else:
+            train_sampler = torch.utils.data.RandomSampler(data_set)
+        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size, collate_fn=collate_fn,
+                                                  sampler=train_sampler, num_workers=workers)
         validation_loader = torch.utils.data.DataLoader(dataset=validation_set, batch_size=batch_size * 4,
                                                         num_workers=workers, shuffle=False, collate_fn=collate_fn)
-        return data_loader, validation_loader
+
+        return data_loader, validation_loader, train_sampler
 
     elif state == 1 or state == 2 or state == 3:
         image_sets = ['valfast', 'test', 'val']
@@ -210,7 +216,8 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
 
 
 def train_schedule(writer, loader, validation_loader, val_num_steps, device, criterion, net, optimizer, lr_scheduler,
-                   num_epochs, is_mixed_precision, input_sizes, exp_name, num_classes, method='baseline'):
+                   num_epochs, is_mixed_precision, input_sizes, exp_name, num_classes, method='baseline',
+                   ddp=False, train_sampler=None):
     # Should be the same as segmentation, given customized loss classes
     net.train()
     epoch = 0
@@ -223,6 +230,8 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
     best_validation = 0
     while epoch < num_epochs:
         net.train()
+        if ddp:
+            train_sampler.set_epoch(epoch)
         time_now = time.time()
         for i, data in enumerate(loader, 0):
             if method == 'lstr':
@@ -250,6 +259,8 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
                 optimizer.step()
 
             lr_scheduler.step()
+
+            log_dict = reduce_dict(log_dict)
             if running_loss is None:  # Because different methods may have different values to log
                 running_loss = {k: 0.0 for k in log_dict.keys()}
             for k in log_dict.keys():
@@ -260,7 +271,9 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
             if current_step_num % loss_num_steps == (loss_num_steps - 1):
                 for k in running_loss.keys():
                     print('[%d, %d] %s: %.4f' % (epoch + 1, i + 1, k, running_loss[k] / loss_num_steps))
-                    writer.add_scalar(k, running_loss[k] / loss_num_steps, current_step_num)
+                    # Logging only once
+                    if is_main_process():
+                        writer.add_scalar(k, running_loss[k] / loss_num_steps, current_step_num)
                     running_loss[k] = 0.0
 
             # Record checkpoints
@@ -271,28 +284,31 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
                     #                 filename=exp_name + '_' + str(current_step_num) + '.pt')
 
                     test_pixel_accuracy, test_mIoU = fast_evaluate(loader=validation_loader, device=device, net=net,
-                                                                   num_classes=num_classes, output_size=input_sizes[0],
+                                                                   num_classes=num_classes,
+                                                                   output_size=input_sizes[0],
                                                                    is_mixed_precision=is_mixed_precision)
-                    writer.add_scalar('test pixel accuracy',
-                                      test_pixel_accuracy,
-                                      current_step_num)
-                    writer.add_scalar('test mIoU',
-                                      test_mIoU,
-                                      current_step_num)
+                    if is_main_process():
+                        writer.add_scalar('test pixel accuracy',
+                                          test_pixel_accuracy,
+                                          current_step_num)
+                        writer.add_scalar('test mIoU',
+                                          test_mIoU,
+                                          current_step_num)
                     net.train()
 
                     # Record best model (straight to disk)
                     if test_mIoU > best_validation:
                         best_validation = test_mIoU
-                        save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                                        filename=exp_name + '.pt')
+                        save_checkpoint(net=net.module if ddp else net, optimizer=optimizer,
+                                        lr_scheduler=lr_scheduler, filename=exp_name + '.pt')
 
         epoch += 1
         print('Epoch time: %.2fs' % (time.time() - time_now))
 
     # For no-evaluation mode
     if validation_loader is None:
-        save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=exp_name + '.pt')
+        save_checkpoint(net=net.module if ddp else net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                        filename=exp_name + '.pt')
 
 
 def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_classes):
@@ -306,6 +322,7 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
                 output = net(image)['out']
                 output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
                 conf_mat.update(target.flatten(), output.argmax(1).flatten())
+        conf_mat.reduce_from_all_processes()
 
     acc_global, acc, iu = conf_mat.compute()
     print((

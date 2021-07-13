@@ -12,6 +12,7 @@ from torchvision_models.segmentation import deeplabv2_resnet101, deeplabv3_resne
 from transforms import ToTensor, Normalize, RandomHorizontalFlip, Resize, RandomCrop, RandomTranslation, \
     ZeroPad, LabelMap, RandomScale, Compose
 from utils.datasets import StandardSegmentationDataset
+from .ddp_utils import save_on_master, is_main_process, is_dist_avail_and_initialized, get_world_size
 
 
 def fcn(num_classes):
@@ -65,6 +66,11 @@ class ConfusionMatrix(object):
         iu = torch.diag(h) / (h.sum(1) + h.sum(0) - torch.diag(h))
         return acc_global, acc, iu
 
+    def reduce_from_all_processes(self):
+        if is_dist_avail_and_initialized():
+            torch.distributed.barrier()
+            torch.distributed.all_reduce(self.mat)
+
 
 # Save model checkpoints (supports amp)
 def save_checkpoint(net, optimizer, lr_scheduler, filename='temp.pt'):
@@ -73,12 +79,17 @@ def save_checkpoint(net, optimizer, lr_scheduler, filename='temp.pt'):
         'optimizer': optimizer.state_dict() if optimizer is not None else None,
         'lr_scheduler': lr_scheduler.state_dict() if lr_scheduler is not None else None
     }
-    torch.save(checkpoint, filename)
+    save_on_master(checkpoint, filename)
 
 
 # Load model checkpoints (supports amp)
 def load_checkpoint(net, optimizer, lr_scheduler, filename):
-    checkpoint = torch.load(filename)
+    try:
+        checkpoint = torch.load(filename, map_location='cpu')
+    except:
+        print('Warning, model not saved as on cpu, could be a legacy trained weight.')
+        checkpoint = torch.load(filename)
+
     # To keep BC while having a acceptable variable name for lane detection
     checkpoint['model'] = OrderedDict((k.replace('aux_head', 'lane_classifier') if 'aux_head' in k else k, v)
                                       for k, v in checkpoint['model'].items())
@@ -99,7 +110,7 @@ def load_checkpoint(net, optimizer, lr_scheduler, filename):
 
 
 def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_label_id_map,
-         test_base=None, test_label_id_map=None, city_aug=0, workers=8):
+         test_base=None, test_label_id_map=None, city_aug=0, workers=8, ddp=False):
     # Return data_loaders
     # depending on whether the state is
     # 1: training
@@ -206,14 +217,19 @@ def init(batch_size, state, input_sizes, std, mean, dataset, train_base, train_l
         # Training
         train_set = StandardSegmentationDataset(root=train_base, image_set='trainaug' if dataset == 'voc' else 'train',
                                                 transforms=transform_train, data_set=dataset)
-        train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=batch_size,
-                                                   num_workers=workers, shuffle=True)
-        return train_loader, val_loader
+        # DDP
+        if ddp:
+            train_sampler = torch.utils.data.distributed.DistributedSampler(train_set)
+        else:
+            train_sampler = torch.utils.data.RandomSampler(train_set)
+        train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=batch_size, sampler=train_sampler,
+                                                   num_workers=workers)
+        return train_loader, val_loader, train_sampler
 
 
 def train_schedule(writer, loader, val_num_steps, validation_loader, device, criterion, net, optimizer, lr_scheduler,
                    num_epochs, is_mixed_precision, num_classes, categories, input_sizes, selector, classes,
-                   encoder_only, exp_name):
+                   encoder_only, exp_name, ddp=False, train_sampler=None):
     # Poly training schedule
     # Validate and find the best snapshot
     best_mIoU = 0
@@ -227,6 +243,8 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
     # Training
     while epoch < num_epochs:
         net.train()
+        if ddp:
+            train_sampler.set_epoch(epoch)
         conf_mat = ConfusionMatrix(num_classes)
         time_now = time.time()
         for i, data in enumerate(loader, 0):
@@ -237,18 +255,18 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
             with autocast(is_mixed_precision):
                 outputs = net(inputs)['out']
 
-                if encoder_only:
-                    labels = labels.unsqueeze(0)
-                    if labels.dtype not in (torch.float32, torch.float64):
-                        labels = labels.to(torch.float32)
-                    labels = torch.nn.functional.interpolate(labels, size=input_sizes[1], mode='nearest')
-                    labels = labels.to(torch.int64)
-                    labels = labels.squeeze(0)
-                else:
-                    outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear',
-                                                              align_corners=True)
-                conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
-                loss = criterion(outputs, labels)
+            if encoder_only:
+                labels = labels.unsqueeze(0)
+                if labels.dtype not in (torch.float32, torch.float64):
+                    labels = labels.to(torch.float32)
+                labels = torch.nn.functional.interpolate(labels, size=input_sizes[1], mode='nearest')
+                labels = labels.to(torch.int64)
+                labels = labels.squeeze(0)
+            else:
+                outputs = torch.nn.functional.interpolate(outputs, size=input_sizes[0], mode='bilinear',
+                                                          align_corners=True)
+            conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
+            loss = criterion(outputs, labels)
 
             if is_mixed_precision:
                 scaler.scale(loss).backward()
@@ -260,40 +278,47 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
 
             lr_scheduler.step()
             running_loss += loss.item()
+            running_loss = torch.tensor([running_loss], dtype=loss.dtype, device=loss.device)
+            if is_dist_avail_and_initialized():
+                torch.distributed.all_reduce(running_loss)
+            running_loss = (running_loss / get_world_size()).item()
             current_step_num = int(epoch * len(loader) + i + 1)
 
-            # Record losses
             if current_step_num % loss_num_steps == (loss_num_steps - 1):
                 print('[%d, %d] loss: %.4f' % (epoch + 1, i + 1, running_loss / loss_num_steps))
-                writer.add_scalar('training loss',
-                                  running_loss / loss_num_steps,
-                                  current_step_num)
+                if is_main_process():
+                    writer.add_scalar('training loss',
+                                      running_loss / loss_num_steps,
+                                      current_step_num)
                 running_loss = 0.0
 
             # Validate and find the best snapshot
             if current_step_num % val_num_steps == (val_num_steps - 1):
                 test_pixel_accuracy, test_mIoU = test_one_set(loader=validation_loader, device=device, net=net,
                                                               num_classes=num_classes, categories=categories,
-                                                              output_size=input_sizes[2], labels_size=input_sizes[1],
+                                                              output_size=input_sizes[2],
+                                                              labels_size=input_sizes[1],
                                                               selector=selector, classes=classes,
                                                               is_mixed_precision=is_mixed_precision,
                                                               encoder_only=encoder_only)
-                writer.add_scalar('test pixel accuracy',
-                                  test_pixel_accuracy,
-                                  current_step_num)
-                writer.add_scalar('test mIoU',
-                                  test_mIoU,
-                                  current_step_num)
+                if is_main_process():
+                    writer.add_scalar('test pixel accuracy',
+                                      test_pixel_accuracy,
+                                      current_step_num)
+                    writer.add_scalar('test mIoU',
+                                      test_mIoU,
+                                      current_step_num)
                 net.train()
 
                 # Record best model (straight to disk)
                 if test_mIoU > best_mIoU:
                     best_mIoU = test_mIoU
-                    save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=exp_name + '.pt')
+                    save_checkpoint(net=net.module if ddp else net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                                    filename=exp_name + '.pt')
 
         # Evaluate training accuracies (same metric as validation, but must be on-the-fly to save time)
-        with autocast(is_mixed_precision):
-            acc_global, acc, iu = conf_mat.compute()
+        conf_mat.reduce_from_all_processes()
+        acc_global, acc, iu = conf_mat.compute()
         print(categories)
         print((
             'global correct: {:.2f}\n'
@@ -307,12 +332,13 @@ def train_schedule(writer, loader, val_num_steps, validation_loader, device, cri
 
         train_pixel_acc = acc_global.item() * 100
         train_mIoU = iu.mean().item() * 100
-        writer.add_scalar('train pixel accuracy',
-                          train_pixel_acc,
-                          epoch + 1)
-        writer.add_scalar('train mIoU',
-                          train_mIoU,
-                          epoch + 1)
+        if is_main_process():
+            writer.add_scalar('train pixel accuracy',
+                              train_pixel_acc,
+                              epoch + 1)
+            writer.add_scalar('train mIoU',
+                              train_mIoU,
+                              epoch + 1)
 
         epoch += 1
         print('Epoch time: %.2fs' % (time.time() - time_now))
@@ -341,6 +367,7 @@ def test_one_set(loader, device, net, num_classes, categories, output_size, labe
                     output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear',
                                                              align_corners=True)
                 conf_mat.update(target.flatten(), output.argmax(1).flatten())
+        conf_mat.reduce_from_all_processes()
 
     acc_global, acc, iu = conf_mat.compute()
     print(categories)
