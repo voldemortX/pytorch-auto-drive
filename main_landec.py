@@ -10,6 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.losses import LaneLoss, SADLoss, HungarianLoss
 from utils.all_utils_semseg import load_checkpoint
 from utils.all_utils_landec import init, train_schedule, test_one_set, fast_evaluate, build_lane_detection_model
+from utils.ddp_utils import init_distributed_mode, is_main_process
 
 if __name__ == '__main__':
     # ulimit
@@ -51,6 +52,10 @@ if __name__ == '__main__':
                         help='Conduct validation(3)/final test(2)/fast validation(1)/normal training(0) (default: 0)')
     parser.add_argument('--encoder-only', action='store_true', default=False,
                         help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
+    parser.add_argument('--world-size', default=0, type=int,
+                        help='number of distributed processes')
+    parser.add_argument('--dist-url', default='env://', help='url used to set up distributed training')
+    parser.add_argument('--device', default='cuda', help='CPU is not recommended!')
     args = parser.parse_args()
     exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
     states = ['train', 'valfast', 'test', 'val']
@@ -72,13 +77,26 @@ if __name__ == '__main__':
     weights = configs[configs['LANE_DATASETS'][args.dataset]]['WEIGHTS']
     base = configs[configs['LANE_DATASETS'][args.dataset]]['BASE_DIR']
     max_lane = configs[configs['LANE_DATASETS'][args.dataset]]['MAX_LANE']
-    device = torch.device('cpu')
-    if torch.cuda.is_available():
-        device = torch.device('cuda:0')
+
+    # device = torch.device('cpu')
+    # if torch.cuda.is_available():
+    #     device = torch.device('cuda:0')
+
+    init_distributed_mode(args)
+    device = torch.device(args.device)
+
     net = build_lane_detection_model(args, num_classes)
     print(device)
     weights = torch.tensor(weights).to(device)
     net.to(device)
+
+    if args.distributed:
+        model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(net)
+    net_without_ddp = net
+    if args.distributed:
+        net = torch.nn.parallel.DistributedDataParallel(net, device_ids=[args.gpu], find_unused_parameters=True)
+        net_without_ddp = net.module
+
     # if args.model == 'scnn':
     #     # Gradient too large after spatial conv
     #     optimizer = torch.optim.SGD([
@@ -89,9 +107,9 @@ if __name__ == '__main__':
     #     ], lr=args.lr, momentum=0.9, weight_decay=1e-4)
     # else:
     if args.method == 'lstr':
-        optimizer = torch.optim.Adam(net.parameters(), lr=args.lr)
+        optimizer = torch.optim.Adam(net_without_ddp.parameters(), lr=args.lr)
     else:
-        optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
+        optimizer = torch.optim.SGD(net_without_ddp.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
     # optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999),  eps=1e-08, weight_decay=1e-4)
 
     # Testing
@@ -112,7 +130,7 @@ if __name__ == '__main__':
         else:  # Test with official scripts later (so just predict lanes here)
             test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision, gap=gap,
                          input_sizes=input_sizes, ppl=ppl, thresh=thresh, dataset=args.dataset, method=args.method,
-                         max_lane=max_lane)
+                         max_lane=max_lane, exp_name=args.exp_name)
     else:
         eigen_value = configs['GENERAL']['LIGHT_EIGEN_VALUE']
         eigen_vector = configs['GENERAL']['LIGHT_EIGEN_VECTOR']
@@ -125,11 +143,13 @@ if __name__ == '__main__':
         else:
             raise ValueError
 
-        writer = SummaryWriter('runs/' + exp_name)
-        data_loader, validation_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
-                                              input_sizes=input_sizes, mean=mean, std=std, base=base,
-                                              workers=args.workers, method=args.method, aug_level=1 if args.aug else 0,
-                                              eigen_value=eigen_value, eigen_vector=eigen_vector)
+        writer = SummaryWriter('runs/' + exp_name) if is_main_process() else None
+        data_loader, validation_loader, sampler = init(batch_size=args.batch_size, state=args.state,
+                                                       dataset=args.dataset, input_sizes=input_sizes,
+                                                       mean=mean, std=std, base=base, workers=args.workers,
+                                                       method=args.method, aug_level=1 if args.aug else 0,
+                                                       eigen_value=eigen_value, eigen_vector=eigen_vector,
+                                                       ddp=args.distributed)
 
         # Warmup https://github.com/XingangPan/SCNN/issues/82
         # Use it as default also for other methods (for fair comparison)
@@ -146,13 +166,16 @@ if __name__ == '__main__':
 
         # Resume training?
         if args.continue_from is not None and args.backbone != 'enet':
-            load_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=args.continue_from)
+            load_checkpoint(net=net_without_ddp, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                            filename=args.continue_from)
 
         # Train
         train_schedule(writer=writer, loader=data_loader, method=args.method,
                        validation_loader=None if args.val_num_steps == 0 else validation_loader,
                        criterion=criterion, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, device=device,
                        num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, input_sizes=input_sizes,
-                       exp_name=exp_name, num_classes=num_classes, val_num_steps=args.val_num_steps)
+                       exp_name=exp_name, num_classes=num_classes, val_num_steps=args.val_num_steps,
+                       ddp=args.distributed, train_sampler=sampler)
 
-        writer.close()
+        if writer is not None:
+            writer.close()

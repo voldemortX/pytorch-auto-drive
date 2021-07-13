@@ -27,8 +27,8 @@ class LaneLoss(WeightedLoss):
                                                             weight=None, pos_weight=None, reduction=self.reduction)
         total_loss = segmentation_loss + self.existence_weight * existence_loss
 
-        return total_loss, {'training loss': total_loss.item(), 'loss seg': segmentation_loss.item(),
-                            'loss exist': existence_loss.item()}
+        return total_loss, {'training loss': total_loss, 'loss seg': segmentation_loss,
+                            'loss exist': existence_loss}
 
 
 # Loss function for SAD
