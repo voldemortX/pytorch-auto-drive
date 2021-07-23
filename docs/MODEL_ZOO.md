@@ -7,16 +7,20 @@
 | Baseline | VGG16 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 93.79% | 93.94% | 1.5h |
 | Baseline | ResNet18 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 94.18% | 94.25% | 0.7h |
 | Baseline | ResNet34 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.23% | 95.31% | 1.1h |
+| Baseline | ResNet34 | strong | 360 x 640 | *no* | TuSimple | Accuracy | 92.14% | 92.68% | 1.2h* |
 | Baseline | ResNet50 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.07% | 95.12% | 1.5h |
 | Baseline | ResNet101 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.15% | 95.19% | 2.6h |
 | Baseline | ERFNet | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 96.02% | 96.04% | 0.8h |
+| Baseline | ERFNet | strong | 360 x 640 | *no* | TuSimple | Accuracy | 94.21% | 94.37% | 0.9h* |
 | Baseline | ENet<sup>#</sup> | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.55% | 95.61% | 1h<sup>+</sup> |
 | SCNN | VGG16 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.01% | 95.17% | 2h |
 | SCNN | ResNet18 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 94.69% | 94.77% | 1.2h |
 | SCNN | ResNet34 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.19% | 95.25% | 1.6h |
+| SCNN | ResNet34 | strong | 360 x 640 | *no* | TuSimple | Accuracy | 92.62% | 93.42% | 1.7h* |
 | SCNN | ResNet50 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.43% | 95.56% | 2.4h |
 | SCNN | ResNet101 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.56% | 95.69% | 3.5h |
 | SCNN | ERFNet | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 96.18% | 96.29% | 1.6h |
+| SCNN | ERFNet | strong | 360 x 640 | *no* | TuSimple | Accuracy | 95.00% | 95.26% | 1.7h* |
 | LSTR | ResNet18s<sup>#</sup> | simple | 360 x 640 | *no* | TuSimple | Accuracy | 91.91% | 92.40% | 14.2h |
 | LSTR | ResNet18s<sup>#</sup> | strong | 360 x 640 | *no* | TuSimple | Accuracy | 94.91% | 95.06% | 15.5h |
 | Baseline | VGG16 | simple | 288 x 800 | *yes* | CULane | F measure | 65.93 | 66.09 | 9.3h |
@@ -47,6 +51,8 @@
 
 *<sup>#</sup> No pre-training.*
 
+*\* Trained on a 1080 Ti cluster with CUDA 9.0 PyTorch 1.3, training time is estimated as: single 2080 Ti, mixed precision.*
+
 ### TuSimple detailed performance (best):
 
 | method | backbone | data<br>augmentation | accuracy | FP | FN | |
@@ -54,18 +60,22 @@
 | Baseline | VGG16 | simple | 93.94% | 0.0998 | 0.1021 | [model](https://drive.google.com/file/d/1ChK0hApqLU0xUiEm4Wul-gNYQDQka151/view?usp=sharing) \| [shell](../tools/shells/vgg16_baseline_tusimple.sh) |
 | Baseline | ResNet18 | simple | 94.25% | 0.0881 | 0.0894 | [model](https://drive.google.com/file/d/17VKnwsN4WMbpnD4DgaaerppjXybqn-LG/view?usp=sharing) \| [shell](../tools/shells/resnet18_baseline_tusimple.sh) |
 | Baseline | ResNet34 | simple | 95.31% | 0.0640 | 0.0622 | [model](https://drive.google.com/file/d/1NAck0aQZK_wAHer4xB8xzegxDWk9EFtG/view?usp=sharing) \| [shell](../tools/shells/resnet34_baseline_tusimple.sh) |
+| Baseline | ResNet34 | strong | 92.68% | 0.1073 | 0.1221 | [model](https://drive.google.com/file/d/1OhN2tWIep9ncKFf-_2RqUEaSJvPK60cn/view?usp=sharing) \| [shell](../tools/shells/resnet34_baseline-aug_tusimple.sh) |
 | Baseline | ResNet50 | simple | 95.12% | 0.0649 | 0.0653 | [model](https://drive.google.com/file/d/10KBMVGc63kPvqL_2deaLfTfC3fSAtnju/view?usp=sharing) \| [shell](../tools/shells/resnet50_baseline_tusimple.sh) |
 | Baseline | ResNet101 | simple | 95.19% | 0.0619 | 0.0620 | [model](https://drive.google.com/file/d/1mELtKB3e8ntOmPovhnMphXWKf_bv83ef/view?usp=sharing) \| [shell](../tools/shells/resnet101_baseline_tusimple.sh) |
 | Baseline | ERFNet | simple | 96.04% | 0.0591 | 0.0365 | [model](https://drive.google.com/file/d/1rLWDP_dkIQ7sBsCEzJi8T7ET1EPghhJJ/view?usp=sharing) \| [shell](../tools/shells/erfnet_baseline_tusimple.sh) |
+| Baseline | ERFNet | strong | 94.37% | 0.0846 | 0.0770 | [model](https://drive.google.com/file/d/1LPmxT8rnyZL2M08lSLrlvrM0H_hMrFvq/view?usp=sharing) \| [shell](../tools/shells/erfnet_baseline-aug_tusimple.sh) |
 | Baseline | ENet | simple | 95.61% | 0.0655 | 0.0503 | [model](https://drive.google.com/file/d/1CNSox62ghs0ArDVJb9mTZ1NVvqSkUNYC/view?usp=sharing) \| [shell](../tools/shells/enet_baseline_tusimple.sh) |
 | SCNN | VGG16 | simple | 95.17% | 0.0637 | 0.0622 | [model](https://drive.google.com/file/d/1Fd46-f_8q-fGcJEI_PhPyh7aBY1uqbIw/view?usp=sharing) \| [shell](../tools/shells/vgg16_scnn_tusimple.sh) |
 | SCNN | ResNet18 | simple | 94.77% | 0.0753 | 0.0737 | [model](https://drive.google.com/file/d/1cHp9gG2NgtC1iSp2LZMPF_UKiCb-fVkn/view?usp=sharing) \| [shell](../tools/shells/resnet18_scnn_tusimple.sh) |
 | SCNN | ResNet34 | simple | 95.25% | 0.0627 | 0.0634 | [model](https://drive.google.com/file/d/1M0ROpEHV8DGJT4xWq2eURcbqMzpea1q7/view?usp=sharing) \| [shell](../tools/shells/resnet34_scnn_tusimple.sh) |
+| SCNN | ResNet34 | strong | 93.42% | 0.0868 | 0.0998 | [model](https://drive.google.com/file/d/1t-cmUjBbLzSjODMvcpwoRPJKnUxLfWKk/view?usp=sharing) \| [shell](../tools/shells/resnet34_scnn-aug_tusimple.sh) |
 | SCNN | ResNet50 | simple | 95.56% | 0.0561 | 0.0556 | [model](https://drive.google.com/file/d/1YK-PzdE9q8zn48isiBxwaZEdRsFw_oHe/view?usp=sharing) \| [shell](../tools/shells/resnet50_scnn_tusimple.sh) |
 | SCNN | ResNet101 | simple | 95.69% | 0.0519 | 0.0504 | [model](https://drive.google.com/file/d/13qk5rIHqhDlwylZP9S-8fN53DexPTBQy/view?usp=sharing) \| [shell](../tools/shells/resnet101_scnn_tusimple.sh) |
 | SCNN | ERFNet | simple | 96.29% | 0.0470 | 0.0318 | [model](https://drive.google.com/file/d/1rzE2fZ5mQswMIm6ICK1lWH-rsQyjRbxL/view?usp=sharing) \| [shell](../tools/shells/erfnet_scnn_tusimple.sh) |
-| LSTR | ResNet18s | simple | 95.06% | 0.0486 | 0.0418 | [model](https://drive.google.com/file/d/1z1ikrcgboyLFO3ysJUIf8qlBv7zEUvjK/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_tusimple.sh) |
-| LSTR | ResNet18s | strong | 92.40% | 0.1289 | 0.1127 | [model](https://drive.google.com/file/d/1iHArGHnOlSbS01RPFlLYI1mPJSX7o4sR/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_tusimple.sh) |
+| SCNN | ERFNet | strong | 95.26% | 0.0625 | 0.0512 | [model](https://drive.google.com/file/d/14XJ-W_wIOndjkhtPiUghwy0cLXrnl0PS/view?usp=sharing) \| [shell](../tools/shells/erfnet_scnn-aug_tusimple.sh) |
+| LSTR | ResNet18s | strong | 95.06% | 0.0486 | 0.0418 | [model](https://drive.google.com/file/d/1z1ikrcgboyLFO3ysJUIf8qlBv7zEUvjK/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_tusimple.sh) |
+| LSTR | ResNet18s | simple | 92.40% | 0.1289 | 0.1127 | [model](https://drive.google.com/file/d/1iHArGHnOlSbS01RPFlLYI1mPJSX7o4sR/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_tusimple.sh) |
 
 ### CULane detailed performance (best):
 
