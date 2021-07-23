@@ -36,6 +36,8 @@
 | SCNN | ResNet50 | simple | 288 x 800 | *yes* | CULane | F measure | 72.95 | 73.03 | 17.9h |
 | SCNN | ResNet101 | simple | 288 x 800 | *yes* | CULane | F measure | 73.29 | 73.58 | 25.7h |
 | SCNN | ERFNet | simple | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
+| LSTR | ResNet18s-2X<sup>#</sup> | simple | 288 x 800 | *no* | CULane | F measure | 35.72 | 39.17 | 28.5h* |
+| LSTR | ResNet18s-2X<sup>#</sup> | strong | 288 x 800 | *no* | CULane | F measure | 66.85 | 67.21 | 31.5h* |
 | Baseline | ERFNet | simple | 360 x 640 | *yes* | LLAMAS | F measure | 95.94 | 96.13 | 10.9h<sup>+</sup> |
 | Baseline | VGG16 | simple | 360 x 640 | *yes* | LLAMAS | F measure | 95.05 | 95.11 | 9.3h |
 | Baseline | ResNet34 | simple | 360 x 640 | *yes* | LLAMAS | F measure | 95.90 | 95.91 | 7.0h |
@@ -51,7 +53,7 @@
 
 *<sup>#</sup> No pre-training.*
 
-*\* Trained on a 1080 Ti cluster with CUDA 9.0 PyTorch 1.3, training time is estimated as: single 2080 Ti, mixed precision.*
+*\* Trained on a 1080 Ti cluster, with CUDA 9.0 PyTorch 1.3, training time is estimated as: single 2080 Ti, mixed precision.*
 
 ### TuSimple detailed performance (best):
 
@@ -94,6 +96,8 @@
 | SCNN | ResNet50 | simple | 91.38 | 70.60 | 67.62 | 45.02 | 71.24 | 86.90 | 66.03 | 66.17 | 1958 | 73.03 | [model](https://drive.google.com/file/d/1DxqUONEpT47RvJlCg7kDWIsdkYH0Fv8E/view?usp=sharing) \| [shell](../tools/shells/resnet50_scnn_culane.sh) |
 | SCNN | ResNet101 | simple | 91.10 | 71.43 | 68.53 | 46.39 | 72.61 | 86.87 | 61.95 | 67.01 | 1720 | 73.58 | [model](https://drive.google.com/file/d/11O4ZDvNqQsKodnl9kJar6Mx1UKnB70L9/view?usp=sharing) \| [shell](../tools/shells/resnet101_scnn_culane.sh) |
 | SCNN | ERFNet | simple | 91.82 | 72.13 | 69.49 | 46.68 | 70.59 | 87.40 | 64.18 | 68.30 | 2236 | 74.03 | [model](https://drive.google.com/file/d/1YOAuIJqh0M1RsPN5zISY7kTx9xt29IS3/view?usp=sharing) \| [shell](../tools/shells/erfnet_scnn_culane.sh) |
+| LSTR | ResNet18s-2X | simple | 55.95 | 38.66 | 22.52 | 25.34 | 25.87 | 51.90 | 40.34 | 29.74 | 2128 | 39.17 | [model](https://drive.google.com/file/d/1vdYwM0xDcQLjMAibjmls8hX-IsUe0xcq/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_culane.sh) |
+| LSTR | ResNet18s-2X | strong | 86.89 | 66.20 | 58.76 | 40.63 | 61.10 | 79.08 | 56.86 | 56.99 | 2455 | 67.21 | [model](https://drive.google.com/file/d/11Tv_nowlWmQtTYQfhGsziDIzb20kPo8o/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_culane.sh) |
 
 ### LLAMAS detailed performance (best):
 
