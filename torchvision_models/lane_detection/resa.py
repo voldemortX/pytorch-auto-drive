@@ -22,7 +22,7 @@ class RESANet(nn.Module):
         self.lane_classifier = EDLaneExist(num_output=num_classes - 1, flattened_size=flattened_size)
 
     def forward(self, x):
-        x = self.backbone(x)
+        x = self.backbone(x)['out']
         x = self.channel_reducer(x)
         x = self.spatial_conv(x)
 

@@ -3,7 +3,37 @@ import math
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from segmentation.erfnet import non_bottleneck_1d
+
+
+class non_bottleneck_1d(nn.Module):
+    def __init__(self, chann, dropprob, dilated):
+        super().__init__()
+        self.conv3x1_1 = nn.Conv2d(chann, chann, (3, 1), stride=1, padding=(1, 0), bias=True)
+        self.conv1x3_1 = nn.Conv2d(chann, chann, (1, 3), stride=1, padding=(0, 1), bias=True)
+        self.bn1 = nn.BatchNorm2d(chann, eps=1e-03)
+        self.conv3x1_2 = nn.Conv2d(chann, chann, (3, 1), stride=1, padding=(1*dilated, 0),
+                                   bias=True, dilation=(dilated, 1))
+        self.conv1x3_2 = nn.Conv2d(chann, chann, (1, 3), stride=1, padding=(0, 1*dilated),
+                                   bias=True, dilation=(1, dilated))
+        self.bn2 = nn.BatchNorm2d(chann, eps=1e-03)
+        self.dropout = nn.Dropout2d(dropprob)
+
+    def forward(self, input):
+        output = self.conv3x1_1(input)
+        output = F.relu(output)
+        output = self.conv1x3_1(output)
+        output = self.bn1(output)
+        output = F.relu(output)
+
+        output = self.conv3x1_2(output)
+        output = F.relu(output)
+        output = self.conv1x3_2(output)
+        output = self.bn2(output)
+
+        if self.dropout.p != 0:
+            output = self.dropout(output)
+
+        return F.relu(output + input)
 
 
 # Unused
@@ -69,7 +99,7 @@ class BilateralUpsamplerBlock(nn.Module):
 class BUSD(nn.Module):
     def __init__(self, in_channels=128, num_classes=5):
         super(BUSD, self).__init__()
-        base = in_channels / 8
+        base = in_channels // 8
         self.layers = nn.ModuleList(BilateralUpsamplerBlock(ninput=base * 2 ** (3 - i), noutput=base * 2 ** (2 - i))
                                     for i in range(3))
         self.output_proj = nn.Conv2d(base, num_classes, kernel_size=1, bias=True)  # Keep bias=True for prediction
@@ -152,6 +182,19 @@ class RESA(nn.Module):
                                     for _ in range(iteration))
         self.conv_l = nn.ModuleList(nn.Conv2d(num_channels, num_channels, (9, 1), padding=(4, 0), bias=False)
                                     for _ in range(iteration))
+        self._adjust_initializations(num_channels=num_channels)
+
+    def _adjust_initializations(self, num_channels=128):
+        # https://github.com/XingangPan/SCNN/issues/82
+        bound = math.sqrt(2.0 / (num_channels * 9 * 5))
+        for i in self.conv_d:
+            nn.init.uniform_(i.weight, -bound, bound)
+        for i in self.conv_u:
+            nn.init.uniform_(i.weight, -bound, bound)
+        for i in self.conv_r:
+            nn.init.uniform_(i.weight, -bound, bound)
+        for i in self.conv_l:
+            nn.init.uniform_(i.weight, -bound, bound)
 
     def forward(self, x):
         y = x

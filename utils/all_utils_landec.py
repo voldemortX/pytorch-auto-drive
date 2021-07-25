@@ -69,7 +69,7 @@ def resnet_tusimple(num_classes, backbone_name='resnet18', spatial_conv=None):
         return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
                                         channel_reduce=128, flattened_size=6160, scnn=scnn)
     elif spatial_conv == 'resa':
-        return RESANet(num_classes=num_classes, backbone_name=backbone_name, flattened_size=6160, channel_reduce=128)
+        return RESANet(num_classes=num_classes, backbone_name=backbone_name, flattened_size=4400, channel_reduce=128)
     else:
         raise ValueError('spatial_conv must be None, scnn or resa! Not {}'.format(spatial_conv))
 
