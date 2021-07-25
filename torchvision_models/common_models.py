@@ -202,7 +202,7 @@ class SimpleLaneExist(nn.Module):
         return output
 
 
-# Lane exist head for ERFNet and ENet
+# Lane exist head for ERFNet, ENet and RESA-BUSD
 # Really tricky without global pooling
 class EDLaneExist(nn.Module):
     def __init__(self, num_output, flattened_size=3965, dropout=0.1, pool='avg'):
