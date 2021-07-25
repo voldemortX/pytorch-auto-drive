@@ -8,6 +8,8 @@ from torch import Tensor
 from torch.nn import functional as F
 from scipy.optimize import linear_sum_assignment
 from ._utils import WeightedLoss
+from torchvision_models.lane_detection import cubic_curve_with_projection
+from ..ddp_utils import is_dist_avail_and_initialized, get_world_size
 
 
 @torch.no_grad()
@@ -16,6 +18,7 @@ def lane_normalize_in_batch(keypoints):
     # so they can produce loss in a similar scale: rather weird but it is what LSTR did
     # https://github.com/liuruijin17/LSTR/blob/6044f7b2c5892dba7201c273ee632b4962350223/models/py_utils/matcher.py#L59
     # keypoints: [..., N, 2], ... means arbitrary number of leading dimensions
+    # No gather/reduce is considered here as in the original implementation
     valid_points = keypoints[..., 0] > 0
     norm_weights = (valid_points.sum().float() / valid_points.sum(dim=-1).float()) ** 0.5
     norm_weights /= norm_weights.max()
@@ -23,23 +26,8 @@ def lane_normalize_in_batch(keypoints):
     return norm_weights, valid_points  # [...], [..., N]
 
 
-def cubic_curve_with_projection(coefficients, y):
-    # The cubic curve model from LSTR (considers projection to image plane)
-    # Return x coordinates
-    # coefficients: [d1, d2, ..., 6]
-    # 6 coefficients: [k", f", m", n", b", b''']
-    # y: [d1, d2, ..., N]
-    y = y.permute(-1, *[i for i in range(len(y.shape) - 1)])  # -> [N, d1, d2, ...]
-    x = coefficients[..., 0] / (y - coefficients[..., 1]) ** 2 \
-        + coefficients[..., 2] / (y - coefficients[..., 1]) \
-        + coefficients[..., 3] \
-        + coefficients[..., 4] * y \
-        - coefficients[..., 5]
-
-    return x.permute(*[i + 1 for i in range(len(x.shape) - 1)], 0)  # [d1, d2, ... , N]
-
-
 # TODO: Speed-up Hungarian on GPU with tensors
+# Nothing will happen with DDP (for at last we use image-wise results)
 class HungarianMatcher(torch.nn.Module):
     """This class computes an assignment between the targets and the predictions of the network
 
@@ -168,8 +156,8 @@ class HungarianLoss(WeightedLoss):
         loss = self.label_weight * loss_label + self.curve_weight * loss_curve + \
             self.lower_weight * loss_lower + self.upper_weight * loss_upper
 
-        return loss, {'training loss': loss.item(), 'loss label': loss_label.item(), 'loss curve': loss_curve.item(),
-                      'loss upper': loss_upper.item(), 'loss lower': loss_lower.item()}
+        return loss, {'training loss': loss, 'loss label': loss_label, 'loss curve': loss_curve,
+                      'loss upper': loss_upper, 'loss lower': loss_lower}
 
     def point_loss(self, inputs: Tensor, targets: Tensor, norm_weights=None, valid_points=None) -> Tensor:
         # L1 loss on sample points, shouldn't it be direct regression?
@@ -182,7 +170,11 @@ class HungarianLoss(WeightedLoss):
         if valid_points is not None:  # Valid points
             loss = loss[valid_points]
         if self.reduction == 'mean':
-            loss = loss.sum() / targets.shape[0]  # Reduce only by number of curves (not number of points)
+            normalizer = torch.as_tensor([targets.shape[0]], dtype=inputs.dtype, device=inputs.device)
+            if is_dist_avail_and_initialized():  # Global normalizer should be same across devices
+                torch.distributed.all_reduce(normalizer)
+            normalizer = torch.clamp(normalizer / get_world_size(), min=1).item()
+            loss = loss.sum() / normalizer  # Reduce only by number of curves (not number of points)
         elif self.reduction == 'sum':  # Usually not needed, but let's have it anyway
             loss = loss.sum()
 

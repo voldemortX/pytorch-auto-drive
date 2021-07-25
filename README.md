@@ -4,6 +4,10 @@
 
 *This repository is under active development, results with models uploaded are stable. For legacy code users, please check [deprecations](https://github.com/voldemortX/pytorch-auto-drive/issues/14) for changes.*
 
+**A demo video from ERFNet:**
+
+https://user-images.githubusercontent.com/32259501/124389349-3e0ea480-dd19-11eb-8947-cf5e9c95721a.mp4
+
 ## Highlights
 
 Various methods tested on a wide range of backbones, **modulated** and **easily understood** codes, image/keypoint loading, transformations and visualizations, **mixed precision training** and tensorboard logging.
@@ -37,7 +41,7 @@ Models from this repo are faster to train (**single card trainable**) and often 
 | lane detection | ENet, ERFNet, VGG16, ResNets (18, 34, 50, 101) | Baseline |
 | lane detection | ERFNet, VGG16, ResNets (18, 34, 50, 101) | [SCNN](https://arxiv.org/abs/1712.06080) |
 | lane detection | VGG16, ResNets (18, 34, 50, 101) | [RESA](https://arxiv.org/abs/2008.13719) (*In progress*) |
-| lane detection | ERFNet, ENet | [SAD](https://arxiv.org/abs/1908.00821) (*In progress*) |
+| lane detection | ERFNet, ENet | [SAD](https://arxiv.org/abs/1908.00821) ([*Postponed*](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes)) |
 | lane detection | ERFNet | [PRNet](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) (*In progress*) |
 | lane detection | ERFNet, ResNet18-reduced | [LSTR](https://arxiv.org/abs/2011.04233) |
 
@@ -63,7 +67,7 @@ Get started with [SEGMENTATION.md](docs/SEGMENTATION.md) for semantic segmentati
 
 ## Visualization Tools
 
-Refer to [VISUALIZATION.md](docs/VISUALIZATION.md) for a visualization tutorial.
+Refer to [VISUALIZATION.md](docs/VISUALIZATION.md) for a visualization & inference tutorial, for image and video inputs.
 
 ## Benchmark Tools
 Refer to [BENCHMARK.md](docs/BENCHMARK.md) for a benchmarking tutorial, including FPS test, FLOPs & memory count for each supported model.

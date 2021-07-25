@@ -1,17 +1,39 @@
+import os
+import filetype
 import numpy as np
-import transforms.functional as F
 import cv2
 import torch
+if torch.__version__ >= '1.6.0':
+    from torch.cuda.amp import autocast
+else:
+    from utils.torch_amp_dummy import autocast
+from enum import Enum
 from PIL import Image
+from transforms import ToTensor, Resize, ZeroPad, Normalize, Compose
+from transforms import functional as F
+from utils.all_utils_landec import lane_as_segmentation_inference
+
+
+# File mode statics
+class FileType(Enum):
+    DIR = 1
+    IMAGE = 2
+    VIDEO = 3
+
+
+def tensor_image_to_numpy(images):
+
+    return (images * 255.0).cpu().numpy().astype(np.uint8)
 
 
 def save_images(images, filenames):
     # Save tensor images in range [0.0, 1.0]
     # filenames: List[str]
     assert images.shape[0] == len(filenames)
-    np_results = (images * 255.0).cpu().numpy().astype(np.uint8)
+    if type(images) != np.ndarray:  # Flexible
+        images = tensor_image_to_numpy(images)
     for i in range(len(filenames)):
-        Image.fromarray(np_results[i]).save(filenames[i])
+        Image.fromarray(images[i]).save(filenames[i])
 
 
 def segmentation_visualize_batched(images, labels, colors, std=None, mean=None, trans=0.3, ignore_color=None):
@@ -43,7 +65,7 @@ def segmentation_visualize_batched(images, labels, colors, std=None, mean=None, 
     return results
 
 
-def lane_detection_visualize_batched(images, filenames, masks=None, keypoints=None,
+def lane_detection_visualize_batched(images, masks=None, keypoints=None,
                                      mask_colors=None, keypoint_color=None, std=None, mean=None):
     # Draw images + lanes from tensors (batched)
     # None masks/keypoints and keypoints (x < 0 or y < 0) will be ignored
@@ -55,7 +77,6 @@ def lane_detection_visualize_batched(images, filenames, masks=None, keypoints=No
         images = segmentation_visualize_batched(images, masks, mask_colors, std, mean,
                                                 trans=0, ignore_color=mask_colors[0])
     if keypoints is not None:
-        # TODO: Get rid of cv2
         if masks is None:
             images = images.permute(0, 2, 3, 1)
         if std is not None and mean is not None:
@@ -63,35 +84,85 @@ def lane_detection_visualize_batched(images, filenames, masks=None, keypoints=No
         images = images.clamp_(0.0, 1.0) * 255.0
         images = images[..., [2, 1, 0]].cpu().numpy().astype(np.uint8)
         if keypoint_color is None:
-            keypoint_color = [0, 0, 255]  # BGR: Red (sits well with lane colors)
-        for i in range(len(filenames)):
+            keypoint_color = [0, 0, 0]  # BGR: Red (sits well with lane colors)
+        for i in range(images.shape[0]):
             for j in range(len(keypoints[i])):
                 temp = keypoints[i][j][(keypoints[i][j][:, 0] > 0) * (keypoints[i][j][:, 1] > 0)]
                 # Draw solid keypoints
                 for k in range(temp.shape[0]):
                     cv2.circle(images[i], (int(temp[k][0]), int(temp[k][1])),
-                               radius=3, color=keypoint_color, thickness=-1)
-            cv2.imwrite(filenames[i], images[i])
-    else:
-        save_images(images=images, filenames=filenames)
+                               radius=5, color=keypoint_color, thickness=-1)
+    return images[..., [2, 1, 0]]
 
 
-def simple_segmentation_transform(images, resize_shape, mean, std, dataset='voc', city_aug=0):
+def simple_segmentation_transform(resize_shape, mean, std, dataset='voc', city_aug=0, to_tensor=True):
     # city_aug correspond to city_aug in init()
     # Assume images in B x C x H x W
     # resize_shape: list[int]
+    transforms = [ToTensor()] if to_tensor else []
     if dataset == 'voc':
-        images = F.pad(images, [0, 0, resize_shape[1] - images.shape[-1], resize_shape[0] - images.shape[-2]], fill=0)
+        transforms.append(ZeroPad(size=resize_shape))
     else:
-        images = F.resize(images, resize_shape, interpolation=Image.LINEAR)
+        transforms.append(Resize(size_image=resize_shape, size_label=resize_shape))
 
     if city_aug != 2:  # No normalization for ERFNet
-        images = F.normalize(images, mean=mean, std=std)
+        transforms.append(Normalize(mean=mean, std=std))
 
-    return images
+    return Compose(transforms)
 
 
-def simple_lane_detection_transform(images, resize_shape, mean, std):
+# Segmentation methods have simple and unified output formats,
+# same simple post-process will suffice
+def unified_segmentation_label_formatting(labels, original_size, args):
+    if args.dataset == 'voc':
+        labels = torch.nn.functional.interpolate(labels, size=(args.height, args.width),
+                                                 mode='bilinear', align_corners=True)
+        labels = F.crop(labels, 0, 0, original_size[0], original_size[1])
+    else:
+        labels = torch.nn.functional.interpolate(labels, size=original_size, mode='bilinear',
+                                                 align_corners=True)
+    return labels.argmax(1)
+
+
+def simple_lane_detection_transform(resize_shape, mean, std, to_tensor=True):
     # Assume images in B x C x H x W
     # resize_shape: list[int]
-    pass
+    transforms = [ToTensor()] if to_tensor else []
+    transforms.append(Resize(size_image=resize_shape, size_label=resize_shape))
+    transforms.append(Normalize(mean=mean, std=std))
+
+    return Compose(transforms)
+
+
+def lane_inference(net, images, inference_size, original_size, args, configs):
+    # Return keypoints List[List[np.array(N x 2)]]
+    with autocast(args.mixed_precision):
+        if args.method in ['baseline', 'scnn', 'resa']:
+            coordinates = lane_as_segmentation_inference(net, images, [inference_size, original_size],
+                                                         configs[configs['LANE_DATASETS'][args.dataset]]['GAP'],
+                                                         configs[configs['LANE_DATASETS'][args.dataset]]['PPL'],
+                                                         configs[configs['LANE_DATASETS'][args.dataset]]['THRESHOLD'],
+                                                         args.dataset,
+                                                         configs[configs['LANE_DATASETS'][args.dataset]]['MAX_LANE'])
+        else:
+            coordinates = net.inference(images, original_size,
+                                        configs[configs['LANE_DATASETS'][args.dataset]]['GAP'],
+                                        configs[configs['LANE_DATASETS'][args.dataset]]['PPL'],
+                                        args.dataset,
+                                        configs[configs['LANE_DATASETS'][args.dataset]]['MAX_LANE'])
+
+    return [[np.array(lane) for lane in image] for image in coordinates]
+
+
+# Return file type (directory-1/image-2/video-3) based on suffix
+def check_file_type(filename, image_suffixes, video_suffixes):
+    if os.path.isdir(filename):
+        return FileType.DIR
+    else:
+        filetype_str = filetype.guess(filename).extension
+        if filetype_str in image_suffixes:
+            return FileType.IMAGE
+        elif filetype_str in video_suffixes:
+            return FileType.VIDEO
+        else:
+            raise ValueError('File must be an image, a video, or a directory!')

@@ -1,11 +1,15 @@
 import os
 import time
 import torch
+if torch.backends.cudnn.version() < 8000:
+    torch.backends.cudnn.benchmark = True
 import argparse
 import math
 import yaml
+import fcntl
 from torch.utils.tensorboard import SummaryWriter
 from utils.all_utils_semseg import init, train_schedule, test_one_set, load_checkpoint, build_segmentation_model
+from utils.ddp_utils import init_distributed_mode, is_main_process
 
 if __name__ == '__main__':
     # Settings
@@ -31,8 +35,8 @@ if __name__ == '__main__':
                              '(default: deeplabv3)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size (default: 8)')
-    parser.add_argument('--do-not-save', action='store_false', default=True,
-                        help='save model (default: True)')
+    parser.add_argument('--do-not-save', action='store_true', default=False,
+                        help='save model (default: False)')
     parser.add_argument('--mixed-precision', action='store_true', default=False,
                         help='Enable mixed precision training (default: False)')
     parser.add_argument('--continue-from', type=str, default=None,
@@ -41,7 +45,13 @@ if __name__ == '__main__':
                         help='train the whole enet(2)/Conduct final test(1)/normal training(0) (default: 0)')
     parser.add_argument('--encoder-only', action='store_true', default=False,
                         help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
+    parser.add_argument('--world-size', default=0, type=int,
+                        help='number of distributed processes')
+    parser.add_argument('--dist-url', default='env://', help='url used to set up distributed training')
+    parser.add_argument('--device', default='cuda', help='CPU is not recommended!')
     args = parser.parse_args()
+    if args.mixed_precision and torch.__version__ < '1.6.0':
+        print('PyTorch version too low, mixed precision training is not available.')
     exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
     with open(exp_name + '_cfg.txt', 'w') as f:
         f.write(str(vars(args)))
@@ -76,14 +86,21 @@ if __name__ == '__main__':
         test_label_id_map = configs['CITYSCAPES']['LABEL_ID_MAP']
         classes = 16  # Or 13
         selector = configs['SYNTHIA']['IOU_16']  # Or 13
-    device = torch.device('cpu')
-    if torch.cuda.is_available():
-        device = torch.device('cuda:0')
+    init_distributed_mode(args)
+    device = torch.device(args.device)
     net, city_aug, input_sizes, weights = build_segmentation_model(configs, args, num_classes, city_aug, input_sizes)
     if weights is not None:
         weights = weights.to(device)
     print(device)
     net.to(device)
+
+    if args.distributed:
+        model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(net)
+    net_without_ddp = net
+    if args.distributed:
+        net = torch.nn.parallel.DistributedDataParallel(net, device_ids=[args.gpu], find_unused_parameters=True)
+        net_without_ddp = net.module
+
     if args.model == 'erfnet' or args.model == 'enet':
         optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999), eps=1e-08,
                                      weight_decay=args.weight_decay)
@@ -102,11 +119,12 @@ if __name__ == '__main__':
                             is_mixed_precision=args.mixed_precision, selector=selector, classes=classes)
     else:
         criterion = torch.nn.CrossEntropyLoss(ignore_index=255, weight=weights)
-        writer = SummaryWriter('runs/' + exp_name)
-        train_loader, val_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
-                                        input_sizes=input_sizes, mean=mean, std=std, train_base=train_base,
-                                        test_base=test_base, city_aug=city_aug, workers=args.workers,
-                                        train_label_id_map=train_label_id_map, test_label_id_map=test_label_id_map)
+        writer = SummaryWriter('runs/' + exp_name) if is_main_process() else None
+        train_loader, val_loader, sampler = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset,
+                                                 input_sizes=input_sizes, mean=mean, std=std, train_base=train_base,
+                                                 test_base=test_base, city_aug=city_aug, workers=args.workers,
+                                                 train_label_id_map=train_label_id_map,
+                                                 test_label_id_map=test_label_id_map, ddp=args.distributed)
 
         # The "poly" policy, variable names are confusing (May need reimplementation)
         if args.model == 'erfnet':
@@ -132,22 +150,25 @@ if __name__ == '__main__':
                        num_epochs=args.epochs, is_mixed_precision=args.mixed_precision,
                        validation_loader=val_loader, device=device, criterion=criterion, categories=categories,
                        num_classes=num_classes, input_sizes=input_sizes, val_num_steps=args.val_num_steps,
-                       classes=classes, selector=selector, encoder_only=args.encoder_only)
+                       classes=classes, selector=selector, encoder_only=args.encoder_only, exp_name=args.exp_name,
+                       ddp=args.distributed, train_sampler=sampler)
 
         # Final evaluations
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename='temp.pt')
+        load_checkpoint(net=net_without_ddp, optimizer=None, lr_scheduler=None, filename=args.exp_name + '.pt')
         _, x = test_one_set(loader=val_loader, device=device, net=net, is_mixed_precision=args.mixed_precision,
                             categories=categories, num_classes=num_classes, labels_size=input_sizes[1],
                             output_size=input_sizes[2], encoder_only=args.encoder_only,
                             classes=classes, selector=selector)
 
-        # --do-not-save => args.do_not_save = False
-        if args.do_not_save:  # Rename the checkpoint with timestamp
-            os.rename('temp.pt', exp_name + '.pt')
-        else:  # Since the checkpoint is already saved, it should be deleted
-            os.remove('temp.pt')
+        if args.do_not_save:
+            os.remove(args.exp_name + '.pt')
 
-        writer.close()
+        if writer is not None:
+            writer.close()
 
-    with open('log.txt', 'a') as f:
-        f.write(exp_name + ': ' + str(x) + '\n')
+    if is_main_process():
+        with open('log.txt', 'a') as f:
+            # Safe writing with locks
+            fcntl.flock(f, fcntl.LOCK_EX)
+            f.write(exp_name + ': ' + str(x) + '\n')
+            fcntl.flock(f, fcntl.LOCK_UN)

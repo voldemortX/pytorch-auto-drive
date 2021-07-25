@@ -1,3 +1,4 @@
+import fcntl
 import numpy as np
 from sklearn.linear_model import LinearRegression
 import ujson as json
@@ -100,7 +101,9 @@ if __name__ == '__main__':
         print(results)
         acc = json.loads(results)[0]['value']
         with open('../../log.txt', 'a') as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
             f.write(sys.argv[3] + ': ' + str(acc) + '\n')
+            fcntl.flock(f, fcntl.LOCK_UN)
         with open('./output/' + sys.argv[3] + '.json', 'w') as f:
             f.write(results)
     except Exception as e:

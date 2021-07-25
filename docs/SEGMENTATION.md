@@ -28,6 +28,16 @@ For detailed instructions, run:
 python main_semseg.py --help
 ```
 
+## Distributed Training
+
+We support multi-GPU training with Distributed Data Parallel (DDP):
+
+```
+python -m torch.distributed.launch --nproc_per_node=<number of GPU per-node> --use_env main_semseg.py --world-size=<total GPU> --dist-url=<socket url like tcp://localhost:23456> <your normal args>
+```
+
+With DDP, `--batch-size` means batch size per-GPU, and more dataloader threads should be used with `--workers`.
+
 ## Testing:
 
 Training contains online evaluations and the best model is saved, you can check best *val* set performance at `log.txt`, for more details you can checkout tensorboard.

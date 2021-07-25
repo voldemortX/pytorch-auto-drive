@@ -18,10 +18,12 @@ metric is used.
 
 import os
 import argparse
-from functools import partial
 import cv2
+import fcntl
+import ujson as json
 import numpy as np
 from p_tqdm import t_map, p_map
+from functools import partial
 from scipy.interpolate import splprep, splev
 from scipy.optimize import linear_sum_assignment
 from shapely.geometry import LineString, Polygon
@@ -197,18 +199,21 @@ def main():
                                sequential=args.sequential)
 
     header = '=' * 20 + ' Results' + '=' * 20
-    res = ""
     print(header)
     for metric, value in results.items():
         if isinstance(value, float):
             output = '{}: {:.4f}'.format(metric, value)
-            res = res + output + " "
             print(output)
         else:
             print('{}: {}'.format(metric, value))
     with open('../../log.txt', 'a') as f:
-        f.write(args.exp_name + ': ' + res + '\n')
+        fcntl.flock(f, fcntl.LOCK_EX)
+        f.write(args.exp_name + ': ' + str(results['F1']) + '\n')
+        fcntl.flock(f, fcntl.LOCK_UN)
     print('=' * len(header))
+
+    with open('./output/' + args.exp_name + '.json', 'w') as f:
+        f.write(json.dumps(results))
 
 
 if __name__ == '__main__':

@@ -59,15 +59,20 @@ def generate_lane_label_dict(target):
     # Although non-existent keypoints are marked as (-2, y), it is safer to check with > 0
 
     # Drop invalid lanes (lanes with less than 2 keypoints are seen as invalid)
-    valid_lanes = (target['keypoints'][:, :, 0] > 0).sum(dim=-1) >= 2
-    target['keypoints'] = target['keypoints'][valid_lanes]
+    target['lowers'] = torch.tensor([], dtype=target['keypoints'].dtype)
+    target['uppers'] = torch.tensor([], dtype=target['keypoints'].dtype)
+    target['labels'] = torch.tensor([], dtype=torch.int64)
+    if target['keypoints'].numel() > 0:
+        valid_lanes = (target['keypoints'][:, :, 0] > 0).sum(dim=-1) >= 2
+        target['keypoints'] = target['keypoints'][valid_lanes]
+        if target['keypoints'].numel() > 0:  # Still has lanes
+            # Append lowest & highest y coordinates (coordinates start at top-left corner), labels (all 1)
+            # Looks better than giving MIN values
+            target['lowers'] = torch.stack([l[l[:, 0] > 0][:, 1].max() for l in target['keypoints']])
+            target['uppers'] = torch.stack([l[l[:, 0] > 0][:, 1].min() for l in target['keypoints']])
+            target['labels'] = torch.ones(target['keypoints'].shape[0],
+                                          device=target['keypoints'].device, dtype=torch.int64)
 
-    # Append lowest & highest y coordinates (coordinates start at top-left corner), labels (all 1)
-    # Looks better than giving MIN values
-    target['lowers'] = torch.stack([l[l[:, 0] > 0][:, 1].max() for l in target['keypoints']])
-    target['uppers'] = torch.stack([l[l[:, 0] > 0][:, 1].min() for l in target['keypoints']])
-    target['labels'] = torch.ones(target['keypoints'].shape[0], device=target['keypoints'].device, dtype=torch.int64)
-    
     return target
 
 

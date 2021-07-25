@@ -15,7 +15,11 @@ BUILD_DIR := build
 CXX ?= g++
 BUILD_DIR ?= ./build
 
-LIBRARIES += opencv_core opencv_highgui opencv_imgproc opencv_imgcodecs
+LIBRARIES += opencv_core opencv_highgui opencv_imgproc
+
+ifeq ($(OPENCV_VERSION), 3)
+        LIBRARIES += opencv_imgcodecs
+endif
 
 CXXFLAGS += $(COMMON_FLAGS) $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 LDFLAGS +=  $(COMMON_FLAGS) $(foreach includedir,$(LIBRARY_DIRS),-L$(includedir)) $(foreach library,$(LIBRARIES),-l$(library))

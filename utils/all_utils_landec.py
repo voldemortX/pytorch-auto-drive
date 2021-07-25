@@ -5,15 +5,19 @@ import time
 import ujson as json
 import numpy as np
 from tqdm import tqdm
-from torch.cuda.amp import autocast, GradScaler
+if torch.__version__ >= '1.6.0':
+    from torch.cuda.amp import autocast, GradScaler
+else:
+    from .torch_amp_dummy import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
     deeplabv1_resnet50, deeplabv1_resnet101, enet_
 from torchvision_models.lane_detection import LSTR
+from torchvision_models.lane_detection.utils import lane_pruning
 from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, LLAMAS, dict_collate_fn
-from utils.losses import cubic_curve_with_projection
 from transforms import ToTensor, Normalize, Resize, RandomRotation, RandomCrop, RandomHorizontalFlip, \
     RandomLighting, ColorJitter, RandomApply, Compose
 from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
+from .ddp_utils import reduce_dict, is_main_process
 
 
 def erfnet_tusimple(num_classes, scnn=False, pretrained_weights='erfnet_encoder_pretrained.pth.tar'):
@@ -112,7 +116,7 @@ def lstr_resnet(num_classes_max=7, backbone_name='resnet18s', expansion=1, aux_l
 
 
 def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, method='baseline',
-         aug_level=0, eigen_value=None, eigen_vector=None):
+         aug_level=0, eigen_value=None, eigen_vector=None, ddp=False):
     # Return data_loaders
     # depending on whether the state is
     # 0: training
@@ -172,14 +176,19 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
         else:
             data_set = StandardLaneDetectionDataset(root=base, image_set='train', transforms=transforms_train,
                                                     data_set=dataset)
-
-        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size, collate_fn=collate_fn,
-                                                  num_workers=workers, shuffle=True)
         validation_set = StandardLaneDetectionDataset(root=base, image_set='valfast',
                                                       transforms=transforms_test, data_set=dataset)
+        # DDP
+        if ddp:
+            train_sampler = torch.utils.data.distributed.DistributedSampler(data_set)
+        else:
+            train_sampler = torch.utils.data.RandomSampler(data_set)
+        data_loader = torch.utils.data.DataLoader(dataset=data_set, batch_size=batch_size, collate_fn=collate_fn,
+                                                  sampler=train_sampler, num_workers=workers)
         validation_loader = torch.utils.data.DataLoader(dataset=validation_set, batch_size=batch_size * 4,
                                                         num_workers=workers, shuffle=False, collate_fn=collate_fn)
-        return data_loader, validation_loader
+
+        return data_loader, validation_loader, train_sampler
 
     elif state == 1 or state == 2 or state == 3:
         image_sets = ['valfast', 'test', 'val']
@@ -207,7 +216,8 @@ def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, m
 
 
 def train_schedule(writer, loader, validation_loader, val_num_steps, device, criterion, net, optimizer, lr_scheduler,
-                   num_epochs, is_mixed_precision, input_sizes, exp_name, num_classes, method='baseline'):
+                   num_epochs, is_mixed_precision, input_sizes, exp_name, num_classes, method='baseline',
+                   ddp=False, train_sampler=None):
     # Should be the same as segmentation, given customized loss classes
     net.train()
     epoch = 0
@@ -220,6 +230,8 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
     best_validation = 0
     while epoch < num_epochs:
         net.train()
+        if ddp:
+            train_sampler.set_epoch(epoch)
         time_now = time.time()
         for i, data in enumerate(loader, 0):
             if method == 'lstr':
@@ -247,6 +259,8 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
                 optimizer.step()
 
             lr_scheduler.step()
+
+            log_dict = reduce_dict(log_dict)
             if running_loss is None:  # Because different methods may have different values to log
                 running_loss = {k: 0.0 for k in log_dict.keys()}
             for k in log_dict.keys():
@@ -257,7 +271,9 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
             if current_step_num % loss_num_steps == (loss_num_steps - 1):
                 for k in running_loss.keys():
                     print('[%d, %d] %s: %.4f' % (epoch + 1, i + 1, k, running_loss[k] / loss_num_steps))
-                    writer.add_scalar(k, running_loss[k] / loss_num_steps, current_step_num)
+                    # Logging only once
+                    if is_main_process():
+                        writer.add_scalar(k, running_loss[k] / loss_num_steps, current_step_num)
                     running_loss[k] = 0.0
 
             # Record checkpoints
@@ -268,28 +284,31 @@ def train_schedule(writer, loader, validation_loader, val_num_steps, device, cri
                     #                 filename=exp_name + '_' + str(current_step_num) + '.pt')
 
                     test_pixel_accuracy, test_mIoU = fast_evaluate(loader=validation_loader, device=device, net=net,
-                                                                   num_classes=num_classes, output_size=input_sizes[0],
+                                                                   num_classes=num_classes,
+                                                                   output_size=input_sizes[0],
                                                                    is_mixed_precision=is_mixed_precision)
-                    writer.add_scalar('test pixel accuracy',
-                                      test_pixel_accuracy,
-                                      current_step_num)
-                    writer.add_scalar('test mIoU',
-                                      test_mIoU,
-                                      current_step_num)
+                    if is_main_process():
+                        writer.add_scalar('test pixel accuracy',
+                                          test_pixel_accuracy,
+                                          current_step_num)
+                        writer.add_scalar('test mIoU',
+                                          test_mIoU,
+                                          current_step_num)
                     net.train()
 
                     # Record best model (straight to disk)
                     if test_mIoU > best_validation:
                         best_validation = test_mIoU
-                        save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                                        filename=exp_name + '.pt')
+                        save_checkpoint(net=net.module if ddp else net, optimizer=optimizer,
+                                        lr_scheduler=lr_scheduler, filename=exp_name + '.pt')
 
         epoch += 1
         print('Epoch time: %.2fs' % (time.time() - time_now))
 
     # For no-evaluation mode
     if validation_loader is None:
-        save_checkpoint(net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, filename=exp_name + '.pt')
+        save_checkpoint(net=net.module if ddp else net, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                        filename=exp_name + '.pt')
 
 
 def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_classes):
@@ -303,6 +322,7 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
                 output = net(image)['out']
                 output = torch.nn.functional.interpolate(output, size=output_size, mode='bilinear', align_corners=True)
                 conf_mat.update(target.flatten(), output.argmax(1).flatten())
+        conf_mat.reduce_from_all_processes()
 
     acc_global, acc, iu = conf_mat.compute()
     print((
@@ -319,10 +339,36 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
     return acc_global.item() * 100, iu.mean().item() * 100
 
 
+# A unified inference function, for segmentation-based lane detection methods
+@torch.no_grad()
+def lane_as_segmentation_inference(net, inputs, input_sizes, gap, ppl, thresh, dataset, max_lane=0, forward=True):
+    # Assume net and images are on the same device
+    # images: B x C x H x W
+    # Return: a list of lane predictions on each image
+    outputs = net(inputs) if forward else inputs  # Support no forwarding inside this function
+    prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
+                                               align_corners=True).softmax(dim=1)
+    existence_conf = outputs['lane'].sigmoid()
+    existence = existence_conf > 0.5
+    if max_lane != 0:  # Lane max number prior for testing
+        existence, existence_conf = lane_pruning(existence, existence_conf, max_lane=max_lane)
+
+    prob_map = prob_map.cpu().numpy()
+    existence = existence.cpu().numpy()
+
+    # Get coordinates for lanes
+    lane_coordinates = []
+    for j in range(existence.shape[0]):
+        lane_coordinates.append(prob_to_lines(prob_map[j], existence[j], resize_shape=input_sizes[1],
+                                              gap=gap, ppl=ppl, thresh=thresh, dataset=dataset))
+
+    return lane_coordinates
+
+
 # Adapted from harryhan618/SCNN_Pytorch
 @torch.no_grad()
 def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, thresh, dataset,
-                 method='baseline', max_lane=0):
+                 method='baseline', max_lane=0, exp_name=None):
     # Predict on 1 data_loader and save predictions for the official script
     # sizes: [input size, test original size, ...]
     # max_lane = 0 -> unlimited number of lanes
@@ -332,45 +378,15 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
     for images, filenames in tqdm(loader):
         images = images.to(device)
         with autocast(is_mixed_precision):
-            outputs = net(images)
-
-            if method == 'lstr':
-                existence_conf = outputs['logits'].softmax(dim=-1)[..., 1]
-                existence = outputs['logits'].max(dim=-1).indices == 1
+            if method in ['baseline', 'scnn', 'resa']:
+                batch_coordinates = lane_as_segmentation_inference(net, images, input_sizes, gap, ppl, thresh, dataset,
+                                                                   max_lane)
             else:
-                prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
-                                                           align_corners=True).softmax(dim=1)
-                existence_conf = outputs['lane'].sigmoid()
-                existence = existence_conf > 0.5
+                batch_coordinates = net.inference(images, input_sizes, gap, ppl, dataset, max_lane)
 
-            if max_lane != 0:  # Lane max number prior for testing
-                # Maybe too slow (but should be faster than topk/sort),
-                # consider batch size >> max number of lanes
-                while (existence.sum(dim=1) > max_lane).sum() > 0:
-                    indices = (existence.sum(dim=1, keepdim=True) > max_lane).expand_as(existence) * \
-                              (existence_conf == existence_conf.min(dim=1, keepdim=True).values)
-                    existence[indices] = 0
-                    existence_conf[indices] = 1.1  # So we can keep using min
-
-        # To CPU
-        if method == 'lstr':
-            existence = existence.cpu().numpy()  # For perfect BC
-        else:
-            prob_map = prob_map.cpu().numpy()
-            existence = existence.cpu().numpy()
-
-        # Get coordinates for lanes
-        for j in range(existence.shape[0]):
-            if method == 'lstr':
-                lane_coordinates = coefficients_to_coordinates(outputs['curves'][j, :, 2:], existence[j],
-                                                               resize_shape=input_sizes[1], dataset=dataset, ppl=ppl,
-                                                               gap=gap, curve_function=cubic_curve_with_projection,
-                                                               upper_bound=outputs['curves'][j, :, 0],
-                                                               lower_bound=outputs['curves'][j, :, 1])
-            else:
-                lane_coordinates = prob_to_lines(prob_map[j], existence[j], resize_shape=input_sizes[1],
-                                                 gap=gap, ppl=ppl, thresh=thresh, dataset=dataset)
-
+        # Parse coordinates
+        for j in range(len(batch_coordinates)):
+            lane_coordinates = batch_coordinates[j]
             if dataset == 'culane':
                 # Save each lane to disk
                 dir_name = filenames[j][:filenames[j].rfind('/')]
@@ -386,7 +402,7 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                 # Save lanes to a single file
                 formatted = {
                     "h_samples": [160 + y * 10 for y in range(ppl)],
-                    "lanes": lane_coordinates,
+                    "lanes": [[c[0] for c in lane] for lane in lane_coordinates],
                     "run_time": 0,
                     "raw_file": filenames[j]
                 }
@@ -407,7 +423,7 @@ def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl,
                 raise ValueError
 
     if dataset == 'tusimple':
-        with open('./output/tusimple_pred.json', 'w') as f:
+        with open('./output/' + exp_name + '.json', 'w') as f:
             for lane in all_lanes:
                 print(lane, end="\n", file=f)
 
@@ -485,45 +501,12 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
             if coords.sum() == 0:
                 continue
             if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
-                coordinates.append([coords[j] if coords[j] > 0 else -2 for j in range(ppl)])
+                coordinates.append([[coords[j], H - (ppl - j) * gap] if coords[j] > 0 else [-2,  H - (ppl - j) * gap]
+                                    for j in range(ppl)])
             elif dataset in ['culane', 'llamas']:
                 coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
             # elif dataset == 'llamas':
             #     coordinates.append([[coords[j], H - j * gap - 1] for j in range(ppl) if coords[j] > 0])
-            else:
-                raise ValueError
-
-    return coordinates
-
-
-def coefficients_to_coordinates(coefficients, existence, resize_shape, dataset, ppl, gap, curve_function,
-                                upper_bound, lower_bound):
-    # For methods that predict coefficients of polynomials,
-    # works with normalized coordinates (in range 0.0 ~ 1.0).
-    # Restricted to single image to align with other methods' codes
-    H, W = resize_shape
-    if dataset == 'tusimple':  # Annotation start at 10 pixel away from bottom
-        y = torch.tensor([1.0 - (ppl - i) * gap / H for i in range(ppl)],
-                         dtype=coefficients.dtype, device=coefficients.device)
-    elif dataset in ['culane', 'llamas']:  # Annotation start at bottom
-        y = torch.tensor([1.0 - i * gap / H for i in range(ppl)],
-                         dtype=coefficients.dtype, device=coefficients.device)
-    else:
-        raise ValueError
-    coords = curve_function(coefficients=coefficients, y=y.unsqueeze(0).expand(coefficients.shape[0], -1))
-
-    # Delete outside points according to predicted upper & lower boundaries
-    coordinates = []
-    for i in range(existence.shape[0]):
-        if existence[i]:
-            # Note that in image coordinate system, (0, 0) is the top-left corner
-            valid_points = (coords[i] >= 0) * (coords[i] <= 1) * (y < lower_bound[i]) * (y > upper_bound[i])
-            if valid_points.sum() < 2:  # Same post-processing technique as segmentation methods
-                continue
-            if dataset == 'tusimple':  # Invalid sample points need to be included as negative value, e.g. -2
-                coordinates.append([(coords[i][j] * W).item() if valid_points[j] else -2 for j in range(ppl)])
-            elif dataset in ['culane', 'llamas']:
-                coordinates.append([[(coords[i][j] * W).item(), H - j * gap] for j in range(ppl) if valid_points[j]])
             else:
                 raise ValueError
 
