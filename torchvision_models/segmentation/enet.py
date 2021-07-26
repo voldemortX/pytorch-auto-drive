@@ -1,6 +1,5 @@
 # copy from https://github.com/davidtvs/PyTorch-ENet/blob/master/models/enet.py
 from collections import OrderedDict
-
 import torch.nn as nn
 import torch
 from torch.nn import functional as F
