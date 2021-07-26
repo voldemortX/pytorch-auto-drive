@@ -11,7 +11,7 @@ from .deeplab_vgg import DeepLabV1
 from .enet import ENet
 from ..common_models import SpatialConv, SimpleLaneExist, RESAReducer
 from torch import load
-import torch
+
 
 __all__ = ['fcn_resnet50', 'fcn_resnet101', 'deeplabv2_resnet101', 'deeplabv3_resnet50', 'deeplabv3_resnet101',
            'erfnet_resnet', 'deeplabv1_vgg16', 'enet_',

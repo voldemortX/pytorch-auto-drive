@@ -11,7 +11,7 @@ else:
     from .torch_amp_dummy import autocast, GradScaler
 from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
     deeplabv1_resnet50, deeplabv1_resnet101, enet_
-from torchvision_models.lane_detection import LSTR
+from torchvision_models.lane_detection import LSTR, RESANet
 from torchvision_models.lane_detection.utils import lane_pruning
 from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, LLAMAS, dict_collate_fn
 from transforms import ToTensor, Normalize, Resize, RandomRotation, RandomCrop, RandomHorizontalFlip, \
@@ -56,40 +56,58 @@ def vgg16_culane(num_classes, scnn=False, pretrained_weights='pytorch-pretrained
                            dropout_1=0.1, flattened_size=4500, scnn=scnn)
 
 
-def resnet_tusimple(num_classes, backbone_name='resnet18', scnn=False):
+def resnet_tusimple(num_classes, backbone_name='resnet18', spatial_conv=None):
     # Define ResNets for Tusimple (With only ImageNet pretraining)
-    model_map = {
-        'resnet18': deeplabv1_resnet18,
-        'resnet34': deeplabv1_resnet34,
-        'resnet50': deeplabv1_resnet50,
-        'resnet101': deeplabv1_resnet101,
-    }
-    return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
-                                    channel_reduce=128, flattened_size=6160, scnn=scnn)
+    if spatial_conv is None or spatial_conv == 'scnn':
+        scnn = spatial_conv is not None
+        model_map = {
+            'resnet18': deeplabv1_resnet18,
+            'resnet34': deeplabv1_resnet34,
+            'resnet50': deeplabv1_resnet50,
+            'resnet101': deeplabv1_resnet101,
+        }
+        return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
+                                        channel_reduce=128, flattened_size=6160, scnn=scnn)
+    elif spatial_conv == 'resa':
+        return RESANet(num_classes=num_classes, backbone_name=backbone_name, flattened_size=4400, channel_reduce=128)
+    else:
+        raise ValueError('spatial_conv must be None, scnn or resa! Not {}'.format(spatial_conv))
 
 
-def resnet_culane(num_classes, backbone_name='resnet18', scnn=False):
+def resnet_culane(num_classes, backbone_name='resnet18', spatial_conv=None):
     # Define ResNets for CULane (With only ImageNet pretraining)
-    model_map = {
-        'resnet18': deeplabv1_resnet18,
-        'resnet34': deeplabv1_resnet34,
-        'resnet50': deeplabv1_resnet50,
-        'resnet101': deeplabv1_resnet101,
-    }
-    return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
-                                    channel_reduce=128, flattened_size=4500, scnn=scnn)
+    if spatial_conv is None or spatial_conv == 'scnn':
+        scnn = spatial_conv is not None
+        model_map = {
+            'resnet18': deeplabv1_resnet18,
+            'resnet34': deeplabv1_resnet34,
+            'resnet50': deeplabv1_resnet50,
+            'resnet101': deeplabv1_resnet101,
+        }
+        return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
+                                        channel_reduce=128, flattened_size=4500, scnn=scnn)
+    elif spatial_conv == 'resa':
+        return RESANet(num_classes=num_classes, backbone_name=backbone_name, flattened_size=4500, channel_reduce=128)
+    else:
+        raise ValueError('spatial_conv must be None, scnn or resa! Not {}'.format(spatial_conv))
 
 
-def resnet_llamas(num_classes, backbone_name='resnet18', scnn=False):
-    # Define ResNets for CULane (With only ImageNet pretraining)
-    model_map = {
-        'resnet18': deeplabv1_resnet18,
-        'resnet34': deeplabv1_resnet34,
-        'resnet50': deeplabv1_resnet50,
-        'resnet101': deeplabv1_resnet101,
-    }
-    return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
-                                    channel_reduce=128, flattened_size=4400, scnn=scnn)
+def resnet_llamas(num_classes, backbone_name='resnet18', spatial_conv=None):
+    # Define ResNets for LLAMAS (With only ImageNet pretraining)
+    if spatial_conv is None or spatial_conv == 'scnn':
+        scnn = spatial_conv is not None
+        model_map = {
+            'resnet18': deeplabv1_resnet18,
+            'resnet34': deeplabv1_resnet34,
+            'resnet50': deeplabv1_resnet50,
+            'resnet101': deeplabv1_resnet101,
+        }
+        return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
+                                        channel_reduce=128, flattened_size=4400, scnn=scnn)
+    elif spatial_conv == 'resa':
+        return RESANet(num_classes=num_classes, backbone_name=backbone_name, flattened_size=4400, channel_reduce=128)
+    else:
+        raise ValueError('spatial_conv must be None, scnn or resa! Not {}'.format(spatial_conv))
 
 
 def enet_tusimple(num_classes, encoder_only, continue_from):
@@ -515,6 +533,7 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
 
 def build_lane_detection_model(args, num_classes):
     scnn = True if args.method == 'scnn' else False
+    spatial_conv = args.method if args.method in ['scnn', 'resa'] else None
     if args.dataset == 'tusimple' and args.backbone == 'erfnet':
         net = erfnet_tusimple(num_classes=num_classes, scnn=scnn)
     elif args.method == 'lstr':
@@ -532,9 +551,9 @@ def build_lane_detection_model(args, num_classes):
     elif args.dataset == 'tusimple' and args.backbone == 'vgg16':
         net = vgg16_tusimple(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'tusimple' and 'resnet' in args.backbone:
-        net = resnet_tusimple(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
+        net = resnet_tusimple(num_classes=num_classes, spatial_conv=spatial_conv, backbone_name=args.backbone)
     elif args.dataset == 'culane' and 'resnet' in args.backbone:
-        net = resnet_culane(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
+        net = resnet_culane(num_classes=num_classes, spatial_conv=spatial_conv, backbone_name=args.backbone)
     elif args.dataset == 'tusimple' and args.backbone == 'enet':
         net = enet_tusimple(num_classes=num_classes, encoder_only=args.encoder_only,
                             continue_from=args.continue_from)
@@ -546,7 +565,7 @@ def build_lane_detection_model(args, num_classes):
     elif args.dataset == 'llamas' and args.backbone == 'vgg16':
         net = vgg16_llamas(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'llamas' and 'resnet' in args.backbone:
-        net = resnet_llamas(num_classes=num_classes, scnn=scnn, backbone_name=args.backbone)
+        net = resnet_llamas(num_classes=num_classes, spatial_conv=spatial_conv, backbone_name=args.backbone)
     else:
         raise ValueError
 

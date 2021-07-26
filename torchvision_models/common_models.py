@@ -1,7 +1,39 @@
+# TODO: Refactor to a directory
 import math
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+
+
+class non_bottleneck_1d(nn.Module):
+    def __init__(self, chann, dropprob, dilated):
+        super().__init__()
+        self.conv3x1_1 = nn.Conv2d(chann, chann, (3, 1), stride=1, padding=(1, 0), bias=True)
+        self.conv1x3_1 = nn.Conv2d(chann, chann, (1, 3), stride=1, padding=(0, 1), bias=True)
+        self.bn1 = nn.BatchNorm2d(chann, eps=1e-03)
+        self.conv3x1_2 = nn.Conv2d(chann, chann, (3, 1), stride=1, padding=(1*dilated, 0),
+                                   bias=True, dilation=(dilated, 1))
+        self.conv1x3_2 = nn.Conv2d(chann, chann, (1, 3), stride=1, padding=(0, 1*dilated),
+                                   bias=True, dilation=(1, dilated))
+        self.bn2 = nn.BatchNorm2d(chann, eps=1e-03)
+        self.dropout = nn.Dropout2d(dropprob)
+
+    def forward(self, input):
+        output = self.conv3x1_1(input)
+        output = F.relu(output)
+        output = self.conv1x3_1(output)
+        output = self.bn1(output)
+        output = F.relu(output)
+
+        output = self.conv3x1_2(output)
+        output = F.relu(output)
+        output = self.conv1x3_2(output)
+        output = self.bn2(output)
+
+        if self.dropout.p != 0:
+            output = self.dropout(output)
+
+        return F.relu(output + input)
 
 
 # Unused
@@ -28,6 +60,55 @@ class SCNNDecoder(nn.Module):
         x = self.conv2(x)
 
         return x
+
+
+# Added a coarse path to the original ERFNet UpsamplerBlock
+# Copied and modified from:
+# https://github.com/ZJULearning/resa/blob/14b0fea6a1ab4f45d8f9f22fb110c1b3e53cf12e/models/decoder.py#L67
+class BilateralUpsamplerBlock(nn.Module):
+    def __init__(self, ninput, noutput):
+        super(BilateralUpsamplerBlock, self).__init__()
+        self.conv = nn.ConvTranspose2d(ninput, noutput, 3, stride=2, padding=1, output_padding=1, bias=True)
+        self.bn = nn.BatchNorm2d(noutput, eps=1e-3, track_running_stats=True)
+        self.follows = nn.ModuleList(non_bottleneck_1d(noutput, 0, 1) for _ in range(2))
+
+        # interpolate
+        self.interpolate_conv = nn.Conv2d(ninput, noutput, kernel_size=1, bias=False)
+        self.interpolate_bn = nn.BatchNorm2d(noutput, eps=1e-3)
+
+    def forward(self, input):
+        # Fine branch
+        output = self.conv(input)
+        output = self.bn(output)
+        out = F.relu(output)
+        for follow in self.follows:
+            out = follow(out)
+
+        # Coarse branch (keep at align_corners=True)
+        interpolate_output = self.interpolate_conv(input)
+        interpolate_output = self.interpolate_bn(interpolate_output)
+        interpolate_output = F.relu(interpolate_output)
+        interpolated = F.interpolate(interpolate_output, size=out.shape[-2:], mode='bilinear', align_corners=True)
+
+        return out + interpolated
+
+
+# Bilateral Up-Sampling Decoder in RESA paper,
+# make it work for arbitrary input channels (8x up-sample then predict).
+# Drops transposed prediction layer in ERFNet, while adds an extra up-sampling block.
+class BUSD(nn.Module):
+    def __init__(self, in_channels=128, num_classes=5):
+        super(BUSD, self).__init__()
+        base = in_channels // 8
+        self.layers = nn.ModuleList(BilateralUpsamplerBlock(ninput=base * 2 ** (3 - i), noutput=base * 2 ** (2 - i))
+                                    for i in range(3))
+        self.output_proj = nn.Conv2d(base, num_classes, kernel_size=1, bias=True)  # Keep bias=True for prediction
+
+    def forward(self, x):
+        for layer in self.layers:
+            x = layer(x)
+
+        return self.output_proj(x)
 
 
 # Reduce channel (typically to 128)
@@ -84,6 +165,65 @@ class SpatialConv(nn.Module):
         return output
 
 
+# REcurrent Feature-Shift Aggregator in RESA paper
+class RESA(nn.Module):
+    def __init__(self, num_channels=128, iteration=5, alpha=2.0):
+        super(RESA, self).__init__()
+        # Different from SCNN, RESA uses bias=False & different convolution layers for each stride,
+        # i.e. 4 * iteration layers vs. 4 layers in SCNN, maybe special init is not needed anymore:
+        # https://github.com/ZJULearning/resa/blob/14b0fea6a1ab4f45d8f9f22fb110c1b3e53cf12e/models/resa.py#L21
+        self.iteration = iteration
+        self.alpha = alpha
+        self.conv_d = nn.ModuleList(nn.Conv2d(num_channels, num_channels, (1, 9), padding=(0, 4), bias=False)
+                                    for _ in range(iteration))
+        self.conv_u = nn.ModuleList(nn.Conv2d(num_channels, num_channels, (1, 9), padding=(0, 4), bias=False)
+                                    for _ in range(iteration))
+        self.conv_r = nn.ModuleList(nn.Conv2d(num_channels, num_channels, (9, 1), padding=(4, 0), bias=False)
+                                    for _ in range(iteration))
+        self.conv_l = nn.ModuleList(nn.Conv2d(num_channels, num_channels, (9, 1), padding=(4, 0), bias=False)
+                                    for _ in range(iteration))
+        self._adjust_initializations(num_channels=num_channels)
+
+    def _adjust_initializations(self, num_channels=128):
+        # https://github.com/XingangPan/SCNN/issues/82
+        bound = math.sqrt(2.0 / (num_channels * 9 * 5))
+        for i in self.conv_d:
+            nn.init.uniform_(i.weight, -bound, bound)
+        for i in self.conv_u:
+            nn.init.uniform_(i.weight, -bound, bound)
+        for i in self.conv_r:
+            nn.init.uniform_(i.weight, -bound, bound)
+        for i in self.conv_l:
+            nn.init.uniform_(i.weight, -bound, bound)
+
+    def forward(self, x):
+        y = x
+        h, w = y.shape[-2:]
+        if 2 ** self.iteration > max(h, w):
+            print('Too many iterations for RESA, your image size may be too small.')
+
+        # We do indexing here to avoid extra input parameters at __init__(), with almost none computation overhead.
+        # Also, now it won't block arbitrary shaped input.
+        # Down
+        for i in range(self.iteration):
+            idx = (torch.arange(h) + h // 2 ** (self.iteration - i)) % h
+            y.add_(self.alpha * F.relu(self.conv_d[i](y[:, :, idx, :])))
+        # Up
+        for i in range(self.iteration):
+            idx = (torch.arange(h) - h // 2 ** (self.iteration - i)) % h
+            y.add_(self.alpha * F.relu(self.conv_u[i](y[:, :, idx, :])))
+        # Right
+        for i in range(self.iteration):
+            idx = (torch.arange(w) + w // 2 ** (self.iteration - i)) % w
+            y.add_(self.alpha * F.relu(self.conv_r[i](y[:, :, :, idx])))
+        # Left
+        for i in range(self.iteration):
+            idx = (torch.arange(w) - w // 2 ** (self.iteration - i)) % w
+            y.add_(self.alpha * F.relu(self.conv_l[i](y[:, :, :, idx])))
+
+        return y
+
+
 # Typical lane existence head originated from the SCNN paper
 class SimpleLaneExist(nn.Module):
     def __init__(self, num_output, flattened_size=4500):
@@ -105,7 +245,7 @@ class SimpleLaneExist(nn.Module):
         return output
 
 
-# Lane exist head for ERFNet and ENet
+# Lane exist head for ERFNet, ENet and RESA-BUSD
 # Really tricky without global pooling
 class EDLaneExist(nn.Module):
     def __init__(self, num_output, flattened_size=3965, dropout=0.1, pool='avg'):

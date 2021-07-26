@@ -1,11 +1,11 @@
 # copy from https://github.com/davidtvs/PyTorch-ENet/blob/master/models/enet.py
 from collections import OrderedDict
-
 import torch.nn as nn
 import torch
 from torch.nn import functional as F
 from torch.nn.parameter import Parameter
 from ..common_models import EDLaneExist
+
 
 class InitialBlock(nn.Module):
     """The initial block is composed of two branches:

@@ -37,7 +37,7 @@ if __name__ == '__main__':
                         help='Train/Evaluate on TuSimple (tusimple) / CULane (culane) / LLAMAS (llamas) (default: '
                              'tusimple)')
     parser.add_argument('--method', type=str, default='baseline',
-                        help='method selection (lstr/scnn/baseline) (default: baseline)')
+                        help='method selection (resa/lstr/scnn/baseline) (default: baseline)')
     parser.add_argument('--backbone', type=str, default='erfnet',
                         help='backbone selection (erfnet/enet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101)'
                              '(default: erfnet)')
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     else:
         eigen_value = configs['GENERAL']['LIGHT_EIGEN_VALUE']
         eigen_vector = configs['GENERAL']['LIGHT_EIGEN_VECTOR']
-        if args.method == 'scnn' or args.method == 'baseline':
+        if args.method in ['resa', 'scnn', 'baseline']:
             criterion = LaneLoss(weight=weights, ignore_index=255)
         elif args.method == 'sad':
             criterion = SADLoss()
