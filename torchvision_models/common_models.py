@@ -111,17 +111,20 @@ class BUSD(nn.Module):
         return self.output_proj(x)
 
 
-# Reduce channel (typically to 128)
+# Reduce channel (typically to 128), RESA code use no BN nor ReLU
 class RESAReducer(nn.Module):
-    def __init__(self, in_channels=512, reduce=128):
+    def __init__(self, in_channels=512, reduce=128, bn_relu=True):
         super(RESAReducer, self).__init__()
+        self.bn_relu = bn_relu
         self.conv1 = nn.Conv2d(in_channels, reduce, 1, bias=False)
-        self.bn1 = nn.BatchNorm2d(reduce)
+        if self.bn_relu:
+            self.bn1 = nn.BatchNorm2d(reduce)
 
     def forward(self, x):
         x = self.conv1(x)
-        x = self.bn1(x)
-        x = F.relu(x)
+        if self.bn_relu:
+            x = self.bn1(x)
+            x = F.relu(x)
 
         return x
 
