@@ -2,7 +2,7 @@
 # Better to use a decoupled implementation,
 # costs more codes, but clear
 import torch.nn as nn
-from ..common_models import RESA, RESAReducer, BUSD, EDLaneExist
+from ..common_models import RESA, RESAReducer, BUSD, EDLaneExist, PlainDecoder
 from .._utils import IntermediateLayerGetter
 from .. import resnet
 
