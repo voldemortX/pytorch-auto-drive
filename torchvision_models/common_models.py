@@ -199,7 +199,7 @@ class RESA(nn.Module):
                                     for _ in range(iteration))
         self.conv_l = nn.ModuleList(nn.Conv2d(num_channels, num_channels, (9, 1), padding=(4, 0), bias=False)
                                     for _ in range(iteration))
-        self._adjust_initializations(num_channels=num_channels)
+        # self._adjust_initializations(num_channels=num_channels)
 
     def _adjust_initializations(self, num_channels=128):
         # https://github.com/XingangPan/SCNN/issues/82
@@ -262,7 +262,7 @@ class SimpleLaneExist(nn.Module):
         return output
 
 
-# Lane exist head for ERFNet, ENet and RESA-BUSD
+# Lane exist head for ERFNet, ENet
 # Really tricky without global pooling
 class EDLaneExist(nn.Module):
     def __init__(self, num_output, flattened_size=3965, dropout=0.1, pool='avg'):
@@ -296,6 +296,31 @@ class EDLaneExist(nn.Module):
         for layer in self.layers_final:
             output = layer(output)
 
+        output = F.softmax(output, dim=1)
+        output = self.pool(output)
+        output = output.flatten(start_dim=1)
+        output = self.linear1(output)
+        output = F.relu(output)
+        output = self.linear2(output)
+
+        return output
+
+
+class RESALaneExist(nn.Module):
+    def __init__(self, num_output, flattened_size=3965, dropout=0.1, in_channels=128):
+        super().__init__()
+
+        self.layers = nn.ModuleList()
+        self.layers.append(nn.Dropout2d(dropout))
+        self.layers.append(nn.Conv2d(in_channels, 5, (1, 1), stride=1, padding=(0, 0), bias=True))
+        self.pool = nn.AvgPool2d(2, stride=2)
+        self.linear1 = nn.Linear(flattened_size, 128)
+        self.linear2 = nn.Linear(128, num_output)
+
+    def forward(self, input):
+        output = input
+        for layer in self.layers:
+            output = layer(output)
         output = F.softmax(output, dim=1)
         output = self.pool(output)
         output = output.flatten(start_dim=1)

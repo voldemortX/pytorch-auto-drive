@@ -2,7 +2,7 @@
 # Better to use a decoupled implementation,
 # costs more codes, but clear
 import torch.nn as nn
-from ..common_models import RESA, RESAReducer, BUSD, EDLaneExist, PlainDecoder
+from ..common_models import RESA, RESAReducer, BUSD, RESALaneExist, PlainDecoder
 from .._utils import IntermediateLayerGetter
 from .. import resnet
 
@@ -16,11 +16,12 @@ class RESANet(nn.Module):
         return_layers = {'layer3': 'out'}
         self.backbone = IntermediateLayerGetter(backbone, return_layers=return_layers)
         in_channels = 1024 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 256
-        self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce)  #
-        self.spatial_conv = RESA(iteration=4)  #
+        self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce, bn_relu=False)
+        self.spatial_conv = RESA(iteration=4)
         # self.decoder = BUSD(num_classes=num_classes)
         self.decoder = PlainDecoder()
-        self.lane_classifier = EDLaneExist(num_output=num_classes - 1, flattened_size=flattened_size)  #
+        # self.lane_classifier = EDLaneExist(num_output=num_classes - 1, flattened_size=flattened_size)
+        self.lane_classifier = RESALaneExist(num_output=num_classes - 1, flattened_size=flattened_size)
 
     def forward(self, x):
         x = self.backbone(x)['out']
