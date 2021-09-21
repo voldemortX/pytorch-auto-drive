@@ -1,5 +1,7 @@
 # Semantic segmentation
 
+**Before diving into this, please make sure you followed the instructions to prepare datasets in [DATASET.md](./DATASET.md)**
+
 ## Training:
 
 If you are using ERFNet, first download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
