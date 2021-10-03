@@ -16,7 +16,8 @@ class RESANet(nn.Module):
         return_layers = {'layer3': 'out'}
         self.backbone = IntermediateLayerGetter(backbone, return_layers=return_layers)
         in_channels = 1024 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 256
-        self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce, bn_relu=False)
+        # self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce, bn_relu=False)
+        self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce)
         self.spatial_conv = RESA(iteration=4)
         # self.decoder = BUSD(num_classes=num_classes)
         self.decoder = PlainDecoder()
