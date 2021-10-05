@@ -312,7 +312,7 @@ class RESALaneExist(nn.Module):
 
         self.layers = nn.ModuleList()
         self.layers.append(nn.Dropout2d(dropout))
-        self.layers.append(nn.Conv2d(in_channels, 5, (1, 1), stride=1, padding=(0, 0), bias=True))
+        self.layers.append(nn.Conv2d(in_channels, num_output + 1, (1, 1), stride=1, padding=(0, 0), bias=True))
         self.pool = nn.AvgPool2d(2, stride=2)
         self.linear1 = nn.Linear(flattened_size, 128)
         self.linear2 = nn.Linear(128, num_output)
