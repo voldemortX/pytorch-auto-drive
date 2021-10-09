@@ -51,7 +51,7 @@ class LSTR(nn.Module):
         else:  # Common backbones
             backbone = resnet.__dict__[backbone_name](
                 pretrained=True,
-                replace_stride_with_dilation=[False, True, True])
+                replace_stride_with_dilation=[False, False, False])
 
         return_layers = {'layer4': 'out'}
         self.backbone = IntermediateLayerGetter(backbone, return_layers=return_layers)
