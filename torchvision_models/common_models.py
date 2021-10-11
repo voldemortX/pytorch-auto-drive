@@ -199,7 +199,7 @@ class RESA(nn.Module):
                                     for _ in range(iteration))
         self.conv_l = nn.ModuleList(nn.Conv2d(num_channels, num_channels, (9, 1), padding=(4, 0), bias=False)
                                     for _ in range(iteration))
-        # self._adjust_initializations(num_channels=num_channels)
+        self._adjust_initializations(num_channels=num_channels)
 
     def _adjust_initializations(self, num_channels=128):
         # https://github.com/XingangPan/SCNN/issues/82
