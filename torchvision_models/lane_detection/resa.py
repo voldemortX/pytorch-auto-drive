@@ -17,17 +17,35 @@ import torch.nn as nn
 from ..common_models import RESA, RESAReducer, BUSD, RESALaneExist, EDLaneExist, PlainDecoder
 from .._utils import IntermediateLayerGetter
 from .. import resnet
+from ..segmentation.deeplab_vgg import VGG16
 
 
 class RESANet(nn.Module):
     def __init__(self, num_classes, backbone_name, flattened_size, channel_reduce, pretrained_backbone=True):
         super(RESANet, self).__init__()
-        backbone = resnet.__dict__[backbone_name](
-            pretrained=pretrained_backbone,
-            replace_stride_with_dilation=[False, True, True])
-        return_layers = {'layer3': 'out'}
-        self.backbone = IntermediateLayerGetter(backbone, return_layers=return_layers)
-        in_channels = 1024 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 256
+        if backbone_name == 'vgg16':
+            # VGG16 with dilation
+            vgg = VGG16(pretained=True)
+            fc6 = nn.Sequential(
+                nn.Conv2d(512, 1024, 3, padding=4, dilation=4, bias=False),
+                nn.BatchNorm2d(1024),
+                nn.ReLU(),
+                # nn.Conv2d(1024, 128, 1, bias=False),
+                # nn.BatchNorm2d(128),
+                # nn.ReLU()
+            )
+            self.backbone = nn.Sequential(
+                vgg,
+                fc6
+            )
+            in_channels = 1024
+        else:
+            backbone = resnet.__dict__[backbone_name](
+                pretrained=pretrained_backbone,
+                replace_stride_with_dilation=[False, True, True])
+            return_layers = {'layer3': 'out'}
+            self.backbone = IntermediateLayerGetter(backbone, return_layers=return_layers)
+            in_channels = 1024 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 256
         # self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce, bn_relu=False)
         self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce)
         self.spatial_conv = RESA()
