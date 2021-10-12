@@ -99,7 +99,7 @@
 | SCNN | ERFNet | simple | 91.82 | 72.13 | 69.49 | 46.68 | 70.59 | 87.40 | 64.18 | 68.30 | 2236 | 74.03 | [model](https://drive.google.com/file/d/1YOAuIJqh0M1RsPN5zISY7kTx9xt29IS3/view?usp=sharing) \| [shell](../tools/shells/erfnet_scnn_culane.sh) |
 | LSTR | ResNet18s-2X | simple | 55.95 | 38.66 | 22.52 | 25.34 | 25.87 | 51.90 | 40.34 | 29.74 | 2128 | 39.17 | [model](https://drive.google.com/file/d/1vdYwM0xDcQLjMAibjmls8hX-IsUe0xcq/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_culane.sh) |
 | LSTR | ResNet18s-2X | strong | 86.89 | 66.20 | 58.76 | 40.63 | 61.10 | 79.08 | 56.86 | 56.99 | 2455 | 67.21 | [model](https://drive.google.com/file/d/11Tv_nowlWmQtTYQfhGsziDIzb20kPo8o/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_culane.sh) |
-| LSTR | ResNet34 | strong | 89.68 | 68.85 | 65.59 | 45.50 | 67.71 | 84.76 | 64.12 | 64.08 | 1776 | 71.51 | [model](https://drive.google.com/file/d/1KfmXubuAtUoE9MO8iViMyB_3XhTxWnwH/view?usp=sharing) \| [shell](../tools/shells/resnet34_lstr-aug_culane.sh) |
+| LSTR | ResNet34 | strong | 89.68 | 68.85 | 65.59 | 45.50 | 67.71 | 84.76 | 64.12 | 64.08 | 1776 | 71.52 | [model](https://drive.google.com/file/d/1KfmXubuAtUoE9MO8iViMyB_3XhTxWnwH/view?usp=sharing) \| [shell](../tools/shells/resnet34_lstr-aug_culane.sh) |
 
 ### LLAMAS detailed performance (best):
 
