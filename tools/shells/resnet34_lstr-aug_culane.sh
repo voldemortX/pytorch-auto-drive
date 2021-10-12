@@ -1,5 +1,5 @@
 #!/bin/bash
-# Trained weights: resnet34_lstr-aug_culane_20210721.pt
+# Trained weights: resnet34_lstr-aug_culane_20211012.pt
 exp_name=resnet34_lstr-aug_culane
 # Training
 python main_landec.py --aug --epochs=150 --lr=0.00025 --batch-size=20 --workers=16 --dataset=culane --method=lstr --backbone=resnet34 --exp-name=${exp_name}
