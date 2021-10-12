@@ -145,7 +145,7 @@ def lane_inference(net, images, inference_size, original_size, args, configs):
                                                          args.dataset,
                                                          configs[configs['LANE_DATASETS'][args.dataset]]['MAX_LANE'])
         else:
-            coordinates = net.inference(images, original_size,
+            coordinates = net.inference(images, [inference_size, original_size],
                                         configs[configs['LANE_DATASETS'][args.dataset]]['GAP'],
                                         configs[configs['LANE_DATASETS'][args.dataset]]['PPL'],
                                         args.dataset,
