@@ -38,7 +38,7 @@
 | SCNN | ERFNet | simple | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
 | LSTR | ResNet18s-2X<sup>#</sup> | simple | 288 x 800 | *no* | CULane | F measure | 35.72 | 39.17 | 28.5h* |
 | LSTR | ResNet18s-2X<sup>#</sup> | strong | 288 x 800 | *no* | CULane | F measure | 66.85 | 67.21 | 31.5h* |
-| LSTR | ResNet34 | strong | 288 x 800 | *no* | CULane | F measure | 71.16 | 71.52 | 70h* |
+| LSTR | ResNet34 | strong | 288 x 800 | *no* | CULane | F measure | 71.16 | 71.52 | 45h* |
 | Baseline | ERFNet | simple | 360 x 640 | *yes* | LLAMAS | F measure | 95.94 | 96.13 | 10.9h<sup>+</sup> |
 | Baseline | VGG16 | simple | 360 x 640 | *yes* | LLAMAS | F measure | 95.05 | 95.11 | 9.3h |
 | Baseline | ResNet34 | simple | 360 x 640 | *yes* | LLAMAS | F measure | 95.90 | 95.91 | 7.0h |
