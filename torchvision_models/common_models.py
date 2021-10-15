@@ -62,6 +62,20 @@ class SCNNDecoder(nn.Module):
         return x
 
 
+# Plain decoder (albeit simplest) from the RESA paper
+class PlainDecoder(nn.Module):
+    def __init__(self, in_channels=128, num_classes=5):
+        super(PlainDecoder, self).__init__()
+        self.dropout1 = nn.Dropout2d(0.1)
+        self.conv1 = nn.Conv2d(in_channels, num_classes, 1, bias=True)
+
+    def forward(self, x):
+        x = self.dropout1(x)
+        x = self.conv1(x)
+
+        return x
+
+
 # Added a coarse path to the original ERFNet UpsamplerBlock
 # Copied and modified from:
 # https://github.com/ZJULearning/resa/blob/14b0fea6a1ab4f45d8f9f22fb110c1b3e53cf12e/models/decoder.py#L67
@@ -111,17 +125,20 @@ class BUSD(nn.Module):
         return self.output_proj(x)
 
 
-# Reduce channel (typically to 128)
+# Reduce channel (typically to 128), RESA code use no BN nor ReLU
 class RESAReducer(nn.Module):
-    def __init__(self, in_channels=512, reduce=128):
+    def __init__(self, in_channels=512, reduce=128, bn_relu=True):
         super(RESAReducer, self).__init__()
+        self.bn_relu = bn_relu
         self.conv1 = nn.Conv2d(in_channels, reduce, 1, bias=False)
-        self.bn1 = nn.BatchNorm2d(reduce)
+        if self.bn_relu:
+            self.bn1 = nn.BatchNorm2d(reduce)
 
     def forward(self, x):
         x = self.conv1(x)
-        x = self.bn1(x)
-        x = F.relu(x)
+        if self.bn_relu:
+            x = self.bn1(x)
+            x = F.relu(x)
 
         return x
 
@@ -245,7 +262,7 @@ class SimpleLaneExist(nn.Module):
         return output
 
 
-# Lane exist head for ERFNet, ENet and RESA-BUSD
+# Lane exist head for ERFNet, ENet
 # Really tricky without global pooling
 class EDLaneExist(nn.Module):
     def __init__(self, num_output, flattened_size=3965, dropout=0.1, pool='avg'):
@@ -279,6 +296,31 @@ class EDLaneExist(nn.Module):
         for layer in self.layers_final:
             output = layer(output)
 
+        output = F.softmax(output, dim=1)
+        output = self.pool(output)
+        output = output.flatten(start_dim=1)
+        output = self.linear1(output)
+        output = F.relu(output)
+        output = self.linear2(output)
+
+        return output
+
+
+class RESALaneExist(nn.Module):
+    def __init__(self, num_output, flattened_size=3965, dropout=0.1, in_channels=128):
+        super().__init__()
+
+        self.layers = nn.ModuleList()
+        self.layers.append(nn.Dropout2d(dropout))
+        self.layers.append(nn.Conv2d(in_channels, num_output + 1, (1, 1), stride=1, padding=(0, 0), bias=True))
+        self.pool = nn.AvgPool2d(2, stride=2)
+        self.linear1 = nn.Linear(flattened_size, 128)
+        self.linear2 = nn.Linear(128, num_output)
+
+    def forward(self, input):
+        output = input
+        for layer in self.layers:
+            output = layer(output)
         output = F.softmax(output, dim=1)
         output = self.pool(output)
         output = output.flatten(start_dim=1)
