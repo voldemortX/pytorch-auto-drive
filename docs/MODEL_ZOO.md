@@ -21,6 +21,10 @@
 | SCNN | ResNet101 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.56% | 95.69% | 3.5h |
 | SCNN | ERFNet | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 96.18% | 96.29% | 1.6h |
 | SCNN | ERFNet | strong | 360 x 640 | *no* | TuSimple | Accuracy | 95.00% | 95.26% | 1.7h* |
+| RESA | ResNet18 | simple | 360 x 640 | *no* | TuSimple | Accuracy | 94.64% | 95.24% | 1.2h* |
+| RESA | ResNet34 | simple | 360 x 640 | *no* | TuSimple | Accuracy | 94.84% | 95.15% | 1.6h* |
+| RESA | ResNet50 | simple | 360 x 640 | *no* | TuSimple | Accuracy | 95.34% | 95.50% | 2.4h* |
+| RESA | ResNet101 | simple | 360 x 640 | *no* | TuSimple | Accuracy | 95.24% | 95.56% | 3.5h* |
 | LSTR | ResNet18s<sup>#</sup> | simple | 360 x 640 | *no* | TuSimple | Accuracy | 91.91% | 92.40% | 14.2h |
 | LSTR | ResNet18s<sup>#</sup> | strong | 360 x 640 | *no* | TuSimple | Accuracy | 94.91% | 95.06% | 15.5h |
 | Baseline | VGG16 | simple | 288 x 800 | *yes* | CULane | F measure | 65.93 | 66.09 | 9.3h |
@@ -36,10 +40,10 @@
 | SCNN | ResNet50 | simple | 288 x 800 | *yes* | CULane | F measure | 72.95 | 73.03 | 17.9h |
 | SCNN | ResNet101 | simple | 288 x 800 | *yes* | CULane | F measure | 73.29 | 73.58 | 25.7h |
 | SCNN | ERFNet | simple | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
-| RESA | ResNet18 | simple | 288 x 800 | *yes* | CULane | F measure | 72.76 | 72.90 | 8.0h* |
-| RESA | ResNet34 | simple | 288 x 800 | *yes* | CULane | F measure | 73.29 | 73.66 | 10.7h* |
-| RESA | ResNet50 | simple | 288 x 800 | *yes* | CULane | F measure | 73.99 | 74.19 | 17.9h* |
-| RESA | ResNet101 | simple | 288 x 800 | *yes* | CULane | F measure | 73.96 | 74.04 | 25.7h* |
+| RESA | ResNet18 | simple | 288 x 800 | *no* | CULane | F measure | 72.76 | 72.90 | 8.0h* |
+| RESA | ResNet34 | simple | 288 x 800 | *no* | CULane | F measure | 73.29 | 73.66 | 10.7h* |
+| RESA | ResNet50 | simple | 288 x 800 | *no* | CULane | F measure | 73.99 | 74.19 | 17.9h* |
+| RESA | ResNet101 | simple | 288 x 800 | *no* | CULane | F measure | 73.96 | 74.04 | 25.7h* |
 | LSTR | ResNet18s-2X<sup>#</sup> | simple | 288 x 800 | *no* | CULane | F measure | 35.72 | 39.17 | 28.5h* |
 | LSTR | ResNet18s-2X<sup>#</sup> | strong | 288 x 800 | *no* | CULane | F measure | 66.85 | 67.21 | 31.5h* |
 | LSTR | ResNet34 | strong | 288 x 800 | *no* | CULane | F measure | 71.16 | 71.52 | 45h* |
@@ -81,6 +85,10 @@
 | SCNN | ResNet101 | simple | 95.69% | 0.0519 | 0.0504 | [model](https://drive.google.com/file/d/13qk5rIHqhDlwylZP9S-8fN53DexPTBQy/view?usp=sharing) \| [shell](../tools/shells/resnet101_scnn_tusimple.sh) |
 | SCNN | ERFNet | simple | 96.29% | 0.0470 | 0.0318 | [model](https://drive.google.com/file/d/1rzE2fZ5mQswMIm6ICK1lWH-rsQyjRbxL/view?usp=sharing) \| [shell](../tools/shells/erfnet_scnn_tusimple.sh) |
 | SCNN | ERFNet | strong | 95.26% | 0.0625 | 0.0512 | [model](https://drive.google.com/file/d/14XJ-W_wIOndjkhtPiUghwy0cLXrnl0PS/view?usp=sharing) \| [shell](../tools/shells/erfnet_scnn-aug_tusimple.sh) |
+| RESA | ResNet18 | simple | 95.24% | 0.0685 | 0.0571 | [model](https://drive.google.com/file/d/1I3XpUB_I0SEkvE4sejIFyInOPZ5XsWyG/view?usp=sharing) \| [shell](../tools/shells/resnet18_resa_tusimple.sh) |
+| RESA | ResNet34 | simple | 95.15% | 0.0690 | 0.0592 | [model](https://drive.google.com/file/d/1Spa1bCXoFyjCgOO-ordSPP5a3GMW6E0N/view?usp=sharing) \| [shell](../tools/shells/resnet34_resa_tusimple.sh) |
+| RESA | ResNet50 | simple | 95.50% | 0.0550 | 0.0507 | [model](https://drive.google.com/file/d/1Mmb_4AFzSpZBcB7UxKr3Vlhwi27exqp0/view?usp=sharing) \| [shell](../tools/shells/resnet50_resa_tusimple.sh) |
+| RESA | ResNet101 | simple | 95.56% | 0.0580 | 0.0513 | [model](https://drive.google.com/file/d/1i--g7uzt3dTeMlNnAXbBCSJ8RXVjIljR/view?usp=sharing) \| [shell](../tools/shells/resnet101_resa_tusimple.sh) |
 | LSTR | ResNet18s | strong | 95.06% | 0.0486 | 0.0418 | [model](https://drive.google.com/file/d/1z1ikrcgboyLFO3ysJUIf8qlBv7zEUvjK/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_tusimple.sh) |
 | LSTR | ResNet18s | simple | 92.40% | 0.1289 | 0.1127 | [model](https://drive.google.com/file/d/1iHArGHnOlSbS01RPFlLYI1mPJSX7o4sR/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_tusimple.sh) |
 
