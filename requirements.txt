@@ -1,5 +1,3 @@
-torch>=1.6.0,<=1.8.0
-torchvision>=0.7.0,<=0.9.0
 p-tqdm==1.3.3
 tqdm==4.62.3
 ujson==4.2.0
