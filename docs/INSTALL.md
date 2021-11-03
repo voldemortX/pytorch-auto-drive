@@ -9,7 +9,7 @@
 - [mmcv-full](https://github.com/open-mmlab/mmcv) (according to PyTorch/CUDA version)
 
 ```
-pip install tqdm ujson tensorboard imageio opencv-python pyyaml thop Shapely p-tqdm scipy sklearn filetype
+pip install -r requirements.txt
 ```
 
 ## Download the code:
