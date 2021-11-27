@@ -4,6 +4,15 @@ import torch
 from torch import nn
 
 
+def is_tracing() -> bool:
+    # https://github.com/pytorch/pytorch/issues/42448
+    trace = torch.jit.is_tracing()
+    if isinstance(trace, bool):
+        return trace
+    else:
+        return torch._C._is_tracing()
+
+
 class IntermediateLayerGetter(nn.ModuleDict):
     """
     Module wrapper that returns intermediate layers from a model
