@@ -1,6 +1,6 @@
 # Codebase for deep autonomous driving perception tasks
 
-*pytorch-auto-drive* is a **pure Python** codebase includes semantic segmentation models, lane detection models, based on **PyTorch** with mixed precision training. For example, *you do not need matlab to test on CULane.*
+*pytorch-auto-drive* is a **pure Python** codebase includes semantic segmentation models, lane detection models, based on **PyTorch** with mixed precision training. For example, *you do not need matlab to test on CULane.* Poster at PyTorch Developer Day: [PytorchAutoDrive: Toolkit & Fair Benchmark for Autonomous Driving Research](https://drive.google.com/file/d/14EgcwPnKvAZJ1aWqBv6W9Msm666Wqi5a/view?usp=sharing).
 
 *This repository is under active development, results with models uploaded are stable. For legacy code users, please check [deprecations](https://github.com/voldemortX/pytorch-auto-drive/issues/14) for changes.*
 
