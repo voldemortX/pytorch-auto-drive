@@ -1,13 +1,12 @@
 # Convert only the pt model part
 
 import argparse
-import onnx
 import torch
 import yaml
 
 from utils.all_utils_landec import build_lane_detection_model as build_lane_model
 from utils.all_utils_semseg import build_segmentation_model, load_checkpoint
-from tools.onnx_utils import add_basic_arguments, pt_to_onnx, test_conversion
+from tools.onnx_utils import add_basic_arguments, pt_to_onnx, test_conversion, MINIMAL_OPSET_VERSIONS
 
 
 if __name__ == '__main__':
@@ -41,7 +40,12 @@ if __name__ == '__main__':
 
     # Convert
     onnx_filename = args.continue_from[:args.continue_from.rfind('.')] + '.onnx'
-    pt_to_onnx(net, dummy, onnx_filename)
+    op_v = 9
+    if args.task == 'lane' and args.method in MINIMAL_OPSET_VERSIONS.keys():
+        op_v = MINIMAL_OPSET_VERSIONS[args.method]
+    if args.task == 'seg' and args.model in MINIMAL_OPSET_VERSIONS.keys():
+        op_v = MINIMAL_OPSET_VERSIONS[args.model]
+    pt_to_onnx(net, dummy, onnx_filename, opset_version=op_v)
 
     # Test
     test_conversion(net, onnx_filename, dummy)

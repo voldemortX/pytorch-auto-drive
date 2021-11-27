@@ -6,6 +6,13 @@ import numpy as np
 import torch
 
 
+MINIMAL_OPSET_VERSIONS = {
+    # Others use 9
+    'lstr': 11,
+    'resa': 12
+}
+
+
 def add_basic_arguments(p):
     p.add_argument('--height', type=int, default=288,
                    help='Image input height (default: 288)')
@@ -28,9 +35,10 @@ def add_basic_arguments(p):
                    help='Continue training from a previous checkpoint')
 
 
-def pt_to_onnx(net, dummy, filename):
+def pt_to_onnx(net, dummy, filename, opset_version=9):
     net.eval()
-    torch.onnx.export(net, dummy, filename, verbose=True, input_names=['input1'], output_names=['output1'])
+    torch.onnx.export(net, dummy, filename, verbose=True, input_names=['input1'], output_names=['output1'],
+                      opset_version=opset_version)
 
 
 @torch.no_grad()
