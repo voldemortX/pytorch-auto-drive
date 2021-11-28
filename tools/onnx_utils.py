@@ -5,7 +5,6 @@ import onnxruntime as ort
 import numpy as np
 import torch
 
-
 MINIMAL_OPSET_VERSIONS = {
     # Others use 9
     'lstr': 11,
@@ -34,6 +33,19 @@ def add_basic_arguments(p):
                    help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
     p.add_argument('--continue-from', type=str, default=None,
                    help='Continue training from a previous checkpoint')
+    p.add_argument('--batch-size', type=int, default=8,
+                   help='input batch size. Recommend 4 times the training batch size in testing (default: 8)')
+    p.add_argument('--mixed-precision', action='store_true', default=False,
+                   help='Enable mixed precision training (default: False)')
+    p.add_argument('--state', type=int, default=0,
+                   help='Conduct validation(3)/final test(2)/fast validation(1)/normal training(0) (default: 0)')
+    p.add_argument('--workers', type=int, default=10,
+                   help='Number of workers (threads) when loading data.'
+                        'Recommend value for training: batch_size / 2 (default: 10)')
+    p.add_argument('--exp-name', type=str, default='',
+                   help='Name of experiment')
+    p.add_argument('--verify', type=str, default='real',
+                   help='no: without verification/real: process the whole dataset/simple: process a random tensor')
 
 
 def pt_to_onnx(net, dummy, filename, opset_version=9):
@@ -63,3 +75,28 @@ def test_conversion(pt_net, onnx_filename, dummy):
     diff_percentage = diff / avg * 100
     print('Average diff: {}\nAverage diff (%): {}'.format(diff, diff_percentage))
     assert diff_percentage < 0.1, 'Diff over 0.1%, please check for special operators!'
+
+
+def get_ort_session(onnx_filename):
+    # return onnx runtime session
+    print(ort.get_device())
+    # providers = [
+    #     ('CUDAExecutionProvider', {
+    #         'device_id': 0,
+    #         'arena_extend_strategy': 'kNextPowerOfTwo',
+    #         'gpu_mem_limit': 2 * 1024 * 1024 * 1024,
+    #         'cudnn_conv_algo_search': 'EXHAUSTIVE',
+    #         'do_copy_in_default_stream': True,
+    #     }),
+    # ]
+    onnx_net = onnx.load(onnx_filename)
+    onnx.checker.check_model(onnx_net)
+    onnx.helper.printable_graph(onnx_net.graph)
+    ort_session = ort.InferenceSession(onnx_filename)
+
+    return ort_session
+
+
+def to_numpy(tensor):
+    # transfer tensor to numpy
+    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()

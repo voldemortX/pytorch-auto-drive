@@ -5,6 +5,7 @@ import time
 import ujson as json
 import numpy as np
 from tqdm import tqdm
+from collections import OrderedDict
 if torch.__version__ >= '1.6.0':
     from torch.cuda.amp import autocast, GradScaler
 else:
@@ -359,11 +360,24 @@ def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_clas
 
 # A unified inference function, for segmentation-based lane detection methods
 @torch.no_grad()
-def lane_as_segmentation_inference(net, inputs, input_sizes, gap, ppl, thresh, dataset, max_lane=0, forward=True):
+def lane_as_segmentation_inference(net, inputs, input_sizes, gap, ppl, thresh, dataset, max_lane=0, forward=True,
+                                   deploy='pt'):
     # Assume net and images are on the same device
     # images: B x C x H x W
     # Return: a list of lane predictions on each image
-    outputs = net(inputs) if forward else inputs  # Support no forwarding inside this function
+    # deploy: pt(pytorch)/onnx(onnx runtime)/trt(tensortrt)
+    if deploy == 'pt':
+        outputs = net(inputs) if forward else inputs  # Support no forwarding inside this function
+    elif deploy == 'onnx':
+
+        onnx_inputs = inputs.detach().cpu().numpy() if inputs.requires_grad else inputs.cpu().numpy()
+        onnx_out = net.run(None, {'input1': onnx_inputs})
+        outputs = OrderedDict()
+        outputs['out'] = torch.from_numpy(onnx_out[0]).to(inputs.device)
+        outputs['lane'] = torch.from_numpy(onnx_out[1]).to(inputs.device)
+    elif deploy == 'trt':
+        # TODO: support the tensorrt
+        pass
     prob_map = torch.nn.functional.interpolate(outputs['out'], size=input_sizes[0], mode='bilinear',
                                                align_corners=True).softmax(dim=1)
     existence_conf = outputs['lane'].sigmoid()
@@ -386,19 +400,21 @@ def lane_as_segmentation_inference(net, inputs, input_sizes, gap, ppl, thresh, d
 # Adapted from harryhan618/SCNN_Pytorch
 @torch.no_grad()
 def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, thresh, dataset,
-                 method='baseline', max_lane=0, exp_name=None):
+                 method='baseline', max_lane=0, exp_name=None, deploy='pt'):
     # Predict on 1 data_loader and save predictions for the official script
     # sizes: [input size, test original size, ...]
     # max_lane = 0 -> unlimited number of lanes
 
     all_lanes = []
-    net.eval()
+    # onnx runtime dose not have .eval()
+    if deploy == 'pt':
+        net.eval()
     for images, filenames in tqdm(loader):
         images = images.to(device)
         with autocast(is_mixed_precision):
             if method in ['baseline', 'scnn', 'resa']:
                 batch_coordinates = lane_as_segmentation_inference(net, images, input_sizes, gap, ppl, thresh, dataset,
-                                                                   max_lane)
+                                                                   max_lane, deploy=deploy)
             else:
                 batch_coordinates = net.inference(images, input_sizes, gap, ppl, dataset, max_lane)
 
