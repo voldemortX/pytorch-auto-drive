@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
+from ._utils import is_tracing
+
 
 class non_bottleneck_1d(nn.Module):
     def __init__(self, chann, dropprob, dilated):
@@ -164,20 +166,35 @@ class SpatialConv(nn.Module):
     def forward(self, input):
         output = input
 
-        # First one remains unchanged (according to the original paper), why not add a relu afterwards?
-        # Update and send to next
-        # Down
-        for i in range(1, output.shape[2]):
-            output[:, :, i:i + 1, :].add_(F.relu(self.conv_d(output[:, :, i - 1:i, :])))
-        # Up
-        for i in range(output.shape[2] - 2, 0, -1):
-            output[:, :, i:i + 1, :].add_(F.relu(self.conv_u(output[:, :, i + 1:i + 2, :])))
-        # Right
-        for i in range(1, output.shape[3]):
-            output[:, :, :, i:i + 1].add_(F.relu(self.conv_r(output[:, :, :, i - 1:i])))
-        # Left
-        for i in range(output.shape[3] - 2, 0, -1):
-            output[:, :, :, i:i + 1].add_(F.relu(self.conv_l(output[:, :, :, i + 1:i + 2])))
+        if is_tracing():
+            # PyTorch index+add_ will be ignored in traced graph
+            # Down
+            for i in range(1, output.shape[2]):
+                output[:, :, i:i + 1, :] = output[:, :, i:i + 1, :].add(F.relu(self.conv_d(output[:, :, i - 1:i, :])))
+            # Up
+            for i in range(output.shape[2] - 2, 0, -1):
+                output[:, :, i:i + 1, :] = output[:, :, i:i + 1, :].add(F.relu(self.conv_u(output[:, :, i + 1:i + 2, :])))
+            # Right
+            for i in range(1, output.shape[3]):
+                output[:, :, :, i:i + 1] = output[:, :, :, i:i + 1].add(F.relu(self.conv_r(output[:, :, :, i - 1:i])))
+            # Left
+            for i in range(output.shape[3] - 2, 0, -1):
+                output[:, :, :, i:i + 1] = output[:, :, :, i:i + 1].add(F.relu(self.conv_l(output[:, :, :, i + 1:i + 2])))
+        else:
+            # First one remains unchanged (according to the original paper), why not add a relu afterwards?
+            # Update and send to next
+            # Down
+            for i in range(1, output.shape[2]):
+                output[:, :, i:i + 1, :].add_(F.relu(self.conv_d(output[:, :, i - 1:i, :])))
+            # Up
+            for i in range(output.shape[2] - 2, 0, -1):
+                output[:, :, i:i + 1, :].add_(F.relu(self.conv_u(output[:, :, i + 1:i + 2, :])))
+            # Right
+            for i in range(1, output.shape[3]):
+                output[:, :, :, i:i + 1].add_(F.relu(self.conv_r(output[:, :, :, i - 1:i])))
+            # Left
+            for i in range(output.shape[3] - 2, 0, -1):
+                output[:, :, :, i:i + 1].add_(F.relu(self.conv_l(output[:, :, :, i + 1:i + 2])))
 
         return output
 

@@ -1,36 +1,20 @@
-import yaml
 import argparse
+import torch
+import yaml
+
 from utils.all_utils_landec import build_lane_detection_model as build_lane_model
 from utils.all_utils_semseg import build_segmentation_model, load_checkpoint
 from tools.profiling_utils import init_lane, init_seg, speed_evaluate_real, speed_evaluate_simple, model_profile
-import torch
+from tools.onnx_utils import add_basic_arguments
 
 if __name__ == '__main__':
     # Settings
     parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
-    parser.add_argument('--height', type=int, default=288,
-                        help='Image input height (default: 288)')
-    parser.add_argument('--width', type=int, default=800,
-                        help='Image input width (default: 800)')
-    parser.add_argument('--dataset', type=str, default='tusimple',
-                        help='Profile on TuSimple (tusimple) / CULane (culane) (default: tusimple)')
-    parser.add_argument('--method', type=str, default='baseline',
-                        help='method selection (lstr/scnn/resa/sad/baseline) (default: baseline)')
-    parser.add_argument('--backbone', type=str, default='erfnet',
-                        help='backbone selection (erfnet/enet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101)'
-                             '(default: erfnet)')
-    parser.add_argument('--task', type=str, default='lane',
-                        help='task selection (lane/seg)')
+    add_basic_arguments(parser)
     parser.add_argument('--mode', type=str, default='simple',
                         help='Profiling mode (simple/real)')
-    parser.add_argument('--model', type=str, default='deeplabv3',
-                        help='Model selection (fcn/erfnet/deeplabv2/deeplabv3/enet) (default: deeplabv3)')
     parser.add_argument('--times', type=int, default=1,
                         help='Select test times')
-    parser.add_argument('--encoder-only', action='store_true', default=False,
-                        help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
-    parser.add_argument('--continue-from', type=str, default=None,
-                        help='Continue training from a previous checkpoint')
     args = parser.parse_args()
     lane_need_interpolate = ['baseline', 'scnn', 'sad', 'resa']
     seg_need_interpolate = ['fcn', 'deeplabv2', 'deeplabv3']
