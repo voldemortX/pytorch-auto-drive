@@ -20,8 +20,11 @@ Or you can install only what is needed in each part of this tutorial, referring 
 ### Extra Dependencies:
 
 ```
-pip install onnx==1.10.2 onnxruntime==1.9.0
+pip install onnx==1.10.2 onnxruntime-gpu==<version>
 ```
+
+`<version>` depends on your CUDA/CuDNN version, see [here](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html#requirements), if you met version issues,
+try install exact cudatoolkit and cudnn from conda. Or you can just install the CPU onnxruntime for this functionality.
 
 ### Conversion:
 

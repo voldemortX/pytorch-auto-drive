@@ -45,18 +45,19 @@ def pt_to_onnx(net, dummy, filename, opset_version=9):
 @torch.no_grad()
 def test_conversion(pt_net, onnx_filename, dummy):
     pt_net.eval()
-    dummy = dummy.cpu()
-    pt_net = pt_net.cpu()
     pt_out = pt_net(dummy)
+    dummy = dummy.cpu()
     onnx_net = onnx.load(onnx_filename)
     onnx.checker.check_model(onnx_net)
     onnx.helper.printable_graph(onnx_net.graph)
-    ort_session = ort.InferenceSession(onnx_filename)
+    providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+    ort_session = ort.InferenceSession(onnx_filename, providers=providers)
+    print(ort_session.get_providers())
     onnx_out = ort_session.run(None, {'input1': dummy.numpy()})
     diff = 0.0
     avg = 0.0
     for (_, temp_pt), temp_onnx in zip(pt_out.items(), onnx_out):
-        diff += np.abs((temp_onnx - temp_pt.numpy())).mean()
+        diff += np.abs((temp_onnx - temp_pt.cpu().numpy())).mean()
         avg += temp_pt.abs().mean().item()
     diff /= len(onnx_out)
     avg /= len(onnx_out)
