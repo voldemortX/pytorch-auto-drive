@@ -9,14 +9,14 @@ if torch.__version__ >= '1.6.0':
     from torch.cuda.amp import autocast, GradScaler
 else:
     from .torch_amp_dummy import autocast, GradScaler
-from torchvision_models.segmentation import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
+from utils.models import erfnet_resnet, deeplabv1_vgg16, deeplabv1_resnet18, deeplabv1_resnet34, \
     deeplabv1_resnet50, deeplabv1_resnet101, enet_
-from torchvision_models.lane_detection import LSTR, RESANet
-from torchvision_models.lane_detection.utils import lane_pruning
+from utils.models import LSTR, RESANet
+from utils.models.lane_detection.utils import lane_pruning
 from utils.datasets import StandardLaneDetectionDataset, TuSimple, CULane, LLAMAS, dict_collate_fn
-from transforms import ToTensor, Normalize, Resize, RandomRotation, RandomCrop, RandomHorizontalFlip, \
+from utils.transforms import ToTensor, Normalize, Resize, RandomRotation, RandomCrop, RandomHorizontalFlip, \
     RandomLighting, ColorJitter, RandomApply, Compose
-from utils.all_utils_semseg import save_checkpoint, ConfusionMatrix
+from .common import ConfusionMatrix
 from .ddp_utils import reduce_dict, is_main_process
 
 

@@ -11,12 +11,12 @@ else:
     from utils.torch_amp_dummy import autocast
 from PIL import Image
 from tqdm import tqdm
-from utils.all_utils_semseg import load_checkpoint, build_segmentation_model
+from utils.seg_utils import load_checkpoint, build_segmentation_model
 from utils.datasets import ImageFolderDataset
 from tools.vis_tools import segmentation_visualize_batched, simple_segmentation_transform, save_images, \
     check_file_type, FileType, unified_segmentation_label_formatting, tensor_image_to_numpy
-from transforms import functional as F
-from transforms.transforms import ToTensor
+from utils.transforms import functional as F
+from utils.transforms import ToTensor
 
 
 if __name__ == '__main__':

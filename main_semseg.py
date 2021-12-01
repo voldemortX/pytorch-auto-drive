@@ -8,7 +8,7 @@ import math
 import yaml
 import fcntl
 from torch.utils.tensorboard import SummaryWriter
-from utils.all_utils_semseg import init, train_schedule, test_one_set, load_checkpoint, build_segmentation_model
+from utils.seg_utils import init, train_schedule, test_one_set, load_checkpoint, build_segmentation_model
 from utils.ddp_utils import init_distributed_mode, is_main_process
 
 if __name__ == '__main__':

@@ -5,3 +5,4 @@ from .culane import *
 from .llamas import *
 from .image_folder import *
 from .utils import dict_collate_fn
+from .builder import DATASETS

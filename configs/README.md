@@ -10,13 +10,13 @@ For functions, you only write static args in your config,
 while passing the dynamic ones on-the-fly by:
 
 ```
-REGISTRY.run_from_dict(
-    <config dict for a function>,
+REGISTRY.from_dict(
+    <config dict for a function/class>,
     kwarg1=1, kwarg2=2, ...
 )
 ```
 
-Note that each argument must be keyword (k=v).
+Note that each argument must be keyword (k=v), and kwargs can overwrite dict configs.
 
 ### Use An Existing Config
 
@@ -35,3 +35,8 @@ Choose the appropriate registry and register your Class/Func by:
 ```
 
 Remember you still need to import this Class/Func for the registering to take effects.
+
+### How To Read The Code
+
+Since you can't just click 'go to definition' in your IDE,
+it is suggested to search the directory for each Class/Function by `name` in configs.

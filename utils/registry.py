@@ -4,8 +4,7 @@ class SimpleRegistry(object):
     # fvcore's Registry
     # Implementing this ourselves to retain the possibility of not using above complex packages.
 
-    def __init__(self, name) -> None:
-        self._name = name
+    def __init__(self) -> None:
         self._map = {}
 
     def register(self):
@@ -27,14 +26,9 @@ class SimpleRegistry(object):
 
         return res
 
-    def init_from_dict(self, dict_params):
+    def from_dict(self, dict_params, **kwargs):
+        dict_params.update(kwargs)
         name = dict_params.pop('name')
-        c = self.get(name)
+        function_or_class = self.get(name)
 
-        return c(**dict_params)
-
-    def run_from_dict(self, dict_params, **kwargs):
-        name = dict_params.pop('name')
-        f = self.get(name)
-
-        return f(kwargs, **dict_params)
+        return function_or_class(**dict_params)

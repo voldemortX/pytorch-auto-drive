@@ -8,13 +8,13 @@ from cv2 import VideoWriter_fourcc
 from mmcv import VideoReader
 from PIL import Image
 from utils.datasets import CULane
-from utils.all_utils_semseg import load_checkpoint
-from utils.all_utils_landec import build_lane_detection_model
+from utils.seg_utils import load_checkpoint
+from utils.lane_det_utils import build_lane_detection_model
 from utils.datasets import ImageFolderDataset
 from tools.vis_tools import lane_detection_visualize_batched, simple_lane_detection_transform, \
     check_file_type, FileType, save_images, lane_inference
-from transforms import functional as F
-from transforms.transforms import ToTensor
+from utils.transforms import functional as F
+from utils.transforms import ToTensor
 
 
 if __name__ == '__main__':

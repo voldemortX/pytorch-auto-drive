@@ -8,7 +8,7 @@ from torch import Tensor
 from torch.nn import functional as F
 from scipy.optimize import linear_sum_assignment
 from ._utils import WeightedLoss
-from torchvision_models.lane_detection import cubic_curve_with_projection
+from ..models.lane_detection import cubic_curve_with_projection
 from ..ddp_utils import is_dist_avail_and_initialized, get_world_size
 
 

@@ -9,8 +9,8 @@ import yaml
 import fcntl
 from torch.utils.tensorboard import SummaryWriter
 from utils.losses import LaneLoss, SADLoss, HungarianLoss
-from utils.all_utils_semseg import load_checkpoint
-from utils.all_utils_landec import init, train_schedule, test_one_set, fast_evaluate, build_lane_detection_model
+from utils.seg_utils import load_checkpoint
+from utils.lane_det_utils import init, train_schedule, test_one_set, fast_evaluate, build_lane_detection_model
 from utils.ddp_utils import init_distributed_mode, is_main_process
 
 if __name__ == '__main__':

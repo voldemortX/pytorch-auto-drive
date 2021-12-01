@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 import warnings
 from .._utils import IntermediateLayerGetter
 from ..utils import load_state_dict_from_url

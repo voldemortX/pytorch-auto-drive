@@ -1,7 +1,7 @@
 import torch
 import torchvision
 from PIL import Image
-from transforms import functional_pil as f_pil
+from utils.transforms import functional_pil as f_pil
 from torch._six import container_abcs, string_classes, int_classes
 from torch.utils.data._utils.collate import default_collate_err_msg_format, np_str_obj_array_pattern
 

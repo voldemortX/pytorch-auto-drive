@@ -14,7 +14,7 @@
 # 6.2. w.o. cutting height trick probably is the main reason for our lower performance, but we can't use it since
 # other pytorch-auto-drive models do not use it.
 import torch.nn as nn
-from ..common_models import RESA, RESAReducer, BUSD, RESALaneExist, EDLaneExist, PlainDecoder
+from ..common_models import RESA, RESAReducer, BUSD, EDLaneExist
 from .._utils import IntermediateLayerGetter
 from .. import resnet
 

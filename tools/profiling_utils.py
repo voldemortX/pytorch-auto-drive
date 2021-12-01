@@ -2,7 +2,7 @@ import torch
 import time
 from tqdm import tqdm
 from utils.datasets import StandardLaneDetectionDataset
-from transforms import ToTensor, Normalize, Resize, Compose, ZeroPad, LabelMap
+from utils.transforms import ToTensor, Normalize, Resize, Compose, ZeroPad, LabelMap
 from utils.datasets import StandardSegmentationDataset
 from thop import profile
 

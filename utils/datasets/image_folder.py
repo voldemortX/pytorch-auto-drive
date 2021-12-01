@@ -1,6 +1,6 @@
 import torchvision
 import os
-from transforms import functional as F
+from utils.transforms import functional as F
 from PIL import Image
 
 

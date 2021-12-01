@@ -2,8 +2,8 @@ import argparse
 import torch
 import yaml
 
-from utils.all_utils_landec import build_lane_detection_model as build_lane_model
-from utils.all_utils_semseg import build_segmentation_model, load_checkpoint
+from utils.lane_det_utils import build_lane_detection_model as build_lane_model
+from utils.seg_utils import build_segmentation_model, load_checkpoint
 from tools.profiling_utils import init_lane, init_seg, speed_evaluate_real, speed_evaluate_simple, model_profile
 from tools.onnx_utils import add_basic_arguments
 
