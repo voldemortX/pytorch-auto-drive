@@ -1,5 +1,5 @@
 class SimpleRegistry(object):
-    # A simple portable registry that can register and init class/function, based on
+    # A simple portable registry that can register and init/run class/function, inspired by
     # mmcv's Registry
     # fvcore's Registry
     # Implementing this ourselves to retain the possibility of not using above complex packages.
@@ -27,7 +27,14 @@ class SimpleRegistry(object):
 
         return res
 
-    def init_from_dict(self, name, dict_params):
-        function_or_class = self.get(name)
+    def init_from_dict(self, dict_params):
+        name = dict_params.pop('name')
+        c = self.get(name)
 
-        return function_or_class(**dict_params)
+        return c(**dict_params)
+
+    def run_from_dict(self, dict_params, **kwargs):
+        name = dict_params.pop('name')
+        f = self.get(name)
+
+        return f(kwargs, **dict_params)
