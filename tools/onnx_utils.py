@@ -47,13 +47,7 @@ def test_conversion(pt_net, onnx_filename, dummy):
     pt_net.eval()
     pt_out = pt_net(dummy)
     dummy = dummy.cpu()
-    onnx_net = onnx.load(onnx_filename)
-    onnx.checker.check_model(onnx_net)
-    onnx.helper.printable_graph(onnx_net.graph)
-    providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-    ort_session = ort.InferenceSession(onnx_filename, providers=providers)
-    print(ort_session.get_providers())
-    onnx_out = ort_session.run(None, {'input1': dummy.numpy()})
+    onnx_out = inference_onnx(dummy, onnx_filename)
     diff = 0.0
     avg = 0.0
     for (_, temp_pt), temp_onnx in zip(pt_out.items(), onnx_out):
@@ -64,3 +58,15 @@ def test_conversion(pt_net, onnx_filename, dummy):
     diff_percentage = diff / avg * 100
     print('Average diff: {}\nAverage diff (%): {}'.format(diff, diff_percentage))
     assert diff_percentage < 0.1, 'Diff over 0.1%, please check for special operators!'
+
+
+def inference_onnx(dummy, onnx_filename):
+    onnx_net = onnx.load(onnx_filename)
+    onnx.checker.check_model(onnx_net)
+    onnx.helper.printable_graph(onnx_net.graph)
+    providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+    ort_session = ort.InferenceSession(onnx_filename, providers=providers)
+    print(ort_session.get_providers())
+    onnx_out = ort_session.run(None, {'input1': dummy.numpy()})
+
+    return onnx_out
