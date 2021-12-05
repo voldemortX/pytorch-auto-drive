@@ -3,7 +3,7 @@ import tensorrt as trt
 
 
 # TensorRT 7.2.3, context style
-def build_engine(model_path, max_batch_size=1, max_workspace_size=1 << 30):
+def build_engine(model_path, max_batch_size=1, max_workspace_size=1 << 33):
     engine_path = model_path[:model_path.rfind('.onnx')] + '.engine'
     TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
     EXPLICIT_BATCH = max_batch_size << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)

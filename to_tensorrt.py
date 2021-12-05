@@ -17,6 +17,7 @@ if __name__ == '__main__':
 
     engine_path = build_engine(args.onnx_path)
     engine = load_engine(engine_path)
+    torch.manual_seed(6)
     dummy = torch.ones(1, 3, args.height, args.width)
     device = torch.device('cuda:0')
     with torch.no_grad():

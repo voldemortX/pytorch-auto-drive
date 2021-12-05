@@ -8,7 +8,7 @@ import torch
 
 MINIMAL_OPSET_VERSIONS = {
     # Others use 9
-    'lstr': 11,
+    'lstr': 10,
     'resa': 12,
     'scnn': 11
 }

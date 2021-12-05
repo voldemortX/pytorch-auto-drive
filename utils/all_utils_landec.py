@@ -120,7 +120,7 @@ def enet_culane(num_classes, encoder_only, continue_from):
                  encoder_only=encoder_only, pretrained_weights=continue_from if not encoder_only else None)
 
 
-def lstr_resnet(num_classes_max=7, backbone_name='resnet18s', expansion=1, aux_loss=True):
+def lstr_resnet(num_classes_max=7, backbone_name='resnet18s', expansion=1, aux_loss=True, trace_arg=None):
     # LSTR with ResNet backbone
     # The original LSTR-ResNet18 modified backbone is `resnet18s`,
     # where network width is controlled by expansion
@@ -130,7 +130,8 @@ def lstr_resnet(num_classes_max=7, backbone_name='resnet18s', expansion=1, aux_l
     elif backbone_name in ['resnet50', 'resnet101']:
         expansion = 16
 
-    return LSTR(num_queries=num_classes_max, backbone_name=backbone_name, expansion=expansion, aux_loss=aux_loss)
+    return LSTR(num_queries=num_classes_max, backbone_name=backbone_name, expansion=expansion, aux_loss=aux_loss,
+                trace_arg=trace_arg)
 
 
 def init(batch_size, state, input_sizes, dataset, mean, std, base, workers=10, method='baseline',
@@ -531,7 +532,7 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
     return coordinates
 
 
-def build_lane_detection_model(args, num_classes):
+def build_lane_detection_model(args, num_classes, tracing=False):
     scnn = True if args.method == 'scnn' else False
     spatial_conv = args.method if args.method in ['scnn', 'resa'] else None
     if args.dataset == 'tusimple' and args.backbone == 'erfnet':
@@ -541,9 +542,18 @@ def build_lane_detection_model(args, num_classes):
             print('Fast validation not supported for this method!')
             raise ValueError
         num_classes_max = 7 if args.dataset in ['culane', 'llamas', 'tusimple'] else num_classes
+        if tracing:
+            trace_arg = {
+                'h': args.height,
+                'w': args.width,
+                'bs': 1
+            }
+        else:
+            trace_arg = None
         net = lstr_resnet(num_classes_max=num_classes_max, backbone_name=args.backbone,
                           expansion=1 if args.dataset == 'tusimple' else 2,
-                          aux_loss=True if hasattr(args, 'state') and args.state == 0 else False)
+                          aux_loss=True if hasattr(args, 'state') and args.state == 0 else False,
+                          trace_arg=trace_arg)
     elif args.dataset == 'culane' and args.backbone == 'erfnet':
         net = erfnet_culane(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'culane' and args.backbone == 'vgg16':

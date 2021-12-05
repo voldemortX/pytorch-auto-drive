@@ -83,7 +83,7 @@ def save_checkpoint(net, optimizer, lr_scheduler, filename='temp.pt'):
 
 
 # Load model checkpoints (supports amp)
-def load_checkpoint(net, optimizer, lr_scheduler, filename):
+def load_checkpoint(net, optimizer, lr_scheduler, filename, strict=True):
     try:
         checkpoint = torch.load(filename, map_location='cpu')
     except:
@@ -93,7 +93,7 @@ def load_checkpoint(net, optimizer, lr_scheduler, filename):
     # To keep BC while having a acceptable variable name for lane detection
     checkpoint['model'] = OrderedDict((k.replace('aux_head', 'lane_classifier') if 'aux_head' in k else k, v)
                                       for k, v in checkpoint['model'].items())
-    net.load_state_dict(checkpoint['model'])
+    net.load_state_dict(checkpoint['model'], strict=strict)
 
     if optimizer is not None:
         try:  # Shouldn't be necessary, but just in case
