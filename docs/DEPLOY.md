@@ -73,3 +73,4 @@ You'll then see the saved `ckpt.engine` file and a report on the conversion qual
 ### Currently Unsupported Models:
 - ENet (segmentation)
 - ENet backbone (lane detection)
+- SCNN (lane detection)
