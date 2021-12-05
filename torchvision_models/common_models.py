@@ -201,7 +201,7 @@ class SpatialConv(nn.Module):
 
 # REcurrent Feature-Shift Aggregator in RESA paper
 class RESA(nn.Module):
-    def __init__(self, num_channels=128, iteration=5, alpha=2.0):
+    def __init__(self, num_channels=128, iteration=5, alpha=2.0, trace_arg=None):
         super(RESA, self).__init__()
         # Different from SCNN, RESA uses bias=False & different convolution layers for each stride,
         # i.e. 4 * iteration layers vs. 4 layers in SCNN, maybe special init is not needed anymore:
@@ -217,6 +217,14 @@ class RESA(nn.Module):
         self.conv_l = nn.ModuleList(nn.Conv2d(num_channels, num_channels, (9, 1), padding=(4, 0), bias=False)
                                     for _ in range(iteration))
         self._adjust_initializations(num_channels=num_channels)
+        if trace_arg is not None:  # Pre-compute offsets for a TensorRT supported implementation
+            h = (trace_arg['h'] - 1) // 8 + 1
+            w = (trace_arg['w'] - 1) // 8 + 1
+            self.offset_h = []
+            self.offset_w = []
+            for i in range(self.iteration):
+                self.offset_h.append(h // 2 ** (self.iteration - i))
+                self.offset_w.append(w // 2 ** (self.iteration - i))
 
     def _adjust_initializations(self, num_channels=128):
         # https://github.com/XingangPan/SCNN/issues/82
@@ -238,22 +246,39 @@ class RESA(nn.Module):
 
         # We do indexing here to avoid extra input parameters at __init__(), with almost none computation overhead.
         # Also, now it won't block arbitrary shaped input.
+        # However, we still need an alternative to Gather for TensorRT
         # Down
         for i in range(self.iteration):
-            idx = (torch.arange(h) + h // 2 ** (self.iteration - i)) % h
-            y.add_(self.alpha * F.relu(self.conv_d[i](y[:, :, idx, :])))
+            if is_tracing():
+                temp = torch.cat([y[:, :, self.offset_h[i]:, :], y[:, :, :self.offset_h[i], :]], dim=-2)
+                y = y.add(self.alpha * F.relu(self.conv_d[i](temp)))
+            else:
+                idx = (torch.arange(h) + h // 2 ** (self.iteration - i)) % h
+                y.add_(self.alpha * F.relu(self.conv_d[i](y[:, :, idx, :])))
         # Up
         for i in range(self.iteration):
-            idx = (torch.arange(h) - h // 2 ** (self.iteration - i)) % h
-            y.add_(self.alpha * F.relu(self.conv_u[i](y[:, :, idx, :])))
+            if is_tracing():
+                temp = torch.cat([y[:, :, (h - self.offset_h[i]):, :], y[:, :, :(h - self.offset_h[i]), :]], dim=-2)
+                y = y.add(self.alpha * F.relu(self.conv_u[i](temp)))
+            else:
+                idx = (torch.arange(h) - h // 2 ** (self.iteration - i)) % h
+                y.add_(self.alpha * F.relu(self.conv_u[i](y[:, :, idx, :])))
         # Right
         for i in range(self.iteration):
-            idx = (torch.arange(w) + w // 2 ** (self.iteration - i)) % w
-            y.add_(self.alpha * F.relu(self.conv_r[i](y[:, :, :, idx])))
+            if is_tracing():
+                temp = torch.cat([y[:, :, :, self.offset_w[i]:], y[:, :, :, :self.offset_w[i]]], dim=-1)
+                y = y.add(self.alpha * F.relu(self.conv_r[i](temp)))
+            else:
+                idx = (torch.arange(w) + w // 2 ** (self.iteration - i)) % w
+                y.add_(self.alpha * F.relu(self.conv_r[i](y[:, :, :, idx])))
         # Left
         for i in range(self.iteration):
-            idx = (torch.arange(w) - w // 2 ** (self.iteration - i)) % w
-            y.add_(self.alpha * F.relu(self.conv_l[i](y[:, :, :, idx])))
+            if is_tracing():
+                temp = torch.cat([y[:, :, :, (w - self.offset_w[i]):], y[:, :, :, :(w - self.offset_w[i])]], dim=-1)
+                y = y.add(self.alpha * F.relu(self.conv_l[i](temp)))
+            else:
+                idx = (torch.arange(w) - w // 2 ** (self.iteration - i)) % w
+                y.add_(self.alpha * F.relu(self.conv_l[i](y[:, :, :, idx])))
 
         return y
 

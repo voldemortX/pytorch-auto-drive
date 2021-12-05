@@ -56,7 +56,7 @@ def vgg16_culane(num_classes, scnn=False, pretrained_weights='pytorch-pretrained
                            dropout_1=0.1, flattened_size=4500, scnn=scnn)
 
 
-def resnet_tusimple(num_classes, backbone_name='resnet18', spatial_conv=None):
+def resnet_tusimple(num_classes, backbone_name='resnet18', spatial_conv=None, trace_arg=None):
     # Define ResNets for Tusimple (With only ImageNet pretraining)
     if spatial_conv is None or spatial_conv == 'scnn':
         scnn = spatial_conv is not None
@@ -69,12 +69,13 @@ def resnet_tusimple(num_classes, backbone_name='resnet18', spatial_conv=None):
         return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
                                         channel_reduce=128, flattened_size=6160, scnn=scnn)
     elif spatial_conv == 'resa':
-        return RESANet(num_classes=num_classes, backbone_name=backbone_name, flattened_size=4400, channel_reduce=128)
+        return RESANet(num_classes=num_classes, backbone_name=backbone_name, flattened_size=4400, channel_reduce=128,
+                       trace_arg=trace_arg)
     else:
         raise ValueError('spatial_conv must be None, scnn or resa! Not {}'.format(spatial_conv))
 
 
-def resnet_culane(num_classes, backbone_name='resnet18', spatial_conv=None):
+def resnet_culane(num_classes, backbone_name='resnet18', spatial_conv=None, trace_arg=None):
     # Define ResNets for CULane (With only ImageNet pretraining)
     if spatial_conv is None or spatial_conv == 'scnn':
         scnn = spatial_conv is not None
@@ -87,12 +88,13 @@ def resnet_culane(num_classes, backbone_name='resnet18', spatial_conv=None):
         return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
                                         channel_reduce=128, flattened_size=4500, scnn=scnn)
     elif spatial_conv == 'resa':
-        return RESANet(num_classes=num_classes, backbone_name=backbone_name, flattened_size=4500, channel_reduce=128)
+        return RESANet(num_classes=num_classes, backbone_name=backbone_name, flattened_size=4500, channel_reduce=128,
+                       trace_arg=trace_arg)
     else:
         raise ValueError('spatial_conv must be None, scnn or resa! Not {}'.format(spatial_conv))
 
 
-def resnet_llamas(num_classes, backbone_name='resnet18', spatial_conv=None):
+def resnet_llamas(num_classes, backbone_name='resnet18', spatial_conv=None, trace_arg=None):
     # Define ResNets for LLAMAS (With only ImageNet pretraining)
     if spatial_conv is None or spatial_conv == 'scnn':
         scnn = spatial_conv is not None
@@ -105,7 +107,8 @@ def resnet_llamas(num_classes, backbone_name='resnet18', spatial_conv=None):
         return model_map[backbone_name](pretrained=False, num_classes=num_classes, num_lanes=num_classes - 1,
                                         channel_reduce=128, flattened_size=4400, scnn=scnn)
     elif spatial_conv == 'resa':
-        return RESANet(num_classes=num_classes, backbone_name=backbone_name, flattened_size=4400, channel_reduce=128)
+        return RESANet(num_classes=num_classes, backbone_name=backbone_name, flattened_size=4400, channel_reduce=128,
+                       trace_arg=trace_arg)
     else:
         raise ValueError('spatial_conv must be None, scnn or resa! Not {}'.format(spatial_conv))
 
@@ -533,6 +536,15 @@ def prob_to_lines(seg_pred, exist, resize_shape=None, smooth=True, gap=20, ppl=N
 
 
 def build_lane_detection_model(args, num_classes, tracing=False):
+    # For torch.jit.trace and TensorRT compatibility
+    trace_arg = None
+    if tracing:
+        trace_arg = {
+            'h': args.height,
+            'w': args.width,
+            'bs': 1
+        }
+
     scnn = True if args.method == 'scnn' else False
     spatial_conv = args.method if args.method in ['scnn', 'resa'] else None
     if args.dataset == 'tusimple' and args.backbone == 'erfnet':
@@ -542,14 +554,6 @@ def build_lane_detection_model(args, num_classes, tracing=False):
             print('Fast validation not supported for this method!')
             raise ValueError
         num_classes_max = 7 if args.dataset in ['culane', 'llamas', 'tusimple'] else num_classes
-        if tracing:
-            trace_arg = {
-                'h': args.height,
-                'w': args.width,
-                'bs': 1
-            }
-        else:
-            trace_arg = None
         net = lstr_resnet(num_classes_max=num_classes_max, backbone_name=args.backbone,
                           expansion=1 if args.dataset == 'tusimple' else 2,
                           aux_loss=True if hasattr(args, 'state') and args.state == 0 else False,
@@ -561,9 +565,11 @@ def build_lane_detection_model(args, num_classes, tracing=False):
     elif args.dataset == 'tusimple' and args.backbone == 'vgg16':
         net = vgg16_tusimple(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'tusimple' and 'resnet' in args.backbone:
-        net = resnet_tusimple(num_classes=num_classes, spatial_conv=spatial_conv, backbone_name=args.backbone)
+        net = resnet_tusimple(num_classes=num_classes, spatial_conv=spatial_conv, backbone_name=args.backbone,
+                              trace_arg=trace_arg)
     elif args.dataset == 'culane' and 'resnet' in args.backbone:
-        net = resnet_culane(num_classes=num_classes, spatial_conv=spatial_conv, backbone_name=args.backbone)
+        net = resnet_culane(num_classes=num_classes, spatial_conv=spatial_conv, backbone_name=args.backbone,
+                            trace_arg=trace_arg)
     elif args.dataset == 'tusimple' and args.backbone == 'enet':
         net = enet_tusimple(num_classes=num_classes, encoder_only=args.encoder_only,
                             continue_from=args.continue_from)
@@ -575,7 +581,8 @@ def build_lane_detection_model(args, num_classes, tracing=False):
     elif args.dataset == 'llamas' and args.backbone == 'vgg16':
         net = vgg16_llamas(num_classes=num_classes, scnn=scnn)
     elif args.dataset == 'llamas' and 'resnet' in args.backbone:
-        net = resnet_llamas(num_classes=num_classes, spatial_conv=spatial_conv, backbone_name=args.backbone)
+        net = resnet_llamas(num_classes=num_classes, spatial_conv=spatial_conv, backbone_name=args.backbone,
+                            trace_arg=trace_arg)
     else:
         raise ValueError
 
