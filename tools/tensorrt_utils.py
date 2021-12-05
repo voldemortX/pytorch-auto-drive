@@ -3,7 +3,7 @@ import tensorrt as trt
 
 
 # TensorRT 7.2.3, context style
-def build_engine(model_path, max_batch_size=1, max_workspace_size=1 << 33):
+def build_engine(model_path, max_batch_size=1, max_workspace_size=1 << 30):
     engine_path = model_path[:model_path.rfind('.onnx')] + '.engine'
     TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
     EXPLICIT_BATCH = max_batch_size << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
@@ -16,7 +16,7 @@ def build_engine(model_path, max_batch_size=1, max_workspace_size=1 << 33):
                     print(parser.get_error(error))
             else:
                 print("Correctly loaded ONNX model!")
-        with trt.Builder(TRT_LOGGER) as builder, builder.create_builder_config() as config:
+        with builder.create_builder_config() as config:
             config.max_workspace_size = max_workspace_size
             with builder.build_engine(network, config) as engine:
                 serialized_engine = engine.serialize()
@@ -24,27 +24,6 @@ def build_engine(model_path, max_batch_size=1, max_workspace_size=1 << 33):
                 print('TensorRT engine saved at : {}'.format(engine_path))
 
     return engine_path
-
-# def build_engine(model_path, max_batch_size=1, max_workspace_size=1 << 30):
-#     trt_logger = trt.Logger(trt.Logger.WARNING)
-#     builder = trt.Builder(trt_logger)
-#     builder.max_batch_size = max_batch_size
-#     config = builder.create_builder_config()
-#     config.max_workspace_size = max_workspace_size
-#     network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
-#     parser = trt.OnnxParser(network, trt_logger)
-#     success = parser.parse_from_file(model_path)
-#     if success:
-#         print("correctly load onnx model...")
-#     else:
-#         for idx in range(parser.num_errors):
-#             print(parser.get_error(idx))
-#         raise ValueError
-#     serialized_engine = builder.build_serialized_network(network, config)
-#     runtime = trt.Runtime(trt_logger)
-#     engine = runtime.deserialize_cuda_engine(serialized_engine)
-#
-#     return engine
 
 
 def save_engine(engine, engine_path):
