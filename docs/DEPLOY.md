@@ -1,7 +1,7 @@
 # Deployment Guide
 
 - [x] PyTorch -> ONNX
-- [ ] ONNX -> TensorRT
+- [x] ONNX -> TensorRT
 - [ ] ONNX inference
 - [ ] TensorRT inference
 - [ ] ONNX visualization
@@ -9,9 +9,18 @@
 
 ## Installation
 
-Install all deployment packages by:
+Install all deployment packages (our tested conda version) by:
 
-Or you can install only what is needed in each part of this tutorial, referring to **Extra Dependencies**.
+```
+conda install cudatoolkit=10.2 -c pytorch
+conda install cudnn==8.0.4 -c nvidia
+pip install onnx==1.10.2 onnxruntime-gpu==1.6.0
+python3 -m pip install --upgrade nvidia-tensorrt==8.2.1.8
+```
+
+In this version, TensorRT may use CUDA runtime >= 11, you might avoid using conda if you have sudo access on your device.
+
+Or you can incrementally install **Extra Dependencies** through the tutorial.
 
 ## PyTorch -> ONNX:
 
@@ -39,3 +48,29 @@ You'll then see the saved `ckpt.onnx` file and a report on the conversion qualit
 ### Currently Unsupported Models:
 - ENet (segmentation)
 - ENet backbone (lane detection)
+
+## ONNX -> TensorRT:
+
+### Extra Dependencies:
+
+```
+python3 -m pip install --upgrade nvidia-tensorrt==<version>
+```
+
+TensorRT `<version>` is recommended to be at least 7.2, you can also install it via other means than pip.
+To work better with onnxruntime (for checking of conversion quality), you best checkout the [compatibility](https://onnxruntime.ai/docs/execution-providers/TensorRT-ExecutionProvider.html#requirements).
+
+### Conversion:
+
+The conversion is mainly a building of TensorRT engine. To convert a checkpoint (*e.g.,* ckpt.onnx) to TensorRT, simply run this command:
+
+```
+python to_tensorrt.py --height=<input height> --width=<input width> --onnx-path=<ckpt.onnx>
+```
+
+You'll then see the saved `ckpt.engine` file and a report on the conversion quality.
+
+### Currently Unsupported Models:
+- ENet (segmentation)
+- ENet backbone (lane detection)
+- SCNN (lane detection)
