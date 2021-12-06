@@ -12,6 +12,7 @@ from ..models import MODELS
 from ..optimizers import OPTIMIZERS
 from ..transforms import TRANSFORMS
 from ..ddp_utils import init_distributed_mode, is_main_process
+from ..common import load_checkpoint
 
 
 def get_collate_fn(name):
@@ -38,7 +39,7 @@ class BaseRunner(ABC):
     def run(self, *args, **kwargs):
         pass
 
-    def get_device(self, *args, **kwargs):
+    def get_device_and_move_model(self, *args, **kwargs):
         device = torch.device('cpu')
         if torch.cuda.is_available():
             device = torch.device('cuda:0')
@@ -46,13 +47,26 @@ class BaseRunner(ABC):
 
         return device
 
+    def load_checkpoint(self, ckpt_filename):
+        # [Possible BC-Break] Get rid of scheduler and optimizer loading
+        if ckpt_filename is not None:
+            load_checkpoint(net=self.model, lr_scheduler=None, optimizer=None, filename=ckpt_filename)
+
+    @staticmethod
+    def update_cfg(cfg, updates):
+        if not isinstance(updates, dict):
+            updates = vars(updates)
+        return cfg.update(updates)
+
 
 class BaseTrainer(BaseRunner):
     def __init__(self, cfg, args):
         super().__init__(cfg)
-        net_without_ddp, self.device = self.get_device(args)
+        net_without_ddp, self.device = self.get_device_and_move_model(args)
         self._cfg = cfg['train']
+        self.update_cfg(self._cfg, args)
         self.writer = self.get_writer()
+        self.load_checkpoint(self._cfg['continue_from'])
 
         # Dataset
         self.collate_fn = get_collate_fn(self._cfg['collate_fn'])
@@ -74,7 +88,7 @@ class BaseTrainer(BaseRunner):
                                                     optimizer=self.optimizer)
         self.criterion = LOSSES.from_dict(cfg['loss'])
 
-    def get_device(self, args):
+    def get_device_and_move_model(self, args):
         init_distributed_mode(args)
         device = torch.device(args.device)
         print(device)
@@ -103,14 +117,19 @@ class BaseTrainer(BaseRunner):
 
 
 class BaseTester(BaseRunner):
-    def __init__(self, cfg):
+    image_sets = ['val']
+
+    def __init__(self, cfg, args):
         super().__init__(cfg)
         self._cfg = cfg['test']
-        self.device = self.get_device()
+        self.update_cfg(self._cfg, args)
+        self.device = self.get_device_and_move_model()
+        self.load_checkpoint(self._cfg['continue_from'])
 
         # Dataset
         transforms = TRANSFORMS.from_dict(cfg['test_augmentation'])
         dataset = DATASETS.from_dict(cfg['dataset'],
+                                     image_set=self.image_sets[self._cfg['state'] - 1],
                                      transforms=transforms)
 
         # Dataloader

@@ -7,8 +7,8 @@ else:
 
 from ..common import save_checkpoint
 from ..ddp_utils import reduce_dict, is_main_process
-from ..lane_det_utils import fast_evaluate
-from .base import BaseTrainer, BaseTester, DATASETS, TRANSFORMS
+from .lane_det_tester import LaneDetTester
+from .base import BaseTrainer, DATASETS, TRANSFORMS
 
 
 class LaneDetTrainer(BaseTrainer):
@@ -80,12 +80,13 @@ class LaneDetTrainer(BaseTrainer):
                 if self._cfg['validation']:
                     if current_step_num % self._cfg['val_num_steps'] == (self._cfg['val_num_steps'] - 1) or \
                             current_step_num == self._cfg['num_epochs'] * len(self.dataloader):
-                        test_pixel_accuracy, test_mIoU = fast_evaluate(loader=self.validation_loader,
-                                                                       device=self.device,
-                                                                       net=self.model,
-                                                                       num_classes=self._cfg['num_classes'],
-                                                                       output_size=self._cfg['image_size'],
-                                                                       is_mixed_precision=self._cfg['is_mixed_precision'])
+                        test_pixel_accuracy, test_mIoU = LaneDetTester.fast_evaluate(
+                            loader=self.validation_loader,
+                            device=self.device,
+                            net=self.model,
+                            num_classes=self._cfg['num_classes'],
+                            output_size=self._cfg['image_size'],
+                            is_mixed_precision=self._cfg['is_mixed_precision'])
                         if is_main_process():
                             self.writer.add_scalar('test pixel accuracy',
                                                    test_pixel_accuracy,

@@ -27,8 +27,9 @@ class SimpleRegistry(object):
         return res
 
     def from_dict(self, dict_params, **kwargs):
-        dict_params.update(kwargs)
-        name = dict_params.pop('name')
+        dict_params_ = dict_params.copy()
+        dict_params_.update(kwargs)
+        name = dict_params_.pop('name')
         function_or_class = self.get(name)
 
-        return function_or_class(**dict_params)
+        return function_or_class(**dict_params_)
