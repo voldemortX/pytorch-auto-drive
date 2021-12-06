@@ -7,7 +7,7 @@ from .. import resnet
 from ..transformer import build_transformer, build_position_encoding
 from ..resnet import resnet18_reduced
 from ..mlp import MLP
-from .._utils import IntermediateLayerGetter
+from .._utils import IntermediateLayerGetter, is_tracing
 
 
 def cubic_curve_with_projection(coefficients, y):
@@ -40,7 +40,8 @@ class LSTR(nn.Module):
                  return_intermediate=True,
                  lsp_dim=8,
                  mlp_layers=3,
-                 backbone_name='resnet18s'
+                 backbone_name='resnet18s',
+                 trace_arg=None
                  ):
         super(LSTR, self).__init__()
 
@@ -59,6 +60,12 @@ class LSTR(nn.Module):
         hidden_dim = 32 * expansion
         self.aux_loss = aux_loss
         self.position_embedding = build_position_encoding(hidden_dim=hidden_dim, position_embedding=pos_type)
+        if trace_arg is not None:  # Pre-compute embeddings
+            trace_arg['h'] = (trace_arg['h'] - 1) // 32 + 1
+            trace_arg['w'] = (trace_arg['w'] - 1) // 32 + 1
+            x = torch.zeros((trace_arg['bs'], trace_arg['h'], trace_arg['w']), dtype=torch.bool)
+            y = torch.zeros((trace_arg['bs'], 128 * expansion, trace_arg['h'], trace_arg['w']), dtype=torch.float32)
+            self.pos = torch.nn.Parameter(data=self.position_embedding(y, x), requires_grad=False)
         self.query_embed = nn.Embedding(num_queries, hidden_dim)
         self.input_proj = nn.Conv2d(128 * expansion, hidden_dim, kernel_size=1)  # Same channel as layer4
 
@@ -83,12 +90,15 @@ class LSTR(nn.Module):
         p = self.backbone(images)['out']
 
         # Padding mask (for paddings added in transforms)
-        if padding_masks is None:  # Make things easier for testing (assume no padding)
-            padding_masks = torch.zeros((p.shape[0], p.shape[2], p.shape[3]), dtype=torch.bool, device=p.device)
+        if is_tracing():
+            pos = self.pos
         else:
-            padding_masks = F.interpolate(padding_masks[None].float(), size=p.shape[-2:]).to(torch.bool)[0]
+            if padding_masks is None:  # Make things easier for testing (assume no padding)
+                padding_masks = torch.zeros((p.shape[0], p.shape[2], p.shape[3]), dtype=torch.bool, device=p.device)
+            else:
+                padding_masks = F.interpolate(padding_masks[None].float(), size=p.shape[-2:]).to(torch.bool)[0]
+            pos = self.position_embedding(p, padding_masks)
 
-        pos = self.position_embedding(p, padding_masks)
         hs, _ = self.transformer(self.input_proj(p), padding_masks, self.query_embed.weight, pos)
         output_class = self.class_embed(hs)
         output_specific = self.specific_embed(hs)

@@ -19,10 +19,12 @@ if __name__ == '__main__':
     input_sizes = (args.height, args.width)
     if args.task == 'lane':
         num_classes = configs[configs['LANE_DATASETS'][args.dataset]]['NUM_CLASSES']
-        net = build_lane_model(args, num_classes)
+        net = build_lane_model(args, num_classes, tracing=True)
+        net_without_tracing = build_lane_model(args, num_classes, tracing=False)
     elif args.task == 'seg':
         num_classes = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['NUM_CLASSES']
         net, _, _, _ = build_segmentation_model(configs, args, num_classes, 0, input_sizes)
+        net_without_tracing = net
     else:
         raise ValueError('Task must be lane or seg! Not {}'.format(args.task))
 
@@ -31,8 +33,10 @@ if __name__ == '__main__':
         device = torch.device('cuda:0')
     print(device)
     net.to(device)
+    net_without_tracing.to(device)
     if args.continue_from is not None:
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
+        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from, strict=False)
+        load_checkpoint(net=net_without_tracing, optimizer=None, lr_scheduler=None, filename=args.continue_from)
     else:
         raise ValueError('Must provide a weight file by --continue-from')
     torch.manual_seed(7)
@@ -48,4 +52,4 @@ if __name__ == '__main__':
     pt_to_onnx(net, dummy, onnx_filename, opset_version=op_v)
 
     # Test
-    test_conversion(net, onnx_filename, dummy)
+    test_conversion(net_without_tracing, onnx_filename, dummy)

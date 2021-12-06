@@ -20,7 +20,8 @@ from .. import resnet
 
 
 class RESANet(nn.Module):
-    def __init__(self, num_classes, backbone_name, flattened_size, channel_reduce, pretrained_backbone=True):
+    def __init__(self, num_classes, backbone_name, flattened_size, channel_reduce, pretrained_backbone=True,
+                 trace_arg=None):
         super(RESANet, self).__init__()
         backbone = resnet.__dict__[backbone_name](
             pretrained=pretrained_backbone,
@@ -30,7 +31,7 @@ class RESANet(nn.Module):
         in_channels = 1024 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 256
         # self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce, bn_relu=False)
         self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce)
-        self.spatial_conv = RESA()
+        self.spatial_conv = RESA(trace_arg=trace_arg)
         self.decoder = BUSD(num_classes=num_classes)
         # self.decoder = PlainDecoder(num_classes=num_classes)
         self.lane_classifier = EDLaneExist(num_output=num_classes - 1, flattened_size=flattened_size)
