@@ -3,8 +3,11 @@ import os
 import torch
 from PIL import Image
 
+from .builder import DATASETS
+
 
 # Lane detection as segmentation
+@DATASETS.register()
 class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None, data_set='tusimple'):
         super().__init__(root, transforms, transform, target_transform)

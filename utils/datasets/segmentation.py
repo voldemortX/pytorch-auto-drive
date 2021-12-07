@@ -3,8 +3,11 @@ import os
 import numpy as np
 from PIL import Image
 
+from .builder import DATASETS
+
 
 # Reimplemented based on torchvision.datasets.VOCSegmentation
+@DATASETS.register()
 class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None, data_set='voc',
                  mask_type='.png'):

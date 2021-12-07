@@ -2,10 +2,13 @@ import os
 import pickle
 import numpy as np
 from tqdm import tqdm
+
 from .utils import LaneKeypointDataset
+from .builder import DATASETS
 
 
 # LLAMAS direct loading (similar with culane)
+@DATASETS.register()
 class LLAMAS(LaneKeypointDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None,
                  ppl=417, gap=1, start=300, padding_mask=False, process_points=False):

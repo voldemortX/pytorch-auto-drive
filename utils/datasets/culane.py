@@ -2,10 +2,13 @@ import os
 import pickle
 import numpy as np
 from tqdm import tqdm
+
 from .utils import LaneKeypointDataset
+from .builder import DATASETS
 
 
 # CULane direct loading (work with the segmentation style lists)
+@DATASETS.register()
 class CULane(LaneKeypointDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None,
                  ppl=31, gap=10, start=290, padding_mask=False, process_points=False):

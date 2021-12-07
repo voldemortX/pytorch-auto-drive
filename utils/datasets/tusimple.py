@@ -1,11 +1,17 @@
 import os
-import ujson as json
+try:
+    import ujson as json
+except ImportError:
+    import json
 import numpy as np
 from tqdm import tqdm
+
 from .utils import LaneKeypointDataset
+from .builder import DATASETS
 
 
 # TuSimple direct loading
+@DATASETS.register()
 class TuSimple(LaneKeypointDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None,
                  ppl=56, gap=10, start=160, padding_mask=False, process_points=False):

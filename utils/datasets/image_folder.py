@@ -1,10 +1,13 @@
 import torchvision
 import os
-from utils.transforms import functional as F
 from PIL import Image
+
+from ..transforms import functional as F
+from .builder import DATASETS
 
 
 # Load a directory of images for inference
+@DATASETS.register()
 class ImageFolderDataset(torchvision.datasets.VisionDataset):
     def __init__(self, root, output_dir, transforms=None, transform=None, target_transform=None):
         super().__init__(root, transforms, transform, target_transform)
