@@ -2,14 +2,15 @@
 # Refactored and added comments
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # Hungarian loss for LSTR
-
 import torch
 from torch import Tensor
 from torch.nn import functional as F
 from scipy.optimize import linear_sum_assignment
+
 from ._utils import WeightedLoss
 from ..models.lane_detection import cubic_curve_with_projection
 from ..ddp_utils import is_dist_avail_and_initialized, get_world_size
+from .builder import LOSSES
 
 
 @torch.no_grad()
@@ -28,6 +29,7 @@ def lane_normalize_in_batch(keypoints):
 
 # TODO: Speed-up Hungarian on GPU with tensors
 # Nothing will happen with DDP (for at last we use image-wise results)
+@LOSSES.register()
 class HungarianMatcher(torch.nn.Module):
     """This class computes an assignment between the targets and the predictions of the network
 
