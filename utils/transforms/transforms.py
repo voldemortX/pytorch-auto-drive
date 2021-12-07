@@ -1,4 +1,5 @@
-# Mostly copied and modified from torch/vision/references/segmentation to support unlabeled data
+# Mostly copied and modified from torch/vision/references/segmentation to support unlabeled data,
+# while adding registers and modified compose transforms to build from dicts.
 # Copied functions from fmassa/vision-1 to support multi-dimensional masks loaded from numpy ndarray
 # Update: The current torchvision github repo now supports tensor operation for all common transformations,
 # you are encouraged to check it out
@@ -6,13 +7,36 @@
 #######################
 # For transforms with multiple targets (masks, keypoints), target is formed as `dict{'padding_mask', 'keypoints', etc.}`
 import numpy as np
-from PIL import Image
-from collections.abc import Sequence
 import numbers
 import random
 import torch
+from collections.abc import Sequence
+from PIL import Image
+
 from . import functional as F
 from . import functional_keypoints as F_kp
+from .builder import TRANSFORMS
+
+__all__ = [
+    'ColorJitter',
+    'Compose',
+    'Crop',
+    'LabelMap',
+    'MatchSize',
+    'Normalize',
+    'RandomApply',
+    'RandomCrop',
+    'RandomHorizontalFlip',
+    'RandomLighting',
+    'RandomResize',
+    'RandomRotation',
+    'RandomScale',
+    'RandomTranslation',
+    'RandomZeroPad',
+    'Resize',
+    'ToTensor',
+    'ZeroPad'
+]
 
 
 def _check_sequence_input(x, name, req_sizes):
@@ -34,9 +58,10 @@ def _setup_angle(x, name, req_sizes=(2, )):
     return [float(d) for d in x]
 
 
+@TRANSFORMS.register()
 class Compose(object):
     def __init__(self, transforms):
-        self.transforms = transforms
+        self.transforms = [t if callable(t) else TRANSFORMS.from_dict(t) for t in transforms]
 
     def __call__(self, image, target=None):
         for t in self.transforms:
@@ -47,9 +72,10 @@ class Compose(object):
             return image, target
 
 
+@TRANSFORMS.register()
 class RandomApply(object):
     def __init__(self, transforms, apply_prob=0.5):
-        self.transforms = transforms
+        self.transforms = [t if callable(t) else TRANSFORMS.from_dict(t) for t in transforms]
         self.apply_prob = apply_prob
 
     def __call__(self, image, target):
@@ -61,6 +87,7 @@ class RandomApply(object):
         return image, target
 
 
+@TRANSFORMS.register()
 class Resize(object):
     def __init__(self, size_image, size_label, ignore_x=-2):
         self.size_image = size_image
@@ -89,6 +116,7 @@ class Resize(object):
 
 
 # Crop from up-left corner
+@TRANSFORMS.register()
 class Crop(object):
     def __init__(self, size, ignore_x=-2):
         self.h, self.w = size
@@ -116,6 +144,7 @@ class Crop(object):
 
 # Pad image with zeros, yet pad target with 255 (ignore label) on bottom & right if
 # given a bigger desired size (or else nothing is done at all)
+@TRANSFORMS.register()
 class ZeroPad(object):
     def __init__(self, size):
         self.h, self.w = size
@@ -143,6 +172,7 @@ class ZeroPad(object):
 
 # Random translation in pixels
 # Random translation = Zero pad + Random crop
+@TRANSFORMS.register()
 class RandomTranslation(object):
     def __init__(self, trans_h, trans_w):
         self.trans_h = trans_h
@@ -159,6 +189,7 @@ class RandomTranslation(object):
         return image, target
 
 
+@TRANSFORMS.register()
 class RandomZeroPad(object):
     def __init__(self, pad_h, pad_w):
         self.pad_h = pad_h
@@ -182,6 +213,7 @@ class RandomZeroPad(object):
         return image, target
 
 
+@TRANSFORMS.register()
 class RandomResize(object):
     def __init__(self, min_size, max_size=None, ignore_x=-2):
         self.min_size = min_size
@@ -200,6 +232,7 @@ class RandomResize(object):
         return Resize.parse_resize(image, target, [h, w], [h, w], (h_ori, w_ori), self.ignore_x)
 
 
+@TRANSFORMS.register()
 class RandomScale(object):
     def __init__(self, min_scale, max_scale=None):
         self.min_scale = min_scale
@@ -218,6 +251,7 @@ class RandomScale(object):
         return image, target
 
 
+@TRANSFORMS.register()
 class RandomCrop(object):
     def __init__(self, size, ignore_x=-2):
         self.size = size
@@ -248,6 +282,7 @@ class RandomCrop(object):
         return Crop.parse_crop(image, target, i, j, h, w, self.ignore_x)
 
 
+@TRANSFORMS.register()
 class RandomHorizontalFlip(object):
     def __init__(self, flip_prob, ignore_x=-2):
         self.flip_prob = flip_prob
@@ -273,6 +308,7 @@ class RandomHorizontalFlip(object):
         return image, target
 
 
+@TRANSFORMS.register()
 class ToTensor(object):
     def __init__(self, keep_scale=False, reverse_channels=False):
         # keep_scale = True => Images or whatever are not divided by 255
@@ -335,6 +371,7 @@ class ToTensor(object):
             return img
 
 
+@TRANSFORMS.register()
 class Normalize(object):
     def __init__(self, mean, std, normalize_target=False, ignore_x=-2):
         self.mean = mean
@@ -354,6 +391,7 @@ class Normalize(object):
 
 
 # Init with a python list as the map (mainly for cityscapes's id -> train_id)
+@TRANSFORMS.register()
 class LabelMap(object):
     def __init__(self, label_id_map, outlier=False):
         self.label_id_map = torch.tensor(label_id_map)
@@ -368,6 +406,7 @@ class LabelMap(object):
 
 
 # Match label and image size
+@TRANSFORMS.register()
 class MatchSize(object):
     def __init__(self, l2i=True):
         self.l2i = l2i  # Match (l)abel to (i)mage
@@ -388,6 +427,7 @@ class MatchSize(object):
 
 # TODO: Support fill color 255 for tensor inputs (supported in torchvision >= 0.9.0)
 # Now fill color is fixed to 0 (background for lane detection label)
+@TRANSFORMS.register()
 class RandomRotation(object):
     def __init__(self, degrees, expand=False, center=None, fill=None, ignore_x=-2):
         self.degrees = _setup_angle(degrees, name="degrees", req_sizes=(2, ))
@@ -422,6 +462,7 @@ class RandomRotation(object):
 
 
 # TODO: Change to random
+@TRANSFORMS.register()
 class ColorJitter(object):
     """Randomly change the brightness, contrast, saturation and hue of an image.
     If the image is torch Tensor, it is expected
@@ -520,6 +561,7 @@ class ColorJitter(object):
 
 # Lighting adjustment with eigen vectors from LSTR:
 # https://github.com/liuruijin17/LSTR/blob/6044f7b2c5892dba7201c273ee632b4962350223/utils/image.py#L12
+@TRANSFORMS.register()
 class RandomLighting(object):
     def __init__(self, mean, std, eigen_value, eigen_vector):
         self.mean = mean
