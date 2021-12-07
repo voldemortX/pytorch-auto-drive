@@ -11,7 +11,7 @@ else:
     from ..torch_amp_dummy import autocast
 
 from .base import BaseTester
-from ..common import ConfusionMatrix
+from ..seg_utils import ConfusionMatrix
 from ..lane_det_utils import lane_as_segmentation_inference
 
 
@@ -96,19 +96,19 @@ class LaneDetTester(BaseTester):
                     print(lane, end="\n", file=f)
 
     @staticmethod
+    @torch.no_grad()
     def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_classes):
         # Fast evaluation (e.g. on the validation set) by pixel-wise mean IoU
         net.eval()
         conf_mat = ConfusionMatrix(num_classes)
-        with torch.no_grad():
-            for image, target in tqdm(loader):
-                image, target = image.to(device), target.to(device)
-                with autocast(is_mixed_precision):
-                    output = net(image)['out']
-                    output = torch.nn.functional.interpolate(output, size=output_size,
-                                                             mode='bilinear', align_corners=True)
-                    conf_mat.update(target.flatten(), output.argmax(1).flatten())
-            conf_mat.reduce_from_all_processes()
+        for image, target in tqdm(loader):
+            image, target = image.to(device), target.to(device)
+            with autocast(is_mixed_precision):
+                output = net(image)['out']
+                output = torch.nn.functional.interpolate(output, size=output_size,
+                                                         mode='bilinear', align_corners=True)
+                conf_mat.update(target.flatten(), output.argmax(1).flatten())
+        conf_mat.reduce_from_all_processes()
 
         acc_global, acc, iu = conf_mat.compute()
         print((

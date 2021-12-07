@@ -121,8 +121,4 @@ class LaneDetTrainer(BaseTrainer):
                                             name='StandardLaneDetectionDataset',
                                             image_set='val_fast',
                                             transforms=validation_transforms)
-        return torch.utils.data.DataLoader(dataset=validation_set,
-                                           batch_size=self._cfg['batch_size'] * 4,
-                                           num_workers=self._cfg['workers'],
-                                           shuffle=False,
-                                           collate_fn=self.collate_fn)
+        return validation_set

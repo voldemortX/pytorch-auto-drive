@@ -79,7 +79,14 @@ class BaseTrainer(BaseRunner):
                                                       collate_fn=self.collate_fn,
                                                       sampler=self.train_sampler,
                                                       num_workers=self._cfg['workers'])
-        self.validation_loader = self.get_validation_dataset(cfg)
+        validation_set = self.get_validation_dataset(cfg)
+        self.validation_loader = None
+        if validation_set is not None:
+            self.validation_loader = torch.utils.data.DataLoader(dataset=validation_set,
+                                                                 batch_size=self._cfg['batch_size'] * 4,
+                                                                 num_workers=self._cfg['workers'],
+                                                                 shuffle=False,
+                                                                 collate_fn=self.collate_fn)
 
         # Optimizer, LR scheduler, etc.
         self.optimizer = OPTIMIZERS.from_dict(cfg['optimizer'],
