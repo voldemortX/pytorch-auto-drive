@@ -1,2 +1,2 @@
 from .builder import OPTIMIZERS
-from .torch_optimizers import torch_optimizers
+from .torch_optimizer import torch_optimizer
