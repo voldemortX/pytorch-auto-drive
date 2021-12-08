@@ -129,8 +129,7 @@ loss = dict(
 )
 
 dataset = dict(
-    name='StandardLaneDetectionDataset',
+    name='CULaneAsSegmentation',
     image_set='train',  # Only set for training. Testing will override this value by --state.
-    root=dataset_root,
-    data_set=dataset_name
+    root=dataset_root
 )

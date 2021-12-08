@@ -1,30 +1,22 @@
-import torchvision
 import os
 import numpy as np
 from PIL import Image
+from torchvision.datasets import VisionDataset
 
 from .builder import DATASETS
 
 
 # Reimplemented based on torchvision.datasets.VOCSegmentation
-@DATASETS.register()
-class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
-    def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None, data_set='voc',
-                 mask_type='.png'):
-        super().__init__(root, transforms, transform, target_transform)
+class _StandardSegmentationDataset(VisionDataset):
+    def __init__(self, root, image_set, transforms=None, mask_type='.png'):
+        super().__init__(root, transforms, None, None)
         self.mask_type = mask_type
-        if data_set == 'voc':
-            self._voc_init(root, image_set)
-        elif data_set == 'city':
-            self._city_init(root, image_set)
-        elif data_set == 'gtav':
-            self._gtav_init(root, image_set)
-        elif data_set == 'synthia':
-            self._synthia_init(root, image_set)
-        else:
-            raise ValueError
-
+        self.images = self.masks = []
+        self.init_dataset(root, image_set)
         assert (len(self.images) == len(self.masks))
+
+    def init_dataset(self, root, image_set):
+        raise NotImplementedError
 
     def __getitem__(self, index):
         img = Image.open(self.images[index]).convert('RGB')
@@ -41,7 +33,11 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
     def __len__(self):
         return len(self.images)
 
-    def _voc_init(self, root, image_set):
+
+# VOC
+@DATASETS.register()
+class PASCAL_VOC_Segmentation(_StandardSegmentationDataset):
+    def init_dataset(self, root, image_set):
         image_dir = os.path.join(root, 'JPEGImages')
         mask_dir = os.path.join(root, 'SegmentationClassAug')
         splits_dir = os.path.join(root, 'ImageSets/Segmentation')
@@ -52,7 +48,11 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
         self.images = [os.path.join(image_dir, x + ".jpg") for x in file_names]
         self.masks = [os.path.join(mask_dir, x + self.mask_type) for x in file_names]
 
-    def _city_init(self, root, image_set):
+
+# Cityscapes
+@DATASETS.register()
+class CityscapesSegmentation(_StandardSegmentationDataset):
+    def init_dataset(self, root, image_set):
         image_dir = os.path.join(root, 'leftImg8bit')
         mask_dir = os.path.join(root, 'gtFine')
 
@@ -72,7 +72,11 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
         self.images = [os.path.join(image_dir, x + "_leftImg8bit.png") for x in file_names]
         self.masks = [os.path.join(mask_dir, x + "_gtFine_labelIds" + self.mask_type) for x in file_names]
 
-    def _gtav_init(self, root, image_set):
+
+# GTAV
+@DATASETS.register()
+class GTAV_Segmentation(_StandardSegmentationDataset):
+    def init_dataset(self, root, image_set):
         image_dir = os.path.join(root, 'images')
         mask_dir = os.path.join(root, 'labels')
 
@@ -85,7 +89,11 @@ class StandardSegmentationDataset(torchvision.datasets.VisionDataset):
         self.images = [os.path.join(image_dir, x + ".png") for x in file_names]
         self.masks = [os.path.join(mask_dir, x + self.mask_type) for x in file_names]
 
-    def _synthia_init(self, root, image_set):
+
+# SYNTHIA
+@DATASETS.register()
+class SYNTHIA_Segmentation(_StandardSegmentationDataset):
+    def init_dataset(self, root, image_set):
         image_dir = os.path.join(root, 'RGB', image_set)
         mask_dir = os.path.join(root, 'GT/LABELS_CONVERTED', image_set)
 

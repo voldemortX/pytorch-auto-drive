@@ -1,5 +1,5 @@
-from .segmentation import StandardSegmentationDataset
-from .lane_as_segmentation import StandardLaneDetectionDataset
+from .segmentation import PASCAL_VOC_Segmentation, CityscapesSegmentation, SYNTHIA_Segmentation, GTAV_Segmentation
+from .lane_as_segmentation import TuSimpleAsSegmentation, CULaneAsSegmentation, LLAMAS_AsSegmentation
 from .tusimple import TuSimple
 from .culane import CULane
 from .llamas import LLAMAS
