@@ -123,6 +123,10 @@ class BaseTrainer(BaseRunner):
     def get_validation_dataset(self, *args, **kwargs):
         return None
 
+    def clean(self):
+        if self.writer is not None:
+            self.writer.close()
+
 
 class BaseTester(BaseRunner):
     image_sets = ['val']

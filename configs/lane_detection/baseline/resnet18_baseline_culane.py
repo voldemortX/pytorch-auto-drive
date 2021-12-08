@@ -12,6 +12,33 @@ mean = [0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
 epochs = 12
 
+# Default args that can be overridden in commandline
+exp_name = 'resnet18_baseline_culane'
+train_args_default = dict(
+    exp_name=exp_name,
+    workers=10,
+    batch_size=20,
+    mixed_precision=True,
+    continue_from=None,
+    state=0,
+    # Device args
+    world_size=0,
+    dist_url='env://',
+    device='cuda'
+)
+test_args_default = dict(
+    exp_name=exp_name,
+    workers=10,
+    batch_size=80,
+    mixed_precision=True,
+    continue_from=exp_name + '.pt',
+    state=2,
+    # Device args
+    world_size=0,
+    dist_url='env://',
+    device='cuda'
+)
+
 train = dict(
     input_size=input_size,
     original_size=original_size,
@@ -21,7 +48,7 @@ train = dict(
     seg=True,  # Seg-based method or not
     validation=False,  # Seg IoU validation (mostly useless)
     val_num_steps=0,
-)
+).update(train_args_default)
 
 test = dict(
     gap=gap,
@@ -32,7 +59,7 @@ test = dict(
     original_size=original_size,
     max_lane=max_lane,
     dataset_name=dataset_name
-)
+).update(test_args_default)
 
 # Essentially DeepLabV1 without dilation like in SCNN paper
 model = dict(

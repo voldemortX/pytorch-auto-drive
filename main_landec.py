@@ -1,164 +1,38 @@
-import time
 import torch
 if torch.backends.cudnn.version() < 8000:
     torch.backends.cudnn.benchmark = True
 # torch.multiprocessing.set_sharing_strategy('file_system')
 import resource
 import argparse
-import yaml
-import fcntl
-from torch.utils.tensorboard import SummaryWriter
-from utils.losses import LaneLoss, SADLoss, HungarianLoss
-from utils.seg_utils import load_checkpoint
-from utils.lane_det_utils import init, train_schedule, test_one_set, fast_evaluate, build_lane_detection_model
-from utils.ddp_utils import init_distributed_mode, is_main_process
+
+from .utils.args import parse_arg_cfg
+from .utils.runners import LaneDetTrainer, LaneDetTester
+
 
 if __name__ == '__main__':
     # ulimit
     rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
     resource.setrlimit(resource.RLIMIT_NOFILE, (8192, rlimit[1]))
 
-    # Settings
+    # Settings (user input > config > argparse defaults)
     parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
-    parser.add_argument('--exp-name', type=str, default='',
+    parser.add_argument('--exp-name', type=str,
                         help='Name of experiment')
-    parser.add_argument('--workers', type=int, default=10,
+    parser.add_argument('--workers', type=int,
                         help='Number of workers (threads) when loading data.'
-                             'Recommend value for training: batch_size / 2 (default: 10)')
-    parser.add_argument('--batch-size', type=int, default=8,
-                        help='input batch size. Recommend 4 times the training batch size in testing (default: 8)')
-    parser.add_argument('--mixed-precision', action='store_true', default=False,
-                        help='Enable mixed precision training (default: False)')
-    parser.add_argument('--continue-from', type=str, default=None,
+                             'Recommend value for training: batch_size / 2')
+    parser.add_argument('--batch-size', type=int,
+                        help='input batch size. Recommend 4 times the training batch size in testing')
+    parser.add_argument('--mixed-precision', type=bool,
+                        help='Enable mixed precision training')
+    parser.add_argument('--continue-from', type=str,
                         help='Continue training from a previous checkpoint')
-    parser.add_argument('--state', type=int, default=0,
-                        help='Conduct validation(3)/final test(2)/fast validation(1)/normal training(0) (default: 0)')
-    parser.add_argument('--world-size', default=0, type=int,
+    parser.add_argument('--state', type=int,
+                        help='Conduct validation(3)/final test(2)/fast validation(1)/normal training(0)')
+    parser.add_argument('--world-size', type=int,
                         help='number of distributed processes')
-    parser.add_argument('--dist-url', default='env://', help='url used to set up distributed training')
-    parser.add_argument('--device', default='cuda', help='CPU is not recommended!')
+    parser.add_argument('--dist-url', type=str, help='url used to set up distributed training')
+    parser.add_argument('--device', type=str, help='CPU is not recommended!')
+    parser.add_argument('--config', type=str, help='Path to config file')
     args = parser.parse_args()
-    if args.mixed_precision and torch.__version__ < '1.6.0':
-        print('PyTorch version too low, mixed precision training is not available.')
-    exp_name = str(time.time()) if args.exp_name == '' else args.exp_name
-    states = ['train', 'valfast', 'test', 'val']
-    with open(exp_name + '_' + states[args.state] + '_cfg.txt', 'w') as f:
-        f.write(str(vars(args)))
-    with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
-        configs = yaml.load(f, Loader=yaml.Loader)
-
-    # Basic configurations
-    mean = configs['GENERAL']['MEAN']
-    std = configs['GENERAL']['STD']
-    if args.dataset not in configs['LANE_DATASETS'].keys():
-        raise ValueError
-    num_classes = configs[configs['LANE_DATASETS'][args.dataset]]['NUM_CLASSES']
-    input_sizes = configs[configs['LANE_DATASETS'][args.dataset]]['SIZES']
-    gap = configs[configs['LANE_DATASETS'][args.dataset]]['GAP']
-    ppl = configs[configs['LANE_DATASETS'][args.dataset]]['PPL']
-    thresh = configs[configs['LANE_DATASETS'][args.dataset]]['THRESHOLD']
-    weights = configs[configs['LANE_DATASETS'][args.dataset]]['WEIGHTS']
-    base = configs[configs['LANE_DATASETS'][args.dataset]]['BASE_DIR']
-    max_lane = configs[configs['LANE_DATASETS'][args.dataset]]['MAX_LANE']
-
-    # device = torch.device('cpu')
-    # if torch.cuda.is_available():
-    #     device = torch.device('cuda:0')
-
-    init_distributed_mode(args)
-    device = torch.device(args.device)
-
-    net = build_lane_detection_model(args, num_classes)
-    print(device)
-    weights = torch.tensor(weights).to(device)
-    net.to(device)
-
-    if args.distributed:
-        model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(net)
-    net_without_ddp = net
-    if args.distributed:
-        net = torch.nn.parallel.DistributedDataParallel(net, device_ids=[args.gpu], find_unused_parameters=True)
-        net_without_ddp = net.module
-
-    # if args.model == 'scnn':
-    #     # Gradient too large after spatial conv
-    #     optimizer = torch.optim.SGD([
-    #         {'params': net.encoder.parameters(), 'lr': 0.1 * args.lr},
-    #         {'params': net.spatial_conv.parameters()},
-    #         {'params': net.decoder.parameters()},
-    #         {'params': net.aux_head.parameters()},
-    #     ], lr=args.lr, momentum=0.9, weight_decay=1e-4)
-    # else:
-    if args.method == 'lstr':
-        optimizer = torch.optim.Adam(net_without_ddp.parameters(), lr=args.lr)
-    else:
-        optimizer = torch.optim.SGD(net_without_ddp.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
-    # optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, betas=(0.9, 0.999),  eps=1e-08, weight_decay=1e-4)
-
-    # Testing
-    if args.state == 1 or args.state == 2 or args.state == 3:
-        data_loader = init(batch_size=args.batch_size, state=args.state, dataset=args.dataset, input_sizes=input_sizes,
-                           mean=mean, std=std, base=base, workers=args.workers, method=args.method)
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
-        if args.state == 1:  # Validate with mean IoU
-            _, x = fast_evaluate(loader=data_loader, device=device, net=net,
-                                 num_classes=num_classes, output_size=input_sizes[0],
-                                 is_mixed_precision=args.mixed_precision)
-            with open('log.txt', 'a') as f:
-                # Safe writing with locks
-                fcntl.flock(f, fcntl.LOCK_EX)
-                f.write(exp_name + ' validation: ' + str(x) + '\n')
-                fcntl.flock(f, fcntl.LOCK_UN)
-
-        else:  # Test with official scripts later (so just predict lanes here)
-            test_one_set(net=net, device=device, loader=data_loader, is_mixed_precision=args.mixed_precision, gap=gap,
-                         input_sizes=input_sizes, ppl=ppl, thresh=thresh, dataset=args.dataset, method=args.method,
-                         max_lane=max_lane, exp_name=args.exp_name)
-    else:
-        eigen_value = configs['GENERAL']['LIGHT_EIGEN_VALUE']
-        eigen_vector = configs['GENERAL']['LIGHT_EIGEN_VECTOR']
-        if args.method in ['resa', 'scnn', 'baseline']:
-            criterion = LaneLoss(weight=weights, ignore_index=255)
-        elif args.method == 'sad':
-            criterion = SADLoss()
-        elif args.method == 'lstr':
-            criterion = HungarianLoss()
-        else:
-            raise ValueError
-
-        writer = SummaryWriter('runs/' + exp_name) if is_main_process() else None
-        data_loader, validation_loader, sampler = init(batch_size=args.batch_size, state=args.state,
-                                                       dataset=args.dataset, input_sizes=input_sizes,
-                                                       mean=mean, std=std, base=base, workers=args.workers,
-                                                       method=args.method, aug_level=1 if args.aug else 0,
-                                                       eigen_value=eigen_value, eigen_vector=eigen_vector,
-                                                       ddp=args.distributed)
-
-        # Warmup https://github.com/XingangPan/SCNN/issues/82
-        # Use it as default also for other methods (for fair comparison)
-        if args.warmup_steps > 0:
-            l = lambda t: t / args.warmup_steps if t < args.warmup_steps \
-                else (1 - (t - args.warmup_steps) / (len(data_loader) * args.epochs - args.warmup_steps)) ** 0.9
-            lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, l)
-        else:
-            if args.method == 'lstr':
-                lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=0.1,
-                                                               step_size=len(data_loader) * args.epochs * 0.9)
-            else:
-                raise NotImplementedError
-
-        # Resume training?
-        if args.continue_from is not None and args.backbone != 'enet':
-            load_checkpoint(net=net_without_ddp, optimizer=optimizer, lr_scheduler=lr_scheduler,
-                            filename=args.continue_from)
-
-        # Train
-        train_schedule(writer=writer, loader=data_loader, method=args.method,
-                       validation_loader=None if args.val_num_steps == 0 else validation_loader,
-                       criterion=criterion, net=net, optimizer=optimizer, lr_scheduler=lr_scheduler, device=device,
-                       num_epochs=args.epochs, is_mixed_precision=args.mixed_precision, input_sizes=input_sizes,
-                       exp_name=exp_name, num_classes=num_classes, val_num_steps=args.val_num_steps,
-                       ddp=args.distributed, train_sampler=sampler)
-
-        if writer is not None:
-            writer.close()
+    
