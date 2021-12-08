@@ -22,37 +22,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
     parser.add_argument('--exp-name', type=str, default='',
                         help='Name of experiment')
-    parser.add_argument('--lr', type=float, default=0.01,
-                        help='Initial learning rate (default: 0.01)')
-    parser.add_argument('--epochs', type=int, default=30,
-                        help='Number of epochs (default: 30)')
-    parser.add_argument('--val-num-steps', type=int, default=0,
-                        help='Validation frequency (default: 0), 0: no online evaluation')
-    parser.add_argument('--warmup-steps', type=int, default=200,
-                        help='Warmup steps (default: 200), 0: no warmup')
     parser.add_argument('--workers', type=int, default=10,
                         help='Number of workers (threads) when loading data.'
                              'Recommend value for training: batch_size / 2 (default: 10)')
-    parser.add_argument('--dataset', type=str, default='tusimple',
-                        help='Train/Evaluate on TuSimple (tusimple) / CULane (culane) / LLAMAS (llamas) (default: '
-                             'tusimple)')
-    parser.add_argument('--method', type=str, default='baseline',
-                        help='method selection (resa/lstr/scnn/baseline) (default: baseline)')
-    parser.add_argument('--backbone', type=str, default='erfnet',
-                        help='backbone selection (erfnet/enet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101)'
-                             '(default: erfnet)')
     parser.add_argument('--batch-size', type=int, default=8,
                         help='input batch size. Recommend 4 times the training batch size in testing (default: 8)')
     parser.add_argument('--mixed-precision', action='store_true', default=False,
                         help='Enable mixed precision training (default: False)')
-    parser.add_argument('--aug', action='store_true', default=False,
-                        help='Enable strong data augmentation (default: False)')
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
     parser.add_argument('--state', type=int, default=0,
                         help='Conduct validation(3)/final test(2)/fast validation(1)/normal training(0) (default: 0)')
-    parser.add_argument('--encoder-only', action='store_true', default=False,
-                        help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
     parser.add_argument('--world-size', default=0, type=int,
                         help='number of distributed processes')
     parser.add_argument('--dist-url', default='env://', help='url used to set up distributed training')

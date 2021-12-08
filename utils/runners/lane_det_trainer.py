@@ -21,7 +21,7 @@ class LaneDetTrainer(BaseTrainer):
         epoch = 0
         running_loss = None  # Dict logging for every loss (too many losses in this task)
         loss_num_steps = int(len(self.dataloader) / 10) if len(self.dataloader) > 10 else 1
-        if self._cfg['is_mixed_precision']:
+        if self._cfg['mixed_precision']:
             scaler = GradScaler()
 
         # Training
@@ -41,16 +41,16 @@ class LaneDetTrainer(BaseTrainer):
                     labels = [{k: v.to(self.device) for k, v in label.items()} for label in labels]  # Seems slow
                 self.optimizer.zero_grad()
 
-                with autocast(self._cfg['is_mixed_precision']):
+                with autocast(self._cfg['mixed_precision']):
                     # To support intermediate losses for SAD
                     if self._cfg['seg']:
                         loss, log_dict = self.criterion(inputs, labels, existence,
-                                                        self.model, self._cfg['image_size'])
+                                                        self.model, self._cfg['input_size'])
                     else:
                         loss, log_dict = self.criterion(inputs, labels,
                                                         self.model)
 
-                if self._cfg['is_mixed_precision']:
+                if self._cfg['mixed_precision']:
                     scaler.scale(loss).backward()
                     scaler.step(self.optimizer)
                     scaler.update()
@@ -61,7 +61,7 @@ class LaneDetTrainer(BaseTrainer):
                 self.lr_scheduler.step()
 
                 log_dict = reduce_dict(log_dict)
-                if running_loss is None:  # Because different self._cfg['method']s may have different values to log
+                if running_loss is None:  # Because different methods may have different values to log
                     running_loss = {k: 0.0 for k in log_dict.keys()}
                 for k in log_dict.keys():
                     running_loss[k] += log_dict[k]
@@ -85,8 +85,8 @@ class LaneDetTrainer(BaseTrainer):
                             device=self.device,
                             net=self.model,
                             num_classes=self._cfg['num_classes'],
-                            output_size=self._cfg['image_size'],
-                            is_mixed_precision=self._cfg['is_mixed_precision'])
+                            output_size=self._cfg['input_size'],
+                            mixed_precision=self._cfg['mixed_precision'])
                         if is_main_process():
                             self.writer.add_scalar('test pixel accuracy',
                                                    test_pixel_accuracy,

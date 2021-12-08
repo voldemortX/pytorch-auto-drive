@@ -17,13 +17,13 @@ class SegTester(BaseTester):
         self.test_one_set(self.dataloader, self.device, self.model,
                           self._cfg['num_classes'], self._cfg['categories'],
                           self._cfg['original_size'], self._cfg['encoder_size'],
-                          self._cfg['is_mixed_precision'],
+                          self._cfg['mixed_precision'],
                           self._cfg['selector'], self._cfg['eval_classes'],
                           self._cfg['encoder_only'])
 
     @staticmethod
     @torch.no_grad()
-    def test_one_set(loader, device, net, num_classes, categories, output_size, labels_size, is_mixed_precision,
+    def test_one_set(loader, device, net, num_classes, categories, output_size, labels_size, mixed_precision,
                      selector=None, classes=None, encoder_only=False):
         # Copied and modified from torch/vision/references/segmentation
         # Evaluate on 1 data_loader
@@ -32,7 +32,7 @@ class SegTester(BaseTester):
         conf_mat = ConfusionMatrix(num_classes)
         for image, target in tqdm(loader):
             image, target = image.to(device), target.to(device)
-            with autocast(is_mixed_precision):
+            with autocast(mixed_precision):
                 output = net(image)['out']
                 if encoder_only:
                     target = target.unsqueeze(0)

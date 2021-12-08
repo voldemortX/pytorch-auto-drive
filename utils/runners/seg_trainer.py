@@ -22,7 +22,7 @@ class SegTrainer(BaseTrainer):
         epoch = 0
         running_loss = 0.0
         loss_num_steps = int(len(self.dataloader) / 10)
-        if self._cfg['is_mixed_precision']:
+        if self._cfg['mixed_precision']:
             scaler = GradScaler()
 
         # Training
@@ -37,7 +37,7 @@ class SegTrainer(BaseTrainer):
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
                 self.optimizer.zero_grad()
 
-                with autocast(self._cfg['is_mixed_precision']):
+                with autocast(self._cfg['mixed_precision']):
                     outputs = self.model(inputs)['out']
 
                     if self._cfg['encoder_only']:
@@ -53,7 +53,7 @@ class SegTrainer(BaseTrainer):
                     conf_mat.update(labels.flatten(), outputs.argmax(1).flatten())
                     loss = self.criterion(outputs, labels)
 
-                if self._cfg['is_mixed_precision']:
+                if self._cfg['mixed_precision']:
                     scaler.scale(loss).backward()
                     scaler.step(self.optimizer)
                     scaler.update()
@@ -86,7 +86,7 @@ class SegTrainer(BaseTrainer):
                         labels_size=self._cfg['encode_size'],
                         selector=self._cfg['selector'],
                         classes=self._cfg['eval_classes'],
-                        is_mixed_precision=self._cfg['is_mixed_precision'],
+                        mixed_precision=self._cfg['mixed_precision'],
                         encoder_only=self._cfg['encoder_only'])
                     if is_main_process():
                         self.writer.add_scalar('test pixel accuracy',

@@ -25,16 +25,16 @@ class LaneDetTester(BaseTester):
     def run(self):
         if self.fast_eval:
             self.fast_evaluate(self.model, self.device, self.dataloader,
-                               self._cfg['is_mixed_precision'], self._cfg['input_size'], self._cfg['num_classes'])
+                               self._cfg['mixed_precision'], self._cfg['input_size'], self._cfg['num_classes'])
         else:
-            self.test_one_set(self.model, self.device, self.dataloader, self._cfg['is_mixed_precision'],
+            self.test_one_set(self.model, self.device, self.dataloader, self._cfg['mixed_precision'],
                               [self._cfg['input_size'], self._cfg['original_size']],
                               self._cfg['gap'], self._cfg['ppl'], self._cfg['thresh'],
                               self._cfg['dataset_name'], self._cfg['seg'], self._cfg['max_lane'], self._cfg['exp_name'])
 
     @staticmethod
     @torch.no_grad()
-    def test_one_set(net, device, loader, is_mixed_precision, input_sizes, gap, ppl, thresh, dataset,
+    def test_one_set(net, device, loader, mixed_precision, input_sizes, gap, ppl, thresh, dataset,
                      seg, max_lane=0, exp_name=None):
         # Adapted from harryhan618/SCNN_Pytorch
         # Predict on 1 data_loader and save predictions for the official script
@@ -45,7 +45,7 @@ class LaneDetTester(BaseTester):
         net.eval()
         for images, filenames in tqdm(loader):
             images = images.to(device)
-            with autocast(is_mixed_precision):
+            with autocast(mixed_precision):
                 if seg:
                     batch_coordinates = lane_as_segmentation_inference(net, images,
                                                                        input_sizes, gap, ppl, thresh, dataset, max_lane)
@@ -97,13 +97,13 @@ class LaneDetTester(BaseTester):
 
     @staticmethod
     @torch.no_grad()
-    def fast_evaluate(net, device, loader, is_mixed_precision, output_size, num_classes):
+    def fast_evaluate(net, device, loader, mixed_precision, output_size, num_classes):
         # Fast evaluation (e.g. on the validation set) by pixel-wise mean IoU
         net.eval()
         conf_mat = ConfusionMatrix(num_classes)
         for image, target in tqdm(loader):
             image, target = image.to(device), target.to(device)
-            with autocast(is_mixed_precision):
+            with autocast(mixed_precision):
                 output = net(image)['out']
                 output = torch.nn.functional.interpolate(output, size=output_size,
                                                          mode='bilinear', align_corners=True)

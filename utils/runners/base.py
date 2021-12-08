@@ -92,7 +92,8 @@ class BaseTrainer(BaseRunner):
         self.optimizer = OPTIMIZERS.from_dict(cfg['optimizer'],
                                               net_without_ddp=net_without_ddp)
         self.lr_scheduler = LR_SCHEDULERS.from_dict(cfg['lr_scheduler'],
-                                                    optimizer=self.optimizer)
+                                                    optimizer=self.optimizer,
+                                                    len_loader=len(self.dataloader))
         self.criterion = LOSSES.from_dict(cfg['loss'])
 
     def get_device_and_move_model(self, args):
