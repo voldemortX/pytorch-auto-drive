@@ -7,7 +7,10 @@ import math
 import torch
 from torch import nn
 
+from ..builder import MODELS
 
+
+@MODELS.register()
 class PositionEmbeddingSine(nn.Module):
     """
     This is a more standard version of the position embedding, very similar to the one
@@ -46,6 +49,7 @@ class PositionEmbeddingSine(nn.Module):
         return pos
 
 
+@MODELS.register()
 class PositionEmbeddingLearned(nn.Module):
     """
     Absolute pos embedding, learned.

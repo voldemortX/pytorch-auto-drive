@@ -1,5 +1,25 @@
-from torch import nn
+import torch.nn as nn
+from torch import load
 from collections import OrderedDict
+
+
+class _EncoderDecoderModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def _load_encoder(self, pretrained_weights):
+        if pretrained_weights is not None:  # Load pre-trained weights
+            saved_weights = load(pretrained_weights)['model']
+            original_weights = self.state_dict()
+            for key in saved_weights.keys():
+                if key in original_weights.keys():
+                    original_weights[key] = saved_weights[key]
+            self.load_state_dict(original_weights)
+        else:
+            print('No pre-training.')
+
+    def forward(self, x):
+        pass
 
 
 class _SimpleSegmentationModel(nn.Module):
@@ -42,11 +62,5 @@ class _SimpleSegmentationModel(nn.Module):
             x = self.aux_classifier(x)
             # x = F.interpolate(x, size=input_shape, mode='bilinear', align_corners=True)
             result['aux'] = x
-
-        # Reconstruction
-        if self.recon_head is not None:
-            x = features['recon']
-            x = self.recon_head(x)
-            result['recon'] = x
 
         return result

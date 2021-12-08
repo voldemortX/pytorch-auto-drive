@@ -5,6 +5,7 @@ import torch.nn as nn
 from torch.nn import functional as F
 
 from ._utils import is_tracing
+from .builder import MODELS
 
 
 class non_bottleneck_1d(nn.Module):
@@ -45,6 +46,7 @@ class non_bottleneck_1d(nn.Module):
 # Dropout 0.1
 # 1x1 Conv -> H x W x 5
 # https://github.com/XingangPan/SCNN/issues/35
+@MODELS.register()
 class SCNNDecoder(nn.Module):
     def __init__(self, in_channels=2048, num_classes=5):
         super(SCNNDecoder, self).__init__()
@@ -65,6 +67,7 @@ class SCNNDecoder(nn.Module):
 
 
 # Plain decoder (albeit simplest) from the RESA paper
+@MODELS.register()
 class PlainDecoder(nn.Module):
     def __init__(self, in_channels=128, num_classes=5):
         super(PlainDecoder, self).__init__()
@@ -112,6 +115,7 @@ class BilateralUpsamplerBlock(nn.Module):
 # Bilateral Up-Sampling Decoder in RESA paper,
 # make it work for arbitrary input channels (8x up-sample then predict).
 # Drops transposed prediction layer in ERFNet, while adds an extra up-sampling block.
+@MODELS.register()
 class BUSD(nn.Module):
     def __init__(self, in_channels=128, num_classes=5):
         super(BUSD, self).__init__()
@@ -128,6 +132,7 @@ class BUSD(nn.Module):
 
 
 # Reduce channel (typically to 128), RESA code use no BN nor ReLU
+@MODELS.register()
 class RESAReducer(nn.Module):
     def __init__(self, in_channels=512, reduce=128, bn_relu=True):
         super(RESAReducer, self).__init__()
@@ -145,7 +150,8 @@ class RESAReducer(nn.Module):
         return x
 
 
-# SCNN head
+# SCNN
+@MODELS.register()
 class SpatialConv(nn.Module):
     def __init__(self, num_channels=128):
         super().__init__()
@@ -200,6 +206,7 @@ class SpatialConv(nn.Module):
 
 
 # REcurrent Feature-Shift Aggregator in RESA paper
+@MODELS.register()
 class RESA(nn.Module):
     def __init__(self, num_channels=128, iteration=5, alpha=2.0, trace_arg=None):
         super(RESA, self).__init__()
@@ -284,6 +291,7 @@ class RESA(nn.Module):
 
 
 # Typical lane existence head originated from the SCNN paper
+@MODELS.register()
 class SimpleLaneExist(nn.Module):
     def __init__(self, num_output, flattened_size=4500):
         super().__init__()
@@ -306,6 +314,7 @@ class SimpleLaneExist(nn.Module):
 
 # Lane exist head for ERFNet, ENet
 # Really tricky without global pooling
+@MODELS.register()
 class EDLaneExist(nn.Module):
     def __init__(self, num_output, flattened_size=3965, dropout=0.1, pool='avg'):
         super().__init__()
@@ -348,6 +357,7 @@ class EDLaneExist(nn.Module):
         return output
 
 
+@MODELS.register()
 class RESALaneExist(nn.Module):
     def __init__(self, num_output, flattened_size=3965, dropout=0.1, in_channels=128):
         super().__init__()

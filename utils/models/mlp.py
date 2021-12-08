@@ -1,9 +1,13 @@
 from torch import nn
 import torch.nn.functional as F
 
+from .builder import MODELS
 
+
+@MODELS.register()
 class MLP(nn.Module):
-    """ Very simple multi-layer perceptron (also called FFN)"""
+    # Modified from facebookresearch/detr
+    # Very simple multi-layer perceptron (also called FFN)
 
     def __init__(self, input_dim, hidden_dim, output_dim, num_layers):
         super().__init__()
@@ -14,4 +18,5 @@ class MLP(nn.Module):
     def forward(self, x):
         for i, layer in enumerate(self.layers):
             x = F.relu(layer(x)) if i < self.num_layers - 1 else layer(x)
+
         return x

@@ -14,27 +14,27 @@
 # 6.2. w.o. cutting height trick probably is the main reason for our lower performance, but we can't use it since
 # other pytorch-auto-drive models do not use it.
 import torch.nn as nn
-from ..common_models import RESA, RESAReducer, BUSD, EDLaneExist
-from .._utils import IntermediateLayerGetter
-from .. import resnet
+
+from ..builder import MODELS
 
 
-class RESANet(nn.Module):
-    def __init__(self, num_classes, backbone_name, flattened_size, channel_reduce, pretrained_backbone=True,
+@MODELS.register()
+class RESA_Net(nn.Module):
+    def __init__(self,
+                 backbone_cfg,
+                 reducer_cfg,
+                 spatial_conv_cfg,
+                 decoder_cfg,
+                 lane_classifier_cfg,
                  trace_arg=None):
-        super(RESANet, self).__init__()
-        backbone = resnet.__dict__[backbone_name](
-            pretrained=pretrained_backbone,
-            replace_stride_with_dilation=[False, True, True])
-        return_layers = {'layer3': 'out'}
-        self.backbone = IntermediateLayerGetter(backbone, return_layers=return_layers)
-        in_channels = 1024 if backbone_name == 'resnet50' or backbone_name == 'resnet101' else 256
+        super().__init__()
+        self.backbone = MODELS.from_dict(backbone_cfg)
         # self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce, bn_relu=False)
-        self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce)
-        self.spatial_conv = RESA(trace_arg=trace_arg)
-        self.decoder = BUSD(num_classes=num_classes)
+        self.channel_reducer = MODELS.from_dict(reducer_cfg)
+        self.spatial_conv = MODELS.from_dict(spatial_conv_cfg, trace_arg=trace_arg)
+        self.decoder = MODELS.from_dict(decoder_cfg)
         # self.decoder = PlainDecoder(num_classes=num_classes)
-        self.lane_classifier = EDLaneExist(num_output=num_classes - 1, flattened_size=flattened_size)
+        self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
         # self.lane_classifier = RESALaneExist(num_output=num_classes - 1, flattened_size=flattened_size)
 
     def forward(self, x):

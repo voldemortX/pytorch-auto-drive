@@ -27,6 +27,8 @@ class SimpleRegistry(object):
         return res
 
     def from_dict(self, dict_params, **kwargs):
+        if dict_params is None:
+            return None
         dict_params_ = dict_params.copy()
         dict_params_.update(kwargs)
         name = dict_params_.pop('name')

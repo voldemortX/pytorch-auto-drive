@@ -1,42 +1,16 @@
 # jcdubron/scnn_pytorch
 import torch.nn as nn
-import torchvision
 from collections import OrderedDict
-from ..common_models import SpatialConv, SimpleLaneExist
+from ..builder import MODELS
 
 
-# Modified VGG16 backbone in DeepLab-LargeFOV
-class VGG16(nn.Module):
-    def __init__(self, pretained=True):
-        super(VGG16, self).__init__()
-        self.pretrained = pretained
-        self.net = torchvision.models.vgg16_bn(pretrained=self.pretrained).features
-        for i in [34, 37, 40]:
-            conv = self.net._modules[str(i)]
-            dilated_conv = nn.Conv2d(
-                conv.in_channels, conv.out_channels, conv.kernel_size, stride=conv.stride,
-                padding=tuple(p * 2 for p in conv.padding), dilation=2, bias=(conv.bias is not None)
-            )
-            dilated_conv.load_state_dict(conv.state_dict())
-            self.net._modules[str(i)] = dilated_conv
-        self.net._modules.pop('33')
-        self.net._modules.pop('43')
-
-    def forward(self, x):
-        x = self.net(x)
-        return x
-
-
+@MODELS.register()
 class DeepLabV1(nn.Module):
-    def __init__(self, num_classes, encoder=None, num_lanes=0, dropout_1=0.1, flattened_size=3965,
-                 scnn=False, pretrain=False):
+    def __init__(self, backbone_cfg, spatial_conv_cfg, lane_classifier_cfg,
+                 num_classes, dropout_1=0.1):
         super(DeepLabV1, self).__init__()
 
-        if encoder is None:
-            self.encoder = VGG16(pretained=pretrain)
-        else:
-            self.encoder = encoder
-
+        self.encoder = MODELS.from_dict(backbone_cfg)
         self.fc67 = nn.Sequential(
             nn.Conv2d(512, 1024, 3, padding=4, dilation=4, bias=False),
             nn.BatchNorm2d(1024),
@@ -45,28 +19,18 @@ class DeepLabV1(nn.Module):
             nn.BatchNorm2d(128),
             nn.ReLU()
         )
-
-        if scnn:
-            self.scnn = SpatialConv()
-        else:
-            self.scnn = None
-
+        self.scnn = MODELS.from_dict(spatial_conv_cfg)
         self.fc8 = nn.Sequential(
             nn.Dropout2d(dropout_1),
             nn.Conv2d(128, num_classes, 1)
         )
-
         self.softmax = nn.Softmax(dim=1)
+        self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
 
-        if num_lanes > 0:
-            self.lane_classifier = SimpleLaneExist(num_output=num_lanes, flattened_size=flattened_size)
-        else:
-            self.lane_classifier = None
-
-    def forward(self, input):
+    def forward(self, x):
         out = OrderedDict()
 
-        output = self.encoder(input)
+        output = self.encoder(x)
         output = self.fc67(output)
 
         if self.scnn is not None:
@@ -77,10 +41,5 @@ class DeepLabV1(nn.Module):
         if self.lane_classifier is not None:
             output = self.softmax(output)
             out['lane'] = self.lane_classifier(output)
-        return out
 
-# t = torch.randn(1, 3, 288, 800)
-# net = VGG16Net(num_classes=5, encoder=None, aux=5, flattened_size=4500, scnn=True)
-# res=net(t)
-# print(res['out'].shape)
-# print(res['lane'].shape)
+        return out

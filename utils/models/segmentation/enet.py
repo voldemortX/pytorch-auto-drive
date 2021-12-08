@@ -4,7 +4,9 @@ import torch.nn as nn
 import torch
 from torch.nn import functional as F
 from torch.nn.parameter import Parameter
-from ..common_models import EDLaneExist
+
+from ._utils import _EncoderDecoderModel
+from ..builder import MODELS
 
 
 class InitialBlock(nn.Module):
@@ -657,18 +659,19 @@ class Decoder(nn.Module):
         return x
 
 
-class ENet(nn.Module):
-
-    def __init__(self, num_classes, encoder_relu=False, decoder_relu=True, dropout_1=0.01, dropout_2=0.1, num_lanes=0,
-                 sad=False, flattened_size=4500, encoder_only=False, encoder=None):
+@MODELS.register()
+class ENet(_EncoderDecoderModel):
+    def __init__(self, lane_classifier_cfg,
+                 num_classes,
+                 encoder_relu=False,
+                 decoder_relu=True,
+                 dropout_1=0.01,
+                 dropout_2=0.1,
+                 encoder_only=False,
+                 pretrained_weights=None):
         super().__init__()
-        self.sad = sad
         self.encoder_conv = None
-
-        if encoder is not None:
-            self.encoder = encoder
-        else:
-            self.encoder = Encoder(encoder_relu=encoder_relu, dropout_1=dropout_1, dropout_2=dropout_2)
+        self.encoder = Encoder(encoder_relu=encoder_relu, dropout_1=dropout_1, dropout_2=dropout_2)
 
         if encoder_only:
             self.decoder = None
@@ -676,11 +679,8 @@ class ENet(nn.Module):
         else:
             self.decoder = Decoder(num_classes=num_classes, decoder_relu=decoder_relu, dropout_2=dropout_2)
 
-        if num_lanes > 0:
-            self.lane_classifier = EDLaneExist(num_output=num_lanes, flattened_size=flattened_size, dropout=dropout_2,
-                                               pool='avg')
-        else:
-            self.lane_classifier = None
+        self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
+        self._load_encoder(pretrained_weights)
 
     def forward(self, x):
         out = OrderedDict()
@@ -696,11 +696,4 @@ class ENet(nn.Module):
                                      stage2_input_size, input_size)
         out['out'] = x
 
-
         return out
-
-# net = ENet(num_classes=19,encoder_only=True)
-# print(net)
-# # x = torch.randn(1, 3, 512, 1024)
-# # res = net(x)['out']
-# # print(res.shape)

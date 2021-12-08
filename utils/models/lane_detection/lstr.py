@@ -3,11 +3,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .utils import lane_pruning
-from .. import resnet
 from ..transformer import build_transformer, build_position_encoding
-from ..resnet import resnet18_reduced
 from ..mlp import MLP
-from .._utils import IntermediateLayerGetter, is_tracing
+from .._utils import is_tracing
+from ..builder import MODELS
 
 
 def cubic_curve_with_projection(coefficients, y):
@@ -26,6 +25,7 @@ def cubic_curve_with_projection(coefficients, y):
     return x.permute(*[i + 1 for i in range(len(x.shape) - 1)], 0)  # [d1, d2, ... , N]
 
 
+@MODELS.register()
 class LSTR(nn.Module):
     def __init__(self,
                  expansion=1,  # Expansion rate (1x for TuSimple & 2x for CULane)
@@ -40,23 +40,13 @@ class LSTR(nn.Module):
                  return_intermediate=True,
                  lsp_dim=8,
                  mlp_layers=3,
-                 backbone_name='resnet18s',
-                 trace_arg=None
-                 ):
-        super(LSTR, self).__init__()
+                 backbone_cfg=None,
+                 thresh=0.95,
+                 trace_arg=None):
+        super().__init__()
 
-        if backbone_name == 'resnet18s':  # Original LSTR backbone
-            backbone = resnet18_reduced(
-                pretrained=False, expansion=expansion,
-                replace_stride_with_dilation=[False, False, False])
-        else:  # Common backbones
-            backbone = resnet.__dict__[backbone_name](
-                pretrained=True,
-                replace_stride_with_dilation=[False, False, False])
-
-        return_layers = {'layer4': 'out'}
-        self.backbone = IntermediateLayerGetter(backbone, return_layers=return_layers)
-
+        self.thresh = thresh
+        self.backbone = MODELS.from_dict(backbone_cfg)
         hidden_dim = 32 * expansion
         self.aux_loss = aux_loss
         self.position_embedding = build_position_encoding(hidden_dim=hidden_dim, position_embedding=pos_type)
@@ -120,7 +110,7 @@ class LSTR(nn.Module):
     def inference(self, inputs, input_sizes, gap, ppl, dataset, max_lane=0, forward=True):
         outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function
         existence_conf = outputs['logits'].softmax(dim=-1)[..., 1]
-        existence = outputs['logits'].max(dim=-1).indices == 1
+        existence = existence_conf > self.thresh
         if max_lane != 0:  # Lane max number prior for testing
             existence, _ = lane_pruning(existence, existence_conf, max_lane=max_lane)
 

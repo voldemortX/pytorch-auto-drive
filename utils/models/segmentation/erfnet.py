@@ -6,7 +6,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
-from ..common_models import SpatialConv, EDLaneExist, non_bottleneck_1d
+
+from ..common_models import non_bottleneck_1d
+from ..builder import MODELS
+from ._utils import _EncoderDecoderModel
 
 
 class DownsamplerBlock(nn.Module):
@@ -93,74 +96,41 @@ class Decoder(nn.Module):
         return output
 
 
-# Really tricky without global pooling
-# class LaneExist(nn.Module):
-#     def __init__(self, num_output, flattened_size=3965, dropout=0.1):
-#         super().__init__()
-#
-#         self.layers = nn.ModuleList()
-#         self.layers.append(nn.Conv2d(128, 32, (3, 3), stride=1, padding=(4, 4), bias=False, dilation=(4, 4)))
-#         self.layers.append(nn.BatchNorm2d(32, eps=1e-03))
-#
-#         self.layers_final = nn.ModuleList()
-#         self.layers_final.append(nn.Dropout2d(dropout))
-#         self.layers_final.append(nn.Conv2d(32, 5, (1, 1), stride=1, padding=(0, 0), bias=True))
-#
-#         self.maxpool = nn.MaxPool2d(2, stride=2)
-#         self.linear1 = nn.Linear(flattened_size, 128)
-#         self.linear2 = nn.Linear(128, num_output)
-#
-#     def forward(self, input):
-#         output = input
-#
-#         for layer in self.layers:
-#             output = layer(output)
-#
-#         output = F.relu(output)
-#
-#         for layer in self.layers_final:
-#             output = layer(output)
-#
-#         output = F.softmax(output, dim=1)
-#         output = self.maxpool(output)
-#         # print(output.shape)
-#         output = output.flatten(start_dim=1)
-#         output = self.linear1(output)
-#         output = F.relu(output)
-#         output = self.linear2(output)
-#
-#         return output
-
-
 # ERFNet
-class ERFNet(nn.Module):
-    def __init__(self, num_classes, encoder=None, num_lanes=0, dropout_1=0.03, dropout_2=0.3, flattened_size=3965,
-                 scnn=False):
+@MODELS.register()
+class ERFNet(_EncoderDecoderModel):
+    def __init__(self,
+                 spatial_conv_cfg,
+                 lane_classifier_cfg,
+                 num_classes,
+                 dropout_1=0.03,
+                 dropout_2=0.3,
+                 pretrained_weights=None):
         super().__init__()
-        if encoder is None:
-            self.encoder = Encoder(num_classes=num_classes, dropout_1=dropout_1, dropout_2=dropout_2)
-        else:
-            self.encoder = encoder
-
+        self.encoder = Encoder(num_classes=num_classes, dropout_1=dropout_1, dropout_2=dropout_2)
         self.decoder = Decoder(num_classes)
+        self.spatial_conv = MODELS.from_dict(spatial_conv_cfg)
+        self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
+        self._load_encoder(pretrained_weights)
 
-        if scnn:
-            self.spatial_conv = SpatialConv()
+    def _load_encoder(self, pretrained_weights):
+        if pretrained_weights is not None:  # Load ImageNet pre-trained weights
+            saved_weights = torch.load(pretrained_weights)['state_dict']
+            original_weights = self.state_dict()
+            for key in saved_weights.keys():
+                my_key = key.replace('module.features.', '')
+                if my_key in original_weights.keys():
+                    original_weights[my_key] = saved_weights[key]
+            self.load_state_dict(original_weights)
         else:
-            self.spatial_conv = None
+            print('No ImageNet pre-training.')
 
-        if num_lanes > 0:
-            self.lane_classifier = EDLaneExist(num_output=num_lanes, flattened_size=flattened_size, dropout=dropout_2,
-                                               pool='max')
-        else:
-            self.lane_classifier = None
-
-    def forward(self, input, only_encode=False):
+    def forward(self, x, only_encode=False):
         out = OrderedDict()
         if only_encode:
-            return self.encoder.forward(input, predict=True)
+            return self.encoder.forward(x, predict=True)
         else:
-            output = self.encoder(input)    # predict=False by default
+            output = self.encoder(x)    # predict=False by default
             if self.spatial_conv is not None:
                 output = self.spatial_conv(output)
             out['out'] = self.decoder.forward(output)

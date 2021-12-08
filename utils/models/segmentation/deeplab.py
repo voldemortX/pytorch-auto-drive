@@ -4,18 +4,10 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from ._utils import _SimpleSegmentationModel
+from ..builder import MODELS
 
 
-__all__ = ["DeepLab"]
-
-
-class DeepLab(_SimpleSegmentationModel):
-    # Should be able to support all deeplab models without CRF
-    # Note that v1 is not the official version
-    pass
-
-
+@MODELS.register()
 class DeepLabV3Head(nn.Sequential):
     def __init__(self, in_channels, num_classes):
         super(DeepLabV3Head, self).__init__(
@@ -28,6 +20,7 @@ class DeepLabV3Head(nn.Sequential):
 
 
 # For better format consistency
+@MODELS.register()
 class DeepLabV2Head(nn.Sequential):
     def __init__(self, in_channels, num_classes):
         super(DeepLabV2Head, self).__init__(
@@ -37,54 +30,11 @@ class DeepLabV2Head(nn.Sequential):
 
 # For better format consistency
 # Not the official VGG backbone version
+@MODELS.register()
 class DeepLabV1Head(nn.Sequential):
     def __init__(self, in_channels, num_classes, dilation=12):
         super(DeepLabV1Head, self).__init__(
             LargeFOV(in_channels, num_classes, dilation)
-        )
-
-
-class ReconHead(nn.Sequential):
-    def __init__(self, in_channels):
-        super(ReconHead, self).__init__(
-            # Down, Hold, Up (similar to U-Net)
-            # 41 -> 81
-            nn.Conv2d(in_channels, int(in_channels / 2), 1, bias=False),
-            nn.BatchNorm2d(int(in_channels / 2)),
-            nn.ReLU(),
-            nn.Conv2d(int(in_channels / 2), int(in_channels / 2), 1, bias=False),
-            nn.BatchNorm2d(int(in_channels / 2)),
-            nn.ReLU(),
-            nn.ConvTranspose2d(int(in_channels / 2), int(in_channels / 2), 3, stride=2, padding=1, bias=False),
-            nn.BatchNorm2d(int(in_channels / 2)),
-            nn.ReLU(),
-
-            # 81 -> 161
-            nn.Conv2d(int(in_channels / 2), int(int(in_channels / 4)), 1, bias=False),
-            nn.BatchNorm2d(int(in_channels / 4)),
-            nn.ReLU(),
-            nn.Conv2d(int(in_channels / 4), int(in_channels / 4), 1, bias=False),
-            nn.BatchNorm2d(int(in_channels / 4)),
-            nn.ReLU(),
-            nn.ConvTranspose2d(int(in_channels / 4), int(in_channels / 4), 3, stride=2, padding=1, bias=False),
-            nn.BatchNorm2d(int(in_channels / 4)),
-            nn.ReLU(),
-
-            # 161 -> 321
-            nn.Conv2d(int(in_channels / 4), int(int(in_channels / 8)), 1, bias=False),
-            nn.BatchNorm2d(int(in_channels / 8)),
-            nn.ReLU(),
-            nn.Conv2d(int(in_channels / 8), int(in_channels / 8), 1, bias=False),
-            nn.BatchNorm2d(int(in_channels / 8)),
-            nn.ReLU(),
-            nn.ConvTranspose2d(int(in_channels / 8), int(in_channels / 8), 3, stride=2, padding=1, bias=False),
-            nn.BatchNorm2d(int(in_channels / 8)),
-            nn.ReLU(),
-
-            # channels -> 3 (is this good enough?)
-            nn.Conv2d(int(in_channels / 8), 3, 1, bias=False)
-
-            # nn.Conv2d(int(in_channels / 4), 3, 1, bias=False)
         )
 
 
