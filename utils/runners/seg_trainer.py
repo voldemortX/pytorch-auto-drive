@@ -28,7 +28,7 @@ class SegTrainer(BaseTrainer):
         # Training
         while epoch < self._cfg['num_epochs']:
             self.model.train()
-            if self._cfg['ddp']:
+            if self._cfg['distributed']:
                 self.train_sampler.set_epoch(epoch)
             conf_mat = ConfusionMatrix(self._cfg['num_classes'])
             time_now = time.time()
@@ -100,7 +100,7 @@ class SegTrainer(BaseTrainer):
                     # Record best model (straight to disk)
                     if test_mIoU > best_mIoU:
                         best_mIoU = test_mIoU
-                        save_checkpoint(net=self.model.module if self._cfg['ddp'] else self.model,
+                        save_checkpoint(net=self.model.module if self._cfg['distributed'] else self.model,
                                         optimizer=None, lr_scheduler=None, filename=self._cfg['exp_name'] + '.pt')
 
             # Evaluate training accuracies (same metric as validation, but must be on-the-fly to save time)

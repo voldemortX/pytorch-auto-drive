@@ -28,7 +28,7 @@ class LaneDetTrainer(BaseTrainer):
         best_validation = 0
         while epoch < self._cfg['num_epochs']:
             self.model.train()
-            if self._cfg['ddp']:
+            if self._cfg['distributed']:
                 self.train_sampler.set_epoch(epoch)
             time_now = time.time()
             for i, data in enumerate(self.dataloader, 0):
@@ -99,7 +99,7 @@ class LaneDetTrainer(BaseTrainer):
                         # Record best model (straight to disk)
                         if test_mIoU > best_validation:
                             best_validation = test_mIoU
-                            save_checkpoint(net=self.model.module if self._cfg['ddp'] else self.model,
+                            save_checkpoint(net=self.model.module if self._cfg['distributed'] else self.model,
                                             optimizer=self.optimizer,
                                             lr_scheduler=self.lr_scheduler, filename=self._cfg['exp_name'] + '.pt')
 
@@ -108,7 +108,7 @@ class LaneDetTrainer(BaseTrainer):
 
         # For no-evaluation mode
         if not self._cfg['validation']:
-            save_checkpoint(net=self.model.module if self._cfg['ddp'] else self.model,
+            save_checkpoint(net=self.model.module if self._cfg['distributed'] else self.model,
                             optimizer=self.optimizer,
                             lr_scheduler=self.lr_scheduler,
                             filename=self._cfg['exp_name'] + '.pt')

@@ -73,7 +73,7 @@ class BaseTrainer(BaseRunner):
         transforms = TRANSFORMS.from_dict(cfg['train_augmentation'])
         dataset = DATASETS.from_dict(cfg['dataset'],
                                      transforms=transforms)
-        self.train_sampler = get_sampler(self._cfg['ddp'], dataset)
+        self.train_sampler = get_sampler(self._cfg['distributed'], dataset)
         self.dataloader = torch.utils.data.DataLoader(dataset=dataset,
                                                       batch_size=self._cfg['batch_size'],
                                                       collate_fn=self.collate_fn,
