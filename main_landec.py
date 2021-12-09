@@ -1,3 +1,4 @@
+import time
 import torch
 if torch.backends.cudnn.version() < 8000:
     torch.backends.cudnn.benchmark = True
@@ -5,8 +6,8 @@ if torch.backends.cudnn.version() < 8000:
 import resource
 import argparse
 
-from .utils.args import parse_arg_cfg
-from .utils.runners import LaneDetTrainer, LaneDetTester
+from utils.args import parse_arg_cfg, read_config
+from utils.runners import LaneDetTrainer, LaneDetTester
 
 
 if __name__ == '__main__':
@@ -34,5 +35,30 @@ if __name__ == '__main__':
     parser.add_argument('--dist-url', type=str, help='url used to set up distributed training')
     parser.add_argument('--device', type=str, help='CPU is not recommended!')
     parser.add_argument('--config', type=str, help='Path to config file')
+
+    defaults = {
+        'exp_name': time.time(),
+        'workers': 10,
+        'batch_size': 8,
+        'mixed_precision': False,
+        'continue_from': None,
+        'state': 0,
+        'world_size': 0,
+        'dist_url': 'env://',
+        'device': 'cuda'
+    }
+    states = ['train', 'fastval', 'test', 'val']
+
     args = parser.parse_args()
-    
+    if args.config is None:
+        raise ValueError('Must specify a config file!')
+
+    # Parse configs and execute runner
+    cfg = read_config(args.config)
+    cfg_runner_key = 'train' if args.state == 0 else 'test'
+    Runner = LaneDetTrainer if args.state == 0 else LaneDetTester
+    args, cfg[cfg_runner_key] = parse_arg_cfg(args, cfg[cfg_runner_key], defaults)
+    with open(args.exp_name + '_' + states[args.state] + '_cfg.txt', 'w') as f:
+        f.write(str(vars(args)))
+    runner = Runner(cfg=cfg, args=args)
+    runner.run()
