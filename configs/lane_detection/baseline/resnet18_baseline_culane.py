@@ -1,16 +1,13 @@
-# Common statics
-input_size = (288, 800)
-original_size = (590, 1640)
-num_classes = 5
-dataset_name = 'culane'
-dataset_root = '../../culane'  # path relative to main_*.py
-max_lane = 4  # for lane pruning
-gap = 20
-ppl = 18
-thresh = 0.3
-mean = [0.485, 0.456, 0.406]
-std = [0.229, 0.224, 0.225]
-epochs = 12
+# Dicts to become configs
+__all__ = ['train',
+           'test',
+           'model',
+           'train_augmentation',
+           'test_augmentation',
+           'lr_scheduler',
+           'optimizer',
+           'loss',
+           'dataset']
 
 # Default args that can be overridden in commandline
 exp_name = 'resnet18_baseline_culane'
@@ -34,11 +31,24 @@ test_args_default = dict(
     continue_from=exp_name + '.pt',
     state=2,
     # Device args
-    world_size=0,
-    dist_url='env://',
     device='cuda'
 )
 
+# Common statics
+input_size = (288, 800)
+original_size = (590, 1640)
+num_classes = 5
+dataset_name = 'culane'
+dataset_root = '../../dataset/culane'  # path relative to main_*.py
+max_lane = 4  # for lane pruning
+gap = 20
+ppl = 18
+thresh = 0.3
+mean = [0.485, 0.456, 0.406]
+std = [0.229, 0.224, 0.225]
+epochs = 12
+
+# Configs
 train = dict(
     input_size=input_size,
     original_size=original_size,
@@ -48,9 +58,11 @@ train = dict(
     seg=True,  # Seg-based method or not
     validation=False,  # Seg IoU validation (mostly useless)
     val_num_steps=0,
-).update(train_args_default)
+)
+train.update(train_args_default)
 
 test = dict(
+    seg=True,
     gap=gap,
     ppl=ppl,
     thresh=thresh,
@@ -59,7 +71,8 @@ test = dict(
     original_size=original_size,
     max_lane=max_lane,
     dataset_name=dataset_name
-).update(test_args_default)
+)
+test.update(test_args_default)
 
 # Essentially DeepLabV1 without dilation like in SCNN paper
 model = dict(
@@ -67,16 +80,14 @@ model = dict(
     backbone_cfg=dict(
         name='predefined_resnet_backbone',
         backbone_name='resnet18',
-        return_layer='layer4'
+        return_layer='layer4',
+        pretrained=True,
+        replace_stride_with_dilation=[False, True, True]
     ),
     reducer_cfg=dict(
         name='RESAReducer',
         in_channels=512,
         reduce=128
-    ),
-    spatial_conv_cfg=dict(
-        name='SpatialConv',
-        num_channels=128
     ),
     classifier_cfg=dict(
         name='DeepLabV1Head',
@@ -87,7 +98,7 @@ model = dict(
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',
         num_output=num_classes - 1,
-        flatten_size=4500
+        flattened_size=4500
     )
 )
 

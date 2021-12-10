@@ -34,4 +34,8 @@ class SimpleRegistry(object):
         name = dict_params_.pop('name')
         function_or_class = self.get(name)
 
-        return function_or_class(**dict_params_)
+        try:
+            return function_or_class(**dict_params_)
+        except Exception as e:
+            print('Error in function or class: {}\nIn Python: {}'.format(name, function_or_class))
+            raise e

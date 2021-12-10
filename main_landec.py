@@ -35,6 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--dist-url', type=str, help='url used to set up distributed training')
     parser.add_argument('--device', type=str, help='CPU is not recommended!')
     parser.add_argument('--config', type=str, help='Path to config file')
+    parser.add_argument('--log-dir', type=str, help='Path prefix to save ckpt, etc.')
 
     defaults = {
         'exp_name': time.time(),
@@ -45,7 +46,8 @@ if __name__ == '__main__':
         'state': 0,
         'world_size': 0,
         'dist_url': 'env://',
-        'device': 'cuda'
+        'device': 'cuda',
+        'log_dir': ''
     }
     states = ['train', 'fastval', 'test', 'val']
 
@@ -59,6 +61,6 @@ if __name__ == '__main__':
     Runner = LaneDetTrainer if args.state == 0 else LaneDetTester
     args, cfg[cfg_runner_key] = parse_arg_cfg(args, cfg[cfg_runner_key], defaults)
     with open(args.exp_name + '_' + states[args.state] + '_cfg.txt', 'w') as f:
-        f.write(str(vars(args)))
+        f.write(str(cfg))
     runner = Runner(cfg=cfg, args=args)
     runner.run()
