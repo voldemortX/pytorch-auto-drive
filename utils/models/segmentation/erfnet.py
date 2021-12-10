@@ -100,9 +100,9 @@ class Decoder(nn.Module):
 @MODELS.register()
 class ERFNet(_EncoderDecoderModel):
     def __init__(self,
-                 spatial_conv_cfg,
-                 lane_classifier_cfg,
                  num_classes,
+                 lane_classifier_cfg=None,
+                 spatial_conv_cfg=None,
                  dropout_1=0.03,
                  dropout_2=0.3,
                  pretrained_weights=None):

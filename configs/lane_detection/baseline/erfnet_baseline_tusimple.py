@@ -10,7 +10,7 @@ __all__ = ['train',
            'dataset']
 
 # Default args that can be overridden in commandline
-exp_name = 'resnet18_baseline_culane'
+exp_name = 'erfnet_baseline_tusimple'
 train_args_default = dict(
     exp_name=exp_name,
     workers=10,
@@ -35,18 +35,18 @@ test_args_default = dict(
 )
 
 # Common statics
-input_size = (288, 800)
-original_size = (590, 1640)
-num_classes = 5
-dataset_name = 'culane'
-dataset_root = '../../dataset/culane'  # path relative to main_*.py
-max_lane = 4  # for lane pruning
-gap = 20
-ppl = 18
+input_size = (360, 640)
+original_size = (720, 1280)
+num_classes = 7
+dataset_name = 'tusimple'
+dataset_root = '../../dataset/tusimple'  # path relative to main_*.py
+max_lane = 5  # for lane pruning
+gap = 10
+ppl = 56
 thresh = 0.3
 mean = [0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
-epochs = 12
+epochs = 50
 
 # Configs
 train = dict(
@@ -74,31 +74,18 @@ test = dict(
 )
 test.update(test_args_default)
 
-# Essentially DeepLabV1 without dilation like in SCNN paper
 model = dict(
-    name='standard_segmentation_model',
-    backbone_cfg=dict(
-        name='predefined_resnet_backbone',
-        backbone_name='resnet18',
-        return_layer='layer4',
-        pretrained=True,
-        replace_stride_with_dilation=[False, True, True]
-    ),
-    reducer_cfg=dict(
-        name='RESAReducer',
-        in_channels=512,
-        reduce=128
-    ),
-    classifier_cfg=dict(
-        name='DeepLabV1Head',
-        in_channels=128,
-        num_classes=num_classes,
-        dilation=1
-    ),
+    name='ERFNet',
+    num_classes=num_classes,
+    dropout_1=0.3,
+    dropout_2=0.3,
+    pretrained_weights='erfnet_encoder_pretrained.pth.tar',
     lane_classifier_cfg=dict(
-        name='SimpleLaneExist',
+        name='EDLaneExist',
         num_output=num_classes - 1,
-        flattened_size=4500
+        flattened_size=4400,
+        dropout=0.3,
+        pool='max'
     )
 )
 
@@ -164,11 +151,11 @@ loss = dict(
     name='LaneLoss',
     existence_weight=0.1,
     ignore_index=255,
-    weight=[0.4, 1, 1, 1, 1]
+    weight=[0.4, 1, 1, 1, 1, 1, 1]
 )
 
 dataset = dict(
-    name='CULaneAsSegmentation',
+    name='TuSimpleAsSegmentation',
     image_set='train',  # Only set for training. Testing will override this value by --state.
     root=dataset_root
 )

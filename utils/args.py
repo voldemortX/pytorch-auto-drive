@@ -9,7 +9,6 @@ def read_config(config_path):
     module_name = module_name[:-3]
     module = SourceFileLoader(module_name, config_path).load_module()
     res = {k: module.__dict__[k] for k in module.__all__}
-    print(res)
 
     return res
 
