@@ -43,6 +43,7 @@ class BaseRunner(ABC):
         device = torch.device('cpu')
         if torch.cuda.is_available():
             device = torch.device('cuda:0')
+        print(device)
         self.model.to(device)
 
         return device

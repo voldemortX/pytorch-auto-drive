@@ -1,5 +1,10 @@
 import os
+import warnings
 from importlib.machinery import SourceFileLoader
+
+ACTION_ARGS = [
+    'mixed_precision'
+]  # Args that can't be set in configs
 
 
 def read_config(config_path):
@@ -8,7 +13,7 @@ def read_config(config_path):
     assert module_name[-3:] == '.py'
     module_name = module_name[:-3]
     module = SourceFileLoader(module_name, config_path).load_module()
-    res = {k: module.__dict__[k] for k in module.__all__}
+    res = {k: v for k, v in module.__dict__.items() if not k.startswith('__')}
 
     return res
 
@@ -26,6 +31,11 @@ def parse_arg_cfg(args, cfg, defaults=None):
                 v = cfg[k]
             else:  # 3
                 v = defaults[k]
+
+        if k in ACTION_ARGS and k in cfg.keys() and cfg[k] != v:
+            warnings.warn('Bool arg `{}={}` in config is illegal, replaced by commandline setting `{}={}`.'.format(
+                k, cfg[k], k, v
+            ))
         args_dict[k] = v
         cfg[k] = v
 

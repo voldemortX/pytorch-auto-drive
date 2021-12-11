@@ -24,7 +24,7 @@ if __name__ == '__main__':
                              'Recommend value for training: batch_size / 2')
     parser.add_argument('--batch-size', type=int,
                         help='input batch size. Recommend 4 times the training batch size in testing')
-    parser.add_argument('--mixed-precision', type=bool,
+    parser.add_argument('--mixed-precision', action='store_true',
                         help='Enable mixed precision training')
     parser.add_argument('--continue-from', type=str,
                         help='Continue training from a previous checkpoint')
