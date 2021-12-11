@@ -3,9 +3,9 @@
 Config files in *PytorchAutoDrive* are used to define models,
 how they are trained, tested, visualized, *etc*.
 
-### Important
+### Registry Mechanism
 
-Different to existing class-based configs, we can also register functions.
+Different to existing class-based registers, we can also register functions.
 For functions, you only write static args in your config,
 while passing the dynamic ones on-the-fly by:
 
@@ -20,11 +20,12 @@ Note that each argument must be keyword (k=v), and kwargs can overwrite dict con
 
 ### Use An Existing Config
 
-Modify customized options like the root of your datasets.
+Modify customized options like the root of your datasets (in `configs/*/common/_*.py`).
 
 ### Write A New Config
 
 Copy the config file most similar to your use case and modify it.
+Note that you can simply import config parts from `common` or other config files, it is like writing Python.
 
 ### Register A New Class/Func
 
