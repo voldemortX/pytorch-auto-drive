@@ -1,10 +1,14 @@
-import warnings
 from typing import Optional, Dict, Tuple
 
 import torch
 from torch import Tensor
 from torch.nn.functional import grid_sample, conv2d, interpolate, pad as torch_pad
 from torch.jit.annotations import List, BroadcastingList2
+
+try:
+    from ..common import warnings
+except ImportError:
+    import warnings
 
 
 def _is_tensor_a_torch_image(x: Tensor) -> bool:

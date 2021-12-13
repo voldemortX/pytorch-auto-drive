@@ -1,15 +1,15 @@
 import math
 import numbers
-import warnings
-from typing import Any, Optional
-
-import numpy as np
-from PIL import Image
-
 import torch
+import numpy as np
 from torch import Tensor
 from torch.jit.annotations import List, Tuple
-
+from PIL import Image
+from typing import Any, Optional
+try:
+    from ..common import warnings
+except ImportError:
+    import warnings
 try:
     import accimage
 except ImportError:

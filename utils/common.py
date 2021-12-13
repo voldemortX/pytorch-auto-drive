@@ -1,8 +1,23 @@
-import warnings
 import torch
 from collections import OrderedDict
 
 from .ddp_utils import save_on_master
+
+
+def get_warnings():
+    # Get rid of the extra line of code printing
+    # https://stackoverflow.com/a/26433913/15449902
+    import warnings
+
+    def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
+        return '%s:%s: %s: %s\n' % (filename, lineno, category.__name__, message)
+
+    warnings.formatwarning = warning_on_one_line
+
+    return warnings
+
+
+warnings = get_warnings()
 
 
 # Save model checkpoints (supports amp)

@@ -1,10 +1,9 @@
 import os
-import warnings
 from importlib.machinery import SourceFileLoader
-
-ACTION_ARGS = [
-    'mixed_precision'
-]  # Args that can't be set in configs
+try:
+    from .common import warnings
+except ImportError:
+    import warnings
 
 
 def read_config(config_path):
@@ -18,12 +17,15 @@ def read_config(config_path):
     return res
 
 
-def parse_arg_cfg(args, cfg, defaults=None):
+def parse_arg_cfg(args, cfg, defaults=None, states=None):
     # args > config > defaults
     args_dict = vars(args)  # Linked changes
     for k in args_dict.keys():
-        if k == 'config':
+        if k == 'config':  # Config path is of no further use
             continue
+        if states is not None and k in states:  # Map states
+            if args_dict[k]:
+                args.state = states.index(k)
         if args_dict[k] is not None:  # 1
             v = args_dict[k]
         else:
@@ -32,7 +34,7 @@ def parse_arg_cfg(args, cfg, defaults=None):
             else:  # 3
                 v = defaults[k]
 
-        if k in ACTION_ARGS and k in cfg.keys() and cfg[k] != v:
+        if type(args_dict[k]) == bool and k in cfg.keys() and cfg[k] != v:
             warnings.warn('Bool arg `{}={}` in config is illegal, replaced by commandline setting `{}={}`.'.format(
                 k, cfg[k], k, v
             ))

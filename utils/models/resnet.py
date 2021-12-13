@@ -1,9 +1,12 @@
-import warnings
 import torch
 import torch.nn as nn
 from torch import Tensor
 from typing import List, Optional
 from .utils import load_state_dict_from_url
+try:
+    from ..common import warnings
+except ImportError:
+    import warnings
 
 
 __all__ = ['ResNet', 'resnet18', 'resnet18_reduced', 'resnet34', 'resnet50', 'resnet101',
