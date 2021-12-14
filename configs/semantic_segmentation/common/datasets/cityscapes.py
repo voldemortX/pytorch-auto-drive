@@ -1,7 +1,7 @@
-from ._utils import TUSIMPLE_ROOT
+from ._utils import CITYSCAPES_ROOT
 
 dataset = dict(
-    name='TuSimpleAsSegmentation',
+    name='CityscapesSegmentation',
     image_set='train',  # Only set for training. Testing will override this value by --state.
-    root=TUSIMPLE_ROOT
+    root=CITYSCAPES_ROOT
 )

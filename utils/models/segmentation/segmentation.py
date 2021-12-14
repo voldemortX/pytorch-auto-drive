@@ -55,4 +55,5 @@ def standard_segmentation_model(backbone_cfg, classifier_cfg,
         else:
             state_dict = load_state_dict_from_url(model_url, progress=progress)
             model.load_state_dict(state_dict)
+
     return model

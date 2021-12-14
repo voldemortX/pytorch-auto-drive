@@ -37,6 +37,25 @@ class _StandardSegmentationDataset(VisionDataset):
 # VOC
 @DATASETS.register()
 class PASCAL_VOC_Segmentation(_StandardSegmentationDataset):
+    categories = [
+        'Background',
+        'Aeroplane', 'Bicycle', 'Bird', 'Boat',
+        'Bottle', 'Bus', 'Car', 'Cat',
+        'Chair', 'Cow', 'Diningtable', 'Dog',
+        'Horse', 'Motorbike', 'Person', 'Pottedplant',
+        'Sheep', 'Sofa', 'Train', 'Tvmonitor'
+    ]
+
+    colors = [
+        [0, 0, 0],
+        [128, 0, 0], [0, 128, 0], [128, 128, 0], [0, 0, 128],
+        [128, 0, 128], [0, 128, 128], [128, 128, 128], [64, 0, 0],
+        [192, 0, 0], [64, 128, 0], [192, 128, 0], [64, 0, 128],
+        [192, 0, 128], [64, 128, 128], [192, 128, 128], [0, 64, 0],
+        [128, 64, 0], [0, 192, 0], [128, 192, 0], [0, 64, 128],
+        [255, 255, 255]  # last color for ignore
+    ]
+
     def init_dataset(self, root, image_set):
         image_dir = os.path.join(root, 'JPEGImages')
         mask_dir = os.path.join(root, 'SegmentationClassAug')
@@ -52,6 +71,30 @@ class PASCAL_VOC_Segmentation(_StandardSegmentationDataset):
 # Cityscapes
 @DATASETS.register()
 class CityscapesSegmentation(_StandardSegmentationDataset):
+    categories = [
+        'road', 'sidewalk', 'building', 'wall',
+        'fence', 'pole', 'traffic light', 'traffic sign',
+        'vegetation', 'terrain', 'sky', 'person',
+        'rider', 'car', 'truck', 'bus',
+        'train', 'motorcycle', 'bicycle'
+    ]
+
+    colors = [
+        [128, 64, 128], [244, 35, 232], [70, 70, 70], [102, 102, 156],
+        [190, 153, 153], [153, 153, 153], [250, 170, 30], [220, 220, 0],
+        [107, 142, 35], [152, 251, 152], [70, 130, 180], [220, 20, 60],
+        [255, 0, 0], [0, 0, 142], [0, 0, 70], [0, 60, 100],
+        [0, 80, 100], [0, 0, 230], [119, 11, 32],
+        [0, 0, 0]  # last color for ignore
+    ]
+
+    cities = [
+        'aachen', 'bremen', 'darmstadt', 'erfurt', 'hanover',
+        'krefeld', 'strasbourg', 'tubingen', 'weimar', 'bochum',
+        'cologne', 'dusseldorf', 'hamburg', 'jena', 'monchengladbach',
+        'stuttgart', 'ulm', 'zurich'
+    ]
+
     def init_dataset(self, root, image_set):
         image_dir = os.path.join(root, 'leftImg8bit')
         mask_dir = os.path.join(root, 'gtFine')
@@ -75,7 +118,9 @@ class CityscapesSegmentation(_StandardSegmentationDataset):
 
 # GTAV
 @DATASETS.register()
-class GTAV_Segmentation(_StandardSegmentationDataset):
+class GTAV_Segmentation(CityscapesSegmentation):
+    cities = None
+
     def init_dataset(self, root, image_set):
         image_dir = os.path.join(root, 'images')
         mask_dir = os.path.join(root, 'labels')
@@ -92,7 +137,9 @@ class GTAV_Segmentation(_StandardSegmentationDataset):
 
 # SYNTHIA
 @DATASETS.register()
-class SYNTHIA_Segmentation(_StandardSegmentationDataset):
+class SYNTHIA_Segmentation(CityscapesSegmentation):
+    cities = None
+
     def init_dataset(self, root, image_set):
         image_dir = os.path.join(root, 'RGB', image_set)
         mask_dir = os.path.join(root, 'GT/LABELS_CONVERTED', image_set)

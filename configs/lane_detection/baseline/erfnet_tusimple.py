@@ -13,17 +13,18 @@ train_args_default = dict(
     exp_name='erfnet_baseline_tusimple',
     workers=10,
     batch_size=20,
-    continue_from=None,
+    checkpoint=None,
     # Device args
     world_size=0,
     dist_url='env://',
-    device='cuda'
+    device='cuda',
+    val_num_steps=0  # Seg IoU validation (mostly useless)
 )
 test_args_default = dict(
     exp_name='erfnet_baseline_tusimple',
     workers=10,
     batch_size=80,
-    continue_from='erfnet_baseline_tusimple.pt',
+    checkpoint='erfnet_baseline_tusimple.pt',
     # Device args
     device='cuda'
 )
@@ -35,9 +36,7 @@ train = dict(
     num_classes=7,
     num_epochs=50,
     collate_fn=None,  # 'dict_collate_fn' for LSTR
-    seg=True,  # Seg-based method or not
-    validation=False,  # Seg IoU validation (mostly useless)
-    val_num_steps=0,
+    seg=True  # Seg-based method or not
 )
 train.update(train_args_default)
 

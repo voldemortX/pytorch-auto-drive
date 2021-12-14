@@ -72,6 +72,12 @@ class _StandardLaneDetectionDataset(VisionDataset):
 # TuSimple
 @DATASETS.register()
 class TuSimpleAsSegmentation(_StandardLaneDetectionDataset):
+    colors = [
+        [0, 0, 0],  # background
+        [255, 0, 255], [0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 0], [0, 255, 255],
+        [0, 0, 0]  # ignore
+    ]
+
     def init_dataset(self, root):
         self.image_dir = os.path.join(root, 'clips')
         self.mask_dir = os.path.join(root, 'segGT6')
@@ -83,6 +89,12 @@ class TuSimpleAsSegmentation(_StandardLaneDetectionDataset):
 # CULane
 @DATASETS.register()
 class CULaneAsSegmentation(_StandardLaneDetectionDataset):
+    colors = [
+        [0, 0, 0],  # background
+        [0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 0],
+        [0, 0, 0]  # ignore
+    ]
+
     def init_dataset(self, root):
         self.image_dir = root
         self.mask_dir = os.path.join(root, 'laneseg_label_w16')
@@ -95,7 +107,7 @@ class CULaneAsSegmentation(_StandardLaneDetectionDataset):
 
 # LLAMAS
 @DATASETS.register()
-class LLAMAS_AsSegmentation(_StandardLaneDetectionDataset):
+class LLAMAS_AsSegmentation(CULaneAsSegmentation):
     def init_dataset(self, root):
         self.image_dir = os.path.join(root, 'color_images')
         self.mask_dir = os.path.join(root, 'laneseg_labels')

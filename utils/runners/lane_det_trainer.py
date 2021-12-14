@@ -117,8 +117,6 @@ class LaneDetTrainer(BaseTrainer):
         if not self._cfg['validation']:
             return None
         validation_transforms = TRANSFORMS.from_dict(cfg['test_augmentation'])
-        validation_set = DATASETS.from_dict(cfg['dataset'],
-                                            name='StandardLaneDetectionDataset',
-                                            image_set='val_fast',
+        validation_set = DATASETS.from_dict(cfg['validation_dataset'],
                                             transforms=validation_transforms)
         return validation_set

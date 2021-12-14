@@ -46,7 +46,7 @@ if __name__ == '__main__':
                                                  count_interpolate=count_interpolate))
             print('GPU FPS: {: .2f}'.format(max(fps)))
         elif args.mode == 'real' and args.dataset in configs['LANE_DATASETS'].keys():
-            load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
+            load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.checkpoint)
             base = configs[configs['LANE_DATASETS'][args.dataset]]['BASE_DIR']
             val_loader = init_lane(dataset=args.dataset, input_sizes=(args.height, args.width), mean=mean, std=std,
                                    base=base)
@@ -86,7 +86,7 @@ if __name__ == '__main__':
                                                  count_interpolate=count_interpolate))
             print('GPU FPS: {: .2f}'.format(max(fps)))
         elif args.mode == 'real' and args.dataset in configs['SEGMENTATION_DATASETS'].keys():
-            load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
+            load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.checkpoint)
             base = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['BASE_DIR']
             train_label_id_map = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['LABEL_ID_MAP'] if \
                 'LABEL_ID_MAP' in configs[configs['SEGMENTATION_DATASETS'][args.dataset]].keys() else \

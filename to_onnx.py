@@ -34,16 +34,16 @@ if __name__ == '__main__':
     print(device)
     net.to(device)
     net_without_tracing.to(device)
-    if args.continue_from is not None:
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from, strict=False)
-        load_checkpoint(net=net_without_tracing, optimizer=None, lr_scheduler=None, filename=args.continue_from)
+    if args.checkpoint is not None:
+        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.checkpoint, strict=False)
+        load_checkpoint(net=net_without_tracing, optimizer=None, lr_scheduler=None, filename=args.checkpoint)
     else:
         raise ValueError('Must provide a weight file by --continue-from')
     torch.manual_seed(7)
     dummy = torch.randn(1, 3, args.height, args.width, device=device, requires_grad=False)
 
     # Convert
-    onnx_filename = args.continue_from[:args.continue_from.rfind('.')] + '.onnx'
+    onnx_filename = args.checkpoint[:args.checkpoint.rfind('.')] + '.onnx'
     op_v = 9
     if args.task == 'lane' and args.method in MINIMAL_OPSET_VERSIONS.keys():
         op_v = MINIMAL_OPSET_VERSIONS[args.method]

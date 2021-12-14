@@ -9,11 +9,12 @@ from ..common import save_checkpoint
 from ..seg_utils import ConfusionMatrix
 from ..ddp_utils import is_main_process, is_dist_avail_and_initialized, get_world_size
 from .base import BaseTrainer, DATASETS, TRANSFORMS
+from .seg_tester import SegTester
 
 
 class SegTrainer(BaseTrainer):
     def __init__(self, cfg, args):
-        super().__init__(cfg, args)
+        super().__init__(cfg, args, map_dataset_statics=['categories'])
 
     def run(self):
         # Validate and find the best snapshot

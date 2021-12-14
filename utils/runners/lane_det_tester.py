@@ -26,12 +26,7 @@ class LaneDetTester(BaseTester):
         if self.fast_eval:
             _, x = self.fast_evaluate(self.model, self.device, self.dataloader,
                                       self._cfg['mixed_precision'], self._cfg['input_size'], self._cfg['num_classes'])
-            import fcntl
-            with open('log.txt', 'a') as f:
-                # Safe writing with locks
-                fcntl.flock(f, fcntl.LOCK_EX)
-                f.write(self._cfg['exp_name'] + ' validation: ' + str(x) + '\n')
-                fcntl.flock(f, fcntl.LOCK_UN)
+            self.write_mp_log('log.txt', self._cfg['exp_name'] + ' validation: ' + str(x) + '\n')
         else:
             self.test_one_set(self.model, self.device, self.dataloader, self._cfg['mixed_precision'],
                               [self._cfg['input_size'], self._cfg['original_size']],

@@ -1,4 +1,4 @@
-from ._roots import CULANE_ROOT
+from ._utils import CULANE_ROOT
 
 dataset = dict(
     name='CULaneAsSegmentation',

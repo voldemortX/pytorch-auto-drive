@@ -13,17 +13,18 @@ train_args_default = dict(
     exp_name='resnet18_baseline_culane',
     workers=10,
     batch_size=20,
-    continue_from=None,
+    checkpoint=None,
     # Device args
     world_size=0,
     dist_url='env://',
-    device='cuda'
+    device='cuda',
+    val_num_steps=0  # Seg IoU validation (mostly useless)
 )
 test_args_default = dict(
     exp_name='resnet18_baseline_culane',
     workers=10,
     batch_size=80,
-    continue_from='resnet18_baseline_culane.pt',
+    checkpoint='resnet18_baseline_culane.pt',
     # Device args
     device='cuda'
 )
@@ -36,8 +37,6 @@ train = dict(
     num_epochs=12,
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     seg=True,  # Seg-based method or not
-    validation=False,  # Seg IoU validation (mostly useless)
-    val_num_steps=0,
 )
 train.update(train_args_default)
 

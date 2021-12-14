@@ -37,5 +37,5 @@ class SimpleRegistry(object):
         try:
             return function_or_class(**dict_params_)
         except Exception as e:
-            print('Error in function or class: {}\nIn Python: {}'.format(name, function_or_class))
+            print('Build from dict error in function or class: {}\nIn Python: {}'.format(name, function_or_class))
             raise e

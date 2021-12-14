@@ -105,7 +105,7 @@ if __name__ == '__main__':
         mask_colors = mask_colors.to(device)
         mean = torch.tensor(mean, device=device)
         std = torch.tensor(std, device=device)
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.continue_from)
+        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.checkpoint)
 
         # Inference
         if image_type == FileType.DIR:  # Image folder (depth 1)

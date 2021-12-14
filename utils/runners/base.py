@@ -39,6 +39,10 @@ class BaseRunner(ABC):
     def run(self, *args, **kwargs):
         pass
 
+    def clean(self, *args, **kwargs):
+        # Cleanups and a hook for after-run messages/ops
+        pass
+
     def get_device_and_move_model(self, *args, **kwargs):
         device = torch.device('cpu')
         if torch.cuda.is_available():
@@ -53,27 +57,47 @@ class BaseRunner(ABC):
         if ckpt_filename is not None:
             load_checkpoint(net=self.model, lr_scheduler=None, optimizer=None, filename=ckpt_filename)
 
+    def get_dataset_statics(self, dataset, map_dataset_statics):
+        assert hasattr(self, '_cfg')
+        if map_dataset_statics is not None:
+            for k in map_dataset_statics:
+                self._cfg[k] = getattr(dataset, k)
+
     @staticmethod
     def update_cfg(cfg, updates):
+        # Update by argparse object/dict
         if not isinstance(updates, dict):
             updates = vars(updates)
         return cfg.update(updates)
 
+    @staticmethod
+    def write_mp_log(log_file, content, append=True):
+        # Multi-processing log writing
+        import fcntl
+        with open(log_file, 'a' if append else 'w') as f:
+            # Safe writing with locks
+            fcntl.flock(f, fcntl.LOCK_EX)
+            f.write(content)
+            fcntl.flock(f, fcntl.LOCK_UN)
+
 
 class BaseTrainer(BaseRunner):
-    def __init__(self, cfg, args):
+    def __init__(self, cfg, args, map_dataset_statics=None):
         super().__init__(cfg)
         net_without_ddp, self.device = self.get_device_and_move_model(args)
         self._cfg = cfg['train']
         self.update_cfg(self._cfg, args)
+        if 'val_num_steps' in self._cfg.keys():
+            self._cfg['validation'] = self._cfg['val_num_steps'] > 0
         self.writer = self.get_writer()
-        self.load_checkpoint(self._cfg['continue_from'])
+        self.load_checkpoint(self._cfg['checkpoint'])
 
         # Dataset
         self.collate_fn = get_collate_fn(self._cfg['collate_fn'])
         transforms = TRANSFORMS.from_dict(cfg['train_augmentation'])
         dataset = DATASETS.from_dict(cfg['dataset'],
                                      transforms=transforms)
+        self.get_dataset_statics(dataset, map_dataset_statics)
         self.train_sampler = get_sampler(self._cfg['distributed'], dataset)
         self.dataloader = torch.utils.data.DataLoader(dataset=dataset,
                                                       batch_size=self._cfg['batch_size'],
@@ -91,7 +115,7 @@ class BaseTrainer(BaseRunner):
 
         # Optimizer, LR scheduler, etc.
         self.optimizer = OPTIMIZERS.from_dict(cfg['optimizer'],
-                                              net_without_ddp=net_without_ddp)
+                                              parameters=net_without_ddp.parameters())
         self.lr_scheduler = LR_SCHEDULERS.from_dict(cfg['lr_scheduler'],
                                                     optimizer=self.optimizer,
                                                     len_loader=len(self.dataloader))
@@ -127,23 +151,26 @@ class BaseTrainer(BaseRunner):
     def clean(self):
         if self.writer is not None:
             self.writer.close()
+        if is_main_process() and self.validation_loader is not None:
+            print('Segmentation models used to be evaluated upon training, now please run a separate --test for eval!')
 
 
 class BaseTester(BaseRunner):
     image_sets = ['val']
 
-    def __init__(self, cfg, args):
+    def __init__(self, cfg, args, map_dataset_statics=None):
         super().__init__(cfg)
         self._cfg = cfg['test']
         self.update_cfg(self._cfg, args)
         self.device = self.get_device_and_move_model()
-        self.load_checkpoint(self._cfg['continue_from'])
+        self.load_checkpoint(self._cfg['checkpoint'])
 
         # Dataset
         transforms = TRANSFORMS.from_dict(cfg['test_augmentation'])
         dataset = DATASETS.from_dict(cfg['dataset'],
                                      image_set=self.image_sets[self._cfg['state'] - 1],
                                      transforms=transforms)
+        self.get_dataset_statics(dataset, map_dataset_statics)
 
         # Dataloader
         collate_fn = get_collate_fn(self._cfg['collate_fn'])

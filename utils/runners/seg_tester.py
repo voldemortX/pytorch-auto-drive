@@ -11,15 +11,16 @@ from .base import BaseTester
 
 class SegTester(BaseTester):
     def __init__(self, cfg, args):
-        super().__init__(cfg, args)
+        super().__init__(cfg, args, map_dataset_statics=['categories'])
 
     def run(self):
-        self.test_one_set(self.dataloader, self.device, self.model,
-                          self._cfg['num_classes'], self._cfg['categories'],
-                          self._cfg['original_size'], self._cfg['encoder_size'],
-                          self._cfg['mixed_precision'],
-                          self._cfg['selector'], self._cfg['eval_classes'],
-                          self._cfg['encoder_only'])
+        acc, iou = self.test_one_set(self.dataloader, self.device, self.model,
+                                     self._cfg['num_classes'], self._cfg['categories'],
+                                     self._cfg['original_size'], self._cfg['encoder_size'],
+                                     self._cfg['mixed_precision'],
+                                     self._cfg['selector'], self._cfg['eval_classes'],
+                                     self._cfg['encoder_only'])
+        self.write_mp_log('log.txt', self._cfg['exp_name'] + ': ' + str(iou) + '\n')
 
     @staticmethod
     @torch.no_grad()

@@ -35,8 +35,9 @@ def load_checkpoint(net, optimizer, lr_scheduler, filename):
     try:
         checkpoint = torch.load(filename, map_location='cpu')
     except:
-        print('Warning, model not saved as on cpu, could be a legacy trained weight.')
+        warnings.warn('Model not saved as on cpu, could be a legacy trained weight, trying loading on saved device...')
         checkpoint = torch.load(filename)
+        print('Loaded on saved device.')
 
     # To keep BC while having a acceptable variable name for lane detection
     checkpoint['model'] = OrderedDict((k.replace('aux_head', 'lane_classifier') if 'aux_head' in k else k, v)
