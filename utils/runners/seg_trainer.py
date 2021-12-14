@@ -45,7 +45,7 @@ class SegTrainer(BaseTrainer):
                         labels = labels.unsqueeze(0)
                         if labels.dtype not in (torch.float32, torch.float64):
                             labels = labels.to(torch.float32)
-                        labels = torch.nn.functional.interpolate(labels, size=self._cfg['encode_size'], mode='nearest')
+                        labels = torch.nn.functional.interpolate(labels, size=self._cfg['encoder_size'], mode='nearest')
                         labels = labels.to(torch.int64)
                         labels = labels.squeeze(0)
                     else:
@@ -84,7 +84,7 @@ class SegTrainer(BaseTrainer):
                         loader=self.validation_loader, device=self.device, net=self.model,
                         num_classes=self._cfg['num_classes'], categories=self._cfg['categories'],
                         output_size=self._cfg['original_size'],
-                        labels_size=self._cfg['encode_size'],
+                        labels_size=self._cfg['encoder_size'],
                         selector=self._cfg['selector'],
                         classes=self._cfg['eval_classes'],
                         mixed_precision=self._cfg['mixed_precision'],
