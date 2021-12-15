@@ -18,13 +18,14 @@ train_args_default = dict(
     world_size=0,
     dist_url='env://',
     device='cuda',
-    val_num_steps=0  # Seg IoU validation (mostly useless)
+    val_num_steps=0,  # Seg IoU validation (mostly useless)
+    save_dir='./checkpoints'
 )
 test_args_default = dict(
     exp_name='erfnet_baseline_tusimple',
     workers=10,
     batch_size=80,
-    checkpoint='erfnet_baseline_tusimple.pt',
+    checkpoint='./checkpoints/erfnet_baseline_tusimple/model.pt',
     # Device args
     device='cuda'
 )

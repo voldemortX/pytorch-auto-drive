@@ -1,9 +1,14 @@
 # Define every component in one line
 # cfg: config file, pure dict
 # args: command line args from argparse
+import os
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from abc import ABC, abstractmethod
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 from ..datasets import DATASETS, dict_collate_fn
 from ..losses import LOSSES
@@ -41,7 +46,9 @@ class BaseRunner(ABC):
 
     def clean(self, *args, **kwargs):
         # Cleanups and a hook for after-run messages/ops
-        pass
+        if hasattr(self, '_cfg') and 'exp_dir' in self._cfg.keys():
+            print('Files saved at: {}\n. Tensorboard log at: {}'.format(
+                self._cfg['exp_dir'], os.path.join('./runs', self._cfg['exp_name'])))
 
     def get_device_and_move_model(self, *args, **kwargs):
         device = torch.device('cpu')
@@ -62,6 +69,15 @@ class BaseRunner(ABC):
         if map_dataset_statics is not None:
             for k in map_dataset_statics:
                 self._cfg[k] = getattr(dataset, k)
+
+    def init_exp_dir(self, cfg, cfg_prefix=None):
+        # Init work directory and save parsed configs for reference
+        assert hasattr(self, '_cfg')
+        exp_dir = os.path.join(self._cfg['save_dir'], self._cfg['exp_name'])
+        os.makedirs(exp_dir, exist_ok=True)
+        self._cfg['exp_dir'] = exp_dir
+        with open(os.path.join(exp_dir, cfg_prefix + '_cfg.txt'), 'w') as f:
+            f.write(json.dumps(cfg, indent=4))
 
     @staticmethod
     def update_cfg(cfg, updates):
@@ -89,6 +105,7 @@ class BaseTrainer(BaseRunner):
         self.update_cfg(self._cfg, args)
         if 'val_num_steps' in self._cfg.keys():
             self._cfg['validation'] = self._cfg['val_num_steps'] > 0
+        self.init_exp_dir(cfg, 'train')
         self.writer = self.get_writer()
         self.load_checkpoint(self._cfg['checkpoint'])
 
@@ -149,6 +166,7 @@ class BaseTrainer(BaseRunner):
         return None
 
     def clean(self):
+        super().clean()
         if self.writer is not None:
             self.writer.close()
         if is_main_process() and self.validation_loader is not None:
@@ -162,6 +180,7 @@ class BaseTester(BaseRunner):
         super().__init__(cfg)
         self._cfg = cfg['test']
         self.update_cfg(self._cfg, args)
+        self.init_exp_dir(cfg, self.image_sets[self._cfg['state'] - 1])
         self.device = self.get_device_and_move_model()
         self.load_checkpoint(self._cfg['checkpoint'])
 

@@ -45,7 +45,7 @@ if __name__ == '__main__':
                         help='number of distributed processes')
     parser.add_argument('--dist-url', type=str, help='url used to set up distributed training')
     parser.add_argument('--device', type=str, help='CPU is not recommended!')
-    parser.add_argument('--log-dir', type=str, help='Path prefix to save ckpt, etc.')
+    parser.add_argument('--save-dir', type=str, help='Path prefix to save all files excluding tensorboard log.')
     parser.add_argument('--do-not-save', action='store_true',
                         help='[Deprecated] Please delete .pt files by yourself.')
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
         'world_size': 0,
         'dist_url': 'env://',
         'device': 'cuda',
-        'log_dir': '',
+        'save_dir': '',
         'do_not_save': False
     }
     states = ['train', 'val']
@@ -84,8 +84,6 @@ if __name__ == '__main__':
     Runner = SegTrainer if args.state == 0 else SegTester
     args, cfg[cfg_runner_key] = parse_arg_cfg(args, cfg[cfg_runner_key],
                                               defaults, required=['state', 'config'], deprecation_map=deprecation_map)
-    with open(args.exp_name + '_' + states[args.state] + '_cfg.txt', 'w') as f:
-        f.write(str(cfg))
     runner = Runner(cfg=cfg, args=args)
     runner.run()
     runner.clean()

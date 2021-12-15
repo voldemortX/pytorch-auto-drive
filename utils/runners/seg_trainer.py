@@ -1,3 +1,4 @@
+import os
 import torch
 import time
 if torch.__version__ >= '1.6.0':
@@ -104,7 +105,7 @@ class SegTrainer(BaseTrainer):
                         save_checkpoint(net=self.model.module if self._cfg['distributed'] else self.model,
                                         optimizer=None,
                                         lr_scheduler=None,
-                                        filename=self._cfg['exp_name'] + '.pt')
+                                        filename=os.path.join(self._cfg['exp_dir'] + 'model.pt'))
 
             # Evaluate training accuracies (same metric as validation, but must be on-the-fly to save time)
             conf_mat.reduce_from_all_processes()
