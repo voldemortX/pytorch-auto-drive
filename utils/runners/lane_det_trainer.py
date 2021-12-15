@@ -100,8 +100,9 @@ class LaneDetTrainer(BaseTrainer):
                         if test_mIoU > best_validation:
                             best_validation = test_mIoU
                             save_checkpoint(net=self.model.module if self._cfg['distributed'] else self.model,
-                                            optimizer=self.optimizer,
-                                            lr_scheduler=self.lr_scheduler, filename=self._cfg['exp_name'] + '.pt')
+                                            optimizer=None,
+                                            lr_scheduler=None,
+                                            filename=self._cfg['exp_name'] + '.pt')
 
             epoch += 1
             print('Epoch time: %.2fs' % (time.time() - time_now))
@@ -109,8 +110,8 @@ class LaneDetTrainer(BaseTrainer):
         # For no-evaluation mode
         if not self._cfg['validation']:
             save_checkpoint(net=self.model.module if self._cfg['distributed'] else self.model,
-                            optimizer=self.optimizer,
-                            lr_scheduler=self.lr_scheduler,
+                            optimizer=None,
+                            lr_scheduler=None,
                             filename=self._cfg['exp_name'] + '.pt')
 
     def get_validation_dataset(self, cfg):

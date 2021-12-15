@@ -102,7 +102,9 @@ class SegTrainer(BaseTrainer):
                     if test_mIoU > best_mIoU:
                         best_mIoU = test_mIoU
                         save_checkpoint(net=self.model.module if self._cfg['distributed'] else self.model,
-                                        optimizer=None, lr_scheduler=None, filename=self._cfg['exp_name'] + '.pt')
+                                        optimizer=None,
+                                        lr_scheduler=None,
+                                        filename=self._cfg['exp_name'] + '.pt')
 
             # Evaluate training accuracies (same metric as validation, but must be on-the-fly to save time)
             conf_mat.reduce_from_all_processes()

@@ -20,7 +20,8 @@ test_augmentation = dict(
         ),
         dict(
             name='LabelMap',
-            label_id_map=CITY_LABEL_MAP
+            label_id_map=CITY_LABEL_MAP,
+            outlier=False
         )
     ]
 )
