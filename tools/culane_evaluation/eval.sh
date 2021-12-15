@@ -38,3 +38,9 @@ out8=./output/out8_night.txt
 ./evaluate -a $data_dir -d $detect_dir -i $data_dir -l $list7 -w $w_lane -t $iou -c $im_w -r $im_h -f $frame -o $out7
 ./evaluate -a $data_dir -d $detect_dir -i $data_dir -l $list8 -w $w_lane -t $iou -c $im_w -r $im_h -f $frame -o $out8
 cat ./output/out*.txt>./output/${exp}_iou${iou}_split.txt
+
+if ! [ -z "$2" ]
+  then
+    mkdir -p ../../${2}/${1}
+    cp ./output/${exp}_iou${iou}_split.txt ../../${2}/${1}/test_result.txt
+fi

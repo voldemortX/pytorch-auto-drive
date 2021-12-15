@@ -18,6 +18,7 @@ train_args_default = dict(
     world_size=0,
     dist_url='env://',
     device='cuda',
+
     val_num_steps=0,  # Seg IoU validation (mostly useless)
     save_dir='./checkpoints'
 )
@@ -27,7 +28,9 @@ test_args_default = dict(
     batch_size=80,
     checkpoint='./checkpoints/resnet18_baseline_culane/model.pt',
     # Device args
-    device='cuda'
+    device='cuda',
+
+    save_dir='./checkpoints'
 )
 
 # Configs

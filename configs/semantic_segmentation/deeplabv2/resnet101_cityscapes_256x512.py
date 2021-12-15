@@ -18,6 +18,7 @@ train_args_default = dict(
     world_size=0,
     dist_url='env://',
     device='cuda',
+
     val_num_steps=1000,  # validation/checkpointing interval (steps)
     save_dir='./checkpoints'
 )
@@ -27,7 +28,9 @@ test_args_default = dict(
     batch_size=8,
     checkpoint='./checkpoints/resnet101_deeplabv2_cityscapes_256x512/model.pt',
     # Device args
-    device='cuda'
+    device='cuda',
+
+    save_dir='./checkpoints'
 )
 
 # Configs

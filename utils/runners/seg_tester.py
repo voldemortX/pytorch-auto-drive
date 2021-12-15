@@ -1,3 +1,4 @@
+import os
 import torch
 from tqdm import tqdm
 if torch.__version__ >= '1.6.0':
@@ -14,13 +15,16 @@ class SegTester(BaseTester):
         super().__init__(cfg, args, map_dataset_statics=['categories'])
 
     def run(self):
-        acc, iou = self.test_one_set(self.dataloader, self.device, self.model,
-                                     self._cfg['num_classes'], self._cfg['categories'],
-                                     self._cfg['original_size'], self._cfg['encoder_size'],
-                                     self._cfg['mixed_precision'],
-                                     self._cfg['selector'], self._cfg['eval_classes'],
-                                     self._cfg['encoder_only'])
+        acc, iou, res_str = self.test_one_set(self.dataloader, self.device, self.model,
+                                              self._cfg['num_classes'], self._cfg['categories'],
+                                              self._cfg['original_size'], self._cfg['encoder_size'],
+                                              self._cfg['mixed_precision'],
+                                              self._cfg['selector'], self._cfg['eval_classes'],
+                                              self._cfg['encoder_only'])
         self.write_mp_log('log.txt', self._cfg['exp_name'] + ': ' + str(iou) + '\n')
+        prefix = 'val' if self._cfg['state'] == 1 else 'custom_state_' + str(self._cfg['state'])
+        with open(os.path.join(self._cfg['exp_dir'], prefix + 'result.txt'), 'w') as f:
+            f.write(res_str)
 
     @staticmethod
     @torch.no_grad()
@@ -49,23 +53,25 @@ class SegTester(BaseTester):
         conf_mat.reduce_from_all_processes()
 
         acc_global, acc, iu = conf_mat.compute()
-        print(categories)
-        print((
-            'global correct: {:.2f}\n'
-            'average row correct: {}\n'
-            'IoU: {}\n'
+        res_str = (
+            'All classes: {}'
+            'Pixel acc: {:.2f}\n'
+            'Pixel acc (per-class): {}\n'
+            'IoU (per-class): {}\n'
             'mean IoU: {:.2f}\n'
             'mean IoU-{}: {:.2f}').format(
+            categories,
             acc_global.item() * 100,
             ['{:.2f}'.format(i) for i in (acc * 100).tolist()],
             ['{:.2f}'.format(i) for i in (iu * 100).tolist()],
             iu.mean().item() * 100,
             -1 if classes is None else classes,
-            -1 if selector is None else iu[selector].mean().item() * 100))
+            -1 if selector is None else iu[selector].mean().item() * 100)
+        print(res_str)
 
         if selector is None:
             iou = iu.mean().item() * 100
         else:
             iou = iu[selector].mean().item() * 100
 
-        return acc_global.item() * 100, iou
+        return acc_global.item() * 100, iou, res_str

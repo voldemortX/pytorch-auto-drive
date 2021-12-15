@@ -47,7 +47,7 @@ class BaseRunner(ABC):
     def clean(self, *args, **kwargs):
         # Cleanups and a hook for after-run messages/ops
         if hasattr(self, '_cfg') and 'exp_dir' in self._cfg.keys():
-            print('Files saved at: {}\n. Tensorboard log at: {}'.format(
+            print('Files saved at: {}.\nTensorboard log at: {}'.format(
                 self._cfg['exp_dir'], os.path.join('./runs', self._cfg['exp_name'])))
 
     def get_device_and_move_model(self, *args, **kwargs):
@@ -76,7 +76,7 @@ class BaseRunner(ABC):
         exp_dir = os.path.join(self._cfg['save_dir'], self._cfg['exp_name'])
         os.makedirs(exp_dir, exist_ok=True)
         self._cfg['exp_dir'] = exp_dir
-        with open(os.path.join(exp_dir, cfg_prefix + '_cfg.txt'), 'w') as f:
+        with open(os.path.join(exp_dir, cfg_prefix + '_cfg.json'), 'w') as f:
             f.write(json.dumps(cfg, indent=4))
 
     @staticmethod
