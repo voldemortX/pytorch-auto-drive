@@ -23,7 +23,7 @@ class SegTester(BaseTester):
                                               self._cfg['encoder_only'])
         self.write_mp_log('log.txt', self._cfg['exp_name'] + ': ' + str(iou) + '\n')
         prefix = 'val' if self._cfg['state'] == 1 else 'custom_state_' + str(self._cfg['state'])
-        with open(os.path.join(self._cfg['exp_dir'], prefix + 'result.txt'), 'w') as f:
+        with open(os.path.join(self._cfg['exp_dir'], prefix + '_result.txt'), 'w') as f:
             f.write(res_str)
 
     @staticmethod
@@ -54,12 +54,12 @@ class SegTester(BaseTester):
 
         acc_global, acc, iu = conf_mat.compute()
         res_str = (
-            'All classes: {}'
+            'All classes: {}\n'
             'Pixel acc: {:.2f}\n'
             'Pixel acc (per-class): {}\n'
             'IoU (per-class): {}\n'
-            'mean IoU: {:.2f}\n'
-            'mean IoU-{}: {:.2f}').format(
+            'Mean IoU: {:.2f}\n'
+            'Mean IoU-{}: {:.2f}').format(
             categories,
             acc_global.item() * 100,
             ['{:.2f}'.format(i) for i in (acc * 100).tolist()],

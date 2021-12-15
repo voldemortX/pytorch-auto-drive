@@ -169,8 +169,6 @@ class BaseTrainer(BaseRunner):
         super().clean()
         if self.writer is not None:
             self.writer.close()
-        if is_main_process() and self.validation_loader is not None:
-            print('Segmentation models used to be evaluated upon training, now please run a separate --test for eval!')
 
 
 class BaseTester(BaseRunner):

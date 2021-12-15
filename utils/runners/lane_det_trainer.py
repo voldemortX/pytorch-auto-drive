@@ -103,7 +103,7 @@ class LaneDetTrainer(BaseTrainer):
                             save_checkpoint(net=self.model.module if self._cfg['distributed'] else self.model,
                                             optimizer=None,
                                             lr_scheduler=None,
-                                            filename=os.path.join(self._cfg['exp_dir'] + 'model.pt'))
+                                            filename=os.path.join(self._cfg['exp_dir'], 'model.pt'))
 
             epoch += 1
             print('Epoch time: %.2fs' % (time.time() - time_now))
@@ -113,7 +113,7 @@ class LaneDetTrainer(BaseTrainer):
             save_checkpoint(net=self.model.module if self._cfg['distributed'] else self.model,
                             optimizer=None,
                             lr_scheduler=None,
-                            filename=os.path.join(self._cfg['exp_dir'] + 'model.pt'))
+                            filename=os.path.join(self._cfg['exp_dir'], 'model.pt'))
 
     def get_validation_dataset(self, cfg):
         if not self._cfg['validation']:

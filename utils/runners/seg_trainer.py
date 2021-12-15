@@ -105,17 +105,17 @@ class SegTrainer(BaseTrainer):
                         save_checkpoint(net=self.model.module if self._cfg['distributed'] else self.model,
                                         optimizer=None,
                                         lr_scheduler=None,
-                                        filename=os.path.join(self._cfg['exp_dir'] + 'model.pt'))
+                                        filename=os.path.join(self._cfg['exp_dir'], 'model.pt'))
 
             # Evaluate training accuracies (same metric as validation, but must be on-the-fly to save time)
             conf_mat.reduce_from_all_processes()
             acc_global, acc, iu = conf_mat.compute()
             print(self._cfg['categories'])
             print((
-                'global correct: {:.2f}\n'
-                'average row correct: {}\n'
-                'IoU: {}\n'
-                'mean IoU: {:.2f}').format(
+                'Pixel acc: {:.2f}\n'
+                'Pixel acc (per-class): {}\n'
+                'IoU (per-class): {}\n'
+                'Mean IoU: {:.2f}').format(
                 acc_global.item() * 100,
                 ['{:.2f}'.format(i) for i in (acc * 100).tolist()],
                 ['{:.2f}'.format(i) for i in (iu * 100).tolist()],
@@ -143,3 +143,8 @@ class SegTrainer(BaseTrainer):
                                             transforms=validation_transforms)
 
         return validation_set
+
+    def clean(self):
+        super().clean()
+        if is_main_process():
+            print('Segmentation models used to be evaluated upon training, now please run a separate --val for eval!')
