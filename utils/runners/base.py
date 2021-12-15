@@ -48,7 +48,9 @@ class BaseRunner(ABC):
         # Cleanups and a hook for after-run messages/ops
         if hasattr(self, '_cfg') and 'exp_dir' in self._cfg.keys():
             print('Files saved at: {}.\nTensorboard log at: {}'.format(
-                self._cfg['exp_dir'], os.path.join('./runs', self._cfg['exp_name'])))
+                self._cfg['exp_dir'],
+                os.path.join(self._cfg['save_dir'], 'tb_logs', self._cfg['exp_name'])
+            ))
 
     def get_device_and_move_model(self, *args, **kwargs):
         device = torch.device('cpu')
@@ -156,7 +158,9 @@ class BaseTrainer(BaseRunner):
         return net_without_ddp, device
 
     def get_writer(self):
-        return SummaryWriter('runs/' + self._cfg['exp_name']) if is_main_process() else None
+        return SummaryWriter(os.path.join(self._cfg['save_dir'],
+                                          'tb_logs',
+                                          self._cfg['exp_name'])) if is_main_process() else None
 
     @abstractmethod
     def run(self, *args, **kwargs):
