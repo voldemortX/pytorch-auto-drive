@@ -17,7 +17,8 @@ train_augmentation = dict(
         dict(
             name='Normalize',
             mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
+            std=[0.229, 0.224, 0.225],
+            normalize_target=True
         )
     ]
 )

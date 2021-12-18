@@ -1,12 +1,12 @@
 # Data pipeline
 from configs.lane_detection.common.datasets.culane_seg import dataset
-from configs.lane_detection.common.datasets.seg_level0_288 import train_augmentation
-from configs.lane_detection.common.datasets.seg_test_288 import test_augmentation
+from configs.lane_detection.common.datasets.train_level0_288 import train_augmentation
+from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_5class import loss
 from configs.lane_detection.common.optims.sgd02 import optimizer
-from configs.lane_detection.common.optims.ep12_warmup200 import lr_scheduler
+from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(

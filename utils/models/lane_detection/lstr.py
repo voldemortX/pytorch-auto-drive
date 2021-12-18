@@ -106,6 +106,11 @@ class LSTR(nn.Module):
 
         return out
 
+    def eval(self):
+        super().eval()
+        self.aux_loss = False
+        self.transformer.decoder.return_intermediate = False
+
     @torch.no_grad()
     def inference(self, inputs, input_sizes, gap, ppl, dataset, max_lane=0, forward=True):
         outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function

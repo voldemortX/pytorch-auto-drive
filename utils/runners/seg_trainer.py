@@ -81,7 +81,7 @@ class SegTrainer(BaseTrainer):
 
                 # Validate and find the best snapshot
                 if current_step_num % self._cfg['val_num_steps'] == (self._cfg['val_num_steps'] - 1):
-                    test_pixel_accuracy, test_mIoU = SegTester.test_one_set(
+                    test_pixel_accuracy, test_mIoU, _ = SegTester.test_one_set(
                         loader=self.validation_loader, device=self.device, net=self.model,
                         num_classes=self._cfg['num_classes'], categories=self._cfg['categories'],
                         output_size=self._cfg['original_size'],

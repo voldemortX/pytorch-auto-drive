@@ -373,7 +373,8 @@ class ToTensor(object):
 
 @TRANSFORMS.register()
 class Normalize(object):
-    def __init__(self, mean, std, normalize_target=False, ignore_x=-2):
+    def __init__(self, mean, std, normalize_target=True, ignore_x=-2):
+        # Default values changed (2021.12.18)
         self.mean = mean
         self.std = std
         self.normalize_target = normalize_target
