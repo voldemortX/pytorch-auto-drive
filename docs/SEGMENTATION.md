@@ -4,55 +4,45 @@
 
 ## Training:
 
-If you are using ERFNet, first download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
+If you are using ERFNet, first download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models).
 
 ```
-python main_semseg.py --state=<state> \  # 0: normal; 2: decoder training
-                      --epochs=<number of epochs> \
-                      --lr=<learning rate> \
-                      --batch-size=<any batch size> \ 
-                      --dataset=<dataset> \
-                      --model=<the model used> \
-                      --exp-name=<whatever you like> \
-                      --mixed-precision \  # Enable mixed precision
-                      --encoder-only  # Pre-train encoder
+python main_semseg.py --train \
+                      --config=<config file path> \
+                      --mixed-precision  # Enable mixed precision
 ```
 
-We provide directly executable shell scripts for each supported models in [MODEL_ZOO.md](MODEL_ZOO.md). You can run a shell script (e.g. `xxx.sh`) by:
-
-```
-./tools/shells/xxx.sh
-```
-
-For detailed instructions, run:
+For more instructions that you can override in commandline:
 
 ```
 python main_semseg.py --help
 ```
-
+ 
 ## Distributed Training
 
 We support multi-GPU training with Distributed Data Parallel (DDP):
 
 ```
-python -m torch.distributed.launch --nproc_per_node=<number of GPU per-node> --use_env main_semseg.py --world-size=<total GPU> --dist-url=<socket url like tcp://localhost:23456> <your normal args>
+python -m torch.distributed.launch --nproc_per_node=<number of GPU per-node> --use_env main_semseg.py <your normal args>
 ```
 
-With DDP, `--batch-size` means batch size per-GPU, and more dataloader threads should be used with `--workers`.
+With DDP, batch size and number of workers are **per-GPU**.
 
 ## Testing:
 
-Training contains online evaluations and the best model is saved, you can check best *val* set performance at `log.txt`, for more details you can checkout tensorboard.
+Training contains online evaluations and the best model is saved.
 
-To evaluate a trained model, you can use either mixed-precision or fp32 for any model trained with/without mixed-precision:
+To evaluate a trained model:
 
 ```
-python main_semseg.py --state=1 \
-                      --continue-from=<trained model .pt filename> \
-                      --dataset=<dataset> \
-                      --model=<the model used> \ 
-                      --batch-size=<any batch size> \
+python main_semseg.py --val \  # No test set labels available
+                      --config=<config file path> \
+                      --checkpoint=<ckpt file path> \
                       --mixed-precision  # Enable mixed precision
 ```
 
-Recommend `--workers=0 --batch-size=1` for high precision inference.
+Detail results will be saved to `<save_dir>/<exp_name>/`.
+
+Overall result will be saved to `log.txt`.
+
+Recommend `workers=0 batch_size=1` for high precision inference.

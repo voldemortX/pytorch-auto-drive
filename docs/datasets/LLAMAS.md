@@ -14,6 +14,15 @@
 
 LLAMAS dataset provides both color and gray images. We use color images in our framework.
 
+4. Prepare official evaluation scripts:
+
+```
+cd tools/llamas_evaluation
+mkdir output
+```
+
+Then change `data_dir` to your LLAMAS base directory in [autotest_llamas.sh](../../autotest_llamas.sh). *Mind that you need extra ../../ if relative path is used.*
+
 ## Description
 
 ### Directory Structure

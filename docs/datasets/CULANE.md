@@ -16,6 +16,18 @@
   python tools/culane_list_convertor.py
 ```
 
+4. Prepare official evaluation scripts:
+
+```
+cd tools/culane_evaluation
+make
+mkdir output
+chmod 777 eval*
+cd -
+```
+
+Then change `data_dir` to your CULane base directory in [eval.sh](../../tools/culane_evaluation/eval.sh) and [eval_validation.sh](../../tools/culane_evaluation/eval_validation.sh). *Mind that you need extra ../../ if relative path is used.*
+
 ## Description
 
 ### Directory Structure

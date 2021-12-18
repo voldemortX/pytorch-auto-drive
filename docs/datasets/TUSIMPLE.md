@@ -14,6 +14,15 @@ First put the data lists you downloaded before in `TUSIMPLE.BASE_DIR/lists`. The
   python tools/tusimple_list_convertor.py
 ```
 
+4. Prepare official evaluation scripts:
+
+```
+cd tools/tusimple_evaluation
+mkdir output
+```
+
+Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh](../../autotest_tusimple.sh). *Mind that you need extra ../../ if relative path is used.*
+
 ## Description
 
 ### Directory Structure

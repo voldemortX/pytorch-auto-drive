@@ -1,6 +1,6 @@
 ## Configs
 
-Config files in *PytorchAutoDrive* are used to define models,
+Config files in *PytorchAutoDrive* (`./configs/`) are used to define models,
 how they are trained, tested, visualized, *etc*.
 
 ### Registry Mechanism
@@ -16,7 +16,7 @@ REGISTRY.from_dict(
 )
 ```
 
-Note that each argument must be keyword (k=v), and kwargs can overwrite dict configs.
+Note that each argument must be keyword (k=v), and some kwargs can overwrite dict configs.
 
 ### Use An Existing Config
 
