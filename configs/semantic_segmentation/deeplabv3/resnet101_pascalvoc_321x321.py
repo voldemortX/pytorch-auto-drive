@@ -1,17 +1,17 @@
 # Data pipeline
-from configs.semantic_segmentation.common.datasets.cityscapes import dataset
-from configs.semantic_segmentation.common.datasets.city_train_half_256 import train_augmentation
-from configs.semantic_segmentation.common.datasets.city_test_half import test_augmentation
+from configs.semantic_segmentation.common.datasets.pascal_voc import dataset
+from configs.semantic_segmentation.common.datasets.voc_train_321 import train_augmentation
+from configs.semantic_segmentation.common.datasets.voc_test_505 import test_augmentation
 
 # Optimization pipeline
 from configs.semantic_segmentation.common.optims.celoss import loss
-from configs.semantic_segmentation.common.optims.sgd0004 import optimizer
-from configs.semantic_segmentation.common.optims.ep60 import lr_scheduler
+from configs.semantic_segmentation.common.optims.sgd0002 import optimizer
+from configs.semantic_segmentation.common.optims.ep30 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='resnet101_deeplabv2_cityscapes_256x512',
-    workers=8,
+    exp_name='resnet101_deeplabv3_pascalvoc_321x321',
+    workers=4,
     batch_size=8,
     checkpoint=None,
     # Device args
@@ -23,10 +23,10 @@ train_args_default = dict(
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='resnet101_deeplabv2_cityscapes_256x512',
+    exp_name='resnet101_deeplabv3_pascalvoc_321x321',
     workers=0,
     batch_size=1,
-    checkpoint='./checkpoints/resnet101_deeplabv2_cityscapes_256x512/model.pt',
+    checkpoint='./checkpoints/resnet101_deeplabv3_pascalvoc_321x321/model.pt',
     # Device args
     device='cuda',
 
@@ -35,14 +35,14 @@ test_args_default = dict(
 
 # Configs
 train = dict(
-    num_epochs=60,
+    num_epochs=30,
     collate_fn=None,
     input_size=(256, 512),
     original_size=(512, 1024),
-    num_classes=19,
+    num_classes=21,
 
     # For selective evaluation (e.g., SYNTHIA selects 13/16 classes from Cityscapes)
-    eval_classes=19,
+    eval_classes=21,
     selector=None,
 
     # For ENet encoder pre-training
@@ -54,10 +54,10 @@ train.update(train_args_default)
 test = dict(
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     original_size=(512, 1024),
-    num_classes=19,
+    num_classes=21,
 
     # For selective evaluation (e.g., SYNTHIA selects 13/16 classes from Cityscapes)
-    eval_classes=19,
+    eval_classes=21,
     selector=None,
 
     # For ENet encoder pre-training
@@ -77,8 +77,8 @@ model = dict(
         replace_stride_with_dilation=[False, True, True]
     ),
     classifier_cfg=dict(
-        name='DeepLabV2Head',
+        name='DeepLabV3Head',
         in_channels=2048,
-        num_classes=19
+        num_classes=21
     )
 )

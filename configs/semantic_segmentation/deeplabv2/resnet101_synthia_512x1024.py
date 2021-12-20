@@ -1,18 +1,18 @@
 # Data pipeline
-from configs.semantic_segmentation.common.datasets.cityscapes import dataset
-from configs.semantic_segmentation.common.datasets.city_train_half_256 import train_augmentation
-from configs.semantic_segmentation.common.datasets.city_test_half import test_augmentation
+from configs.semantic_segmentation.common.datasets.synthia import dataset
+from configs.semantic_segmentation.common.datasets.synthia_train_hd_512 import train_augmentation
+from configs.semantic_segmentation.common.datasets.city_test_hd import test_augmentation
 
 # Optimization pipeline
 from configs.semantic_segmentation.common.optims.celoss import loss
-from configs.semantic_segmentation.common.optims.sgd0004 import optimizer
-from configs.semantic_segmentation.common.optims.ep60 import lr_scheduler
+from configs.semantic_segmentation.common.optims.sgd0002 import optimizer
+from configs.semantic_segmentation.common.optims.ep20 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='resnet101_deeplabv2_cityscapes_256x512',
+    exp_name='resnet101_deeplabv2_synthia_512x1024',
     workers=8,
-    batch_size=8,
+    batch_size=4,
     checkpoint=None,
     # Device args
     world_size=0,
@@ -23,10 +23,10 @@ train_args_default = dict(
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='resnet101_deeplabv2_cityscapes_256x512',
+    exp_name='resnet101_deeplabv2_synthia_512x1024',
     workers=0,
     batch_size=1,
-    checkpoint='./checkpoints/resnet101_deeplabv2_cityscapes_256x512/model.pt',
+    checkpoint='./checkpoints/resnet101_deeplabv2_synthia_512x1024/model.pt',
     # Device args
     device='cuda',
 
@@ -35,15 +35,15 @@ test_args_default = dict(
 
 # Configs
 train = dict(
-    num_epochs=60,
+    num_epochs=20,
     collate_fn=None,
-    input_size=(256, 512),
-    original_size=(512, 1024),
+    input_size=(512, 1024),
+    original_size=(1024, 2048),
     num_classes=19,
 
     # For selective evaluation (e.g., SYNTHIA selects 13/16 classes from Cityscapes)
-    eval_classes=19,
-    selector=None,
+    eval_classes=16,
+    selector=[0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18],
 
     # For ENet encoder pre-training
     encoder_only=False,
@@ -53,12 +53,12 @@ train.update(train_args_default)
 
 test = dict(
     collate_fn=None,  # 'dict_collate_fn' for LSTR
-    original_size=(512, 1024),
+    original_size=(1024, 2048),
     num_classes=19,
 
     # For selective evaluation (e.g., SYNTHIA selects 13/16 classes from Cityscapes)
-    eval_classes=19,
-    selector=None,
+    eval_classes=16,
+    selector=[0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 17, 18],
 
     # For ENet encoder pre-training
     encoder_only=False,

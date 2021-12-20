@@ -1,18 +1,18 @@
 # Data pipeline
 from configs.semantic_segmentation.common.datasets.cityscapes import dataset
-from configs.semantic_segmentation.common.datasets.city_train_half_256 import train_augmentation
-from configs.semantic_segmentation.common.datasets.city_test_half import test_augmentation
+from configs.semantic_segmentation.common.datasets.city_train_half_512_wo_norm import train_augmentation
+from configs.semantic_segmentation.common.datasets.city_test_half_wo_norm import test_augmentation
 
 # Optimization pipeline
-from configs.semantic_segmentation.common.optims.celoss import loss
-from configs.semantic_segmentation.common.optims.sgd0004 import optimizer
-from configs.semantic_segmentation.common.optims.ep60 import lr_scheduler
+from configs.semantic_segmentation.common.optims.celoss_cityscapes_balanced import loss
+from configs.semantic_segmentation.common.optims.adam00007 import optimizer
+from configs.semantic_segmentation.common.optims.ep150_epoch import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='resnet101_deeplabv2_cityscapes_256x512',
+    exp_name='erfnet_cityscapes_512x1024',
     workers=8,
-    batch_size=8,
+    batch_size=10,
     checkpoint=None,
     # Device args
     world_size=0,
@@ -23,10 +23,10 @@ train_args_default = dict(
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='resnet101_deeplabv2_cityscapes_256x512',
+    exp_name='erfnet_cityscapes_512x1024',
     workers=0,
     batch_size=1,
-    checkpoint='./checkpoints/resnet101_deeplabv2_cityscapes_256x512/model.pt',
+    checkpoint='./checkpoints/erfnet_cityscapes_512x1024/model.pt',
     # Device args
     device='cuda',
 
@@ -35,9 +35,9 @@ test_args_default = dict(
 
 # Configs
 train = dict(
-    num_epochs=60,
+    num_epochs=150,
     collate_fn=None,
-    input_size=(256, 512),
+    input_size=(512, 1024),
     original_size=(512, 1024),
     num_classes=19,
 
@@ -67,18 +67,9 @@ test = dict(
 test.update(test_args_default)
 
 model = dict(
-    name='standard_segmentation_model',
-    pretrained=False,  # MSCOCO pre-training, not recommended (not the same COCO pre-training in DeepLab paper)
-    backbone_cfg=dict(
-        name='predefined_resnet_backbone',
-        backbone_name='resnet101',
-        return_layer='layer4',
-        pretrained=True,  # ImageNet pre-training
-        replace_stride_with_dilation=[False, True, True]
-    ),
-    classifier_cfg=dict(
-        name='DeepLabV2Head',
-        in_channels=2048,
-        num_classes=19
-    )
+    name='ERFNet',
+    num_classes=19,
+    dropout_1=0.03,
+    dropout_2=0.3,
+    pretrained_weights='erfnet_encoder_pretrained.pth.tar'
 )

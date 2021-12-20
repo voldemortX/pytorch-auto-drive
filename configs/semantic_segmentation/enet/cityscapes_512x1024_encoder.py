@@ -1,0 +1,78 @@
+# Data pipeline
+from configs.semantic_segmentation.common.datasets.cityscapes import dataset
+from configs.semantic_segmentation.common.datasets.city_train_half_512_wo_norm import train_augmentation
+from configs.semantic_segmentation.common.datasets.city_test_half_wo_norm import test_augmentation
+
+# Optimization pipeline
+from configs.semantic_segmentation.common.optims.celoss_cityscapes_balanced import loss
+from configs.semantic_segmentation.common.optims.adam00008_wd00002 import optimizer
+from configs.semantic_segmentation.common.optims.ep300 import lr_scheduler
+
+# Default args that can be overridden in commandline
+train_args_default = dict(
+    exp_name='enet_cityscapes_512x1024_encoder',
+    workers=8,
+    batch_size=16,
+    checkpoint=None,
+    # Device args
+    world_size=0,
+    dist_url='env://',
+    device='cuda',
+
+    val_num_steps=1000,  # validation/checkpointing interval (steps)
+    save_dir='./checkpoints'
+)
+test_args_default = dict(
+    exp_name='enet_cityscapes_512x1024_encoder',
+    workers=0,
+    batch_size=1,
+    checkpoint='./checkpoints/enet_cityscapes_512x1024_encoder/model.pt',
+    # Device args
+    device='cuda',
+
+    save_dir='./checkpoints'
+)
+
+# Configs
+train = dict(
+    num_epochs=300,
+    collate_fn=None,
+    input_size=(512, 1024),
+    original_size=(512, 1024),
+    num_classes=19,
+
+    # For selective evaluation (e.g., SYNTHIA selects 13/16 classes from Cityscapes)
+    eval_classes=19,
+    selector=None,
+
+    # For ENet encoder pre-training
+    encoder_only=True,
+    encoder_size=(64, 128)
+)
+train.update(train_args_default)
+
+test = dict(
+    collate_fn=None,  # 'dict_collate_fn' for LSTR
+    original_size=(512, 1024),
+    num_classes=19,
+
+    # For selective evaluation (e.g., SYNTHIA selects 13/16 classes from Cityscapes)
+    eval_classes=19,
+    selector=None,
+
+    # For ENet encoder pre-training
+    encoder_only=True,
+    encoder_size=(64, 128)
+)
+test.update(test_args_default)
+
+model = dict(
+    name='ENet',
+    num_classes=19,
+    encoder_relu=False,
+    decoder_relu=True,
+    dropout_1=0.01,
+    dropout_2=0.1,
+    encoder_only=True,
+    pretrained_weights=None
+)

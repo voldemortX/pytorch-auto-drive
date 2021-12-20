@@ -661,8 +661,9 @@ class Decoder(nn.Module):
 
 @MODELS.register()
 class ENet(_EncoderDecoderModel):
-    def __init__(self, lane_classifier_cfg,
+    def __init__(self,
                  num_classes,
+                 lane_classifier_cfg=None,
                  encoder_relu=False,
                  decoder_relu=True,
                  dropout_1=0.01,
