@@ -14,14 +14,10 @@ from .builder import DATASETS
 @DATASETS.register()
 class TuSimple(LaneKeypointDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None,
-                 ppl=56, gap=10, start=160, padding_mask=False, process_points=False):
-        super().__init__(root, transforms, transform, target_transform, ppl, gap, start, padding_mask, process_points)
+                 ppl=56, gap=10, start=160, padding_mask=False):
+        super().__init__(root, transforms, transform, target_transform, ppl, gap, start, padding_mask, image_set)
 
-        # Checks
-        if not os.path.exists('./output'):
-            os.makedirs('./output')
-        if image_set not in ['train', 'val', 'test']:
-            raise ValueError
+        self._check()
 
         # Data list
         with open(os.path.join(root, 'lists', image_set + '.txt'), "r") as f:

@@ -29,7 +29,6 @@ def lane_normalize_in_batch(keypoints):
 
 # TODO: Speed-up Hungarian on GPU with tensors
 # Nothing will happen with DDP (for at last we use image-wise results)
-@LOSSES.register()
 class HungarianMatcher(torch.nn.Module):
     """This class computes an assignment between the targets and the predictions of the network
 
@@ -94,6 +93,7 @@ class HungarianMatcher(torch.nn.Module):
 
 
 # The Hungarian loss for LSTR
+@LOSSES.register()
 class HungarianLoss(WeightedLoss):
     __constants__ = ['reduction']
 

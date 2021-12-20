@@ -1,5 +1,5 @@
 # Data pipeline
-from configs.lane_detection.common.datasets.tusimple_seg import dataset
+from configs.lane_detection.common.datasets.tusimple import dataset
 from configs.lane_detection.common.datasets.train_level0_360 import train_augmentation
 from configs.lane_detection.common.datasets.test_360 import test_augmentation
 
@@ -40,7 +40,7 @@ train = dict(
     original_size=(720, 1280),
     num_classes=7,
     num_epochs=2000,
-    collate_fn='dict'
+    collate_fn='dict_collate_fn'
 )
 train.update(train_args_default)
 
@@ -49,7 +49,7 @@ test = dict(
     gap=10,
     ppl=56,
     thresh=0.3,
-    collate_fn='dict',
+    collate_fn='dict_collate_fn',
     input_size=(360, 640),
     original_size=(720, 1280),
     max_lane=5,
