@@ -6,11 +6,12 @@ from torch import nn
 
 def is_tracing() -> bool:
     # https://github.com/pytorch/pytorch/issues/42448
-    trace = torch.jit.is_tracing()
-    if isinstance(trace, bool):
-        return trace
-    else:
+    if torch.__version__ >= '1.7.0':
+        return torch.jit.is_tracing()
+    elif torch.__version__ >= '1.6.0':
         return torch._C._is_tracing()
+    else:
+        return False
 
 
 class IntermediateLayerGetter(nn.ModuleDict):
