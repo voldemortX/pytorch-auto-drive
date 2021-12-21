@@ -1,7 +1,10 @@
 # Data pipeline
 from configs.semantic_segmentation.common.datasets.gtav import dataset
 from configs.semantic_segmentation.common.datasets.gtav_train_hd_512 import train_augmentation
-from configs.semantic_segmentation.common.datasets.city_test_half import test_augmentation
+from configs.semantic_segmentation.common.datasets.city_test_hd import test_augmentation
+
+# For UDA baseline setting (train on GTAV, test on Cityscapes)
+from configs.semantic_segmentation.common.datasets.cityscapes import dataset as test_dataset
 
 # Optimization pipeline
 from configs.semantic_segmentation.common.optims.celoss import loss

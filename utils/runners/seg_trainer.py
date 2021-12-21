@@ -138,7 +138,7 @@ class SegTrainer(BaseTrainer):
         if not self._cfg['validation']:
             return None
         validation_transforms = TRANSFORMS.from_dict(cfg['test_augmentation'])
-        validation_set = DATASETS.from_dict(cfg['dataset'],
+        validation_set = DATASETS.from_dict(cfg['test_dataset'] if 'test_dataset' in cfg.keys() else cfg['dataset'],
                                             image_set='val',
                                             transforms=validation_transforms)
 
