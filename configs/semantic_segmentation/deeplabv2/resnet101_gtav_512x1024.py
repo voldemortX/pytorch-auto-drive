@@ -50,7 +50,10 @@ train = dict(
 
     # For ENet encoder pre-training
     encoder_only=False,
-    encoder_size=None
+    encoder_size=None,
+
+    # To avoid OOM
+    val_batch_size=2
 )
 train.update(train_args_default)
 

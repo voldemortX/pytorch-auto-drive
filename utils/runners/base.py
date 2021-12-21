@@ -126,8 +126,11 @@ class BaseTrainer(BaseRunner):
         validation_set = self.get_validation_dataset(cfg)
         self.validation_loader = None
         if validation_set is not None:
+            val_bs = self._cfg.get('val_batch_size')
+            if val_bs is None:
+                val_bs = self._cfg['batch_size'] * 4
             self.validation_loader = torch.utils.data.DataLoader(dataset=validation_set,
-                                                                 batch_size=self._cfg['batch_size'] * 4,
+                                                                 batch_size=val_bs,
                                                                  num_workers=self._cfg['workers'],
                                                                  shuffle=False,
                                                                  collate_fn=self.collate_fn)
