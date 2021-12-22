@@ -115,7 +115,11 @@ class ERFNet(_EncoderDecoderModel):
 
     def _load_encoder(self, pretrained_weights):
         if pretrained_weights is not None:  # Load ImageNet pre-trained weights
-            saved_weights = torch.load(pretrained_weights)['state_dict']
+            try:
+                saved_weights = torch.load(pretrained_weights)['state_dict']
+            except FileNotFoundError:
+                raise FileNotFoundError('pretrained_weights is not there! '
+                                        'Please set pretrained_weights=None if you are only testing.')
             original_weights = self.state_dict()
             for key in saved_weights.keys():
                 my_key = key.replace('module.features.', '')

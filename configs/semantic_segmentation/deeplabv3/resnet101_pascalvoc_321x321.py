@@ -37,8 +37,8 @@ test_args_default = dict(
 train = dict(
     num_epochs=30,
     collate_fn=None,
-    input_size=(256, 512),
-    original_size=(512, 1024),
+    input_size=(321, 321),
+    original_size=(505, 505),
     num_classes=21,
 
     # For selective evaluation (e.g., SYNTHIA selects 13/16 classes from Cityscapes)
@@ -53,7 +53,7 @@ train.update(train_args_default)
 
 test = dict(
     collate_fn=None,  # 'dict_collate_fn' for LSTR
-    original_size=(512, 1024),
+    original_size=(505, 505),
     num_classes=21,
 
     # For selective evaluation (e.g., SYNTHIA selects 13/16 classes from Cityscapes)
