@@ -61,9 +61,9 @@ model = dict(
     num_classes=7,
     dropout_1=0.1,
     backbone_cfg=dict(
-        name='VGG16'
+        name='VGG16',
+        pretrained=True
     ),
-    spatial_conv_cfg=None,
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',
         num_output=7 - 1,

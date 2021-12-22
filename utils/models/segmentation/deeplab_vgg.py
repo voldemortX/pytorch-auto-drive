@@ -6,8 +6,11 @@ from ..builder import MODELS
 
 @MODELS.register()
 class DeepLabV1(nn.Module):
-    def __init__(self, backbone_cfg, spatial_conv_cfg, lane_classifier_cfg,
-                 num_classes, dropout_1=0.1):
+    def __init__(self, backbone_cfg,
+                 num_classes,
+                 spatial_conv_cfg=None,
+                 lane_classifier_cfg=None,
+                 dropout_1=0.1):
         super(DeepLabV1, self).__init__()
 
         self.encoder = MODELS.from_dict(backbone_cfg)
