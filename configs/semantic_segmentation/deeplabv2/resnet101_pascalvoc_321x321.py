@@ -10,7 +10,7 @@ from configs.semantic_segmentation.common.optims.ep30 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='resnet101_fcn_pascalvoc_321x321',
+    exp_name='resnet101_deeplabv2_pascalvoc_321x321',
     workers=4,
     batch_size=8,
     checkpoint=None,
@@ -23,10 +23,10 @@ train_args_default = dict(
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='resnet101_fcn_pascalvoc_321x321',
+    exp_name='resnet101_deeplabv2_pascalvoc_321x321',
     workers=0,
     batch_size=1,
-    checkpoint='./checkpoints/resnet101_fcn_pascalvoc_321x321/model.pt',
+    checkpoint='./checkpoints/resnet101_deeplabv2_pascalvoc_321x321/model.pt',
     # Device args
     device='cuda',
 
@@ -77,7 +77,7 @@ model = dict(
         replace_stride_with_dilation=[False, True, True]
     ),
     classifier_cfg=dict(
-        name='FCNHead',
+        name='DeepLabV2Head',
         in_channels=2048,
         num_classes=21
     )

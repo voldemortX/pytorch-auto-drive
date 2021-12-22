@@ -9,7 +9,11 @@ class _EncoderDecoderModel(nn.Module):
 
     def _load_encoder(self, pretrained_weights):
         if pretrained_weights is not None:  # Load pre-trained weights
-            saved_weights = load(pretrained_weights)['model']
+            try:
+                saved_weights = load(pretrained_weights)['model']
+            except FileNotFoundError:
+                raise FileNotFoundError('pretrained_weights is not there! '
+                                        'Please set pretrained_weights=None if you are only testing.')
             original_weights = self.state_dict()
             for key in saved_weights.keys():
                 if key in original_weights.keys():
