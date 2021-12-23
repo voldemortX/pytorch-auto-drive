@@ -21,7 +21,6 @@ def build_engine(model_path, max_batch_size=1, max_workspace_size=1 << 30):
             with builder.build_engine(network, config) as engine:
                 serialized_engine = engine.serialize()
                 save_engine(serialized_engine, engine_path)
-                print('TensorRT engine saved at : {}'.format(engine_path))
 
     return engine_path
 

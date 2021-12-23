@@ -34,3 +34,5 @@ if __name__ == '__main__':
         diff_percentage = diff / avg * 100
         print('Average diff: {}\nAverage diff (%): {}'.format(diff, diff_percentage))
         assert diff_percentage < 0.1, 'Diff over 0.1%, please check your environments!'
+
+    print('TensorRT engine saved as: {}'.format(engine_path))

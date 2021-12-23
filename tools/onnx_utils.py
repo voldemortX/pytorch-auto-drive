@@ -6,34 +6,44 @@ import numpy as np
 import torch
 
 
+DEFAULT_OPSET_VERSION = 9
 MINIMAL_OPSET_VERSIONS = {
     # Others use 9
-    'lstr': 10,
-    'resa': 11,
-    'scnn': 11
+    'LSTR': 10,
+    'RESA': 11,
+    'SpatialConv': 11
 }
+TRACE_REQUIRE_PREPROCESSING = [
+    'LSTR',
+    'RESA'
+]
 
 
-def add_basic_arguments(p):
-    p.add_argument('--height', type=int, default=288,
-                   help='Image input height (default: 288)')
-    p.add_argument('--width', type=int, default=800,
-                   help='Image input width (default: 800)')
-    p.add_argument('--dataset', type=str, default='tusimple',
-                   help='Profile on TuSimple (tusimple) / CULane (culane) (default: tusimple)')
-    p.add_argument('--method', type=str, default='baseline',
-                   help='method selection (lstr/scnn/sad/baseline) (default: baseline)')
-    p.add_argument('--backbone', type=str, default='erfnet',
-                   help='backbone selection (erfnet/enet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101)'
-                        '(default: erfnet)')
-    p.add_argument('--task', type=str, default='lane',
-                   help='task selection (lane/seg)')
-    p.add_argument('--model', type=str, default='deeplabv3',
-                   help='Model selection (fcn/erfnet/deeplabv2/deeplabv3/enet) (default: deeplabv3)')
-    p.add_argument('--encoder-only', action='store_true', default=False,
-                   help='Only train the encoder. ENet trains encoder and decoder separately (default: False)')
-    p.add_argument('--continue-from', type=str, default=None,
-                   help='Continue training from a previous checkpoint')
+def get_minimal_opset_version(cfg, min_version):
+    # Recursively get minimum version
+    if isinstance(cfg, dict):
+        for k, v in cfg.items():
+            if k == 'name':
+                temp = MINIMAL_OPSET_VERSIONS.get(v)
+                if temp is None:
+                    temp = DEFAULT_OPSET_VERSION
+                min_version = max(min_version, temp)
+            else:
+                min_version = max(min_version, get_minimal_opset_version(v, min_version))
+        return min_version
+    else:
+        return DEFAULT_OPSET_VERSION
+
+
+def append_trace_arg(cfg, trace_arg):
+    # Do the above trick again
+    if isinstance(cfg, dict) and cfg.get('name') in TRACE_REQUIRE_PREPROCESSING:
+        cfg['trace_arg'] = trace_arg
+    else:
+        for k in cfg.keys():
+            cfg[k] = append_trace_arg(cfg[k], trace_arg)
+
+    return cfg
 
 
 def pt_to_onnx(net, dummy, filename, opset_version=9):

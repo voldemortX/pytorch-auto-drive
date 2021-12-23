@@ -1,55 +1,79 @@
 # Convert only the pt model part
-
 import argparse
+import os
 import torch
-import yaml
 
-from utils.lane_det_utils import build_lane_detection_model as build_lane_model
-from utils.seg_utils import build_segmentation_model, load_checkpoint
-from tools.onnx_utils import add_basic_arguments, pt_to_onnx, test_conversion, MINIMAL_OPSET_VERSIONS
+from utils.common import load_checkpoint
+from utils.args import read_config, parse_arg_cfg
+from utils.models import MODELS
+from tools.onnx_utils import pt_to_onnx, test_conversion, get_minimal_opset_version, append_trace_arg
 
 
 if __name__ == '__main__':
     # Settings
     parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
-    add_basic_arguments(parser)
-    args = parser.parse_args()
-    with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
-        configs = yaml.load(f, Loader=yaml.Loader)
-    input_sizes = (args.height, args.width)
-    if args.task == 'lane':
-        num_classes = configs[configs['LANE_DATASETS'][args.dataset]]['NUM_CLASSES']
-        net = build_lane_model(args, num_classes, tracing=True)
-        net_without_tracing = build_lane_model(args, num_classes, tracing=False)
-    elif args.task == 'seg':
-        num_classes = configs[configs['SEGMENTATION_DATASETS'][args.dataset]]['NUM_CLASSES']
-        net, _, _, _ = build_segmentation_model(configs, args, num_classes, 0, input_sizes)
-        net_without_tracing = net
-    else:
-        raise ValueError('Task must be lane or seg! Not {}'.format(args.task))
+    parser.add_argument('--config', type=str, help='Path to config file', required=True)
+    parser.add_argument('--height', type=int, default=288,
+                        help='Image input height (default: 288)')
+    parser.add_argument('--width', type=int, default=800,
+                        help='Image input width (default: 800)')
 
+    # Optional args/to overwrite configs
+    group2 = parser.add_mutually_exclusive_group()
+    group2.add_argument('--continue-from', type=str,
+                        help='[Deprecated] Continue training from a previous checkpoint')
+    group2.add_argument('--checkpoint', type=str,
+                        help='Continue/Load from a previous checkpoint')
+
+    args = parser.parse_args()
+
+    defaults = {
+        'checkpoint': None,
+        'continue_from': None
+    }
+
+    deprecation_map = {
+        'continue_from': {'valid': 'checkpoint', 'message': ''}
+    }
+
+    # Parse configs and build model
+    cfg = read_config(args.config)
+    args, _ = parse_arg_cfg(args, cfg['test'], defaults, required=None, deprecation_map=deprecation_map)
+    net_without_tracing = MODELS.from_dict(cfg['model'])
+    trace_arg = {
+        'h': args.height,
+        'w': args.width,
+        'bs': 1
+    }
+    cfg_with_trace_arg = append_trace_arg(cfg['model'].copy(), trace_arg)
+    net = MODELS.from_dict(cfg_with_trace_arg)
+
+    # Move to device (simple single card)
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     print(device)
     net.to(device)
     net_without_tracing.to(device)
+
+    # Load weights
     if args.checkpoint is not None:
         load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.checkpoint, strict=False)
         load_checkpoint(net=net_without_tracing, optimizer=None, lr_scheduler=None, filename=args.checkpoint)
     else:
-        raise ValueError('Must provide a weight file by --continue-from')
+        raise ValueError('Must provide a weight file by --checkpoint')
+
+    # Set dummy for precision matching
     torch.manual_seed(7)
     dummy = torch.randn(1, 3, args.height, args.width, device=device, requires_grad=False)
 
     # Convert
     onnx_filename = args.checkpoint[:args.checkpoint.rfind('.')] + '.onnx'
-    op_v = 9
-    if args.task == 'lane' and args.method in MINIMAL_OPSET_VERSIONS.keys():
-        op_v = MINIMAL_OPSET_VERSIONS[args.method]
-    if args.task == 'seg' and args.model in MINIMAL_OPSET_VERSIONS.keys():
-        op_v = MINIMAL_OPSET_VERSIONS[args.model]
+    op_v = get_minimal_opset_version(cfg['model'], -1)
+    print('Minimum required opset version is: {}'.format(op_v))
     pt_to_onnx(net, dummy, onnx_filename, opset_version=op_v)
 
     # Test
     test_conversion(net_without_tracing, onnx_filename, dummy)
+
+    print('ONNX model saved as: {}'.format(onnx_filename))
