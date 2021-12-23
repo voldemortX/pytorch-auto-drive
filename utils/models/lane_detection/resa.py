@@ -24,7 +24,7 @@ class RESA_Net(nn.Module):
                  backbone_cfg,
                  reducer_cfg,
                  spatial_conv_cfg,
-                 decoder_cfg,
+                 classifier_cfg,
                  lane_classifier_cfg,
                  trace_arg=None):
         super().__init__()
@@ -32,7 +32,7 @@ class RESA_Net(nn.Module):
         # self.channel_reducer = RESAReducer(in_channels=in_channels, reduce=channel_reduce, bn_relu=False)
         self.channel_reducer = MODELS.from_dict(reducer_cfg)
         self.spatial_conv = MODELS.from_dict(spatial_conv_cfg, trace_arg=trace_arg)
-        self.decoder = MODELS.from_dict(decoder_cfg)
+        self.decoder = MODELS.from_dict(classifier_cfg)
         # self.decoder = PlainDecoder(num_classes=num_classes)
         self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
         # self.lane_classifier = RESALaneExist(num_output=num_classes - 1, flattened_size=flattened_size)
