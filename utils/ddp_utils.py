@@ -103,4 +103,4 @@ def init_distributed_mode(cfg):
         cfg['rank'], cfg['dist_url']), flush=True)
     torch.distributed.init_process_group(backend=cfg['dist_backend'], init_method=cfg['dist_url'],
                                          world_size=cfg['world_size'], rank=cfg['rank'])
-    setup_for_distributed(cfg['rank == 0'])
+    setup_for_distributed(cfg['rank'] == 0)

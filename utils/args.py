@@ -45,7 +45,8 @@ def cmd_dict(x):
 def add_shortcuts(parser):
     # TODO: duplicates
     for k, v in SHORTCUTS.items():
-        parser.add_argument(k, type=v['type'], help='{}. Shortcut for {}'.format(v['help'], str(v['keys'])))
+        parser.add_argument('--' + k.replace('_', '-'), type=v['type'],
+                            help='{}. Shortcut for {}'.format(v['help'], str(v['keys'])))
 
 
 def read_config(config_path):
@@ -92,14 +93,13 @@ def parse_arg_cfg(args, cfg, deprecation_map=None):
     if overrides is None:
         overrides = {}
     for k, v in dict_args.items():
-        argparse_key = '--' + k.replace('_', '-')
-        if argparse_key in SHORTCUTS.keys():
-            for tk in SHORTCUTS[argparse_key]['keys']:
+        if k in SHORTCUTS.keys():
+            for tk in SHORTCUTS[k]['keys']:
                 v_cfg_options = overrides.get(tk)
                 if v_cfg_options is not None:
                     if v is not None and v != v_cfg_options:
                         raise ValueError('Conflict between arg {}={} in --cfg-option and shortcut arg {}={}'.format(
-                            tk, v_cfg_options, argparse_key, v
+                            tk, v_cfg_options, k, v
                         ))
                 else:
                     overrides[tk] = v

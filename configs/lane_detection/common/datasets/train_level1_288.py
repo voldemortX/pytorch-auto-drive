@@ -15,7 +15,7 @@ train_augmentation = dict(
                     flip_prob=0.5
                 ),
                 dict(
-                    'RandomCrop',
+                    name='RandomCrop',
                     size=(int(590 * 0.9), int(1640 * 0.9))
                 )
             ]

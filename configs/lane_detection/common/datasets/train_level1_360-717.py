@@ -15,7 +15,7 @@ train_augmentation = dict(
                     flip_prob=0.5
                 ),
                 dict(
-                    'RandomCrop',
+                    name='RandomCrop',
                     size=(int(717 * 0.9), int(1276 * 0.9))  # LLAMAS size
                 )
             ]

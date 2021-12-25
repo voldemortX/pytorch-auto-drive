@@ -79,6 +79,7 @@ class LaneDetTrainer(BaseTrainer):
 
                 # Record checkpoints
                 if self._cfg['validation']:
+                    assert self._cfg['seg'], 'Only segmentation based methods can be fast evaluated!'
                     if current_step_num % self._cfg['val_num_steps'] == (self._cfg['val_num_steps'] - 1) or \
                             current_step_num == self._cfg['num_epochs'] * len(self.dataloader):
                         test_pixel_accuracy, test_mIoU = LaneDetTester.fast_evaluate(

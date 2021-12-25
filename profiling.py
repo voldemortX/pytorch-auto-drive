@@ -38,37 +38,36 @@ if __name__ == '__main__':
     args, cfg = parse_arg_cfg(args, cfg)
     net = MODELS.from_dict(cfg['model'])
 
-    if args.task == 'lane':
-        device = torch.device('cpu')
-        if torch.cuda.is_available():
-            device = torch.device('cuda:0')
-        print(device)
+    device = torch.device('cpu')
+    if torch.cuda.is_available():
+        device = torch.device('cuda:0')
+    print(device)
 
-        net.to(device)
+    net.to(device)
 
-        macs, _ = model_profile(net, args.height, args.width, device)
-        params = sum(p.numel() for p in net.parameters())
-        print('FLOPs(G): {: .2f}'.format(2 * macs / 1e9))
-        print('Number of parameters: {: .2f}'.format(params / 1e6))
-        print('Profiling, please clear your GPU memory before doing this.')
-        if args.mode == 'simple':
-            dummy = torch.ones((1, 3, args.height, args.width))
-            print(dummy.dtype)
-            fps = []
-            for i in range(0, args.times):
-                fps.append(speed_evaluate_simple(net=net, device=device, dummy=dummy, num=300))
-            print('GPU FPS: {: .2f}'.format(max(fps)))
-        elif args.mode == 'real':
-            if args.checkpoint is not None:
-                load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.checkpoint)
-            val_loader = init_dataset(cfg['dataset'], cfg['test_augmentations'], (args.height, args.width))
-            fps = []
-            gpu_fps = []
-            for i in range(0, args.times):
-                fps_item, gpu_fps_item = speed_evaluate_real(net=net, device=device, loader=val_loader, num=300)
-                fps.append(fps_item)
-                gpu_fps.append(gpu_fps_item)
-            print('Real FPS: {: .2f}'.format(max(fps)))
-            print('GPU FPS: {: .2f}'.format(max(gpu_fps)))
-        else:
-            raise ValueError
+    macs, _ = model_profile(net, args.height, args.width, device)
+    params = sum(p.numel() for p in net.parameters())
+    print('FLOPs(G): {: .2f}'.format(2 * macs / 1e9))
+    print('Number of parameters: {: .2f}'.format(params / 1e6))
+    print('Profiling, please clear your GPU memory before doing this.')
+    if args.mode == 'simple':
+        dummy = torch.ones((1, 3, args.height, args.width))
+        print(dummy.dtype)
+        fps = []
+        for i in range(0, args.times):
+            fps.append(speed_evaluate_simple(net=net, device=device, dummy=dummy, num=300))
+        print('GPU FPS: {: .2f}'.format(max(fps)))
+    elif args.mode == 'real':
+        if args.checkpoint is not None:
+            load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.checkpoint)
+        val_loader = init_dataset(cfg['dataset'], cfg['test_augmentations'], (args.height, args.width))
+        fps = []
+        gpu_fps = []
+        for i in range(0, args.times):
+            fps_item, gpu_fps_item = speed_evaluate_real(net=net, device=device, loader=val_loader, num=300)
+            fps.append(fps_item)
+            gpu_fps.append(gpu_fps_item)
+        print('Real FPS: {: .2f}'.format(max(fps)))
+        print('GPU FPS: {: .2f}'.format(max(gpu_fps)))
+    else:
+        raise ValueError

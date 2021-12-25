@@ -1,10 +1,8 @@
 #!/bin/bash
 # Trained weights: resnet18_resa_culane_20211016.pt
-exp_name=resnet18_resa_culane
-url=tcp://localhost:12345
 # Training
-python -m torch.distributed.launch --nproc_per_node=4 --use_env main_landec.py --epochs=12 --lr=0.06 --warmup-steps=500 --batch-size=5 --workers=4 --dataset=culane --method=resa --backbone=resnet18 --world-size=4 --dist-url=${url} --exp-name=${exp_name}
+python -m torch.distributed.launch --nproc_per_node=4 --use_env main_landec.py --train --config=configs/lane_detection/resa/resnet18_culane.py
 # Predicting lane points for testing
-python main_landec.py --state=2 --batch-size=20 --continue-from=${exp_name}.pt --dataset=culane --method=resa --backbone=resnet18 --exp-name=${exp_name}
+python main_landec.py --test --config=configs/lane_detection/resa/resnet18_culane.py
 # Testing with official scripts
-./autotest_culane.sh ${exp_name} test
+./autotest_culane.sh resnet18_resa_culane test checkpoints
