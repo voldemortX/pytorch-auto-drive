@@ -14,8 +14,8 @@ from .seg_tester import SegTester
 
 
 class SegTrainer(BaseTrainer):
-    def __init__(self, cfg, args):
-        super().__init__(cfg, args, map_dataset_statics=['categories'])
+    def __init__(self, cfg):
+        super().__init__(cfg, map_dataset_statics=['categories'])
 
     def run(self):
         # Validate and find the best snapshot

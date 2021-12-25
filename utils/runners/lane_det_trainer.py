@@ -13,8 +13,8 @@ from .base import BaseTrainer, DATASETS, TRANSFORMS
 
 
 class LaneDetTrainer(BaseTrainer):
-    def __init__(self, cfg, args):
-        super().__init__(cfg, args)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
     def run(self):
         # Should be the same as segmentation, given customized loss classes

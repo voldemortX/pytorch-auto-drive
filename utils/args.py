@@ -1,9 +1,51 @@
 import os
 from importlib.machinery import SourceFileLoader
 try:
+    import ujson as json
+except ImportError:
+    import json
+
+from configs.statics import DEPRECATION_MAP, SHORTCUTS
+try:
     from .common import warnings
 except ImportError:
     import warnings
+
+
+def update_nested(d, keys, value):
+    # Update nested dict with keys as list
+    if not isinstance(d, dict):
+        raise ValueError
+    if len(keys) == 1:
+        d[keys[0]] = value
+    else:
+        if keys[0] in d.keys():
+            d[keys[0]] = update_nested(d[keys[0]], keys[1:], value)
+        else:
+            d[keys[0]] = update_nested({}, keys[1:], value)
+
+    return d
+
+
+def cmd_dict(x):
+    # A data type to hack a dict-style argparse input,
+    # every key should be in k1.k2.kn format to the last non-dict value,
+    # values can't include tuples,
+    # other more complex settings should refer to config files instead.
+    # x: x1=y1 x2=y2 x3=y3 etc.
+    options = x.split()
+    res = {}
+    for o in options:
+        kv = o.split('=', maxsplit=1)
+        res[kv[0]] = json.loads(kv[1])
+
+    return res
+
+
+def add_shortcuts(parser):
+    # TODO: duplicates
+    for k, v in SHORTCUTS.items():
+        parser.add_argument(k, type=v['type'], help='{}. Shortcut for {}'.format(v['help'], str(v['keys'])))
 
 
 def read_config(config_path):
@@ -27,49 +69,55 @@ def map_states(args, states):
     return state
 
 
-def parse_arg_cfg(args, cfg, defaults=None, required=None, deprecation_map=None):
-    # args > config > defaults
-    # required: [...]
-    # deprecation_map: {deprecated_arg: {valid: new_arg, message: custom warning message}, ...}
-    args_dict = vars(args)  # Linked changes
-    for k in args_dict.keys():
-        if required is not None and k in required:  # Required args are set only at commandline
-            v = args_dict[k]
-            if k in cfg.keys():
-                warnings.warn('Required arg `{}={}` in config is illegal, replaced by commandline\'s `{}={}`.'.format(
-                    k, cfg[v], k, v
-                ))
-        elif args_dict[k] is not None:  # 1
-            v = args_dict[k]
-        else:
-            if k in cfg.keys():  # 2
-                v = cfg[k]
-            else:  # 3
-                v = defaults[k]
+def parse_arg_cfg(args, cfg, deprecation_map=None):
+    if deprecation_map is None:
+        deprecation_map = DEPRECATION_MAP
 
-        if type(args_dict[k]) == bool and k in cfg.keys() and cfg[k] != v:
-            warnings.warn('Bool arg `{}={}` in config is illegal, replaced by commandline\'s `{}={}`.'.format(
-                k, cfg[k], k, v
-            ))
-        args_dict[k] = v
-        cfg[k] = v
-
-    # Handle simple deprecations
+    # Simply reject deprecations
+    dict_args = vars(args)
     if deprecation_map is not None:
         for deprecated, v in deprecation_map.items():
-            if cfg[deprecated] is None or ('expected' in v.keys() and cfg[deprecated] == v['expected']):
-                continue
-            if v['valid'] is None:
-                warnings.warn('Deprecated arg {}={} will not be used. '.format(deprecated, cfg[deprecated])
-                              + v['message'])
-            elif type(cfg[deprecated]) == bool or type(cfg[v['valid']]) == bool or cfg[v['valid']] is not None:
-                warnings.warn('Deprecated arg {}={} will be overridden with new arg {}={}. '.format(
-                    deprecated, cfg[deprecated], v['valid'], cfg[v['valid']]
-                ) + v['message'])
-            else:  # Use the deprecated arg in absence of new arg
-                warnings.warn('Arg {} is deprecated, please use {} instead. '.format(deprecated, v['valid'])
-                              + v['message'])
-                cfg[v['valid']] = cfg[deprecated]
-                args_dict[v['valid']] = args_dict[deprecated]
+            if dict_args.get(deprecated) is not None:
+                if v['valid'] is None:  # Not used anymore
+                    warnings.warn('Deprecated arg {}={} will not be used. '.format(deprecated, cfg[deprecated])
+                                  + v['message'])
+                else:  # Use the deprecated arg in absence of new arg
+                    warnings.warn('Arg {} is deprecated, please use {} instead. '.format(deprecated, v['valid'])
+                                  + v['message'])
+                    if dict_args.get(v['valid']) is None:
+                        dict_args[v['valid']] = dict_args[deprecated]
+
+    # Set shortcuts
+    overrides = dict_args['cfg_options']
+    if overrides is None:
+        overrides = {}
+    for k, v in dict_args.items():
+        argparse_key = '--' + k.replace('_', '-')
+        if argparse_key in SHORTCUTS.keys():
+            for tk in SHORTCUTS[argparse_key]['keys']:
+                v_cfg_options = overrides.get(tk)
+                if v_cfg_options is not None:
+                    if v is not None and v != v_cfg_options:
+                        raise ValueError('Conflict between arg {}={} in --cfg-option and shortcut arg {}={}'.format(
+                            tk, v_cfg_options, argparse_key, v
+                        ))
+                else:
+                    overrides[tk] = v
+
+    # Override cfg by args
+    for k, v in overrides.items():
+        if v is not None:
+            if type(v) == bool:
+                warnings.warn('Override Bool arg {} is insecure, by default, it will be overridden by False!'.format(
+                    k
+                ))
+            # k = 'k1.k2.kn'
+            key_path = k.split('.')
+            try:
+                cfg = update_nested(cfg, key_path, v)
+            except RuntimeError:
+                raise RuntimeError('Structural conflict in config key path {}!'.format(key_path))
+
+    # Add retain args
 
     return args, cfg

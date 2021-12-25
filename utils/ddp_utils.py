@@ -76,31 +76,31 @@ def reduce_dict(input_dict, average=True, to_item=True):
     return reduced_dict
 
 
-def init_distributed_mode(args):
-    if args.state == 0 and args.world_size > 0:  # Restrict ddp to training
+def init_distributed_mode(cfg):
+    if cfg['state'] == 0 and cfg['world_size'] > 0:  # Restrict ddp to training
         if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
-            args.rank = int(os.environ["RANK"])
-            args.world_size = int(os.environ['WORLD_SIZE'])
-            args.gpu = int(os.environ['LOCAL_RANK'])
+            cfg['rank'] = int(os.environ["RANK"])
+            cfg['world_size'] = int(os.environ['WORLD_SIZE'])
+            cfg['gpu'] = int(os.environ['LOCAL_RANK'])
         elif 'SLURM_PROCID' in os.environ:
-            args.rank = int(os.environ['SLURM_PROCID'])
-            args.gpu = args.rank % torch.cuda.device_count()
-        elif hasattr(args, "rank"):
+            cfg['rank'] = int(os.environ['SLURM_PROCID'])
+            cfg['gpu'] = cfg['rank'] % torch.cuda.device_count()
+        elif hasattr(cfg, "rank"):
             pass
         else:
             print('Not using distributed mode')
-            args.distributed = False
+            cfg['distributed'] = False
             return
     else:
         print('Not using distributed mode')
-        args.distributed = False
+        cfg['distributed'] = False
         return
 
-    args.distributed = True
-    torch.cuda.set_device(args.gpu)
-    args.dist_backend = 'nccl'
+    cfg['distributed'] = True
+    torch.cuda.set_device(cfg['gpu'])
+    cfg['dist_backend'] = 'nccl'
     print('| distributed init (rank {}): {}'.format(
-        args.rank, args.dist_url), flush=True)
-    torch.distributed.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
-                                         world_size=args.world_size, rank=args.rank)
-    setup_for_distributed(args.rank == 0)
+        cfg['rank'], cfg['dist_url']), flush=True)
+    torch.distributed.init_process_group(backend=cfg['dist_backend'], init_method=cfg['dist_url'],
+                                         world_size=cfg['world_size'], rank=cfg['rank'])
+    setup_for_distributed(cfg['rank == 0'])
