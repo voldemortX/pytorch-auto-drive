@@ -38,7 +38,7 @@ train = dict(
     seg=False,  # Seg-based method or not
     input_size=(360, 640),
     original_size=(720, 1280),
-    num_classes=7,
+    num_classes=None,
     num_epochs=2000,
     collate_fn='dict_collate_fn'
 )
@@ -48,7 +48,7 @@ test = dict(
     seg=False,
     gap=10,
     ppl=56,
-    thresh=0.3,
+    thresh=None,
     collate_fn='dict_collate_fn',
     input_size=(360, 640),
     original_size=(720, 1280),
@@ -57,7 +57,6 @@ test = dict(
 )
 test.update(test_args_default)
 
-# Essentially DeepLabV1 without dilation like in SCNN paper
 model = dict(
     name='LSTR',
     expansion=1,

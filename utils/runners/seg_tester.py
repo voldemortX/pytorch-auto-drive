@@ -11,8 +11,8 @@ from .base import BaseTester
 
 
 class SegTester(BaseTester):
-    def __init__(self, cfg, args):
-        super().__init__(cfg, args, map_dataset_statics=['categories'])
+    def __init__(self, cfg):
+        super().__init__(cfg, map_dataset_statics=['categories'])
 
     def run(self):
         acc, iou, res_str = self.test_one_set(self.dataloader, self.device, self.model,

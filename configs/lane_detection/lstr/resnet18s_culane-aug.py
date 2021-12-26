@@ -1,16 +1,16 @@
 # Data pipeline
-from configs.lane_detection.common.datasets.tusimple import dataset
-from configs.lane_detection.common.datasets.train_level0_360 import train_augmentation
-from configs.lane_detection.common.datasets.test_360 import test_augmentation
+from configs.lane_detection.common.datasets.culane import dataset
+from configs.lane_detection.common.datasets.train_level1_288 import train_augmentation
+from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.matchingloss_polynomial import loss
 from configs.lane_detection.common.optims.adam000025 import optimizer
-from configs.lane_detection.common.optims.ep2000_step import lr_scheduler
+from configs.lane_detection.common.optims.ep150_step import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='resnet18s_lstr_tusimple',
+    exp_name='resnet18s_lstr-aug_culane',
     workers=16,
     batch_size=20,
     checkpoint=None,
@@ -19,14 +19,14 @@ train_args_default = dict(
     dist_url='env://',
     device='cuda',
 
-    val_num_steps=0,  # >0 not supported
+    val_num_steps=0,  # Seg IoU validation (mostly useless)
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='resnet18s_lstr_tusimple',
+    exp_name='resnet18s_lstr-aug_culane',
     workers=10,
     batch_size=80,
-    checkpoint='./checkpoints/resnet18s_lstr_tusimple/model.pt',
+    checkpoint='./checkpoints/resnet18s_lstr-aug_culane/model.pt',
     # Device args
     device='cuda',
 
@@ -35,31 +35,31 @@ test_args_default = dict(
 
 # Configs
 train = dict(
-    seg=False,  # Seg-based method or not
-    input_size=(360, 640),
-    original_size=(720, 1280),
+    input_size=(288, 800),
+    original_size=(590, 1640),
     num_classes=None,
-    num_epochs=2000,
-    collate_fn='dict_collate_fn'
+    num_epochs=12,
+    collate_fn='dict_collate_fn',  # 'dict_collate_fn' for LSTR
+    seg=False,  # Seg-based method or not
 )
 train.update(train_args_default)
 
 test = dict(
     seg=False,
-    gap=10,
-    ppl=56,
+    gap=20,
+    ppl=18,
     thresh=None,
-    collate_fn='dict_collate_fn',
-    input_size=(360, 640),
-    original_size=(720, 1280),
-    max_lane=5,
-    dataset_name='tusimple'
+    collate_fn='dict_collate_fn',  # 'dict_collate_fn' for LSTR
+    input_size=(288, 800),
+    original_size=(590, 1640),
+    max_lane=4,
+    dataset_name='culane'
 )
 test.update(test_args_default)
 
 model = dict(
     name='LSTR',
-    expansion=1,
+    expansion=2,
     num_queries=7,
     aux_loss=True,
     pos_type='sine',
@@ -78,6 +78,6 @@ model = dict(
         return_layer='layer4',
         pretrained=False,
         replace_stride_with_dilation=[False, False, False],
-        expansion=1
+        expansion=2
     )
 )

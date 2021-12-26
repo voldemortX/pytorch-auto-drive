@@ -1,13 +1,14 @@
 import argparse
 import numpy as np
 import torch
-from tools.tensorrt_utils import build_engine, inference_trt, load_engine
-from tools.onnx_utils import inference_onnx
+
+from utils.tensorrt_utils import build_engine, inference_trt, load_engine
+from utils.onnx_utils import inference_onnx
 
 
 if __name__ == '__main__':
     # Settings
-    parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
+    parser = argparse.ArgumentParser(description='PytorchAutoDrive ONNX to TensorRT')
     parser.add_argument('--onnx-path', type=str, default='', help='ONNX file path')
     parser.add_argument('--height', type=int, default=288,
                         help='Image input height (default: 288)')

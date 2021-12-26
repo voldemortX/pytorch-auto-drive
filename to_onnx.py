@@ -1,24 +1,27 @@
 # Convert only the pt model part
 import argparse
-import os
 import torch
 
 from utils.common import load_checkpoint
-from utils.args import read_config, parse_arg_cfg
+from utils.args import read_config, parse_arg_cfg, add_shortcuts, cmd_dict
 from utils.models import MODELS
-from tools.onnx_utils import pt_to_onnx, test_conversion, get_minimal_opset_version, append_trace_arg
+from utils.onnx_utils import pt_to_onnx, test_conversion, get_minimal_opset_version, append_trace_arg
 
 
 if __name__ == '__main__':
     # Settings
-    parser = argparse.ArgumentParser(description='PyTorch Auto-drive')
+    parser = argparse.ArgumentParser(description='PytorchAutoDrive PyTorch to ONNX')
+    add_shortcuts(parser)
+
     parser.add_argument('--config', type=str, help='Path to config file', required=True)
+
+    # Optional args/to overwrite configs
     parser.add_argument('--height', type=int, default=288,
                         help='Image input height (default: 288)')
     parser.add_argument('--width', type=int, default=800,
                         help='Image input width (default: 800)')
-
-    # Optional args/to overwrite configs
+    parser.add_argument('--cfg-options', type=cmd_dict,
+                        help='Override config options with \"x1=y1 x2=y2 xn=yn\", tuple value not supported, try list')
     group2 = parser.add_mutually_exclusive_group()
     group2.add_argument('--continue-from', type=str,
                         help='[Deprecated] Continue training from a previous checkpoint')
@@ -27,18 +30,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    defaults = {
-        'checkpoint': None,
-        'continue_from': None
-    }
-
-    deprecation_map = {
-        'continue_from': {'valid': 'checkpoint', 'message': ''}
-    }
-
     # Parse configs and build model
     cfg = read_config(args.config)
-    args, _ = parse_arg_cfg(args, cfg['test'], defaults, required=None, deprecation_map=deprecation_map)
+    args, cfg = parse_arg_cfg(args, cfg)
     net_without_tracing = MODELS.from_dict(cfg['model'])
     trace_arg = {
         'h': args.height,

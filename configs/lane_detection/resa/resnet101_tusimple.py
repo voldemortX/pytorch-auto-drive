@@ -5,28 +5,28 @@ from configs.lane_detection.common.datasets.test_360 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_7class import loss
-from configs.lane_detection.common.optims.sgd013 import optimizer
-from configs.lane_detection.common.optims.ep50_poly_warmup500 import lr_scheduler
+from configs.lane_detection.common.optims.sgd0048 import optimizer
+from configs.lane_detection.common.optims.ep50_poly_warmup250 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='resnet50_baseline_tusimple',
-    workers=4,
-    batch_size=8,
+    exp_name='resnet101_resa_tusimple',
+    workers=2,
+    batch_size=2,
     checkpoint=None,
     # Device args
-    world_size=0,
-    dist_url='env://',
+    world_size=8,
+    dist_url='tcp://localhost:12345',
     device='cuda',
 
     val_num_steps=0,  # Seg IoU validation (mostly useless)
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='resnet50_baseline_tusimple',
-    workers=4,
-    batch_size=32,
-    checkpoint='./checkpoints/resnet50_baseline_tusimple/model.pt',
+    exp_name='resnet101_resa_tusimple',
+    workers=2,
+    batch_size=8,
+    checkpoint='./checkpoints/resnet101_resa_tusimple/model.pt',
     # Device args
     device='cuda',
 
@@ -57,30 +57,36 @@ test = dict(
 )
 test.update(test_args_default)
 
-# Essentially DeepLabV1 without dilation like in SCNN paper
 model = dict(
-    name='standard_segmentation_model',
+    name='RESA_Net',
     backbone_cfg=dict(
         name='predefined_resnet_backbone',
-        backbone_name='resnet50',
-        return_layer='layer4',
+        backbone_name='resnet101',
+        return_layer='layer3',
         pretrained=True,
         replace_stride_with_dilation=[False, True, True]
     ),
     reducer_cfg=dict(
         name='RESAReducer',
-        in_channels=2048,
+        in_channels=1024,
         reduce=128
     ),
+    spatial_conv_cfg=dict(
+        name='RESA',
+        num_channels=128,
+        iteration=5,
+        alpha=2.0
+    ),
     classifier_cfg=dict(
-        name='DeepLabV1Head',
+        name='BUSD',
         in_channels=128,
-        num_classes=7,
-        dilation=1
+        num_classes=7
     ),
     lane_classifier_cfg=dict(
-        name='SimpleLaneExist',
+        name='EDLaneExist',
         num_output=7 - 1,
-        flattened_size=6160
+        flattened_size=4400,
+        dropout=0.1,
+        pool='avg'
     )
 )

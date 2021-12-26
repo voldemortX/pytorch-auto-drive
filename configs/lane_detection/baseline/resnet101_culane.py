@@ -10,7 +10,7 @@ from configs.lane_detection.common.optims.ep12_poly_warmup500 import lr_schedule
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='resnet50_baseline_culane',
+    exp_name='resnet101_baseline_culane',
     workers=4,
     batch_size=8,
     checkpoint=None,
@@ -23,10 +23,10 @@ train_args_default = dict(
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='resnet50_baseline_culane',
+    exp_name='resnet101_baseline_culane',
     workers=4,
     batch_size=32,
-    checkpoint='./checkpoints/resnet50_baseline_culane/model.pt',
+    checkpoint='./checkpoints/resnet101_baseline_culane/model.pt',
     # Device args
     device='cuda',
 
@@ -62,7 +62,7 @@ model = dict(
     name='standard_segmentation_model',
     backbone_cfg=dict(
         name='predefined_resnet_backbone',
-        backbone_name='resnet50',
+        backbone_name='resnet101',
         return_layer='layer4',
         pretrained=True,
         replace_stride_with_dilation=[False, True, True]
