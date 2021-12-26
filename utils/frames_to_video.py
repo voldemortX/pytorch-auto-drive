@@ -2,7 +2,7 @@
 import os
 import cv2
 from cv2 import VideoWriter_fourcc
-from mmcv.utils import check_file_exist, mkdir_or_exist, scandir, track_progress
+from mmcv.utils import check_file_exist, track_progress
 
 
 def frames2video(frame_dir,

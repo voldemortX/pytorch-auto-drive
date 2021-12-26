@@ -9,8 +9,9 @@ else:
     from utils.torch_amp_dummy import autocast
 from enum import Enum
 from PIL import Image
-from utils.transforms import ToTensor, Resize, ZeroPad, Normalize, Compose, functional as F
-from utils.lane_det_utils import lane_as_segmentation_inference
+
+from .transforms import ToTensor, Resize, ZeroPad, Normalize, Compose, functional as F
+from .lane_det_utils import lane_as_segmentation_inference
 
 
 # File mode statics

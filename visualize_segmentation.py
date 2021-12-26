@@ -13,7 +13,7 @@ from PIL import Image
 from tqdm import tqdm
 from utils.seg_utils import load_checkpoint, build_segmentation_model
 from utils.datasets import ImageFolderDataset
-from tools.vis_tools import segmentation_visualize_batched, simple_segmentation_transform, save_images, \
+from utils.vis_utils import segmentation_visualize_batched, simple_segmentation_transform, save_images, \
     check_file_type, FileType, unified_segmentation_label_formatting, tensor_image_to_numpy
 from utils.transforms import functional as F
 from utils.transforms import ToTensor

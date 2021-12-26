@@ -1,5 +1,8 @@
 import os
-import yaml
+
+from importmagician import import_from
+with import_from('./'):
+    from configs.semantic_segmentation.common.datasets._utils import GTAV_ROOT as base
 
 
 # Pad with 0
@@ -20,9 +23,6 @@ train_list = [pad(str(x)) for x in range(start, end + 1)]
 print('Whole training set size: ' + str(len(train_list)))
 
 # Save training list
-with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
-    configs = yaml.load(f, Loader=yaml.Loader)
-base = configs['GTAV']['BASE_DIR']
 lists_dir = os.path.join(base, "data_lists")
 if not os.path.exists(lists_dir):
     os.makedirs(lists_dir)

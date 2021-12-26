@@ -1,12 +1,11 @@
 # This script generates Cityscapes official demos from downloaded demo images
 import os
-import yaml
-from frames_to_video import frames2video
+from utils.frames_to_video import frames2video
 
-
-with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
-    configs = yaml.load(f, Loader=yaml.Loader)
-base = os.path.join(configs['CITYSCAPES']['BASE_DIR'], 'all_demoVideo', 'leftImg8bit', 'demoVideo')
+from importmagician import import_from
+with import_from('./'):
+    from configs.semantic_segmentation.common.datasets._utils import CITYSCAPES_ROOT
+base = os.path.join(CITYSCAPES_ROOT, 'all_demoVideo', 'leftImg8bit', 'demoVideo')
 
 # Get image file list
 sub_dirs = sorted(os.listdir(base))

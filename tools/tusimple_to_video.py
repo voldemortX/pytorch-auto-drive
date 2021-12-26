@@ -1,12 +1,11 @@
 # This script converts TuSimple validation set (0531) to a video
 import os
-import yaml
-from frames_to_video import frames2video
+from utils.frames_to_video import frames2video
 
-
-with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
-    configs = yaml.load(f, Loader=yaml.Loader)
-base = os.path.join(configs['TUSIMPLE']['BASE_DIR'], 'clips', '0601')
+from importmagician import import_from
+with import_from('./'):
+    from configs.lane_detection.common.datasets._utils import TUSIMPLE_ROOT
+base = os.path.join(TUSIMPLE_ROOT, 'clips', '0531')
 
 # Get image file list
 sub_dirs = sorted(os.listdir(base))

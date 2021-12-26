@@ -2,8 +2,10 @@ import argparse
 import numpy as np
 import torch
 
-from utils.tensorrt_utils import build_engine, inference_trt, load_engine
-from utils.onnx_utils import inference_onnx
+from importmagician import import_from
+with import_from('./'):
+    from utils.tensorrt_utils import build_engine, inference_trt, load_engine
+    from utils.onnx_utils import inference_onnx
 
 
 if __name__ == '__main__':
