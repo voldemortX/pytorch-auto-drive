@@ -380,4 +380,5 @@ class SegRepVGG(nn.Module):
         for module in self.encoder.modules():
             if hasattr(module, 'switch_to_deploy'):
                 module.switch_to_deploy()
+        print('Deploy!')
         return self.train(False)

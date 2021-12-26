@@ -13,6 +13,9 @@
 | Baseline | ERFNet | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 96.02% | 96.04% | 0.8h |
 | Baseline | ERFNet | strong | 360 x 640 | *no* | TuSimple | Accuracy | 94.21% | 94.37% | 0.9h* |
 | Baseline | ENet<sup>#</sup> | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.55% | 95.61% | 1h<sup>+</sup> |
+| Baseline | RepVGG-A0 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 94.70% | 94.89% | 1.3h |
+| Baseline | RepVGG-A1 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 94.84% | 94.93% | 1.4h |
+| Baseline | RepVGG-A2 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 94.40% | 94.68% | 2.0h |
 | SCNN | VGG16 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.01% | 95.17% | 2h |
 | SCNN | ResNet18 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 94.69% | 94.77% | 1.2h |
 | SCNN | ResNet34 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.19% | 95.25% | 1.6h |
@@ -77,6 +80,9 @@
 | Baseline | ERFNet | simple | 96.04% | 0.0591 | 0.0365 | [model](https://drive.google.com/file/d/1rLWDP_dkIQ7sBsCEzJi8T7ET1EPghhJJ/view?usp=sharing) \| [shell](../tools/shells/erfnet_baseline_tusimple.sh) |
 | Baseline | ERFNet | strong | 94.37% | 0.0846 | 0.0770 | [model](https://drive.google.com/file/d/1LPmxT8rnyZL2M08lSLrlvrM0H_hMrFvq/view?usp=sharing) \| [shell](../tools/shells/erfnet_baseline-aug_tusimple.sh) |
 | Baseline | ENet | simple | 95.61% | 0.0655 | 0.0503 | [model](https://drive.google.com/file/d/1CNSox62ghs0ArDVJb9mTZ1NVvqSkUNYC/view?usp=sharing) \| [shell](../tools/shells/enet_baseline_tusimple.sh) |
+| Baseline | RepVGG-A0 | simple | 94.89% | 0.0789 | 0.0700 | [model] \| [shell](../tools/shells/repvgg-a0_baseline_tusimple.sh) |
+| Baseline | RepVGG-A1 | simple | 94.93% | 0.0700 | 0.0681 | [model] \| [shell](../tools/shells/repvgg-a1_baseline_tusimple.sh) |
+| Baseline | RepVGG-A2 | simple | 94.68% | 0.0780 | 0.0746 | [model] \| [shell](../tools/shells/repvgg-a2_baseline_tusimple.sh) |
 | SCNN | VGG16 | simple | 95.17% | 0.0637 | 0.0622 | [model](https://drive.google.com/file/d/1Fd46-f_8q-fGcJEI_PhPyh7aBY1uqbIw/view?usp=sharing) \| [shell](../tools/shells/vgg16_scnn_tusimple.sh) |
 | SCNN | ResNet18 | simple | 94.77% | 0.0753 | 0.0737 | [model](https://drive.google.com/file/d/1cHp9gG2NgtC1iSp2LZMPF_UKiCb-fVkn/view?usp=sharing) \| [shell](../tools/shells/resnet18_scnn_tusimple.sh) |
 | SCNN | ResNet34 | simple | 95.25% | 0.0627 | 0.0634 | [model](https://drive.google.com/file/d/1M0ROpEHV8DGJT4xWq2eURcbqMzpea1q7/view?usp=sharing) \| [shell](../tools/shells/resnet34_scnn_tusimple.sh) |
