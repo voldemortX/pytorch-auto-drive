@@ -22,7 +22,7 @@ class SimpleRegistry(object):
     def get(self, name):
         res = self._map.get(name)
         if res is None:
-            raise KeyError('Class or Function {} not found in registry {}!'.format(name, self._name))
+            raise KeyError('Class or Function {} not found in registry!'.format(name))
 
         return res
 

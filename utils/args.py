@@ -1,9 +1,5 @@
 import os
 from importlib.machinery import SourceFileLoader
-try:
-    import ujson as json
-except ImportError:
-    import json
 
 from configs.statics import DEPRECATION_MAP, SHORTCUTS
 try:
@@ -37,7 +33,11 @@ def cmd_dict(x):
     res = {}
     for o in options:
         kv = o.split('=', maxsplit=1)
-        res[kv[0]] = json.loads(kv[1])
+        try:
+            v = eval(kv[1])
+        except NameError:
+            v = kv[1]
+        res[kv[0]] = v
 
     return res
 
