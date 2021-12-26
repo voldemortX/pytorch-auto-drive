@@ -1,5 +1,8 @@
 import os
-import yaml
+
+from importmagician import import_from
+with import_from('./'):
+    from configs.semantic_segmentation.common.datasets._utils import CITYSCAPES_ROOT as base
 
 
 def traverse(images_dir, data_list):
@@ -11,9 +14,6 @@ def traverse(images_dir, data_list):
 
 
 # Traverse images
-with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
-    configs = yaml.load(f, Loader=yaml.Loader)
-base = configs['CITYSCAPES']['BASE_DIR']
 train_list = []
 val_list = []
 test_list = []

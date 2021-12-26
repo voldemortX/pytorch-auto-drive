@@ -1,5 +1,8 @@
 import os
-import yaml
+
+from importmagician import import_from
+with import_from('./'):
+    from configs.semantic_segmentation.common.datasets._utils import SYNTHIA_ROOT as base
 
 
 # Pad with 0
@@ -14,9 +17,6 @@ def pad(x):
 
 
 # Count
-with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
-    configs = yaml.load(f, Loader=yaml.Loader)
-base = configs['SYNTHIA']['BASE_DIR']
 start = 0
 end = 9399
 train_list = [pad(str(x)) for x in range(start, end + 1)]

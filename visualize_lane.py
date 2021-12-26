@@ -11,7 +11,7 @@ from utils.datasets import CULane
 from utils.seg_utils import load_checkpoint
 from utils.lane_det_utils import build_lane_detection_model
 from utils.datasets import ImageFolderDataset
-from tools.vis_tools import lane_detection_visualize_batched, simple_lane_detection_transform, \
+from utils.vis_utils import lane_detection_visualize_batched, simple_lane_detection_transform, \
     check_file_type, FileType, save_images, lane_inference
 from utils.transforms import functional as F
 from utils.transforms import ToTensor

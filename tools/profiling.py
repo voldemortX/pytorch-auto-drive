@@ -1,10 +1,12 @@
 import argparse
 import torch
 
-from utils.args import read_config, parse_arg_cfg, cmd_dict, add_shortcuts
-from utils.models import MODELS
-from utils.common import load_checkpoint
-from utils.profiling_utils import init_dataset, speed_evaluate_real, speed_evaluate_simple, model_profile
+from importmagician import import_from
+with import_from('./'):
+    from utils.args import read_config, parse_arg_cfg, cmd_dict, add_shortcuts
+    from utils.models import MODELS
+    from utils.common import load_checkpoint
+    from utils.profiling_utils import init_dataset, speed_evaluate_real, speed_evaluate_simple, model_profile
 
 if __name__ == '__main__':
     # Settings
@@ -59,7 +61,7 @@ if __name__ == '__main__':
         print('GPU FPS: {: .2f}'.format(max(fps)))
     elif args.mode == 'real':
         if args.checkpoint is not None:
-            load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.checkpoint)
+            load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=cfg['test']['checkpoint'])
         val_loader = init_dataset(cfg['dataset'], cfg['test_augmentations'], (args.height, args.width))
         fps = []
         gpu_fps = []

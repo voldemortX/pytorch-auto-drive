@@ -2,15 +2,17 @@
 import argparse
 import torch
 
-from utils.common import load_checkpoint
-from utils.args import read_config, parse_arg_cfg, add_shortcuts, cmd_dict
-from utils.models import MODELS
-from utils.onnx_utils import pt_to_onnx, test_conversion, get_minimal_opset_version, append_trace_arg
+from importmagician import import_from
+with import_from('./'):
+    from utils.common import load_checkpoint
+    from utils.args import read_config, parse_arg_cfg, add_shortcuts, cmd_dict
+    from utils.models import MODELS
+    from utils.onnx_utils import pt_to_onnx, test_conversion, get_minimal_opset_version, append_trace_arg
 
 
 if __name__ == '__main__':
     # Settings
-    parser = argparse.ArgumentParser(description='PytorchAutoDrive PyTorch to ONNX')
+    parser = argparse.ArgumentParser(description='PytorchAutoDrive PyTorch to ONNX', conflict_handler='resolve')
     add_shortcuts(parser)
 
     parser.add_argument('--config', type=str, help='Path to config file', required=True)
@@ -51,9 +53,9 @@ if __name__ == '__main__':
     net_without_tracing.to(device)
 
     # Load weights
-    if args.checkpoint is not None:
-        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=args.checkpoint, strict=False)
-        load_checkpoint(net=net_without_tracing, optimizer=None, lr_scheduler=None, filename=args.checkpoint)
+    if cfg['test']['checkpoint'] is not None:
+        load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=cfg['test']['checkpoint'], strict=False)
+        load_checkpoint(net=net_without_tracing, optimizer=None, lr_scheduler=None, filename=cfg['test']['checkpoint'])
     else:
         raise ValueError('Must provide a weight file by --checkpoint')
 
@@ -62,7 +64,7 @@ if __name__ == '__main__':
     dummy = torch.randn(1, 3, args.height, args.width, device=device, requires_grad=False)
 
     # Convert
-    onnx_filename = args.checkpoint[:args.checkpoint.rfind('.')] + '.onnx'
+    onnx_filename = cfg['test']['checkpoint'][:cfg['test']['checkpoint'].rfind('.')] + '.onnx'
     op_v = get_minimal_opset_version(cfg['model'], -1)
     print('Minimum required opset version is: {}'.format(op_v))
     pt_to_onnx(net, dummy, onnx_filename, opset_version=op_v)

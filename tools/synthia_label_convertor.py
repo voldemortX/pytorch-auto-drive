@@ -3,12 +3,11 @@ import numpy as np
 import imageio
 from PIL import Image
 from tqdm import tqdm
-import yaml
 
+from importmagician import import_from
+with import_from('./'):
+    from configs.semantic_segmentation.common.datasets._utils import SYNTHIA_ROOT as base
 
-with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
-    configs = yaml.load(f, Loader=yaml.Loader)
-base = configs['SYNTHIA']['BASE_DIR']
 for image_set in ['train', 'val']:
     mask_dir = os.path.join(base, 'GT/LABELS', image_set)
     new_mask_dir = os.path.join(base, 'GT/LABELS_CONVERTED', image_set)

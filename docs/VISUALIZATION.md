@@ -4,7 +4,7 @@ Trained models used for inference can be found at [MODEL_ZOO.md](../docs/MODEL_Z
 
 Colors can be specified in [configs.yaml](../configs.yaml) for each dataset settings.
 
-[vis_tools.py](../tools/vis_tools.py) contains batch-wise visualization functions to modify for your own use case.
+[vis_utils.py](../utils/vis_utils.py) contains batch-wise visualization functions to modify for your own use case.
 
 ## Segmentation mask (Image/Video/Folder)
 
