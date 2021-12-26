@@ -11,8 +11,8 @@ from configs.lane_detection.common.optims.ep50_poly_warmup500 import lr_schedule
 # Default args that can be overridden in commandline
 train_args_default = dict(
     exp_name='resnet50_baseline_tusimple',
-    workers=10,
-    batch_size=20,
+    workers=4,
+    batch_size=8,
     checkpoint=None,
     # Device args
     world_size=0,
@@ -24,8 +24,8 @@ train_args_default = dict(
 )
 test_args_default = dict(
     exp_name='resnet50_baseline_tusimple',
-    workers=10,
-    batch_size=80,
+    workers=4,
+    batch_size=32,
     checkpoint='./checkpoints/resnet50_baseline_tusimple/model.pt',
     # Device args
     device='cuda',
