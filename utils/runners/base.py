@@ -100,11 +100,10 @@ class BaseRunner(ABC):
 
 
 class BaseTrainer(BaseRunner):
-    def __init__(self, cfg, args, map_dataset_statics=None):
+    def __init__(self, cfg, map_dataset_statics=None):
         super().__init__(cfg)
-        net_without_ddp, self.device = self.get_device_and_move_model(args)
         self._cfg = cfg['train']
-        self.update_cfg(self._cfg, args)
+        net_without_ddp, self.device = self.get_device_and_move_model()
         if 'val_num_steps' in self._cfg.keys():
             self._cfg['validation'] = self._cfg['val_num_steps'] > 0
         self.init_exp_dir(cfg, 'train')
@@ -143,18 +142,18 @@ class BaseTrainer(BaseRunner):
                                                     len_loader=len(self.dataloader))
         self.criterion = LOSSES.from_dict(cfg['loss'])
 
-    def get_device_and_move_model(self, args):
-        init_distributed_mode(args)
-        device = torch.device(args.device)
+    def get_device_and_move_model(self):
+        init_distributed_mode(self._cfg)
+        device = torch.device(self._cfg['device'])
         print(device)
         self.model.to(device)
 
-        if args.distributed:
+        if self._cfg['distributed']:
             self.model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model)
         net_without_ddp = self.model
-        if args.distributed:
+        if self._cfg['distributed']:
             self.model = torch.nn.parallel.DistributedDataParallel(self.model,
-                                                                   device_ids=[args.gpu],
+                                                                   device_ids=[self._cfg['gpu']],
                                                                    find_unused_parameters=True)
             net_without_ddp = self.model.module
 
@@ -181,10 +180,9 @@ class BaseTrainer(BaseRunner):
 class BaseTester(BaseRunner):
     image_sets = ['val']
 
-    def __init__(self, cfg, args, map_dataset_statics=None):
+    def __init__(self, cfg, map_dataset_statics=None):
         super().__init__(cfg)
         self._cfg = cfg['test']
-        self.update_cfg(self._cfg, args)
         self.init_exp_dir(cfg, self.image_sets[self._cfg['state'] - 1])
         self.device = self.get_device_and_move_model()
         self.load_checkpoint(self._cfg['checkpoint'])

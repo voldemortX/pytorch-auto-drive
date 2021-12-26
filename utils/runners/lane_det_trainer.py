@@ -13,8 +13,8 @@ from .base import BaseTrainer, DATASETS, TRANSFORMS
 
 
 class LaneDetTrainer(BaseTrainer):
-    def __init__(self, cfg, args):
-        super().__init__(cfg, args)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
     def run(self):
         # Should be the same as segmentation, given customized loss classes
@@ -79,6 +79,7 @@ class LaneDetTrainer(BaseTrainer):
 
                 # Record checkpoints
                 if self._cfg['validation']:
+                    assert self._cfg['seg'], 'Only segmentation based methods can be fast evaluated!'
                     if current_step_num % self._cfg['val_num_steps'] == (self._cfg['val_num_steps'] - 1) or \
                             current_step_num == self._cfg['num_epochs'] * len(self.dataloader):
                         test_pixel_accuracy, test_mIoU = LaneDetTester.fast_evaluate(

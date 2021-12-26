@@ -10,8 +10,8 @@ from configs.lane_detection.common.optims.ep50_poly_warmup200 import lr_schedule
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='resnet34_baseline_tusimple-aug',
-    workers=8,
+    exp_name='erfnet_scnn_tusimple-aug',
+    workers=5,
     batch_size=10,
     checkpoint=None,
     # Device args
@@ -23,10 +23,10 @@ train_args_default = dict(
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='resnet34_baseline_tusimple-aug',
+    exp_name='erfnet_scnn_tusimple-aug',
     workers=10,
-    batch_size=80,
-    checkpoint='./checkpoints/resnet34_baseline_tusimple-aug/model.pt',
+    batch_size=40,
+    checkpoint='./checkpoints/erfnet_scnn_tusimple-aug/model.pt',
     # Device args
     device='cuda',
 
@@ -57,30 +57,21 @@ test = dict(
 )
 test.update(test_args_default)
 
-# Essentially DeepLabV1 without dilation like in SCNN paper
 model = dict(
-    name='standard_segmentation_model',
-    backbone_cfg=dict(
-        name='predefined_resnet_backbone',
-        backbone_name='resnet34',
-        return_layer='layer4',
-        pretrained=True,
-        replace_stride_with_dilation=[False, True, True]
-    ),
-    reducer_cfg=dict(
-        name='RESAReducer',
-        in_channels=512,
-        reduce=128
-    ),
-    classifier_cfg=dict(
-        name='DeepLabV1Head',
-        in_channels=128,
-        num_classes=7,
-        dilation=1
+    name='ERFNet',
+    num_classes=7,
+    dropout_1=0.3,
+    dropout_2=0.3,
+    pretrained_weights='erfnet_encoder_pretrained.pth.tar',
+    spatial_conv_cfg=dict(
+        name='SpatialConv',
+        num_channels=128
     ),
     lane_classifier_cfg=dict(
-        name='SimpleLaneExist',
+        name='EDLaneExist',
         num_output=7 - 1,
-        flattened_size=6160
+        flattened_size=4400,
+        dropout=0.3,
+        pool='max'
     )
 )

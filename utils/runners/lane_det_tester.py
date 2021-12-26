@@ -18,9 +18,9 @@ from ..lane_det_utils import lane_as_segmentation_inference
 class LaneDetTester(BaseTester):
     image_sets = ['valfast', 'test', 'val']
 
-    def __init__(self, cfg, args):
-        super().__init__(cfg, args)
-        self.fast_eval = True if args.state == 1 else False
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        self.fast_eval = True if self._cfg['state'] == 1 else False
 
     def run(self):
         if self.fast_eval:

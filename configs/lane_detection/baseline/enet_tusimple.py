@@ -1,32 +1,32 @@
 # Data pipeline
 from configs.lane_detection.common.datasets.tusimple_seg import dataset
-from configs.lane_detection.common.datasets.train_level1_360 import train_augmentation
+from configs.lane_detection.common.datasets.train_level0_360 import train_augmentation
 from configs.lane_detection.common.datasets.test_360 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_7class import loss
-from configs.lane_detection.common.optims.sgd02 import optimizer
+from configs.lane_detection.common.optims.sgd04 import optimizer
 from configs.lane_detection.common.optims.ep50_poly_warmup200 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='resnet34_baseline_tusimple-aug',
-    workers=8,
-    batch_size=10,
+    exp_name='enet_baseline_tusimple',
+    workers=10,
+    batch_size=20,
     checkpoint=None,
     # Device args
-    world_size=2,
-    dist_url='tcp://localhost:12345',
+    world_size=0,
+    dist_url='env://',
     device='cuda',
 
     val_num_steps=0,  # Seg IoU validation (mostly useless)
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='resnet34_baseline_tusimple-aug',
+    exp_name='enet_baseline_tusimple',
     workers=10,
     batch_size=80,
-    checkpoint='./checkpoints/resnet34_baseline_tusimple-aug/model.pt',
+    checkpoint='./checkpoints/enet_baseline_tusimple/model.pt',
     # Device args
     device='cuda',
 
@@ -57,30 +57,20 @@ test = dict(
 )
 test.update(test_args_default)
 
-# Essentially DeepLabV1 without dilation like in SCNN paper
 model = dict(
-    name='standard_segmentation_model',
-    backbone_cfg=dict(
-        name='predefined_resnet_backbone',
-        backbone_name='resnet34',
-        return_layer='layer4',
-        pretrained=True,
-        replace_stride_with_dilation=[False, True, True]
-    ),
-    reducer_cfg=dict(
-        name='RESAReducer',
-        in_channels=512,
-        reduce=128
-    ),
-    classifier_cfg=dict(
-        name='DeepLabV1Head',
-        in_channels=128,
-        num_classes=7,
-        dilation=1
-    ),
+    name='ENet',
+    num_classes=7,
+    encoder_relu=False,
+    decoder_relu=True,
+    dropout_1=0.01,
+    dropout_2=0.1,
+    encoder_only=False,
+    pretrained_weights=None,
     lane_classifier_cfg=dict(
-        name='SimpleLaneExist',
+        name='EDLaneExist',
         num_output=7 - 1,
-        flattened_size=6160
+        flattened_size=4400,
+        dropout=0.1,
+        pool='avg'
     )
 )

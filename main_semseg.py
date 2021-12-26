@@ -1,4 +1,3 @@
-import time
 import torch
 import argparse
 try:
@@ -8,13 +7,14 @@ except ImportError:
 if torch.backends.cudnn.version() < 8000:
     torch.backends.cudnn.benchmark = True
 
-from utils.args import parse_arg_cfg, read_config, map_states
+from utils.args import parse_arg_cfg, read_config, map_states, add_shortcuts, cmd_dict
 from utils.runners import SegTrainer, SegTester
 
 
 if __name__ == '__main__':
     # Settings (user input > config > argparse defaults)
-    parser = argparse.ArgumentParser(description='PytorchAutoDrive Semantic Segmentation')
+    parser = argparse.ArgumentParser(description='PytorchAutoDrive Semantic Segmentation', conflict_handler='resolve')
+    add_shortcuts(parser)
 
     # Required args
     parser.add_argument('--config', type=str, help='Path to config file', required=True)
@@ -31,44 +31,20 @@ if __name__ == '__main__':
     group2.add_argument('--checkpoint', type=str,
                         help='Continue/Load from a previous checkpoint')
 
-    parser.add_argument('--exp-name', type=str,
-                        help='Name of experiment')
-    parser.add_argument('--workers', type=int,
-                        help='Number of workers (threads) when loading data.'
-                             'Recommend value for training: batch_size')
-    parser.add_argument('--batch-size', type=int,
-                        help='input batch size. Recommend 4 times the training batch size in testing')
+    # Optional args/to overwrite configs
+    group2 = parser.add_mutually_exclusive_group()
+    group2.add_argument('--continue-from', type=str,
+                        help='[Deprecated] Continue training from a previous checkpoint')
+    group2.add_argument('--checkpoint', type=str,
+                        help='Continue/Load from a previous checkpoint')
+
     parser.add_argument('--mixed-precision', action='store_true',
                         help='Enable mixed precision training')
-    parser.add_argument('--val-num-steps', type=int, help='Validation frequency')
-    parser.add_argument('--world-size', type=int,
-                        help='number of distributed processes')
-    parser.add_argument('--dist-url', type=str, help='url used to set up distributed training')
-    parser.add_argument('--device', type=str, help='CPU is not recommended!')
-    parser.add_argument('--save-dir', type=str, help='Path prefix to save all files excluding tensorboard log.')
-    parser.add_argument('--do-not-save', action='store_true',
-                        help='[Deprecated] Please delete .pt files by yourself.')
+    parser.add_argument('--cfg-options', type=cmd_dict,
+                        help='Override config options with \"x1=y1 x2=y2 xn=yn\", tuple value not supported, try list')
 
-    # Deprecations, Defaults and such
-    defaults = {
-        'exp_name': time.time(),
-        'workers': 8,
-        'batch_size': 8,
-        'mixed_precision': False,
-        'checkpoint': None,
-        'continue_from': None,
-        'val_num_steps': 1000,
-        'world_size': 0,
-        'dist_url': 'env://',
-        'device': 'cuda',
-        'save_dir': '',
-        'do_not_save': False
-    }
     states = ['train', 'val']
-    deprecation_map = {
-        'continue_from': {'valid': 'checkpoint', 'message': ''},
-        'do_not_save': {'valid': None, 'message': 'Please delete the .pt files yourself!', 'expected': False}
-    }
+    retain_args = ['state', 'mixed_precision']
 
     args = parser.parse_args()
     if args.state is not None:
@@ -82,8 +58,9 @@ if __name__ == '__main__':
     cfg = read_config(args.config)
     cfg_runner_key = 'train' if args.state == 0 else 'test'
     Runner = SegTrainer if args.state == 0 else SegTester
-    args, cfg[cfg_runner_key] = parse_arg_cfg(args, cfg[cfg_runner_key],
-                                              defaults, required=['state', 'config'], deprecation_map=deprecation_map)
-    runner = Runner(cfg=cfg, args=args)
+    args, cfg = parse_arg_cfg(args, cfg)
+    for k in retain_args:
+        cfg[cfg_runner_key][k] = vars(args)[k]
+    runner = Runner(cfg=cfg)
     runner.run()
     runner.clean()
