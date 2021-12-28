@@ -347,20 +347,13 @@ class SegRepVGG(nn.Module):
             nn.ReLU()
         )
         self.scnn = MODELS.from_dict(spatial_conv_cfg)
-        # if scnn:
-        #     self.scnn = SpatialConv()
-        # else:
-        #     self.scnn = None
         self.fc8 = nn.Sequential(
             nn.Dropout2d(dropout_1),
             nn.Conv2d(128, num_classes, 1)
         )
         self.softmax = nn.Softmax(dim=1)
         self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
-        # if num_lanes > 0:
-        #     self.lane_classifier = SimpleLaneExist(num_output=num_lanes, flattened_size=flattened_size)
-        # else:
-        #     self.lane_classifier = None
+
 
     def forward(self, input):
         out = OrderedDict()
