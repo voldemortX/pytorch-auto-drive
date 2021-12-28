@@ -245,16 +245,29 @@ def create_RepVGG_A2(deploy=False):
                   width_multiplier=[1.5, 1.5, 1.5, 2.75], override_groups_map=None, deploy=deploy)
 
 
+def create_RepVGG_B1(deploy=False):
+    return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
+                  width_multiplier=[2, 2, 2, 4], override_groups_map=None, deploy=deploy)
+
+def create_RepVGG_B1g2(deploy=False):
+    return RepVGG(num_blocks=[4, 6, 16, 1], num_classes=1000,
+                  width_multiplier=[2, 2, 2, 4], override_groups_map=g2_map, deploy=deploy)
+
+
 func_dict = {
     'RepVGG-A0': create_RepVGG_A0,
     'RepVGG-A1': create_RepVGG_A1,
     'RepVGG-A2': create_RepVGG_A2,
+    'RepVGG-B1': create_RepVGG_B1,
+    'RepVGG-B1g2': create_RepVGG_B1g2
 }
 
 pretrained_model_dict = {
     'RepVGG-A0': 'RepVGG-A0-train.pth',
     'RepVGG-A1': 'RepVGG-A1-train.pth',
     'RepVGG-A2': 'RepVGG-A2-train.pth',
+    'RepVGG-B1': 'RepVGG-B1-train.pth',
+    'RepVGG-B1g2': 'RepVGG-B1g2-train.pth'
 }
 
 
