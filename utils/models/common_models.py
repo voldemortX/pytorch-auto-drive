@@ -14,9 +14,9 @@ class non_bottleneck_1d(nn.Module):
         self.conv3x1_1 = nn.Conv2d(chann, chann, (3, 1), stride=1, padding=(1, 0), bias=True)
         self.conv1x3_1 = nn.Conv2d(chann, chann, (1, 3), stride=1, padding=(0, 1), bias=True)
         self.bn1 = nn.BatchNorm2d(chann, eps=1e-03)
-        self.conv3x1_2 = nn.Conv2d(chann, chann, (3, 1), stride=1, padding=(1*dilated, 0),
+        self.conv3x1_2 = nn.Conv2d(chann, chann, (3, 1), stride=1, padding=(1 * dilated, 0),
                                    bias=True, dilation=(dilated, 1))
-        self.conv1x3_2 = nn.Conv2d(chann, chann, (1, 3), stride=1, padding=(0, 1*dilated),
+        self.conv1x3_2 = nn.Conv2d(chann, chann, (1, 3), stride=1, padding=(0, 1 * dilated),
                                    bias=True, dilation=(1, dilated))
         self.bn2 = nn.BatchNorm2d(chann, eps=1e-03)
         self.dropout = nn.Dropout2d(dropprob)
@@ -179,13 +179,15 @@ class SpatialConv(nn.Module):
                 output[:, :, i:i + 1, :] = output[:, :, i:i + 1, :].add(F.relu(self.conv_d(output[:, :, i - 1:i, :])))
             # Up
             for i in range(output.shape[2] - 2, 0, -1):
-                output[:, :, i:i + 1, :] = output[:, :, i:i + 1, :].add(F.relu(self.conv_u(output[:, :, i + 1:i + 2, :])))
+                output[:, :, i:i + 1, :] = output[:, :, i:i + 1, :].add(
+                    F.relu(self.conv_u(output[:, :, i + 1:i + 2, :])))
             # Right
             for i in range(1, output.shape[3]):
                 output[:, :, :, i:i + 1] = output[:, :, :, i:i + 1].add(F.relu(self.conv_r(output[:, :, :, i - 1:i])))
             # Left
             for i in range(output.shape[3] - 2, 0, -1):
-                output[:, :, :, i:i + 1] = output[:, :, :, i:i + 1].add(F.relu(self.conv_l(output[:, :, :, i + 1:i + 2])))
+                output[:, :, :, i:i + 1] = output[:, :, :, i:i + 1].add(
+                    F.relu(self.conv_l(output[:, :, :, i + 1:i + 2])))
         else:
             # First one remains unchanged (according to the original paper), why not add a relu afterwards?
             # Update and send to next
@@ -381,3 +383,55 @@ class RESALaneExist(nn.Module):
         output = self.linear2(output)
 
         return output
+
+
+# MobileV2
+class InvertedResidual(nn.Module):
+    """InvertedResidual block for MobileNetV2.
+    Args:
+        in_channels (int): The input channels of the InvertedResidual block.
+        out_channels (int): The output channels of the InvertedResidual block.
+        stride (int): Stride of the middle (first) 3x3 convolution.
+        expand_ratio (int): Adjusts number of channels of the hidden layer
+            in InvertedResidual by this amount.
+        dilation (int): Dilation rate of depthwise conv. Default: 1
+    Returns:
+        Tensor: The output tensor.
+    """
+
+    def __init__(self, in_channels, out_channels, stride, expand_ratio, dilation=1):
+        super(InvertedResidual, self).__init__()
+        self.stride = stride
+        assert stride in [1, 2], f'stride must in [1, 2]. ' \
+                                 f'But received {stride}.'
+        self.use_res_connect = self.stride == 1 and in_channels == out_channels
+        hidden_dim = int(round(in_channels * expand_ratio))
+        layers = []
+        if expand_ratio != 1:
+            layers.extend([
+                nn.Conv2d(in_channels=in_channels, out_channels=hidden_dim, kernel_size=1),
+                nn.BatchNorm2d(hidden_dim),
+                nn.ReLU6()  # min(max(0, x), 6)
+            ])
+
+        layers.extend([
+            nn.Conv2d(in_channels=hidden_dim, out_channels=hidden_dim, kernel_size=3, stride=stride,
+                      padding=dilation, dilation=dilation, groups=hidden_dim),
+            nn.BatchNorm2d(hidden_dim),
+            nn.ReLU6(),
+            nn.Conv2d(in_channels=hidden_dim, out_channels=out_channels, kernel_size=1),
+            nn.BatchNorm2d(out_channels)
+        ])
+        self.conv = nn.Sequential(*layers)
+
+    def forward(self, x):
+
+        def _inner_forward(x):
+            if self.use_res_connect:
+                return x + self.conv(x)
+            else:
+                return self.conv(x)
+
+        out = _inner_forward(x)
+
+        return out
