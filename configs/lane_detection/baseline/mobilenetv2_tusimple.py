@@ -58,7 +58,7 @@ test = dict(
 test.update(test_args_default)
 
 model = dict(
-    name='SegRepVGG',
+    name='DeepLabV1Lane',
     backbone_cfg=dict(
         name='MobileNetV2',
         pretrained='https://download.pytorch.org/models/mobilenet_v2-b0353104.pth',
