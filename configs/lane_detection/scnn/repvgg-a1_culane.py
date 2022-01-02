@@ -6,7 +6,7 @@ from configs.lane_detection.common.datasets.test_288 import test_augmentation
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_5class import loss
 from configs.lane_detection.common.optims.sgd06 import optimizer
-from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
+from configs.lane_detection.common.optims.ep12_poly_warmup500 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
@@ -68,6 +68,11 @@ model = dict(
     spatial_conv_cfg=dict(
         name='SpatialConv',
         num_channels=128
+    ),
+    reducer_cfg=dict(
+        name='RESAReducer',
+        in_channels=1280,
+        reduce=128
     ),
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',

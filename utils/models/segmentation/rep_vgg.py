@@ -333,19 +333,12 @@ class SegRepVGG(nn.Module):
                  backbone_cfg=None,
                  spatial_conv_cfg=None,
                  lane_classifier_cfg=None,
+                 reducer_cfg=None,
                  dropout_1=0.1):
         super(SegRepVGG, self).__init__()
-        # self.encoder = RepVggEncoder(backbone_name=backbone_name, pretrained=pretrained, deploy=deploy)
         self.encoder = MODELS.from_dict(backbone_cfg)
         self.fea_dim = self.encoder.fea_dim
-        self.fc67 = nn.Sequential(
-            nn.Conv2d(self.fea_dim, 1024, 3, padding=4, dilation=4, bias=False),
-            nn.BatchNorm2d(1024),
-            nn.ReLU(),
-            nn.Conv2d(1024, 128, 1, bias=False),
-            nn.BatchNorm2d(128),
-            nn.ReLU()
-        )
+        self.reducer = MODELS.from_dict(reducer_cfg)
         self.scnn = MODELS.from_dict(spatial_conv_cfg)
         self.fc8 = nn.Sequential(
             nn.Dropout2d(dropout_1),
@@ -357,13 +350,10 @@ class SegRepVGG(nn.Module):
 
     def forward(self, input):
         out = OrderedDict()
-
         output = self.encoder(input)
-        output = self.fc67(output)
-
+        output = self.reducer(output)
         if self.scnn is not None:
             output = self.scnn(output)
-
         output = self.fc8(output)
         out['out'] = output
         if self.lane_classifier is not None:
