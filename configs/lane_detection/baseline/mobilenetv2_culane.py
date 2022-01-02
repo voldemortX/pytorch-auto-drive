@@ -68,14 +68,9 @@ model = dict(
         out_indices=(1, 2, 4, 6),
         out_stride=8,
     ),
-    reducer_cfg=dict(
-        name='RESAReducer',
-        in_channels=96,
-        reduce=128,
-    ),
     classifier_cfg=dict(
         name='DeepLabV1Head',
-        in_channels=128,
+        in_channels=96,
         num_classes=5,
         dilation=1
     ),
