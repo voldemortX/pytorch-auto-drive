@@ -328,57 +328,53 @@ class RepVggEncoder(nn.Module):
 
 
 @MODELS.register()
-class SegRepVGG(nn.Module):
-    def __init__(self, num_classes,
+class DeepLabV1Lane(nn.Module):
+    def __init__(self,
                  backbone_cfg=None,
                  spatial_conv_cfg=None,
                  lane_classifier_cfg=None,
-                 dropout_1=0.1):
-        super(SegRepVGG, self).__init__()
-        # self.encoder = RepVggEncoder(backbone_name=backbone_name, pretrained=pretrained, deploy=deploy)
+                 reducer_cfg=None,
+                 classifier_cfg=None):
+        super().__init__()
         self.encoder = MODELS.from_dict(backbone_cfg)
         self.fea_dim = self.encoder.fea_dim
-        self.fc67 = nn.Sequential(
-            nn.Conv2d(self.fea_dim, 1024, 3, padding=4, dilation=4, bias=False),
-            nn.BatchNorm2d(1024),
-            nn.ReLU(),
-            nn.Conv2d(1024, 128, 1, bias=False),
-            nn.BatchNorm2d(128),
-            nn.ReLU()
-        )
+        self.reducer = MODELS.from_dict(reducer_cfg)
         self.scnn = MODELS.from_dict(spatial_conv_cfg)
-        # if scnn:
-        #     self.scnn = SpatialConv()
-        # else:
-        #     self.scnn = None
-        self.fc8 = nn.Sequential(
-            nn.Dropout2d(dropout_1),
-            nn.Conv2d(128, num_classes, 1)
-        )
+        # self.fc67 = nn.Sequential(
+        #     nn.Conv2d(self.fea_dim, 1024, 3, padding=4, dilation=4, bias=False),
+        #     nn.BatchNorm2d(1024),
+        #     nn.ReLU(),
+        #     nn.Conv2d(1024, 128, 1, bias=False),
+        #     nn.BatchNorm2d(128),
+        #     nn.ReLU()
+        # )
+        # self.fc8 = nn.Sequential(
+        #     nn.Dropout2d(0.1),
+        #     nn.Conv2d(128, 5, 1)
+        # )
+        self.classifier = MODELS.from_dict(classifier_cfg)
         self.softmax = nn.Softmax(dim=1)
         self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
-        # if num_lanes > 0:
-        #     self.lane_classifier = SimpleLaneExist(num_output=num_lanes, flattened_size=flattened_size)
-        # else:
-        #     self.lane_classifier = None
 
     def forward(self, input):
         out = OrderedDict()
-
         output = self.encoder(input)
-        output = self.fc67(output)
-
+        output = self.reducer(output)
         if self.scnn is not None:
             output = self.scnn(output)
-
-        output = self.fc8(output)
+        output = self.classifier(output)
+        # output = self.fc67(output)
+        # output = self.fc8(output)
         out['out'] = output
         if self.lane_classifier is not None:
             output = self.softmax(output)
             out['lane'] = self.lane_classifier(output)
         return out
 
-    def eval(self: T) -> T:
+
+@MODELS.register()
+class SegRepVGG(DeepLabV1Lane):
+    def eval(self):
         r"""Sets the module in evaluation mode.
         This has any effect only on certain modules. See documentations of
         particular modules for details of their behaviors in training/evaluation

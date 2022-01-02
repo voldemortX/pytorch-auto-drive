@@ -5,27 +5,27 @@ from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_5class import loss
-from configs.lane_detection.common.optims.sgd08 import optimizer
-from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
+from configs.lane_detection.common.optims.sgd06 import optimizer
+from configs.lane_detection.common.optims.ep12_poly_warmup500 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='repvgg-a0_baseline_culane',
-    workers=10,
-    batch_size=20,
+    exp_name='repvgg-a1_scnn_culane',
+    workers=5,
+    batch_size=10,
     checkpoint=None,
     # Device args
-    world_size=0,
-    dist_url='env://',
+    world_size=2,
+    dist_url='tcp://localhost:12345',
     device='cuda',
     val_num_steps=0,  # Seg IoU validation (mostly useless)
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='repvgg-a0_baseline_culane',
+    exp_name='repvgg-a1_scnn_culane',
     workers=10,
     batch_size=80,
-    checkpoint='./checkpoints/repvgg-a0_baseline_culane/model.pt',
+    checkpoint='./checkpoints/repvgg-a1_scnn_culane/model.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints'
@@ -61,9 +61,13 @@ model = dict(
     dropout_1=0.1,
     backbone_cfg=dict(
         name='RepVggEncoder',
-        backbone_name='RepVGG-A0',
+        backbone_name='RepVGG-A1',
         pretrained=True,
         deploy=False
+    ),
+    spatial_conv_cfg=dict(
+        name='SpatialConv',
+        num_channels=128
     ),
     reducer_cfg=dict(
         name='RESAReducer',

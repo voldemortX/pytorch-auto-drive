@@ -66,6 +66,11 @@ model = dict(
         pretrained=True,
         deploy=False
     ),
+    reducer_cfg=dict(
+        name='RESAReducer',
+        in_channels=1408,
+        reduce=128
+    ),
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',
         num_output=7 - 1,
