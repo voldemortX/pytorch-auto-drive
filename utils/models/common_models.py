@@ -399,7 +399,7 @@ class InvertedResidual(nn.Module):
         Tensor: The output tensor.
     """
 
-    def __init__(self, in_channels, out_channels, stride, expand_ratio, dilation=1):
+    def __init__(self, in_channels, out_channels, stride, expand_ratio, dilation=1, bias=False):
         super(InvertedResidual, self).__init__()
         self.stride = stride
         assert stride in [1, 2], f'stride must in [1, 2]. ' \
@@ -409,17 +409,17 @@ class InvertedResidual(nn.Module):
         layers = []
         if expand_ratio != 1:
             layers.extend([
-                nn.Conv2d(in_channels=in_channels, out_channels=hidden_dim, kernel_size=1),
+                nn.Conv2d(in_channels=in_channels, out_channels=hidden_dim, kernel_size=1, bias=bias),
                 nn.BatchNorm2d(hidden_dim),
                 nn.ReLU6()  # min(max(0, x), 6)
             ])
 
         layers.extend([
             nn.Conv2d(in_channels=hidden_dim, out_channels=hidden_dim, kernel_size=3, stride=stride,
-                      padding=dilation, dilation=dilation, groups=hidden_dim),
+                      padding=dilation, dilation=dilation, groups=hidden_dim, bias=bias),
             nn.BatchNorm2d(hidden_dim),
             nn.ReLU6(),
-            nn.Conv2d(in_channels=hidden_dim, out_channels=out_channels, kernel_size=1),
+            nn.Conv2d(in_channels=hidden_dim, out_channels=out_channels, kernel_size=1, bias=bias),
             nn.BatchNorm2d(out_channels)
         ])
         self.conv = nn.Sequential(*layers)

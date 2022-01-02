@@ -59,8 +59,6 @@ test.update(test_args_default)
 
 model = dict(
     name='SegRepVGG',
-    num_classes=5,
-    dropout_1=0.1,
     backbone_cfg=dict(
         name='MobileNetV2',
         pretrained='https://download.pytorch.org/models/mobilenet_v2-b0353104.pth',
@@ -69,6 +67,17 @@ model = dict(
         dilations=(1, 1, 1, 2, 2, 4, 4),
         out_indices=(1, 2, 4, 6),
         out_stride=8,
+    ),
+    reducer_cfg=dict(
+        name='RESAReducer',
+        in_channels=96,
+        reduce=128,
+    ),
+    classifier_cfg=dict(
+        name='DeepLabV1Head',
+        in_channels=128,
+        num_classes=5,
+        dilation=1
     ),
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',
