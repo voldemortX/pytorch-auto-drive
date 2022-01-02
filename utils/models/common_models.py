@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-from ._utils import is_tracing
+from ._utils import is_tracing, make_divisible
 from .builder import MODELS
 
 
@@ -435,3 +435,103 @@ class InvertedResidual(nn.Module):
         out = _inner_forward(x)
 
         return out
+
+
+class InvertedResidualV3(nn.Module):
+    """Inverted Residual Block for MobileNetV3.
+    Args:
+        in_channels (int): The input channels of this Module.
+        out_channels (int): The output channels of this Module.
+        mid_channels (int): The input channels of the depthwise convolution.
+        kernel_size (int): The kernel size of the depthwise convolution. Default: 3.
+        stride (int): The stride of the depthwise convolution. Default: 1.
+        with_se (dict): with or without se layer. Default: False, which means no se layer.
+        with_expand_conv (bool): Use expand conv or not. If set False,
+            mid_channels must be the same with in_channels. Default: True.
+        act_cfg (dict): Config dict for activation layer.
+            Default: dict(type='ReLU').
+    Returns:
+        Tensor: The output tensor.
+    """
+
+    def __init__(self, in_channels, out_channels, mid_channels, kernel_size=3, stride=1, with_se=False,
+                 with_expand_conv=True, act='HSwish'):
+        super(InvertedResidualV3, self).__init__()
+        self.with_res_shortcut = (stride == 1 and in_channels == out_channels)
+        assert stride in [1, 2]
+        activation_layer = nn.Hardswish if act == 'HSwish' else nn.ReLU6
+        self.with_se = with_se
+        self.with_expand_conv = with_expand_conv
+        if not self.with_expand_conv:
+            assert mid_channels == in_channels
+        if self.with_expand_conv:
+            self.expand_conv = nn.Sequential(
+                nn.Conv2d(in_channels=in_channels, out_channels=mid_channels, kernel_size=1, stride=1, padding=0),
+                nn.BatchNorm2d(mid_channels),
+                activation_layer()
+            )
+        self.depthwise_conv = nn.Sequential(
+            nn.Conv2d(in_channels=mid_channels, out_channels=mid_channels, kernel_size=kernel_size, stride=stride,
+                      padding=kernel_size // 2, groups=mid_channels),
+            nn.BatchNorm2d(mid_channels),
+            activation_layer()
+        )
+        if self.with_se:
+            self.se = SELayer(channels=mid_channels, ratio=4)
+
+        self.linear_conv = nn.Sequential(
+            nn.Conv2d(in_channels=mid_channels, out_channels=out_channels, kernel_size=1, stride=1, padding=0),
+            nn.BatchNorm2d(out_channels)
+        )
+
+    def forward(self, x):
+
+        def _inner_forward(x):
+            out = x
+
+            if self.with_expand_conv:
+                out = self.expand_conv(out)
+
+            out = self.depthwise_conv(out)
+
+            if self.with_se:
+                out = self.se(out)
+
+            out = self.linear_conv(out)
+
+            if self.with_res_shortcut:
+                return x + out
+            else:
+                return out
+
+        out = _inner_forward(x)
+
+        return out
+
+
+class SELayer(nn.Module):
+    """Squeeze-and-Excitation Module.
+    Args:
+        channels (int): The input (and output) channels of the SE layer.
+        ratio (int): Squeeze ratio in SELayer, the intermediate channel will be
+            ``int(channels/ratio)``. Default: 16.
+    """
+
+    def __init__(self, channels, ratio=16, act=nn.ReLU, scale_act=nn.Sigmoid):
+        super(SELayer, self).__init__()
+
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
+        self.fc1 = nn.Conv2d(in_channels=channels, out_channels=make_divisible(channels // ratio, 8), kernel_size=1,
+                             stride=1)
+        self.fc2 = nn.Conv2d(in_channels=make_divisible(channels // ratio, 8), out_channels=channels, kernel_size=1,
+                             stride=1)
+        self.activation = act()
+        self.scale_activation = scale_act()
+
+    def forward(self, x):
+        out = self.avgpool(x)
+        out = self.fc1(out)
+        out = self.activation(out)
+        out = self.fc2(out)
+        out = self.scale_activation(out)
+        return x * out
