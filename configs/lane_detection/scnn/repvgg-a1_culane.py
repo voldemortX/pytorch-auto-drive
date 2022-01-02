@@ -57,8 +57,6 @@ test.update(test_args_default)
 
 model = dict(
     name='SegRepVGG',
-    num_classes=5,
-    dropout_1=0.1,
     backbone_cfg=dict(
         name='RepVggEncoder',
         backbone_name='RepVGG-A1',
@@ -78,5 +76,11 @@ model = dict(
         name='SimpleLaneExist',
         num_output=5 - 1,
         flattened_size=4500,
+    ),
+    classifier_cfg = dict(
+        name='DeepLabV1Head',
+        in_channels=128,
+        num_classes=5,
+        dilation=1
     )
 )
