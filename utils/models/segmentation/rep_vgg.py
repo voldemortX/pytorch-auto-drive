@@ -359,7 +359,8 @@ class DeepLabV1Lane(nn.Module):
     def forward(self, input):
         out = OrderedDict()
         output = self.encoder(input)
-        output = self.reducer(output)
+        if self.reducer is not None:
+            output = self.reducer(output)
         if self.scnn is not None:
             output = self.scnn(output)
         output = self.classifier(output)
