@@ -118,7 +118,7 @@ class MobileNetV3(nn.Module):
         # block6 layer16 os=32 for large model
         out_channels = 576 if self.arch == 'small' else 960
         layer = nn.Sequential(
-            nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=1, dilation=4,
+            nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=1,
                       padding=0, bias=False),
             nn.BatchNorm2d(out_channels),
             nn.Hardswish()
