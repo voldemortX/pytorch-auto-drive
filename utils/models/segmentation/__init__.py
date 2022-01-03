@@ -7,3 +7,4 @@ from .erfnet import ERFNet
 from .enet import ENet
 from .rep_vgg import SegRepVGG, RepVggEncoder, DeepLabV1Lane
 from .mobilenet_v2 import MobileNetV2
+from .mobilenet_v3 import MobileNetV3

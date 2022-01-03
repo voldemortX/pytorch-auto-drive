@@ -337,7 +337,7 @@ class DeepLabV1Lane(nn.Module):
                  classifier_cfg=None):
         super().__init__()
         self.encoder = MODELS.from_dict(backbone_cfg)
-        self.fea_dim = self.encoder.fea_dim
+        # self.fea_dim = self.encoder.fea_dim
         self.reducer = MODELS.from_dict(reducer_cfg)
         self.scnn = MODELS.from_dict(spatial_conv_cfg)
         # self.fc67 = nn.Sequential(

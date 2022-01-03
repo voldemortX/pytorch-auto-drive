@@ -455,7 +455,7 @@ class InvertedResidualV3(nn.Module):
     """
 
     def __init__(self, in_channels, out_channels, mid_channels, kernel_size=3, stride=1, with_se=False,
-                 with_expand_conv=True, act='HSwish'):
+                 with_expand_conv=True, act='HSwish', bias=False, dilation=1):
         super(InvertedResidualV3, self).__init__()
         self.with_res_shortcut = (stride == 1 and in_channels == out_channels)
         assert stride in [1, 2]
@@ -466,13 +466,15 @@ class InvertedResidualV3(nn.Module):
             assert mid_channels == in_channels
         if self.with_expand_conv:
             self.expand_conv = nn.Sequential(
-                nn.Conv2d(in_channels=in_channels, out_channels=mid_channels, kernel_size=1, stride=1, padding=0),
+                nn.Conv2d(in_channels=in_channels, out_channels=mid_channels, kernel_size=1, stride=1, padding=0,
+                          bias=bias),
                 nn.BatchNorm2d(mid_channels),
                 activation_layer()
             )
+        _stride = 1 if dilation > 1 else stride
         self.depthwise_conv = nn.Sequential(
-            nn.Conv2d(in_channels=mid_channels, out_channels=mid_channels, kernel_size=kernel_size, stride=stride,
-                      padding=kernel_size // 2, groups=mid_channels),
+            nn.Conv2d(in_channels=mid_channels, out_channels=mid_channels, kernel_size=kernel_size, stride=_stride,
+                      padding=kernel_size // 2, groups=mid_channels, bias=bias),
             nn.BatchNorm2d(mid_channels),
             activation_layer()
         )
@@ -480,7 +482,8 @@ class InvertedResidualV3(nn.Module):
             self.se = SELayer(channels=mid_channels, ratio=4)
 
         self.linear_conv = nn.Sequential(
-            nn.Conv2d(in_channels=mid_channels, out_channels=out_channels, kernel_size=1, stride=1, padding=0),
+            nn.Conv2d(in_channels=mid_channels, out_channels=out_channels, kernel_size=1, stride=1, padding=0,
+                      bias=False),
             nn.BatchNorm2d(out_channels)
         )
 
