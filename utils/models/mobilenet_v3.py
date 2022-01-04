@@ -1,11 +1,15 @@
-import torch.nn as nn
-from ..builder import MODELS
-from ..common_models import InvertedResidualV3
+# Modified from mmsegmentation code, referenced from torchvision
+
 import torch
+import torch.nn as nn
+
+from .builder import MODELS
+from .common_models import InvertedResidualV3
+
 
 @MODELS.register()
-class MobileNetV3(nn.Module):
-    """MobileNetV3 backbone.
+class MobileNetV3Encoder(nn.Module):
+    """MobileNetV3 backbone (keep the last 1x1)).
     This backbone is the improved implementation of `Searching for MobileNetV3
     <https://ieeexplore.ieee.org/document/9008835>`_.
     Args:
@@ -24,41 +28,45 @@ class MobileNetV3(nn.Module):
     # Parameters to build each block:
     #     [kernel size, mid channels, out channels, with_se, act type, stride, dilated]
     arch_settings = {
-        'small': [[3, 16, 16, True, 'ReLU', 2, False],  # block0 layer1 os=4
-                  [3, 72, 24, False, 'ReLU', 2, False],  # block1 layer2 os=8
-                  [3, 88, 24, False, 'ReLU', 1, False],
-                  [5, 96, 40, True, 'HSwish', 2, False],  # block2 layer4 os=16
-                  [5, 240, 40, True, 'HSwish', 1, False],
-                  [5, 240, 40, True, 'HSwish', 1, False],
-                  [5, 120, 48, True, 'HSwish', 1, False],  # block3 layer7 os=16
-                  [5, 144, 48, True, 'HSwish', 1, False],
-                  [5, 288, 96, True, 'HSwish', 2, True],  # block4 layer9 os=32
-                  [5, 576, 96, True, 'HSwish', 1, True],
-                  [5, 576, 96, True, 'HSwish', 1, True]],
-        'large': [[3, 16, 16, False, 'ReLU', 1, False],  # block0 layer1 os=2
-                  [3, 64, 24, False, 'ReLU', 2, False],  # block1 layer2 os=4
-                  [3, 72, 24, False, 'ReLU', 1, False],
-                  [5, 72, 40, True, 'ReLU', 2, False],  # block2 layer4 os=8
-                  [5, 120, 40, True, 'ReLU', 1, False],
-                  [5, 120, 40, True, 'ReLU', 1, False],
-                  [3, 240, 80, False, 'HSwish', 2, False],  # block3 layer7 os=16
-                  [3, 200, 80, False, 'HSwish', 1, False],
-                  [3, 184, 80, False, 'HSwish', 1, False],
-                  [3, 184, 80, False, 'HSwish', 1, False],
-                  [3, 480, 112, True, 'HSwish', 1, False],  # block4 layer11 os=16
-                  [3, 672, 112, True, 'HSwish', 1, False],
-                  [5, 672, 160, True, 'HSwish', 2, True],  # block5 layer13 os=32
-                  [5, 960, 160, True, 'HSwish', 1, True],
-                  [5, 960, 160, True, 'HSwish', 1, True]]
-    }  # yapf: disable
+        'small': [[3, 16, 16, True, 'ReLU'],  # block0 layer1 os=4
+                  [3, 72, 24, False, 'ReLU'],  # block1 layer2 os=8
+                  [3, 88, 24, False, 'ReLU'],
+                  [5, 96, 40, True, 'HSwish'],  # block2 layer4 os=16
+                  [5, 240, 40, True, 'HSwish'],
+                  [5, 240, 40, True, 'HSwish'],
+                  [5, 120, 48, True, 'HSwish'],  # block3 layer7 os=16
+                  [5, 144, 48, True, 'HSwish'],
+                  [5, 288, 96, True, 'HSwish'],  # block4 layer9 os=32
+                  [5, 576, 96, True, 'HSwish'],
+                  [5, 576, 96, True, 'HSwish']],
+        'large': [[3, 16, 16, False, 'ReLU'],  # block0 layer1 os=2
+                  [3, 64, 24, False, 'ReLU'],  # block1 layer2 os=4
+                  [3, 72, 24, False, 'ReLU'],
+                  [5, 72, 40, True, 'ReLU'],  # block2 layer4 os=8
+                  [5, 120, 40, True, 'ReLU'],
+                  [5, 120, 40, True, 'ReLU'],
+                  [3, 240, 80, False, 'HSwish'],  # block3 layer7 os=16
+                  [3, 200, 80, False, 'HSwish'],
+                  [3, 184, 80, False, 'HSwish'],
+                  [3, 184, 80, False, 'HSwish'],
+                  [3, 480, 112, True, 'HSwish'],  # block4 layer11 os=16
+                  [3, 672, 112, True, 'HSwish'],
+                  [5, 672, 160, True, 'HSwish'],  # block5 layer13 os=32
+                  [5, 960, 160, True, 'HSwish'],
+                  [5, 960, 160, True, 'HSwish']]
+    }
 
-    def __init__(self, arch='small', out_indices=(0, 1, 12), frozen_stages=-1, reduction_factor=1,
-                 norm_eval=False, pretrained=None):
-        super(MobileNetV3, self).__init__()
+    def __init__(self, arch='small', out_indices=(12, ), frozen_stages=-1, reduction_factor=1,
+                 norm_eval=False, pretrained=None,
+                 strides=(2, 2, 1, 2, 1, 1, 1, 1, 2, 1, 1),
+                 dilations=(1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2)):
+        super(MobileNetV3Encoder, self).__init__()
 
         self.pretrained = pretrained
         assert arch in self.arch_settings
         assert isinstance(reduction_factor, int) and reduction_factor > 0
+        self.strides = strides
+        self.dilations = dilations
 
         for index in out_indices:
             if index not in range(0, len(self.arch_settings[arch]) + 2):
@@ -98,13 +106,13 @@ class MobileNetV3(nn.Module):
 
         layer_setting = self.arch_settings[self.arch]
         for i, params in enumerate(layer_setting):
-            (kernel_size, mid_channels, out_channels, with_se, act,
-             stride, dilated) = params
+            (kernel_size, mid_channels, out_channels, with_se, act) = params
+            stride = self.strides[i]
+            dilation = self.dilations[i]
 
             if self.arch == 'large' and i >= 12 or self.arch == 'small' and i >= 8:
                 mid_channels = mid_channels // self.reduction_factor
                 out_channels = out_channels // self.reduction_factor
-            dilation = 2 if dilated else 1
             layer = InvertedResidualV3(in_channels=in_channels, out_channels=out_channels, mid_channels=mid_channels,
                                        kernel_size=kernel_size, stride=stride, with_se=with_se, act=act,
                                        with_expand_conv=(in_channels != mid_channels), dilation=dilation)
@@ -167,5 +175,3 @@ class MobileNetV3(nn.Module):
             elif isinstance(m, nn.Linear):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.zeros_(m.bias)
-
-

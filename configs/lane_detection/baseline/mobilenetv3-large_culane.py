@@ -60,10 +60,18 @@ test.update(test_args_default)
 model = dict(
     name='DeepLabV1Lane',
     backbone_cfg=dict(
-        name='MobileNetV3',
+        # MobileNetV3-Large 1.0
+        # Manually download https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth,
+        # bug in torch 1.6
+        name='MobileNetV3Encoder',
         pretrained='mobilenet_v3_large-8738ca79.pth',
         arch='large',
-        out_indices=(0, 3, 16)
+        reduction_factor=1,
+
+        # OS-16 (DeepLab style)
+        strides=(1, 2, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1),
+        dilations=(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2),
+        out_indices=(16, )
     ),
     classifier_cfg=dict(
         name='DeepLabV1Head',

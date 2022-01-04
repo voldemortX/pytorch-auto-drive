@@ -1,10 +1,10 @@
 # Modified from mmsegmentation code, referenced from torchvision
 
 import torch.nn as nn
-from ..builder import MODELS
-from .._utils import make_divisible
-from ..common_models import InvertedResidual
-from ..utils import load_state_dict_from_url
+from .builder import MODELS
+from ._utils import make_divisible
+from .common_models import InvertedResidual
+from .utils import load_state_dict_from_url
 
 
 @MODELS.register()

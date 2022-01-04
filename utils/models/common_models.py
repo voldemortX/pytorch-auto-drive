@@ -471,9 +471,10 @@ class InvertedResidualV3(nn.Module):
                 nn.BatchNorm2d(mid_channels),
                 activation_layer()
             )
-        _stride = 1 if dilation > 1 else stride
+        if stride > 1 and dilation > 1:
+            raise ValueError('Can\'t have stride and dilation both > 1 in MobileNetV3')
         self.depthwise_conv = nn.Sequential(
-            nn.Conv2d(in_channels=mid_channels, out_channels=mid_channels, kernel_size=kernel_size, stride=_stride,
+            nn.Conv2d(in_channels=mid_channels, out_channels=mid_channels, kernel_size=kernel_size, stride=stride,
                       padding=kernel_size // 2, groups=mid_channels, bias=bias),
             nn.BatchNorm2d(mid_channels),
             activation_layer()

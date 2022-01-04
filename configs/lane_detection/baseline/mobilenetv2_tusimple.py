@@ -60,23 +60,29 @@ test.update(test_args_default)
 model = dict(
     name='DeepLabV1Lane',
     backbone_cfg=dict(
-        name='MobileNetV2',
+        name='MobileNetV2Encoder',
         pretrained='https://download.pytorch.org/models/mobilenet_v2-b0353104.pth',
         widen_factor=1,
-        strides=(1, 2, 2, 1, 1, 1, 1),
-        dilations=(1, 1, 1, 2, 2, 4, 4),
-        out_indices=(1, 2, 4, 6),
-        out_stride=8,
+
+        # OS-16 (DeepLab style)
+        strides=(1, 2, 2, 2, 1, 1, 1),
+        dilations=(1, 1, 1, 1, 1, 2, 2),
+        out_indices=(6, )
+    ),
+    reducer_cfg=dict(
+        name='RESAReducer',
+        in_channels=320,
+        reduce=128
     ),
     classifier_cfg=dict(
         name='DeepLabV1Head',
-        in_channels=96,
-        num_classes=5,
+        in_channels=128,
+        num_classes=7,
         dilation=1
     ),
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',
         num_output=7 - 1,
-        flattened_size=6160,
+        flattened_size=1540,
     )
 )

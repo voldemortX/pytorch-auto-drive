@@ -1,13 +1,11 @@
+# https://github.com/DingXiaoH/RepVGG
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from ..builder import MODELS
-from ..common_models import SimpleLaneExist, SpatialConv
-from typing import TypeVar
-from collections import OrderedDict
 
-T = TypeVar('T', bound='Module')
+from .builder import MODELS
 
 
 def conv_bn(in_channels, out_channels, kernel_size, stride, padding, groups=1):
@@ -287,7 +285,7 @@ class RepVggEncoder(nn.Module):
                 checkpoint = checkpoint['state_dict']
             ckpt = {k.replace('module.', ''): v for k, v in checkpoint.items()}  # strip the names
             self.encoder.load_state_dict(ckpt)
-        # too stupid
+        # TODO: Refactor with feature extractor
         self.layer0 = self.encoder.stage0
         self.layer1 = self.encoder.stage1
         self.layer2 = self.encoder.stage2
@@ -325,70 +323,3 @@ class RepVggEncoder(nn.Module):
         x4 = self.layer4(x3)
 
         return x4
-
-
-@MODELS.register()
-class DeepLabV1Lane(nn.Module):
-    def __init__(self,
-                 backbone_cfg=None,
-                 spatial_conv_cfg=None,
-                 lane_classifier_cfg=None,
-                 reducer_cfg=None,
-                 classifier_cfg=None):
-        super().__init__()
-        self.encoder = MODELS.from_dict(backbone_cfg)
-        # self.fea_dim = self.encoder.fea_dim
-        self.reducer = MODELS.from_dict(reducer_cfg)
-        self.scnn = MODELS.from_dict(spatial_conv_cfg)
-        # self.fc67 = nn.Sequential(
-        #     nn.Conv2d(self.fea_dim, 1024, 3, padding=4, dilation=4, bias=False),
-        #     nn.BatchNorm2d(1024),
-        #     nn.ReLU(),
-        #     nn.Conv2d(1024, 128, 1, bias=False),
-        #     nn.BatchNorm2d(128),
-        #     nn.ReLU()
-        # )
-        # self.fc8 = nn.Sequential(
-        #     nn.Dropout2d(0.1),
-        #     nn.Conv2d(128, 5, 1)
-        # )
-        self.classifier = MODELS.from_dict(classifier_cfg)
-        self.softmax = nn.Softmax(dim=1)
-        self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
-
-    def forward(self, input):
-        out = OrderedDict()
-        output = self.encoder(input)
-        if self.reducer is not None:
-            output = self.reducer(output)
-        if self.scnn is not None:
-            output = self.scnn(output)
-        output = self.classifier(output)
-        # output = self.fc67(output)
-        # output = self.fc8(output)
-        out['out'] = output
-        if self.lane_classifier is not None:
-            output = self.softmax(output)
-            out['lane'] = self.lane_classifier(output)
-        return out
-
-
-@MODELS.register()
-class SegRepVGG(DeepLabV1Lane):
-    def eval(self):
-        r"""Sets the module in evaluation mode.
-        This has any effect only on certain modules. See documentations of
-        particular modules for details of their behaviors in training/evaluation
-        mode, if they are affected, e.g. :class:`Dropout`, :class:`BatchNorm`,
-        etc.
-        This is equivalent with :meth:`self.train(False) <torch.nn.Module.train>`.
-        See :ref:`locally-disable-grad-doc` for a comparison between
-        `.eval()` and several similar mechanisms that may be confused with it.
-        Returns:
-            Module: self
-        """
-        for module in self.encoder.modules():
-            if hasattr(module, 'switch_to_deploy'):
-                module.switch_to_deploy()
-        print('Deploy!')
-        return self.train(False)
