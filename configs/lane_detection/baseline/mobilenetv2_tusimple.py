@@ -5,12 +5,12 @@ from configs.lane_detection.common.datasets.test_360 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_7class import loss
-from configs.lane_detection.common.optims.sgd06 import optimizer
+from configs.lane_detection.common.optims.sgd02 import optimizer
 from configs.lane_detection.common.optims.ep50_poly_warmup200 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='repvgg-a2_baseline_tusimple',
+    exp_name='mobilenetv2_baseline_tusimple',
     workers=10,
     batch_size=20,
     checkpoint=None,
@@ -23,12 +23,13 @@ train_args_default = dict(
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='repvgg-a2_baseline_tusimple',
+    exp_name='mobilenetv2_baseline_tusimple',
     workers=10,
     batch_size=80,
-    checkpoint='./checkpoints/repvgg-a2_baseline_tusimple/model.pt',
+    checkpoint='./checkpoints/mobilenetv2_baseline_tusimple/model.pt',
     # Device args
     device='cuda',
+
     save_dir='./checkpoints'
 )
 
@@ -57,23 +58,31 @@ test = dict(
 test.update(test_args_default)
 
 model = dict(
-    name='SegRepVGG',
-    num_classes=7,
-    dropout_1=0.1,
+    name='DeepLabV1Lane',
     backbone_cfg=dict(
-        name='RepVggEncoder',
-        backbone_name='RepVGG-A2',
-        pretrained=True,
-        deploy=False
+        name='MobileNetV2Encoder',
+        pretrained='https://download.pytorch.org/models/mobilenet_v2-b0353104.pth',
+        widen_factor=1,
+
+        # OS-16 (DeepLab style)
+        strides=(1, 2, 2, 2, 1, 1, 1),
+        dilations=(1, 1, 1, 1, 1, 2, 2),
+        out_indices=(6, )
     ),
     reducer_cfg=dict(
         name='RESAReducer',
-        in_channels=1408,
+        in_channels=320,
         reduce=128
+    ),
+    classifier_cfg=dict(
+        name='DeepLabV1Head',
+        in_channels=128,
+        num_classes=7,
+        dilation=1
     ),
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',
         num_output=7 - 1,
-        flattened_size=6160,
+        flattened_size=1540,
     )
 )

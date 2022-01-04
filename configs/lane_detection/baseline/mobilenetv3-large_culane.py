@@ -5,12 +5,12 @@ from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_5class import loss
-from configs.lane_detection.common.optims.sgd08 import optimizer
+from configs.lane_detection.common.optims.sgd02 import optimizer
 from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='repvgg-a0_baseline_culane',
+    exp_name='mobilenetv3-large_baseline_culane',
     workers=10,
     batch_size=20,
     checkpoint=None,
@@ -18,16 +18,18 @@ train_args_default = dict(
     world_size=0,
     dist_url='env://',
     device='cuda',
+
     val_num_steps=0,  # Seg IoU validation (mostly useless)
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='repvgg-a0_baseline_culane',
+    exp_name='mobilenetv3-large_baseline_culane',
     workers=10,
     batch_size=80,
-    checkpoint='./checkpoints/repvgg-a0_baseline_culane/model.pt',
+    checkpoint='./checkpoints/mobilenetv3-large_baseline_culane/model.pt',
     # Device args
     device='cuda',
+
     save_dir='./checkpoints'
 )
 
@@ -56,23 +58,35 @@ test = dict(
 test.update(test_args_default)
 
 model = dict(
-    name='SegRepVGG',
-    num_classes=5,
-    dropout_1=0.1,
+    name='DeepLabV1Lane',
     backbone_cfg=dict(
-        name='RepVggEncoder',
-        backbone_name='RepVGG-A0',
-        pretrained=True,
-        deploy=False
+        # MobileNetV3-Large 1.0
+        # Manually download https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth,
+        # bug in torch 1.6
+        name='MobileNetV3Encoder',
+        pretrained='mobilenet_v3_large-8738ca79.pth',
+        arch='large',
+        reduction_factor=1,
+
+        # OS-16 (DeepLab style)
+        strides=(1, 2, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1),
+        dilations=(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2),
+        out_indices=(16, )
+    ),
+    classifier_cfg=dict(
+        name='DeepLabV1Head',
+        in_channels=128,
+        num_classes=5,
+        dilation=1
     ),
     reducer_cfg=dict(
         name='RESAReducer',
-        in_channels=1280,
+        in_channels=960,
         reduce=128
     ),
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',
         num_output=5 - 1,
-        flattened_size=4500,
+        flattened_size=1125,
     )
 )

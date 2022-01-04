@@ -11,12 +11,12 @@ from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_schedule
 # Default args that can be overridden in commandline
 train_args_default = dict(
     exp_name='repvgg-a1_baseline_culane',
-    workers=10,
-    batch_size=20,
+    workers=5,
+    batch_size=10,
     checkpoint=None,
     # Device args
-    world_size=0,
-    dist_url='env://',
+    world_size=2,
+    dist_url='tcp://localhost:12345',
     device='cuda',
     val_num_steps=0,  # Seg IoU validation (mostly useless)
     save_dir='./checkpoints'
@@ -57,17 +57,28 @@ test.update(test_args_default)
 
 model = dict(
     name='SegRepVGG',
-    num_classes=5,
-    dropout_1=0.1,
+    # num_classes=5,
+    # dropout_1=0.1,
     backbone_cfg=dict(
         name='RepVggEncoder',
         backbone_name='RepVGG-A1',
         pretrained=True,
         deploy=False
     ),
+    reducer_cfg=dict(
+        name='RESAReducer',
+        in_channels=1280,
+        reduce=128
+    ),
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',
         num_output=5 - 1,
         flattened_size=4500,
+    ),
+    classifier_cfg=dict(
+        name='DeepLabV1Head',
+        in_channels=128,
+        num_classes=5,
+        dilation=1
     )
 )

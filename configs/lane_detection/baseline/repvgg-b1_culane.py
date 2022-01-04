@@ -11,7 +11,7 @@ from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_schedule
 # Default args that can be overridden in commandline
 train_args_default = dict(
     exp_name='repvgg-b1_baseline_culane',
-    workers=5,
+    workers=4,
     batch_size=10,
     checkpoint=None,
     # Device args
@@ -57,13 +57,24 @@ test.update(test_args_default)
 
 model = dict(
     name='SegRepVGG',
-    num_classes=5,
-    dropout_1=0.1,
+    # num_classes=5,
+    # dropout_1=0.1,
     backbone_cfg=dict(
         name='RepVggEncoder',
         backbone_name='RepVGG-B1',
         pretrained=True,
         deploy=False
+    ),
+    reducer_cfg=dict(
+        name='RESAReducer',
+        in_channels=2048,
+        reduce=128
+    ),
+    classifier_cfg=dict(
+        name='DeepLabV1Head',
+        in_channels=128,
+        num_classes=5,
+        dilation=1
     ),
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',

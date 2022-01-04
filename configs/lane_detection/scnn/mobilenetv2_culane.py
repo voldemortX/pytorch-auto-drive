@@ -5,12 +5,12 @@ from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_5class import loss
-from configs.lane_detection.common.optims.sgd08 import optimizer
+from configs.lane_detection.common.optims.sgd02 import optimizer
 from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='repvgg-a0_baseline_culane',
+    exp_name='mobilenetv2_baseline_culane',
     workers=10,
     batch_size=20,
     checkpoint=None,
@@ -18,16 +18,18 @@ train_args_default = dict(
     world_size=0,
     dist_url='env://',
     device='cuda',
+
     val_num_steps=0,  # Seg IoU validation (mostly useless)
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='repvgg-a0_baseline_culane',
+    exp_name='mobilenetv2_baseline_culane',
     workers=10,
     batch_size=80,
-    checkpoint='./checkpoints/repvgg-a0_baseline_culane/model.pt',
+    checkpoint='./checkpoints/mobilenetv2_baseline_culane/model.pt',
     # Device args
     device='cuda',
+
     save_dir='./checkpoints'
 )
 
@@ -57,22 +59,28 @@ test.update(test_args_default)
 
 model = dict(
     name='SegRepVGG',
-    num_classes=5,
-    dropout_1=0.1,
     backbone_cfg=dict(
-        name='RepVggEncoder',
-        backbone_name='RepVGG-A0',
-        pretrained=True,
-        deploy=False
+        name='MobileNetV2',
+        pretrained='https://download.pytorch.org/models/mobilenet_v2-b0353104.pth',
+        widen_factor=1,
+        strides=(1, 2, 2, 1, 1, 1, 1),
+        dilations=(1, 1, 1, 2, 2, 4, 4),
+        out_indices=(1, 2, 4, 6),
+        out_stride=8,
     ),
-    reducer_cfg=dict(
-        name='RESAReducer',
-        in_channels=1280,
-        reduce=128
+    classifier_cfg=dict(
+        name='DeepLabV1Head',
+        in_channels=96,
+        num_classes=5,
+        dilation=1
     ),
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',
         num_output=5 - 1,
         flattened_size=4500,
-    )
+    ),
+    spatial_conv_cfg=dict(
+        name='SpatialConv',
+        num_channels=96
+    ),
 )
