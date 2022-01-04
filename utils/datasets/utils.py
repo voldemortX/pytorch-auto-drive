@@ -79,6 +79,8 @@ def generate_lane_label_dict(target):
 
 # Lanes as keypoints
 class LaneKeypointDataset(torchvision.datasets.VisionDataset):
+    keypoint_color = [0, 0, 0]
+
     def __init__(self, root, transforms, transform, target_transform,
                  ppl, gap, start, padding_mask, image_set):
         super().__init__(root, transforms, transform, target_transform)

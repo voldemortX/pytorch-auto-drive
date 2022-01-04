@@ -8,6 +8,8 @@ from .builder import DATASETS
 
 # Lane detection as segmentation
 class _StandardLaneDetectionDataset(VisionDataset):
+    keypoint_color = [0, 0, 0]
+
     def __init__(self, root, image_set, transforms=None):
         super().__init__(root, transforms, None, None)
         if image_set == 'valfast':

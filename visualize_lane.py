@@ -30,29 +30,10 @@ if __name__ == '__main__':
                              'if both mask & keypoint are None, inference will be performed (default: None)')
     parser.add_argument('--save-path', type=str, default='test_result.png',
                         help='Result output path (default: test_result.png)')
-    parser.add_argument('--height', type=int, default=288,
-                        help='Image input height (default: 288)')
-    parser.add_argument('--width', type=int, default=800,
-                        help='Image input width (default: 800)')
-    parser.add_argument('--mean', metavar='N', type=float, nargs='+',
-                        help='RGB mean for input data (default: ImageNet mean)')
-    parser.add_argument('--std', metavar='N', type=float, nargs='+',
-                        help='RGB standard variance for input data (default: ImageNet std)')
-    parser.add_argument('--dataset', type=str, default='tusimple',
-                        help='Train/Evaluate on TuSimple (tusimple) / CULane (culane) (default: tusimple)')
-    parser.add_argument('--method', type=str, default='baseline',
-                        help='method selection (lstr/scnn/resa/sad/baseline/etc) (default: baseline)')
-    parser.add_argument('--backbone', type=str, default='erfnet',
-                        help='backbone selection (erfnet/vgg16/resnet18s/resnet18/resnet34/resnet50/resnet101)'
-                             '(default: erfnet)')
     parser.add_argument('--mixed-precision', action='store_true', default=False,
                         help='Enable mixed precision training (default: False)')
     parser.add_argument('--continue-from', type=str, default=None,
                         help='Continue training from a previous checkpoint')
-    parser.add_argument('--batch-size', type=int, default=1,
-                        help='Batch size for inference with video/image folder (default: 1)')
-    parser.add_argument('--workers', type=int, default=0,
-                        help='Number of workers (default: 0)')
     args = parser.parse_args()
     if args.mixed_precision and torch.__version__ < '1.6.0':
         print('PyTorch version too low, mixed precision training is not available.')
@@ -111,7 +92,7 @@ if __name__ == '__main__':
         if image_type == FileType.DIR:  # Image folder (depth 1)
             if check_file_type(args.save_path, image_suffix, video_suffix) != FileType.DIR:
                 raise ValueError('Must use a folder to save folder inference results!')
-            dataset = ImageFolderDataset(root=args.image_path, output_dir=args.save_path, transforms=images_trans)
+            dataset = ImageFolderDataset(root_image=args.image_path, root_output=args.save_path, transforms=images_trans)
             loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=args.batch_size,
                                                  num_workers=args.workers, shuffle=False)
             with torch.no_grad():

@@ -106,7 +106,7 @@ if __name__ == '__main__':
         if image_type == FileType.DIR:  # Image folder (depth 1)
             if check_file_type(args.save_path, image_suffix, video_suffix) != FileType.DIR:
                 raise ValueError('Must use a folder to save folder inference results!')
-            dataset = ImageFolderDataset(root=args.image_path, output_dir=args.save_path, transforms=images_trans)
+            dataset = ImageFolderDataset(root_image=args.image_path, root_output=args.save_path, transforms=images_trans)
             loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=args.batch_size,
                                                  num_workers=args.workers, shuffle=False)
             with torch.no_grad():

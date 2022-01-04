@@ -70,7 +70,12 @@ class BaseRunner(ABC):
         assert hasattr(self, '_cfg')
         if map_dataset_statics is not None:
             for k in map_dataset_statics:
-                self._cfg[k] = getattr(dataset, k)
+                if isinstance(dataset, str):
+                    from utils import datasets
+                    attr = getattr(datasets.__dict__[dataset], k)
+                else:
+                    attr = getattr(dataset, k)
+                self._cfg[k] = attr
 
     def init_exp_dir(self, cfg, cfg_prefix=None):
         # Init work directory and save parsed configs for reference
@@ -204,4 +209,30 @@ class BaseTester(BaseRunner):
 
     @abstractmethod
     def run(self, *args, **kwargs):
+        pass
+
+
+class BaseVisualizer(BaseRunner):
+    dataset_tensor_statistics = []
+    dataset_statistics = []
+
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        self._cfg = cfg['vis'] if 'vis' in cfg.keys() else cfg['test']
+        self.dataloader, dataset = self.get_loader(cfg)
+        self.get_dataset_statics(dataset, set(self.dataset_statistics).union(set(self.dataset_tensor_statistics)))
+        for k in self.dataset_tensor_statistics:
+            self._cfg[k] = torch.tensor(self._cfg[k])
+        if self._cfg['pred']:
+            self.device = self.get_device_and_move_model()
+            self.load_checkpoint(self._cfg['checkpoint'])
+            for k in self.dataset_tensor_statistics:
+                self._cfg[k] = self._cfg[k].to(self.device)
+
+    @abstractmethod
+    def run(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_loader(self, *args, **kwargs):
         pass
