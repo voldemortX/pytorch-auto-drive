@@ -1,7 +1,6 @@
-from typing import Type
+# Modified from mmsegmentation code, referenced from torchvision
 
 import torch.nn as nn
-from collections import OrderedDict
 from ..builder import MODELS
 from .._utils import make_divisible
 from ..common_models import InvertedResidual
@@ -9,8 +8,8 @@ from ..utils import load_state_dict_from_url
 
 
 @MODELS.register()
-class MobileNetV2(nn.Module):
-    """MobileNetV2 backbone.
+class MobileNetV2Encoder(nn.Module):
+    """MobileNetV2 backbone (up to second-to-last feature map).
     This backbone is the implementation of
     `MobileNetV2: Inverted Residuals and Linear Bottlenecks
     <https://arxiv.org/abs/1801.04381>`_.
@@ -39,7 +38,7 @@ class MobileNetV2(nn.Module):
     def __init__(self, widen_factor=1., strides=(1, 2, 2, 2, 1, 2, 1), dilations=(1, 1, 1, 1, 1, 1, 1),
                  out_indices=(1, 2, 4, 6), frozen_stages=-1, norm_eval=False, pretrained=None,
                  progress=True, out_stride=0):
-        super(MobileNetV2, self).__init__()
+        super(MobileNetV2Encoder, self).__init__()
         self.pretrained = pretrained
         self.widen_factor = widen_factor
         self.strides = strides
@@ -55,7 +54,6 @@ class MobileNetV2(nn.Module):
         self.frozen_stages = frozen_stages
         self.norm_eval = norm_eval
         self.out_stride = out_stride
-        self.fea_dim = 320 if out_stride == 16 else 96
         self.in_channels = make_divisible(32 * widen_factor, 8)
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=self.in_channels, kernel_size=3, stride=2, padding=1, bias=False),
@@ -144,8 +142,6 @@ class MobileNetV2(nn.Module):
 
         if len(outs) == 1:
             return outs[0]
-        elif self.out_stride != 0:
-            return tuple(outs)[self.out_stride // 8 + 1]
         else:
             return tuple(outs)
 
@@ -158,57 +154,3 @@ class MobileNetV2(nn.Module):
             layer.eval()
             for param in layer.parameters():
                 param.requires_grad = False
-
-
-# @MODELS.register()
-# class SegMobileNetV2(nn.Module):
-#     def __init__(self, num_classes,
-#                  backbone_cfg=None,
-#                  spatial_conv_cfg=None,
-#                  lane_classifier_cfg=None,
-#                  dropout_1=0.1):
-#         super(SegMobileNetV2, self).__init__()
-#         # self.encoder = RepVggEncoder(backbone_name=backbone_name, pretrained=pretrained, deploy=deploy)
-#         self.encoder = MODELS.from_dict(backbone_cfg)
-#         self.fea_dim = self.encoder.fea_dim
-#         self.fc67 = nn.Sequential(
-#             nn.Conv2d(self.fea_dim, 1024, 3, padding=4, dilation=4, bias=False),
-#             nn.BatchNorm2d(1024),
-#             nn.ReLU(),
-#             nn.Conv2d(1024, 128, 1, bias=False),
-#             nn.BatchNorm2d(128),
-#             nn.ReLU()
-#         )
-#         self.scnn = MODELS.from_dict(spatial_conv_cfg)
-#         # if scnn:
-#         #     self.scnn = SpatialConv()
-#         # else:
-#         #     self.scnn = None
-#         self.fc8 = nn.Sequential(
-#             nn.Dropout2d(dropout_1),
-#             nn.Conv2d(128, num_classes, 1)
-#         )
-#         self.softmax = nn.Softmax(dim=1)
-#         self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
-#         # if num_lanes > 0:
-#         #     self.lane_classifier = SimpleLaneExist(num_output=num_lanes, flattened_size=flattened_size)
-#         # else:
-#         #     self.lane_classifier = None
-#
-#     def forward(self, input):
-#         out = OrderedDict()
-#
-#         output = self.encoder(input)
-#         output = self.fc67(output)
-#
-#         if self.scnn is not None:
-#             output = self.scnn(output)
-#
-#         output = self.fc8(output)
-#         out['out'] = output
-#         if self.lane_classifier is not None:
-#             output = self.softmax(output)
-#             out['lane'] = self.lane_classifier(output)
-#         return out
-
-
