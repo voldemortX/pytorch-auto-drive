@@ -16,8 +16,6 @@ if __name__ == '__main__':
     add_shortcuts(parser)
 
     parser.add_argument('--config', type=str, help='Path to config file', required=True)
-    parser.add_argument('--pred', action='store_true',
-                        help='Whether to predict from a model')
     parser.add_argument('--image-path', type=str, required=True,
                         help='Image input path')
     parser.add_argument('--save-path', type=str, required=True,
@@ -36,6 +34,8 @@ if __name__ == '__main__':
                         help='Keypoint file suffix')
     parser.add_argument('--mask-suffix', type=str, default='.png',
                         help='Segmentation mask file suffix')
+    parser.add_argument('--pred', action='store_true',
+                        help='Whether to predict from a model')
     parser.add_argument('--mixed-precision', action='store_true',
                         help='Enable mixed precision training')
     parser.add_argument('--use-color-pool', action='store_true',
