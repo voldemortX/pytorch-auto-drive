@@ -5,6 +5,7 @@ import os
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from abc import ABC, abstractmethod
+
 try:
     import ujson as json
 except ImportError:
@@ -143,7 +144,8 @@ class BaseTrainer(BaseRunner):
 
         # Optimizer, LR scheduler, etc.
         self.optimizer = OPTIMIZERS.from_dict(cfg['optimizer'],
-                                              parameters=net_without_ddp.parameters())
+                                              parameters=net_without_ddp)
+        # parameters=net_without_ddp.parameters())
         self.lr_scheduler = LR_SCHEDULERS.from_dict(cfg['lr_scheduler'],
                                                     optimizer=self.optimizer,
                                                     len_loader=len(self.dataloader))
