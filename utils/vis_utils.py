@@ -23,7 +23,8 @@ def save_images(images, filenames):
         Image.fromarray(images[i]).save(filenames[i])
 
 
-def segmentation_visualize_batched(images, labels, colors, std=None, mean=None, trans=0.3, ignore_color=None):
+def segmentation_visualize_batched(images, labels, colors, std=None, mean=None, trans=0.3, ignore_color=None,
+                                   auto_color=True, ignore_index=255):
     # Draw images + labels from tensors (batched)
     # images (4D), labels (3D), colors (2D), std, mean, ignore_color: torch.Tensor
     # trans: how transparent is the label
@@ -35,7 +36,12 @@ def segmentation_visualize_batched(images, labels, colors, std=None, mean=None, 
         colors = torch.tensor([[0, 0, 0], [255, 255, 255]], device=images.device)
         labels[labels > 0] = 1
     else:
-        labels[labels == 255] = colors.shape[0] - 1  # Color for ignore
+        ignore_pixels = labels == ignore_index
+        bg_pixels = labels == 0
+        if auto_color:  # Iterate colors (except background and ignore)
+            labels = (labels - 1) % (colors.shape[0] - 2) + 1
+        labels[ignore_pixels] = colors.shape[0] - 1  # Color for ignore
+        labels[bg_pixels] = 0
     labels = colors[labels] / 255.0
 
     # Denormalize if needed and map from (N, 3, d1, d2) to (N, d1, d2, 3)
@@ -59,7 +65,7 @@ def lane_detection_visualize_batched(images, masks=None, keypoints=None,
     # images (4D), masks (3D), keypoints (4D), colors (2D), std, mean: torch.Tensor
     # keypoints can be either List[List[N x 2 numpy array]] (for variate length lanes) or a 4D numpy array
     # filenames: List[str]
-    # keypoint_color: BGR
+    # keypoint_color: RGB
     if masks is not None:
         images = segmentation_visualize_batched(images, masks, mask_colors, std, mean,
                                                 trans=0, ignore_color=mask_colors[0])
@@ -71,7 +77,9 @@ def lane_detection_visualize_batched(images, masks=None, keypoints=None,
         images = images.clamp_(0.0, 1.0) * 255.0
         images = images[..., [2, 1, 0]].cpu().numpy().astype(np.uint8)
         if keypoint_color is None:
-            keypoint_color = [0, 0, 0]  # BGR: Red (sits well with lane colors)
+            keypoint_color = [0, 0, 0]  # Black (sits well with lane colors)
+        else:
+            keypoint_color = keypoint_color[::-1]  # To BGR
         for i in range(images.shape[0]):
             for j in range(len(keypoints[i])):
                 temp = keypoints[i][j][(keypoints[i][j][:, 0] > 0) * (keypoints[i][j][:, 1] > 0)]

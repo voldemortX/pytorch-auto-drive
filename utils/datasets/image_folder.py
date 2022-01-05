@@ -2,7 +2,7 @@ import torchvision
 import os
 from PIL import Image
 
-from ..transforms import functional as F
+from ..transforms import functional as F, ToTensor
 from .builder import DATASETS
 
 
@@ -59,15 +59,17 @@ class ImageFolderLaneDataset(torchvision.datasets.VisionDataset):
         self.images = []
         self.keypoints = None if root_keypoint is None else []
         self.masks = None if root_mask is None else []
-        self.kypoint_process_fn = keypoint_process_fn
+        self.keypoint_process_fn = keypoint_process_fn
         for filename in sorted(os.listdir(root_image)):
-            middle_name = filename[:filename.rfind(image_suffix)]
-            self.filenames.append(filename)
-            self.images.append(os.path.join(root_image, filename))
-            if self.keypoints is not None:
-                self.keypoints.append(os.path.join(root_keypoint, middle_name + keypoint_suffix))
-            if self.masks is not None:
-                self.masks.append(os.path.join(root_mask, middle_name + mask_suffix))
+            suffix_pos = filename.rfind(image_suffix)
+            if suffix_pos != -1:
+                middle_name = filename[:suffix_pos]
+                self.filenames.append(filename)
+                self.images.append(os.path.join(root_image, filename))
+                if self.keypoints is not None:
+                    self.keypoints.append(os.path.join(root_keypoint, middle_name + keypoint_suffix))
+                if self.masks is not None:
+                    self.masks.append(os.path.join(root_mask, middle_name + mask_suffix))
 
     def __getitem__(self, index):
         # Return transformed image / original image / save filename / labels (if exist)
@@ -77,7 +79,7 @@ class ImageFolderLaneDataset(torchvision.datasets.VisionDataset):
         mask = None
         if self.masks is not None:
             w, h = F._get_image_size(img)
-            mask = F.to_tensor(
+            mask = ToTensor.label_to_tensor(
                 F.resize(Image.open(self.masks[index]), size=[h, w], interpolation=Image.NEAREST)
             )
 

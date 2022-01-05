@@ -66,10 +66,12 @@ class BaseRunner(ABC):
         if ckpt_filename is not None:
             load_checkpoint(net=self.model, lr_scheduler=None, optimizer=None, filename=ckpt_filename)
 
-    def get_dataset_statics(self, dataset, map_dataset_statics):
+    def get_dataset_statics(self, dataset, map_dataset_statics, exist_ok=False):
         assert hasattr(self, '_cfg')
         if map_dataset_statics is not None:
             for k in map_dataset_statics:
+                if exist_ok and k in self._cfg.keys():
+                    continue
                 if isinstance(dataset, str):
                     from utils import datasets
                     attr = getattr(datasets.__dict__[dataset], k)
@@ -220,7 +222,8 @@ class BaseVisualizer(BaseRunner):
         super().__init__(cfg)
         self._cfg = cfg['vis'] if 'vis' in cfg.keys() else cfg['test']
         self.dataloader, dataset = self.get_loader(cfg)
-        self.get_dataset_statics(dataset, set(self.dataset_statistics).union(set(self.dataset_tensor_statistics)))
+        self.get_dataset_statics(dataset, set(self.dataset_statistics).union(set(self.dataset_tensor_statistics)),
+                                 exist_ok=True)
         for k in self.dataset_tensor_statistics:
             self._cfg[k] = torch.tensor(self._cfg[k])
         if self._cfg['pred']:

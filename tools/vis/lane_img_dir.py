@@ -32,12 +32,14 @@ if __name__ == '__main__':
                              'if both mask & keypoint are None, inference will be performed')
     parser.add_argument('--image-suffix', type=str, default='.jpg',
                         help='Image file suffix')
-    parser.add_argument('--keypoint-suffix', type=str, default='.txt',
+    parser.add_argument('--keypoint-suffix', type=str, default='.lines.txt',
                         help='Keypoint file suffix')
     parser.add_argument('--mask-suffix', type=str, default='.png',
                         help='Segmentation mask file suffix')
     parser.add_argument('--mixed-precision', action='store_true',
                         help='Enable mixed precision training')
+    parser.add_argument('--use-color-pool', action='store_true',
+                        help='Use a larger color pool for lane segmentation masks')
     parser.add_argument('--cfg-options', type=cmd_dict,
                         help='Override config options with \"x1=y1 x2=y2 xn=yn\"')
 
@@ -49,20 +51,21 @@ if __name__ == '__main__':
 
     retain_args = ['mixed_precision', 'pred',
                    'image_path', 'save_path', 'mask_path', 'keypoint_path',
-                   'image_suffix', 'keypoint_suffix', 'mask_suffix']
+                   'image_suffix', 'keypoint_suffix', 'mask_suffix', 'use_color_pool']
 
     args = parser.parse_args()
 
     # Parse configs and build model
     if args.mixed_precision and torch.__version__ < '1.6.0':
         warnings.warn('PyTorch version too low, mixed precision training is not available.')
+    assert args.image_path != args.save_path, "Try not to overwrite your dataset!"
     cfg = read_config(args.config)
     args, cfg = parse_arg_cfg(args, cfg)
 
     cfg_runner_key = 'vis' if 'vis' in cfg.keys() else 'test'
     for k in retain_args:
         cfg[cfg_runner_key][k] = vars(args)[k]
-    if not cfg['pred']:
+    if not cfg[cfg_runner_key]['pred']:
         cfg['model'] = None
     runner = LaneDetDir(cfg=cfg)
     runner.run()
