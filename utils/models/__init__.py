@@ -6,3 +6,4 @@ from .backbones import VGG16
 from .mobilenet_v2 import MobileNetV2Encoder
 from .mobilenet_v3 import MobileNetV3Encoder
 from .rep_vgg import RepVggEncoder
+from .swin import SwinTransformer

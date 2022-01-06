@@ -185,7 +185,7 @@ class BaseTrainer(BaseRunner):
                     other_params = [v for _, v in list(filter(lambda kv: all([group_key not in kv[0]
                                                                               for group_key in group_keys]),
                                                               net.named_parameters()))]
-                    parameters[i].append({'params': other_params})
+                    parameters[i] = {'params': other_params}
                 else:
                     parameters[i]['params'] = [v for _, v in list(filter(lambda kv: parameters[i]['params'] in kv[0],
                                                                          net.named_parameters()))]
