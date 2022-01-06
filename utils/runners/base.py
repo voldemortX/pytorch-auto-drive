@@ -142,10 +142,9 @@ class BaseTrainer(BaseRunner):
                                                                  shuffle=False,
                                                                  collate_fn=self.collate_fn)
 
+
         # Optimizer, LR scheduler, etc.
-        self.optimizer = OPTIMIZERS.from_dict(cfg['optimizer'],
-                                              parameters=net_without_ddp)
-        # parameters=net_without_ddp.parameters())
+        self.optimizer = self.get_optimizer(cfg['optimizer'], net_without_ddp)
         self.lr_scheduler = LR_SCHEDULERS.from_dict(cfg['lr_scheduler'],
                                                     optimizer=self.optimizer,
                                                     len_loader=len(self.dataloader))
@@ -172,6 +171,26 @@ class BaseTrainer(BaseRunner):
         return SummaryWriter(os.path.join(self._cfg['save_dir'],
                                           'tb_logs',
                                           self._cfg['exp_name'])) if is_main_process() else None
+
+    @staticmethod
+    def get_optimizer(optimizer_cfg, net):
+        parameters = optimizer_cfg.pop('parameters')
+        if parameters is None:  # For BC
+            parameters = net.parameters()
+        else:  # replace str with actual parameter groups
+            group_keys = [d['params'] for d in parameters if d['params'] != '__others__']
+            for i in range(len(parameters)):
+                assert type(parameters[i]['params']) == str, 'Use string as placeholder in your config!'
+                if parameters[i]['params'] == '__others__':
+                    other_params = [v for _, v in list(filter(lambda kv: all([group_key not in kv[0]
+                                                                              for group_key in group_keys]),
+                                                              net.named_parameters()))]
+                    parameters[i].append({'params': other_params})
+                else:
+                    parameters[i]['params'] = [v for _, v in list(filter(lambda kv: parameters[i]['params'] in kv[0],
+                                                                         net.named_parameters()))]
+
+        return OPTIMIZERS.from_dict(optimizer_cfg, parameters=parameters)
 
     @abstractmethod
     def run(self, *args, **kwargs):
