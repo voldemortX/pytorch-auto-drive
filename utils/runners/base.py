@@ -174,7 +174,7 @@ class BaseTrainer(BaseRunner):
 
     @staticmethod
     def get_optimizer(optimizer_cfg, net):
-        parameters = optimizer_cfg.pop('parameters')
+        parameters = optimizer_cfg.pop('parameters') if 'parameters' in optimizer_cfg.keys() else None
         if parameters is None:  # For BC
             parameters = net.parameters()
         else:  # replace str with actual parameter groups
