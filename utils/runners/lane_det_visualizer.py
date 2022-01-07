@@ -1,5 +1,4 @@
 import os
-import cv2
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -9,7 +8,7 @@ if torch.__version__ >= '1.6.0':
 else:
     from ..torch_amp_dummy import autocast
 
-from .base import BaseVisualizer, get_collate_fn
+from .base import BaseVisualizer, BaseVideoVisualizer, get_collate_fn
 from ..datasets import DATASETS
 from ..transforms import TRANSFORMS
 from ..lane_det_utils import lane_as_segmentation_inference
@@ -133,27 +132,9 @@ class LaneDetDir(LaneDetVisualizer):
             save_images(results, filenames=filenames)
 
 
-class LaneDetVideo(LaneDetVisualizer):
+class LaneDetVideo(BaseVideoVisualizer, LaneDetVisualizer):
     def __init__(self, cfg):
         super().__init__(cfg)
-        self.writer = cv2.VideoWriter(self._cfg['save_path'],
-                                      cv2.VideoWriter_fourcc(*'XVID'),
-                                      self.dataloader.fps,
-                                      self.dataloader.resolution)
-
-    def get_loader(self, cfg):
-        if 'vis_dataset' in cfg.keys():
-            dataloader_cfg = cfg['vis_dataset']
-        else:
-            dataloader_cfg = dict(
-                name='VideoLoader',
-                filename=self._cfg['video_path'],
-                batch_size=self._cfg['batch_size']
-            )
-        dataloader = DATASETS.from_dict(dataloader_cfg,
-                                        transforms=TRANSFORMS.from_dict(cfg['test_augmentation']))
-
-        return dataloader, cfg['dataset']['name']
 
     def run(self):
         # Must do inference
@@ -171,10 +152,6 @@ class LaneDetVideo(LaneDetVisualizer):
                                                        std=None, mean=None)
             for j in range(results.shape[0]):
                 self.writer.write(results[j])
-
-    def clean(self):
-        super().clean()
-        self.writer.release()
 
 
 class LaneDetDataset(BaseVisualizer):

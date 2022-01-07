@@ -18,11 +18,13 @@ class ImageFolderDataset(torchvision.datasets.VisionDataset):
         self.targets = None if root_target is None else []
         self.target_process_fn = target_process_fn
         for filename in sorted(os.listdir(root_image)):
-            middle_name = filename[:filename.rfind(image_suffix)]
-            self.filenames.append(filename)
-            self.images.append(os.path.join(root_image, filename))
-            if self.targets is not None:
-                self.targets.append(os.path.join(root_target, middle_name + target_suffix))
+            suffix_pos = filename.rfind(image_suffix)
+            if suffix_pos != -1:
+                middle_name = filename[:suffix_pos]
+                self.filenames.append(filename)
+                self.images.append(os.path.join(root_image, filename))
+                if self.targets is not None:
+                    self.targets.append(os.path.join(root_target, middle_name + target_suffix))
 
     def __getitem__(self, index):
         # Return transformed image / original image / save filename / label (if exist)

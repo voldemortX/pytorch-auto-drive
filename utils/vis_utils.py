@@ -1,11 +1,7 @@
-import os
-import filetype
 import numpy as np
 import cv2
 import torch
 from PIL import Image
-
-from .transforms import functional as F
 
 
 def tensor_image_to_numpy(images):
@@ -92,14 +88,28 @@ def lane_detection_visualize_batched(images, masks=None, keypoints=None,
     return images
 
 
-# Segmentation methods have simple and unified output formats,
-# same simple post-process will suffice
-def unified_segmentation_label_formatting(labels, original_size, args):
-    if args.dataset == 'voc':
-        labels = torch.nn.functional.interpolate(labels, size=(args.height, args.width),
-                                                 mode='bilinear', align_corners=True)
-        labels = F.crop(labels, 0, 0, original_size[0], original_size[1])
-    else:
-        labels = torch.nn.functional.interpolate(labels, size=original_size, mode='bilinear',
-                                                 align_corners=True)
-    return labels.argmax(1)
+def find_transform_by_name(cfg, name):
+    # Returns True if a transform name exists in augmentation cfg dict
+    if isinstance(cfg, dict):
+        if 'name' in cfg.keys() and cfg['name'] == name:
+            return True
+        else:
+            if 'transforms' in cfg.keys() and isinstance(cfg['transforms'], (list, tuple)):
+                return any([find_transform_by_name(t, name) for t in cfg['transforms']])
+            return False
+
+
+def get_transform_attr_by_name(cfg, name, attr):
+    # Returns attr of first found transform by name in augmentation cfg dict
+    if isinstance(cfg, dict):
+        if 'name' in cfg.keys() and cfg['name'] == name:
+            return cfg.get(attr)
+        else:
+            if 'transforms' in cfg.keys() and isinstance(cfg['transforms'], (list, tuple)):
+                res = None
+                for t in cfg['transforms']:
+                    res = get_transform_attr_by_name(t, name, attr)
+                    if res is not None:
+                        break
+                return res
+            return None

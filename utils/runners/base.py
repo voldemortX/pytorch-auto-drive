@@ -3,6 +3,7 @@
 # args: command line args from argparse
 import os
 import torch
+import cv2
 from torch.utils.tensorboard import SummaryWriter
 from abc import ABC, abstractmethod
 try:
@@ -239,3 +240,34 @@ class BaseVisualizer(BaseRunner):
     @abstractmethod
     def get_loader(self, *args, **kwargs):
         pass
+
+
+class BaseVideoVisualizer(BaseVisualizer):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        self.writer = cv2.VideoWriter(self._cfg['save_path'],
+                                      cv2.VideoWriter_fourcc(*'XVID'),
+                                      self.dataloader.fps,
+                                      self.dataloader.resolution)
+
+    def get_loader(self, cfg):
+        if 'vis_dataset' in cfg.keys():
+            dataloader_cfg = cfg['vis_dataset']
+        else:
+            dataloader_cfg = dict(
+                name='VideoLoader',
+                filename=self._cfg['video_path'],
+                batch_size=self._cfg['batch_size']
+            )
+        dataloader = DATASETS.from_dict(dataloader_cfg,
+                                        transforms=TRANSFORMS.from_dict(cfg['test_augmentation']))
+
+        return dataloader, cfg['dataset']['name']
+
+    @abstractmethod
+    def run(self):
+        pass
+
+    def clean(self):
+        super().clean()
+        self.writer.release()
