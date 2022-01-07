@@ -20,10 +20,10 @@ lr_scheduler = dict(
 train_args_default = dict(
     exp_name='swin-tiny_baseline_culane',
     workers=4,
-    batch_size=8,
+    batch_size=5,
     checkpoint=None,
     # Device args
-    world_size=2,
+    world_size=4,
     dist_url='tcp://localhost:12345',
     device='cuda',
     val_num_steps=0,  # Seg IoU validation (mostly useless)
