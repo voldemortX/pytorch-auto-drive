@@ -71,7 +71,8 @@ class IntermediateLayerGetter(nn.ModuleDict):
                 out[out_name] = x
         return out
 
-# crop from OpenMMLab.
+
+# Copied from OpenMMLab.
 # https://github.com/open-mmlab/mmsegmentation/blob/fa8c93e78c1679eee558ced5047cc280adfa1c1d/mmseg/models/utils/make_divisible.py#L2
 def make_divisible(value, divisor, min_value=None, min_ratio=0.9):
     """Make divisible function.
