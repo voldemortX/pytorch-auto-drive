@@ -119,7 +119,8 @@ class LaneDetDir(LaneDetVisualizer):
             else:
                 masks = torch.stack(masks)
             if self._cfg['pred']:  # Inference keypoints
-                masks = masks.to(self.device)
+                if masks is not None:
+                    masks = masks.to(self.device)
                 imgs = imgs.to(self.device)
                 original_imgs = original_imgs.to(self.device)
                 keypoints = self.lane_inference(imgs, original_imgs.shape[2:])
@@ -150,6 +151,7 @@ class LaneDetVideo(BaseVideoVisualizer, LaneDetVisualizer):
                                                        mask_colors=None,
                                                        keypoint_color=self._cfg['keypoint_color'],
                                                        std=None, mean=None)
+            results = results[..., [2, 1, 0]]
             for j in range(results.shape[0]):
                 self.writer.write(results[j])
 

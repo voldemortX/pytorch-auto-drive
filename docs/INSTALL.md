@@ -26,15 +26,19 @@ chmod 777 *.sh tools/shells/*.sh
 mkdir output
 ```
 
-## Improve training speed with [Pillow-SIMD](https://github.com/uploadcare/pillow-simd) (optional):
+## Improve training speed with [Pillow-SIMD](https://github.com/uploadcare/pillow-simd) (optional, advanced):
 
 ```
 pip uninstall pillow
 CC="cc -mavx2" pip install -U --force-reinstall pillow-simd
 ```
 
+Note that you need to use ToTensor transform as late as possible for this speedup.
+
 ## Enable tensorboard (optional):
 
 ```
-tensorboard --logdir=runs
+tensorboard --logdir=<path to tb_logs>
 ```
+
+`<path to tb_logs>` is usually `./checkpoints/tb_logs` if you did not customized `save_dir` in config file.

@@ -39,6 +39,8 @@ def get_sampler(ddp, dataset):
 
 class BaseRunner(ABC):
     def __init__(self, cfg):
+        if torch.backends.cudnn.version() < 8000:
+            torch.backends.cudnn.benchmark = True
         self.model = MODELS.from_dict(cfg['model'])
 
     @abstractmethod
@@ -232,6 +234,7 @@ class BaseVisualizer(BaseRunner):
             self.load_checkpoint(self._cfg['checkpoint'])
             for k in self.dataset_tensor_statistics:
                 self._cfg[k] = self._cfg[k].to(self.device)
+            self.model.eval()
 
     @abstractmethod
     def run(self, *args, **kwargs):

@@ -15,13 +15,10 @@ from ..vis_utils import segmentation_visualize_batched, save_images, \
     find_transform_by_name, get_transform_attr_by_name, tensor_image_to_numpy
 
 
-def seg_label_process_fn(label, id_map=None):
+def seg_label_process_fn(label):
     # Open and process a common seg label from filename
     label = Image.open(label)
     label = ToTensor.label_to_tensor(label)
-    if id_map is not None:
-        label[label >= id_map.shape[0]] = 0
-        label = id_map[label]
 
     return label
 
@@ -60,8 +57,10 @@ class SegDir(SegVisualizer):
         super().__init__(cfg)
         os.makedirs(self._cfg['save_path'], exist_ok=True)
         self.pad_crop = find_transform_by_name(cfg['test_augmentation'], 'ZeroPad')
+        self.id_map = None
         if self._cfg['map_id']:
-            self.id_map = get_transform_attr_by_name(cfg['test_augmentation'], 'LabelMap', attr='label_id_map')
+            id_map = get_transform_attr_by_name(cfg['test_augmentation'], 'LabelMap', attr='label_id_map')
+            self.id_map = torch.tensor(id_map)
 
     def get_loader(self, cfg):
         if 'vis_dataset' in cfg.keys():
@@ -100,6 +99,9 @@ class SegDir(SegVisualizer):
                 imgs = imgs.to(self.device)
                 original_imgs = original_imgs.to(self.device)
                 targets = self.seg_inference(imgs, original_imgs.shape[2:], pad_crop=self.pad_crop)
+            elif self.id_map is not None:
+                targets[targets >= self.id_map.shape[0]] = 0
+                targets = self.id_map[targets]
             results = segmentation_visualize_batched(original_imgs,
                                                      targets,
                                                      colors=self._cfg['colors'],
@@ -124,7 +126,7 @@ class SegVideo(BaseVideoVisualizer, SegVisualizer):
                                                      targets,
                                                      colors=self._cfg['colors'],
                                                      std=None, mean=None)
-            np_results = tensor_image_to_numpy(results)
+            np_results = tensor_image_to_numpy(results)[..., [2, 1, 0]]
             for j in range(np_results.shape[0]):
                 self.writer.write(np_results[j])
 
