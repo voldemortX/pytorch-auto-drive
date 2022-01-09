@@ -60,7 +60,7 @@ if __name__ == '__main__':
             fps.append(speed_evaluate_simple(net=net, device=device, dummy=dummy, num=300))
         print('GPU FPS: {: .2f}'.format(max(fps)))
     elif args.mode == 'real':
-        if args.checkpoint is not None:
+        if cfg['test']['checkpoint'] is not None:
             load_checkpoint(net=net, optimizer=None, lr_scheduler=None, filename=cfg['test']['checkpoint'])
         val_loader = init_dataset(cfg['dataset'], cfg['test_augmentations'], (args.height, args.width))
         fps = []
