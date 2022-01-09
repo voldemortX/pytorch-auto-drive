@@ -8,7 +8,7 @@ from configs.lane_detection.common.optims.matchingloss_polynomial import loss
 from configs.lane_detection.common.optims.adam000025 import optimizer
 from configs.lane_detection.common.optims.ep2000_step import lr_scheduler
 
-# Default args that can be overridden in commandline
+
 train_args_default = dict(
     exp_name='resnet18s_lstr-aug_tusimple',
     workers=16,
@@ -42,7 +42,6 @@ train = dict(
     num_epochs=2000,
     collate_fn='dict_collate_fn'
 )
-train.update(train_args_default)
 
 test = dict(
     seg=False,
@@ -55,7 +54,6 @@ test = dict(
     max_lane=5,
     dataset_name='tusimple'
 )
-test.update(test_args_default)
 
 model = dict(
     name='LSTR',

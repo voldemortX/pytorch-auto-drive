@@ -8,7 +8,7 @@ from configs.semantic_segmentation.common.optims.celoss_cityscapes_balanced impo
 from configs.semantic_segmentation.common.optims.adam00008_wd00002 import optimizer
 from configs.semantic_segmentation.common.optims.ep300 import lr_scheduler
 
-# Default args that can be overridden in commandline
+
 train_args_default = dict(
     exp_name='enet_cityscapes_512x1024_encoder',
     workers=8,
@@ -49,7 +49,6 @@ train = dict(
     encoder_only=True,
     encoder_size=(64, 128)
 )
-train.update(train_args_default)
 
 test = dict(
     collate_fn=None,  # 'dict_collate_fn' for LSTR
@@ -64,7 +63,6 @@ test = dict(
     encoder_only=True,
     encoder_size=(64, 128)
 )
-test.update(test_args_default)
 
 model = dict(
     name='ENet',

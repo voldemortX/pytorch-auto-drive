@@ -8,7 +8,7 @@ from configs.semantic_segmentation.common.optims.celoss import loss
 from configs.semantic_segmentation.common.optims.sgd0002 import optimizer
 from configs.semantic_segmentation.common.optims.ep60 import lr_scheduler
 
-# Default args that can be overridden in commandline
+
 train_args_default = dict(
     exp_name='resnet101_deeplabv3_cityscapes_512x1024',
     workers=8,
@@ -52,7 +52,6 @@ train = dict(
     # To avoid OOM
     val_batch_size=2
 )
-train.update(train_args_default)
 
 test = dict(
     collate_fn=None,  # 'dict_collate_fn' for LSTR
@@ -67,7 +66,6 @@ test = dict(
     encoder_only=False,
     encoder_size=None
 )
-test.update(test_args_default)
 
 model = dict(
     name='standard_segmentation_model',

@@ -8,7 +8,7 @@ from configs.lane_detection.common.optims.segloss_5class import loss
 from configs.lane_detection.common.optims.sgd008 import optimizer
 from configs.lane_detection.common.optims.ep12_poly_warmup500 import lr_scheduler
 
-# Default args that can be overridden in commandline
+
 train_args_default = dict(
     exp_name='resnet50_baseline_culane',
     workers=4,
@@ -42,7 +42,6 @@ train = dict(
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     seg=True,  # Seg-based method or not
 )
-train.update(train_args_default)
 
 test = dict(
     seg=True,
@@ -55,7 +54,6 @@ test = dict(
     max_lane=4,
     dataset_name='culane'
 )
-test.update(test_args_default)
 
 # Essentially DeepLabV1 without dilation like in SCNN paper
 model = dict(
