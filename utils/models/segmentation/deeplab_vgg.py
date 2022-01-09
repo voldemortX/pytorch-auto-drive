@@ -102,3 +102,57 @@ class SegRepVGG(DeepLabV1Lane):
                 module.switch_to_deploy()
         print('Deploy!')
         return self.train(False)
+
+
+@MODELS.register()
+class DLabV1AuxLane(nn.Module):
+    # General lane baseline
+    def __init__(self,
+                 backbone_cfg=None,
+                 spatial_conv_cfg=None,
+                 lane_classifier_cfg=None,
+                 reducer_cfg=None,
+                 aux_head_cfg=None,
+                 classifier_cfg=None):
+        super().__init__()
+        self.encoder = MODELS.from_dict(backbone_cfg)
+        self.reducer = MODELS.from_dict(reducer_cfg)
+        self.scnn = MODELS.from_dict(spatial_conv_cfg)
+        self.classifier = MODELS.from_dict(classifier_cfg)
+        self.softmax = nn.Softmax(dim=1)
+        self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
+        self.aux_head = MODELS.from_dict(aux_head_cfg)
+
+    def forward(self, input):
+        out = OrderedDict()
+        output = self.encoder(input)
+        if self.aux_head is not None:
+            output = self.aux_head(output)
+        if self.reducer is not None:
+            output = self.reducer(output)
+        if self.scnn is not None:
+            output = self.scnn(output)
+        output = self.classifier(output)
+        out['out'] = output
+        if self.lane_classifier is not None:
+            output = self.softmax(output)
+            out['lane'] = self.lane_classifier(output)
+        return out
+
+    def eval(self):
+        r"""Sets the module in evaluation mode.
+        This has any effect only on certain modules. See documentations of
+        particular modules for details of their behaviors in training/evaluation
+        mode, if they are affected, e.g. :class:`Dropout`, :class:`BatchNorm`,
+        etc.
+        This is equivalent with :meth:`self.train(False) <torch.nn.Module.train>`.
+        See :ref:`locally-disable-grad-doc` for a comparison between
+        `.eval()` and several similar mechanisms that may be confused with it.
+        Returns:
+            Module: self
+        """
+        for module in self.encoder.modules():
+            if hasattr(module, 'switch_to_deploy'):
+                module.switch_to_deploy()
+        print('Deploy!')
+        return self.train(False)

@@ -290,10 +290,11 @@ def get_RepVGG_func_by_name(name):
 
 @MODELS.register()
 class RepVggEncoder(nn.Module):
-    def __init__(self, backbone_name, pretrained=False, deploy=False):
+    def __init__(self, backbone_name, pretrained=False, deploy=False, fpn=False):
         super(RepVggEncoder, self).__init__()
         repvgg_fn = get_RepVGG_func_by_name(backbone_name)
         self.encoder = repvgg_fn(deploy)
+        self.fpn=fpn
         if pretrained:
             checkpoint = torch.load(pretrained_model_dict[backbone_name])
             if 'state_dict' in checkpoint:
@@ -336,5 +337,8 @@ class RepVggEncoder(nn.Module):
         x2 = self.layer2(x1)
         x3 = self.layer3(x2)
         x4 = self.layer4(x3)
-
-        return x4
+        # using feature pyramid
+        if self.fpn:
+            return tuple([x0, x1, x2, x3, x4])
+        else:
+            return x4
