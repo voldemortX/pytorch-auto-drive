@@ -6,7 +6,7 @@
 
 **A demo video from ERFNet:**
 
-https://user-images.githubusercontent.com/32259501/148680399-d59b725d-a8d8-4e65-a568-80ffcf404367.mp4
+https://user-images.githubusercontent.com/32259501/148680744-a18793cd-f437-461f-8c3a-b909c9931709.mp4
 
 ## Highlights
 
