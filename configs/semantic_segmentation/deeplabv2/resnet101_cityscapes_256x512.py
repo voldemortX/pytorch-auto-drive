@@ -9,7 +9,7 @@ from configs.semantic_segmentation.common.optims.sgd0004 import optimizer
 from configs.semantic_segmentation.common.optims.ep60 import lr_scheduler
 
 
-train_args_default = dict(
+train = dict(
     exp_name='resnet101_deeplabv2_cityscapes_256x512',
     workers=8,
     batch_size=8,
@@ -20,21 +20,8 @@ train_args_default = dict(
     device='cuda',
 
     val_num_steps=1000,  # validation/checkpointing interval (steps)
-    save_dir='./checkpoints'
-)
-test_args_default = dict(
-    exp_name='resnet101_deeplabv2_cityscapes_256x512',
-    workers=0,
-    batch_size=1,
-    checkpoint='./checkpoints/resnet101_deeplabv2_cityscapes_256x512/model.pt',
-    # Device args
-    device='cuda',
+    save_dir='./checkpoints',
 
-    save_dir='./checkpoints'
-)
-
-# Configs
-train = dict(
     num_epochs=60,
     collate_fn=None,
     input_size=(256, 512),
@@ -51,6 +38,15 @@ train = dict(
 )
 
 test = dict(
+    exp_name='resnet101_deeplabv2_cityscapes_256x512',
+    workers=0,
+    batch_size=1,
+    checkpoint='./checkpoints/resnet101_deeplabv2_cityscapes_256x512/model.pt',
+    # Device args
+    device='cuda',
+
+    save_dir='./checkpoints',
+
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     original_size=(512, 1024),
     num_classes=19,

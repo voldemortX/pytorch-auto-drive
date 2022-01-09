@@ -9,7 +9,7 @@ from configs.semantic_segmentation.common.optims.adam00008_wd00002 import optimi
 from configs.semantic_segmentation.common.optims.ep300 import lr_scheduler
 
 
-train_args_default = dict(
+train = dict(
     exp_name='enet_cityscapes_512x1024_encoder',
     workers=8,
     batch_size=16,
@@ -20,21 +20,8 @@ train_args_default = dict(
     device='cuda',
 
     val_num_steps=1000,  # validation/checkpointing interval (steps)
-    save_dir='./checkpoints'
-)
-test_args_default = dict(
-    exp_name='enet_cityscapes_512x1024_encoder',
-    workers=0,
-    batch_size=1,
-    checkpoint='./checkpoints/enet_cityscapes_512x1024_encoder/model.pt',
-    # Device args
-    device='cuda',
+    save_dir='./checkpoints',
 
-    save_dir='./checkpoints'
-)
-
-# Configs
-train = dict(
     num_epochs=300,
     collate_fn=None,
     input_size=(512, 1024),
@@ -51,6 +38,15 @@ train = dict(
 )
 
 test = dict(
+    exp_name='enet_cityscapes_512x1024_encoder',
+    workers=0,
+    batch_size=1,
+    checkpoint='./checkpoints/enet_cityscapes_512x1024_encoder/model.pt',
+    # Device args
+    device='cuda',
+
+    save_dir='./checkpoints',
+
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     original_size=(512, 1024),
     num_classes=19,

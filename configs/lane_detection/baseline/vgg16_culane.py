@@ -9,7 +9,7 @@ from configs.lane_detection.common.optims.sgd02 import optimizer
 from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
 
 
-train_args_default = dict(
+train = dict(
     exp_name='vgg16_baseline_culane',
     workers=10,
     batch_size=20,
@@ -19,20 +19,8 @@ train_args_default = dict(
     dist_url='env://',
     device='cuda',
     val_num_steps=0,  # Seg IoU validation (mostly useless)
-    save_dir='./checkpoints'
-)
-test_args_default = dict(
-    exp_name='vgg16_baseline_culane',
-    workers=10,
-    batch_size=80,
-    checkpoint='./checkpoints/vgg16_baseline_culane/model.pt',
-    # Device args
-    device='cuda',
-    save_dir='./checkpoints'
-)
+    save_dir='./checkpoints',
 
-# Configs
-train = dict(
     input_size=(288, 800),
     original_size=(590, 1640),
     num_classes=5,
@@ -42,6 +30,14 @@ train = dict(
 )
 
 test = dict(
+    exp_name='vgg16_baseline_culane',
+    workers=10,
+    batch_size=80,
+    checkpoint='./checkpoints/vgg16_baseline_culane/model.pt',
+    # Device args
+    device='cuda',
+    save_dir='./checkpoints',
+
     seg=True,
     gap=20,
     ppl=18,

@@ -9,7 +9,7 @@ from configs.lane_detection.common.optims.sgd02 import optimizer
 from configs.lane_detection.common.optims.ep50_poly_warmup200 import lr_scheduler
 
 
-train_args_default = dict(
+train = dict(
     exp_name='resnet18_scnn_tusimple',
     workers=10,
     batch_size=20,
@@ -20,21 +20,8 @@ train_args_default = dict(
     device='cuda',
 
     val_num_steps=0,  # Seg IoU validation (mostly useless)
-    save_dir='./checkpoints'
-)
-test_args_default = dict(
-    exp_name='resnet18_scnn_tusimple',
-    workers=4,
-    batch_size=80,
-    checkpoint='./checkpoints/resnet18_scnn_tusimple/model.pt',
-    # Device args
-    device='cuda',
+    save_dir='./checkpoints',
 
-    save_dir='./checkpoints'
-)
-
-# Configs
-train = dict(
     input_size=(360, 640),
     original_size=(720, 1280),
     num_classes=7,
@@ -44,6 +31,15 @@ train = dict(
 )
 
 test = dict(
+    exp_name='resnet18_scnn_tusimple',
+    workers=4,
+    batch_size=80,
+    checkpoint='./checkpoints/resnet18_scnn_tusimple/model.pt',
+    # Device args
+    device='cuda',
+
+    save_dir='./checkpoints',
+
     seg=True,
     gap=10,
     ppl=56,
