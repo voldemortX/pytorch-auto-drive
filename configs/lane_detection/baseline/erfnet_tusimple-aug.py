@@ -8,8 +8,8 @@ from configs.lane_detection.common.optims.segloss_7class import loss
 from configs.lane_detection.common.optims.sgd02 import optimizer
 from configs.lane_detection.common.optims.ep50_poly_warmup200 import lr_scheduler
 
-# Default args that can be overridden in commandline
-train_args_default = dict(
+
+train = dict(
     exp_name='erfnet_baseline_tusimple-aug',
     workers=5,
     batch_size=10,
@@ -20,21 +20,8 @@ train_args_default = dict(
     device='cuda',
 
     val_num_steps=0,  # Seg IoU validation (mostly useless)
-    save_dir='./checkpoints'
-)
-test_args_default = dict(
-    exp_name='erfnet_baseline_tusimple-aug',
-    workers=10,
-    batch_size=40,
-    checkpoint='./checkpoints/erfnet_baseline_tusimple-aug/model.pt',
-    # Device args
-    device='cuda',
+    save_dir='./checkpoints',
 
-    save_dir='./checkpoints'
-)
-
-# Configs
-train = dict(
     input_size=(360, 640),
     original_size=(720, 1280),
     num_classes=7,
@@ -42,9 +29,17 @@ train = dict(
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     seg=True  # Seg-based method or not
 )
-train.update(train_args_default)
 
 test = dict(
+    exp_name='erfnet_baseline_tusimple-aug',
+    workers=10,
+    batch_size=40,
+    checkpoint='./checkpoints/erfnet_baseline_tusimple-aug/model.pt',
+    # Device args
+    device='cuda',
+
+    save_dir='./checkpoints',
+
     seg=True,
     gap=10,
     ppl=56,
@@ -55,7 +50,6 @@ test = dict(
     max_lane=5,
     dataset_name='tusimple'
 )
-test.update(test_args_default)
 
 model = dict(
     name='ERFNet',

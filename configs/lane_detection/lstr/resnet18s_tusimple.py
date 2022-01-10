@@ -8,8 +8,8 @@ from configs.lane_detection.common.optims.matchingloss_polynomial import loss
 from configs.lane_detection.common.optims.adam000025 import optimizer
 from configs.lane_detection.common.optims.ep2000_step import lr_scheduler
 
-# Default args that can be overridden in commandline
-train_args_default = dict(
+
+train = dict(
     exp_name='resnet18s_lstr_tusimple',
     workers=16,
     batch_size=20,
@@ -20,21 +20,8 @@ train_args_default = dict(
     device='cuda',
 
     val_num_steps=0,  # >0 not supported
-    save_dir='./checkpoints'
-)
-test_args_default = dict(
-    exp_name='resnet18s_lstr_tusimple',
-    workers=10,
-    batch_size=80,
-    checkpoint='./checkpoints/resnet18s_lstr_tusimple/model.pt',
-    # Device args
-    device='cuda',
+    save_dir='./checkpoints',
 
-    save_dir='./checkpoints'
-)
-
-# Configs
-train = dict(
     seg=False,  # Seg-based method or not
     input_size=(360, 640),
     original_size=(720, 1280),
@@ -42,9 +29,17 @@ train = dict(
     num_epochs=2000,
     collate_fn='dict_collate_fn'
 )
-train.update(train_args_default)
 
 test = dict(
+    exp_name='resnet18s_lstr_tusimple',
+    workers=10,
+    batch_size=80,
+    checkpoint='./checkpoints/resnet18s_lstr_tusimple/model.pt',
+    # Device args
+    device='cuda',
+
+    save_dir='./checkpoints',
+
     seg=False,
     gap=10,
     ppl=56,
@@ -55,7 +50,6 @@ test = dict(
     max_lane=5,
     dataset_name='tusimple'
 )
-test.update(test_args_default)
 
 model = dict(
     name='LSTR',

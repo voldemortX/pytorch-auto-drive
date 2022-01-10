@@ -8,8 +8,8 @@ from configs.lane_detection.common.optims.segloss_5class import loss
 from configs.lane_detection.common.optims.sgd06 import optimizer
 from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
 
-# Default args that can be overridden in commandline
-train_args_default = dict(
+
+train = dict(
     exp_name='repvgg-b1g2_baseline_culane',
     workers=5,
     batch_size=10,
@@ -19,20 +19,8 @@ train_args_default = dict(
     dist_url='tcp://localhost:12345',
     device='cuda',
     val_num_steps=0,  # Seg IoU validation (mostly useless)
-    save_dir='./checkpoints'
-)
-test_args_default = dict(
-    exp_name='repvgg-b1g2_baseline_culane',
-    workers=10,
-    batch_size=80,
-    checkpoint='./checkpoints/repvgg-b1g2_baseline_culane/model.pt',
-    # Device args
-    device='cuda',
-    save_dir='./checkpoints'
-)
+    save_dir='./checkpoints',
 
-# Configs
-train = dict(
     input_size=(288, 800),
     original_size=(590, 1640),
     num_classes=5,
@@ -40,9 +28,16 @@ train = dict(
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     seg=True  # Seg-based method or not
 )
-train.update(train_args_default)
 
 test = dict(
+    exp_name='repvgg-b1g2_baseline_culane',
+    workers=10,
+    batch_size=80,
+    checkpoint='./checkpoints/repvgg-b1g2_baseline_culane/model.pt',
+    # Device args
+    device='cuda',
+    save_dir='./checkpoints',
+
     seg=True,
     gap=20,
     ppl=18,
@@ -53,7 +48,6 @@ test = dict(
     max_lane=4,
     dataset_name='culane'
 )
-test.update(test_args_default)
 
 model = dict(
     name='SegRepVGG',

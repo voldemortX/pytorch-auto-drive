@@ -6,7 +6,7 @@
 
 **A demo video from ERFNet:**
 
-https://user-images.githubusercontent.com/32259501/124389349-3e0ea480-dd19-11eb-8947-cf5e9c95721a.mp4
+https://user-images.githubusercontent.com/32259501/148680744-a18793cd-f437-461f-8c3a-b909c9931709.mp4
 
 ## Highlights
 
@@ -70,10 +70,16 @@ Get started with [SEGMENTATION.md](docs/SEGMENTATION.md) for semantic segmentati
 Refer to [VISUALIZATION.md](docs/VISUALIZATION.md) for a visualization & inference tutorial, for image and video inputs.
 
 ## Benchmark Tools
+
 Refer to [BENCHMARK.md](docs/BENCHMARK.md) for a benchmarking tutorial, including FPS test, FLOPs & memory count for each supported model.
 
 ## Deployment
+
 Refer to [DEPLOY.md](docs/DEPLOY.md) for ONNX and TensorRT deployment supports.
+
+## Advanced Tutorial
+
+Checkout [ADVANCED_TUTORIAL.md](docs/ADVANCED_TUTORIAL.md) for advanced use cases and how to code in PytorchAutoDrive. 
 
 ## Contributing
 
@@ -95,8 +101,6 @@ This repository implements (or plan to implement) the following interesting pape
 
 [RESA: Recurrent Feature-Shift Aggregator for Lane Detection](https://arxiv.org/abs/2008.13719) AAAI 2021
 
-[Learning Lightweight Lane Detection CNNs by Self Attention Distillation](https://arxiv.org/abs/1908.00821) ICCV 2019
-
 [Polynomial Regression Network for Variable-Number Lane Detection](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) ECCV 2020
 
 [End-to-end Lane Shape Prediction with Transformers](https://arxiv.org/abs/2011.04233) WACV 2021
@@ -105,8 +109,16 @@ You are also welcomed to make additions on this paper list, or open-source your 
 
 ## Notes:
 
-1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in [configs.yaml](configs.yaml); similar changes can be done with other experiments.
+1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in config files if needed.
 
 2. Training times are measured on **a single RTX 2080Ti**, including online validation time for segmentation, test time for lane detection.
 
 3. All segmentation results reported are from single model without CRF and without multi-scale testing.
+
+## Credits:
+
+PytorchAutoDrive is maintained by Zhengyang Feng ([VoldemortX](https://github.com/voldemortX)) and Shaohua Guo ([cedricgsh](https://github.com/cedricgsh)).
+
+Community contributors (GitHub ID): [kalkun](https://github.com/kalkun)
+
+People who sponsored us with hardware: Junshu Tang ([junshutang](https://github.com/junshutang))
