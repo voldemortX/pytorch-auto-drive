@@ -19,4 +19,6 @@ class WeightedLoss(_Loss):
     def __init__(self, weight: Optional[Tensor] = None, size_average=None, reduce=None,
                  reduction: str = 'mean') -> None:
         super(WeightedLoss, self).__init__(size_average, reduce, reduction)
+        if weight is not None and not isinstance(weight, Tensor):
+            weight = torch.tensor(weight).cuda()
         self.register_buffer('weight', weight)

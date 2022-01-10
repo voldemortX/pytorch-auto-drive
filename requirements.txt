@@ -9,4 +9,4 @@ Shapely==1.8.0
 scipy==1.5.4
 scikit_learn==0.23.2
 filetype==1.0.8
-PyYAML==5.4.1
+importmagician>=0.1.0

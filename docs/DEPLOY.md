@@ -9,6 +9,8 @@
 
 ## Installation
 
+**A separate Python virtual environment is recommended here to avoid effects to your training & testing environment.**
+
 Install all deployment packages (our tested conda version) by:
 
 ```
@@ -40,10 +42,18 @@ try install exact cudatoolkit and cudnn from conda. Or you can just install the 
 The conversion is based on Torch JIT's tracing on random input. To convert a checkpoint (*e.g.,* ckpt.pt) to ONNX, simply run this command:
 
 ```
-python to_onnx.py --height=<input height> --width=<input width> --task=<task: lane/seg> --dataset=<dataset> --method=<method for lane det> --backbone=<backbone for lane det> --model=<model for seg> --continue-from=ckpt.pt
+python tools/to_onnx.py --config=<config file path>  --height=<input height> --width=<input width> --checkpoint=ckpt.pt
 ```
 
 You'll then see the saved `ckpt.onnx` file and a report on the conversion quality.
+
+Same config mechanism and commandline overwrite by `--cfg-options` as in training/testing.
+
+For detailed instructions and commandline shortcuts available, run:
+
+```
+python tools/profiling.py --help
+```
 
 ### Currently Unsupported Models:
 - ENet (segmentation)
@@ -65,7 +75,7 @@ To work better with onnxruntime (for checking of conversion quality), you best c
 The conversion is mainly a building of TensorRT engine. To convert a checkpoint (*e.g.,* ckpt.onnx) to TensorRT, simply run this command:
 
 ```
-python to_tensorrt.py --height=<input height> --width=<input width> --onnx-path=<ckpt.onnx>
+python tools/to_tensorrt.py --height=<input height> --width=<input width> --onnx-path=<ckpt.onnx>
 ```
 
 You'll then see the saved `ckpt.engine` file and a report on the conversion quality.

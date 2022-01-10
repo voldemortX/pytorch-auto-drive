@@ -1,16 +1,16 @@
 # Codebase for deep self-driving perception
 
-*PytorchAutoDrive* is a **pure Python** codebase includes semantic segmentation models, lane detection models based on **PyTorch**. Here we provide full stack supports from research (model training, testing, fair benchmarking) to application (visualization, model deployment). Poster at PyTorch Developer Day: [PytorchAutoDrive: Toolkit & Fair Benchmark for Autonomous Driving Research](https://drive.google.com/file/d/14EgcwPnKvAZJ1aWqBv6W9Msm666Wqi5a/view?usp=sharing).
+*PytorchAutoDrive* is a **pure Python** codebase includes semantic segmentation models, lane detection models based on **PyTorch**. Here we provide full stack supports from research (model training, testing, fair benchmarking by simply writing configs) to application (visualization, model deployment). Poster at PyTorch Developer Day: [PytorchAutoDrive: Toolkit & Fair Benchmark for Autonomous Driving Research](https://drive.google.com/file/d/14EgcwPnKvAZJ1aWqBv6W9Msm666Wqi5a/view?usp=sharing).
 
 *This repository is under active development, results with models uploaded are stable. For legacy code users, please check [deprecations](https://github.com/voldemortX/pytorch-auto-drive/issues/14) for changes.*
 
 **A demo video from ERFNet:**
 
-https://user-images.githubusercontent.com/32259501/124389349-3e0ea480-dd19-11eb-8947-cf5e9c95721a.mp4
+https://user-images.githubusercontent.com/32259501/148680744-a18793cd-f437-461f-8c3a-b909c9931709.mp4
 
 ## Highlights
 
-Various methods tested on a wide range of backbones, **modulated** and **easily understood** codes, image/keypoint loading, transformations and **visualizations**, **mixed precision training**, tensorboard logging and **deployment support** with ONNX and TensorRT.
+Various methods on a wide range of backbones, **config** based implementations, **modulated** and **easily understood** codes, image/keypoint loading, transformations and **visualizations**, **mixed precision training**, tensorboard logging and **deployment support** with ONNX and TensorRT.
 
 Models from this repo are faster to train (**single card trainable**) and often have better performance than other implementations, see [wiki](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes) for reasons and technical specification of models.
 
@@ -70,10 +70,16 @@ Get started with [SEGMENTATION.md](docs/SEGMENTATION.md) for semantic segmentati
 Refer to [VISUALIZATION.md](docs/VISUALIZATION.md) for a visualization & inference tutorial, for image and video inputs.
 
 ## Benchmark Tools
+
 Refer to [BENCHMARK.md](docs/BENCHMARK.md) for a benchmarking tutorial, including FPS test, FLOPs & memory count for each supported model.
 
 ## Deployment
+
 Refer to [DEPLOY.md](docs/DEPLOY.md) for ONNX and TensorRT deployment supports.
+
+## Advanced Tutorial
+
+Checkout [ADVANCED_TUTORIAL.md](docs/ADVANCED_TUTORIAL.md) for advanced use cases and how to code in PytorchAutoDrive. 
 
 ## Contributing
 
@@ -95,8 +101,6 @@ This repository implements (or plan to implement) the following interesting pape
 
 [RESA: Recurrent Feature-Shift Aggregator for Lane Detection](https://arxiv.org/abs/2008.13719) AAAI 2021
 
-[Learning Lightweight Lane Detection CNNs by Self Attention Distillation](https://arxiv.org/abs/1908.00821) ICCV 2019
-
 [Polynomial Regression Network for Variable-Number Lane Detection](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) ECCV 2020
 
 [End-to-end Lane Shape Prediction with Transformers](https://arxiv.org/abs/2011.04233) WACV 2021
@@ -105,8 +109,16 @@ You are also welcomed to make additions on this paper list, or open-source your 
 
 ## Notes:
 
-1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in [configs.yaml](configs.yaml); similar changes can be done with other experiments.
+1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in config files if needed.
 
 2. Training times are measured on **a single RTX 2080Ti**, including online validation time for segmentation, test time for lane detection.
 
 3. All segmentation results reported are from single model without CRF and without multi-scale testing.
+
+## Credits:
+
+PytorchAutoDrive is maintained by Zhengyang Feng ([VoldemortX](https://github.com/voldemortX)) and Shaohua Guo ([cedricgsh](https://github.com/cedricgsh)).
+
+Community contributors (GitHub ID): [kalkun](https://github.com/kalkun)
+
+People who sponsored us with hardware: Junshu Tang ([junshutang](https://github.com/junshutang))

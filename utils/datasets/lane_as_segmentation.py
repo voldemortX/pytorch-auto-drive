@@ -1,50 +1,34 @@
-import torchvision
 import os
 import torch
 from PIL import Image
+from torchvision.datasets import VisionDataset
+
+from .builder import DATASETS
 
 
 # Lane detection as segmentation
-class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
-    def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None, data_set='tusimple'):
-        super().__init__(root, transforms, transform, target_transform)
+class _StandardLaneDetectionDataset(VisionDataset):
+    keypoint_color = [0, 0, 0]
+
+    def __init__(self, root, image_set, transforms=None):
+        super().__init__(root, transforms, None, None)
         if image_set == 'valfast':
             self.test = 1
         elif image_set == 'test' or image_set == 'val':  # Different format (without lane existence annotations)
             self.test = 2
         else:
             self.test = 0
-        if data_set == 'tusimple':
-            self.image_dir = os.path.join(root, 'clips')
-            self.mask_dir = os.path.join(root, 'segGT6')
-            self.output_prefix = 'clips'
-            self.output_suffix = '.jpg'
-            self.image_suffix = '.jpg'
-        elif data_set == 'culane':
-            self.image_dir = root
-            self.mask_dir = os.path.join(root, 'laneseg_label_w16')
-            self.output_prefix = './output'
-            self.output_suffix = '.lines.txt'
-            self.image_suffix = '.jpg'
-            if not os.path.exists(self.output_prefix):
-                os.makedirs(self.output_prefix)
-        elif data_set == 'llamas':
-            self.image_dir = os.path.join(root, 'color_images')
-            self.mask_dir = os.path.join(root, 'laneseg_labels')
-            self.output_prefix = './output'
-            self.output_suffix = '.lines.txt'
-            self.image_suffix = '.png'
-            if not os.path.exists(self.output_prefix):
-                os.makedirs(self.output_prefix)
-        else:
-            raise ValueError
-        self.data_set = data_set
+
+        self.init_dataset(root)
         self.image_set = image_set
         self.splits_dir = os.path.join(root, 'lists')
 
         self._init_all()
 
         assert (len(self.images) == len(self.masks))
+
+    def init_dataset(self, root):
+        raise NotImplementedError
 
     def __getitem__(self, index):
         # Return x (input image) & y (mask image, i.e. pixel-wise supervision) & lane existence (a list),
@@ -85,3 +69,52 @@ class StandardLaneDetectionDataset(torchvision.datasets.VisionDataset):
             self.images = [os.path.join(self.image_dir, x[:x.find(' ')] + self.image_suffix) for x in contents]
             self.masks = [os.path.join(self.mask_dir, x[:x.find(' ')] + '.png') for x in contents]
             self.lane_existences = [list(map(int, x[x.find(' '):].split())) for x in contents]
+
+
+# TuSimple
+@DATASETS.register()
+class TuSimpleAsSegmentation(_StandardLaneDetectionDataset):
+    colors = [
+        [0, 0, 0],  # background
+        [255, 0, 255], [0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 0], [0, 255, 255],
+        [0, 0, 0]  # ignore
+    ]
+
+    def init_dataset(self, root):
+        self.image_dir = os.path.join(root, 'clips')
+        self.mask_dir = os.path.join(root, 'segGT6')
+        self.output_prefix = 'clips'
+        self.output_suffix = '.jpg'
+        self.image_suffix = '.jpg'
+
+
+# CULane
+@DATASETS.register()
+class CULaneAsSegmentation(_StandardLaneDetectionDataset):
+    colors = [
+        [0, 0, 0],  # background
+        [0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 0],
+        [0, 0, 0]  # ignore
+    ]
+
+    def init_dataset(self, root):
+        self.image_dir = root
+        self.mask_dir = os.path.join(root, 'laneseg_label_w16')
+        self.output_prefix = './output'
+        self.output_suffix = '.lines.txt'
+        self.image_suffix = '.jpg'
+        if not os.path.exists(self.output_prefix):
+            os.makedirs(self.output_prefix)
+
+
+# LLAMAS
+@DATASETS.register()
+class LLAMAS_AsSegmentation(CULaneAsSegmentation):
+    def init_dataset(self, root):
+        self.image_dir = os.path.join(root, 'color_images')
+        self.mask_dir = os.path.join(root, 'laneseg_labels')
+        self.output_prefix = './output'
+        self.output_suffix = '.lines.txt'
+        self.image_suffix = '.png'
+        if not os.path.exists(self.output_prefix):
+            os.makedirs(self.output_prefix)

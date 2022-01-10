@@ -2,19 +2,19 @@ import os
 import pickle
 import numpy as np
 from tqdm import tqdm
+
 from .utils import LaneKeypointDataset
+from .builder import DATASETS
 
 
 # LLAMAS direct loading (similar with culane)
+@DATASETS.register()
 class LLAMAS(LaneKeypointDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None,
-                 ppl=417, gap=1, start=300, padding_mask=False, process_points=False):
-        super().__init__(root, transforms, transform, target_transform, ppl, gap, start, padding_mask, process_points)
+                 ppl=417, gap=1, start=300, padding_mask=False):
+        super().__init__(root, transforms, transform, target_transform, ppl, gap, start, padding_mask, image_set)
 
-        if not os.path.exists('./output'):
-            os.makedirs('./output')
-        if image_set not in ['train', 'val', 'test']:
-            raise ValueError
+        self._check()
 
         self.images_path = os.path.join(root, 'color_images')
         # Data list

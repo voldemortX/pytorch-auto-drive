@@ -4,7 +4,7 @@
 
 1. The LLAMAS dataset can be downloaded in their [official website](https://unsupervised-llamas.com/llamas/).
 
-2. Change the `LLAMAS.BASE_DIR` in [configs.yaml](../../configs.yaml) to your dataset's location.
+2. Change the `LLAMAS_ROOT` in [configs/lane_detection/common/datasets/_utils.py](../../configs/lane_detection/common/datasets/_utils.py) to your dataset's location..
 
 3. Pre-processing:
 
@@ -13,6 +13,15 @@
 ```
 
 LLAMAS dataset provides both color and gray images. We use color images in our framework.
+
+4. Prepare official evaluation scripts:
+
+```
+cd tools/llamas_evaluation
+mkdir output
+```
+
+Then change `data_dir` to your LLAMAS base directory in [autotest_llamas.sh](../../autotest_llamas.sh). *Mind that you need extra ../../ if relative path is used.*
 
 ## Description
 

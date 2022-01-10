@@ -1,94 +1,105 @@
-# Welcome to pytorch-auto-drive visualization tutorial
+# Welcome to PytorchAutoDrive visualization tutorial
 
 Trained models used for inference can be found at [MODEL_ZOO.md](../docs/MODEL_ZOO.md).
 
-Colors can be specified in [configs.yaml](../configs.yaml) for each dataset settings.
+To quickly get some results, download [PAD_test_images](https://drive.google.com/file/d/1XQvBS1uoHeIgUv7oDQ4Vp1tWYi0oAGhU/view?usp=sharing) (129MB). It includes sample images and videos from TuSimple, CULane, Cityscapes and PASCAL VOC 2012.
 
-[vis_tools.py](../tools/vis_tools.py) contains batch-wise visualization functions to modify for your own use case.
-
-## Segmentation mask (Image/Video/Folder)
-
-Use [visualize_segmentation.py](../visualize_segmentation.py) to visualize segmentation results, by providing the image with `--image-path` and mask (**not the colored ones**) with `--mask-path`, also `--dataset` needs to be specified for color selection. For detailed instructions, run:
+After download, unzip it as:
 
 ```
-python visualize_segmentation.py --help
+unzip PAD_test_images.zip -d PAD_test_images
 ```
 
-For example, visualize with PASCAL VOC 2012 setting:
+## Segmentation mask (Image Folder)
+
+Use [tools/vis/seg_img_dir.py](../tools/vis/seg_img_dir.py) to visualize segmentation results, by providing the image folder with `--image-path` and mask (**not the colored ones**) with `--target-path`. For detailed instructions, run:
 
 ```
-python visualize_segmentation.py --image-path=test_images/voc_test_image.jpg --mask-path=test_images/voc_test_mask.png --save-path=test_images/voc_test.png --dataset=voc
+python tools/vis/seg_img_dir.py --help
 ```
 
-You should be able to see the result like this stored at `--save-path`:
+For example, visualize a PASCAL VOC image:
+
+```
+python tools/vis/seg_img_dir.py --image-path=PAD_test_images/seg_test_images/voc --image-suffix=_image.jpg --target-path=PAD_test_images/seg_test_images/voc --target-suffix=_mask.png --save-path=PAD_test_images/seg_test_images/voc_res --config=<any PASCAL VOC config>
+```
+
+You should be able to see the result like this stored at `--save-path` with same image names as in `--image-path`:
 
 <div align="center">
-  <img src="vis_voc1.png"/>
+  <img src="assets/vis_voc1.jpg"/>
 </div>
 
-If mask is not provided, an inference will be performed by the model specified with `--model` and `--continue-from`, you can define input resolution with `--height` and `--width`, but the result will always be resized to the original image:
+You can also do inference by `--pred`, in this case you'll need the correct `--config` and `--checkpoint`, for example:
 
 ```
-python visualize_segmentation.py --image-path=test_images/voc_test_image.jpg --save-path=test_images/voc_pred.png --model=deeplabv2 --dataset=voc --continue-from=deeplabv2_pascalvoc_321x321_20201108.pt --height=505 --width=505
+python tools/vis/seg_img_dir.py --image-path=PAD_test_images/seg_test_images/voc --image-suffix=_image.jpg --save-path=PAD_test_images/seg_test_images/voc_pred --pred --config=configs/semantic_segmentation/deeplabv2/resnet101_pascalvoc_321x321.py --checkpoint=deeplabv2_pascalvoc_321x321_20201108.pt
 ```
 
-### Image folder or videos:
-
-`--image-path` and `--save-path` can also be image folder or video. You can try a demo video we made from Cityscapes: [link](https://drive.google.com/file/d/1IuDESvUgaTUHQ7Vw_V29_Jty3eqkOvcL/view?usp=sharing), with the following commands:
+Another example for visualizing complex filename and structure such as Cityscapes (Remember to use `--map-id` for Cityscapes style annotation files):
 
 ```
-python visualize_segmentation.py --image-path=stuttgart_00.avi --save-path=test_cityscapes.avi --model=erfnet --dataset=city --continue-from=
-erfnet_cityscapes_512x1024_20200918.pt --height=512 --width=1024
+python tools/vis/seg_img_dir.py --image-path=PAD_test_images/seg_test_images/munster --image-suffix=_leftImg8bit.png --target-path=PAD_test_images/seg_test_images/labels/munster --target-suffix=_gtFine_labelIds.png --save-path=PAD_test_images/seg_test_images/city_res --config=configs/semantic_segmentation/erfnet/cityscapes_512x1024.py --map-id
 ```
 
-To generate more demo videos like that on Cityscapes, you can download the official demo files, and run:
+## Segmentation mask (Video)
+
+Since there are no video labels available from all supported datasets, inference must be conducted, for example:
 
 ```
-python tools/generate_cityscapes_demo.py
+python tools/vis/seg_video.py --video-path=PAD_test_images/seg_test_images/stuttgart_00.avi --save-path=PAD_test_images/seg_test_images/stuttgart_pred.avi --config=configs/semantic_segmentation/erfnet/cityscapes_512x1024.py --checkpoint=erfnet_cityscapes_512x1024_20200918.pt
 ```
 
-## Lane points (Image/Video/Folder)
+## Lane points (Image Folder)
 
-Use [visualize_lane.py](../visualize_lane.py) to visualize lane detection results. For detailed instructions, run:
-
-```
-python visualize_lane.py --help
-```
-
-By providing a mask with `--mask-path`, lanes will be drawn as non-transparent segmentation masks:
+Use [tools/vis/lane_img_dir.py](../tools/vis/lane_img_dir.py) to visualize segmentation results, by providing the image folder with `--image-path`, keypoint file (**CULane format**) with `--keypoint-path` and optional segmentation mask (**not the colored ones**) with `--mask-path`. For detailed instructions, run:
 
 ```
-python visualize_lane.py --image-path=test_images/culane_test_image.jpg --mask-path=test_images/culane_test_mask.png --save-path=test_images/culane_test.png --dataset=culane
+python tools/vis/lane_img_dir.py --help
 ```
 
-The result will be like this:
+For example, visualize on CULane:
+
+```
+python tools/vis/lane_img_dir.py --image-path=PAD_test_images/lane_test_images/05171008_0748.MP4 --keypoint-path=PAD_test_images/lane_test_images/05171008_0748.MP4 --mask-path=PAD_test_images/lane_test_images/laneseg_label_w16/05171008_0748.MP4 --image-suffix=.jpg --keypoint-suffix=.lines.txt --mask-suffix=.png --save-path=PAD_test_images/lane_test_images/culane_res --config=<any CULane config>
+```
+
+You should be able to see the result like this stored at `--save-path` with same image names as in `--image-path`:
 
 <div align="center">
-  <img src="vis_culane2.png"/>
+  <img src="assets/vis_culane1.jpg"/>
 </div>
 
-You can also draw sample points with `--keypoint-path` in the CULane format, for example:
+You can also do inference by `--pred`, in this case you'll need the correct `--config` and `--checkpoint`, for example:
 
 ```
-python visualize_lane.py --image-path=test_images/culane_test_image.jpg --keypoint-path=test_images/culane_test_keypoint.txt --save-path=test_images/culane_test.png --dataset=culane
+python tools/vis/lane_img_dir.py --image-path=PAD_test_images/lane_test_images/05171008_0748.MP4 --image-suffix=.jpg --save-path=PAD_test_images/lane_test_images/culane_pred --pred --config=configs/lane_detection/baseline/erfnet_culane.py --checkpoint=erfnet_baseline_culane_20210204.pt
 ```
 
-<div align="center">
-  <img src="vis_culane1.png"/>
-</div>
+## Lane points (Video)
 
-Sample points and segmentation mask can be drawn together if both files are provided.
-
-If mask & keypoint are not provided, an inference will be performed by the model specified with `--method`, `--backbone` and `--continue-from`, you can define input resolution with `--height` and `--width`, but the result will always be resized to the original image:
+Since there are no video labels available from all supported datasets, inference must be conducted, for example:
 
 ```
-python visualize_lane.py --image-path=test_images/culane_test_image.jpg --save-path=test_images/culane_pred.png --method=baseline --backbone=erfnet --dataset=culane --continue-from=erfnet_baseline_culane_20210204.pt --height=288 --width=800
+python tools/vis/lane_video.py --video-path=PAD_test_images/lane_test_images/tusimple_val_1min.avi --save-path=PAD_test_images/lane_test_images/tusimple_val_1min_pred.avi --config=configs/lane_detection/baseline/erfnet_tusimple.py --checkpoint=erfnet_baseline_tusimple_20210424.pt
 ```
 
-### Image folder or videos:
+## Advanced Visualization
 
-`--image-path` and `--save-path` can also be image folder or video. You can try a demo video we made from TuSimple validation set: [link](https://drive.google.com/file/d/1cxH7iZMWZQ2eF8H_zjUBC090qmrpuJea/view?usp=sharing), with the following commands:
+You can set `--image-path` or `--target-path` to your dataset paths in order to visualize the dataset, but keep in mind about `--save-path`: **don't accidentally overwrite your dataset!**
 
-```
-python visualize_lane.py --image-path=tusimple_val_1min.avi --save-path=test_tusimple.avi --method=baseline --backbone=erfnet --dataset=tusimple --continue-from=erfnet_baseline_tusimple_20210424.pt --height=360 --width=640
-```
+Use large `batch_size`, more `workers` or `--mixed-precision` to accelerate visualization same as training/testing.
+
+To generate videos from Cityscapes like our sample video, you can download the demo files from Cityscapes website, modify and run `tools/generate_cityscapes_demo.py`
+
+To generate videos from TuSimple like our sample video, modify and run `tools/tusimple_to_video.py`
+
+Colors can be customized for each dataset in `utils/datasets/`, although we recommend not doing that and keep the official colors for each dataset. If you are using custom data/custom model with more predicted classes but never did modify the code, the class colors will be used iteratively.
+
+[vis_utils.py](../utils/vis_utils.py) contains batch-wise visualization functions to modify for your own use case.
+
+You can set a `vis_dataset` dict in your config file to init the `ImageFolder` or `VideoLoader` classes from config file, otherwise it is automatically initiated by commandline args.
+
+You can set a `vis` dict in your config file, this way the visualizer will use this dict's options instead of `test`.
+
+For advanced visualization that includes actual coding, refer to [ADVANCED_TUTORIAL.md](./ADVANCED_TUTORIAL.md).

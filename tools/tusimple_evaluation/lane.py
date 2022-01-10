@@ -1,7 +1,10 @@
 import fcntl
 import numpy as np
 from sklearn.linear_model import LinearRegression
-import ujson as json
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 
 class LaneEval(object):
@@ -92,10 +95,11 @@ class LaneEval(object):
 
 
 if __name__ == '__main__':
-    # args: pred filename, gt filename, experiment name
+    # args: pred filename, gt filename, experiment name, save dir
     import sys
+    import os
     try:
-        if len(sys.argv) != 4:
+        if len(sys.argv) < 4:
             raise Exception('Invalid input arguments')
         results = LaneEval.bench_one_submit(sys.argv[1], sys.argv[2])
         print(results)
@@ -106,6 +110,17 @@ if __name__ == '__main__':
             fcntl.flock(f, fcntl.LOCK_UN)
         with open('./output/' + sys.argv[3] + '.json', 'w') as f:
             f.write(results)
+        if len(sys.argv) >= 5:
+            gt_file = os.path.split(sys.argv[2])[1]
+            prefix = 'custom_file_' + gt_file
+            if gt_file == 'test_label.json':
+                prefix = 'test'
+            elif gt_file == 'label_data_0531.json':
+                prefix = 'val'
+            save_dir = os.path.join('../../', sys.argv[4], sys.argv[3])
+            os.makedirs(save_dir, exist_ok=True)
+            with open(os.path.join(save_dir, prefix + '_result.json'), 'w') as f:
+                f.write(results)
     except Exception as e:
         print(e.message)
         sys.exit(e.message)

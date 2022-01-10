@@ -1,7 +1,8 @@
+import os
 import torch
 import torchvision
 from PIL import Image
-from transforms import functional_pil as f_pil
+from utils.transforms import functional_pil as f_pil
 from torch._six import container_abcs, string_classes, int_classes
 from torch.utils.data._utils.collate import default_collate_err_msg_format, np_str_obj_array_pattern
 
@@ -78,16 +79,26 @@ def generate_lane_label_dict(target):
 
 # Lanes as keypoints
 class LaneKeypointDataset(torchvision.datasets.VisionDataset):
+    keypoint_color = [0, 0, 0]
+
     def __init__(self, root, transforms, transform, target_transform,
-                 ppl, gap, start, padding_mask, process_points):
+                 ppl, gap, start, padding_mask, image_set):
         super().__init__(root, transforms, transform, target_transform)
         self.ppl = ppl  # Sampled points-per-lane
         self.gap = gap  # y gap between sample points
         self.start = start  # y coordinate to start annotation
         self.padding_mask = padding_mask  # Padding mask for transformer
-        self.process_points = process_points  # Add lowest & highest y coordinates, lane class labels
+        self.process_points = image_set == 'train'  # Add lowest & highest y coordinates, lane class labels
         self.images = []  # placeholder
         self.targets = []  # placeholder
+        self.image_set = image_set
+
+    def _check(self):
+        # Checks
+        if not os.path.exists('./output'):
+            os.makedirs('./output')
+        if self.image_set not in ['train', 'val', 'test']:
+            raise ValueError
 
     def __getitem__(self, index):
         # Return x (input image) & y (L lane with N coordinates (x, y) as np.array (L x N x 2))

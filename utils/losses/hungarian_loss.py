@@ -2,14 +2,15 @@
 # Refactored and added comments
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # Hungarian loss for LSTR
-
 import torch
 from torch import Tensor
 from torch.nn import functional as F
 from scipy.optimize import linear_sum_assignment
+
 from ._utils import WeightedLoss
-from torchvision_models.lane_detection import cubic_curve_with_projection
+from ..models.lane_detection import cubic_curve_with_projection
 from ..ddp_utils import is_dist_avail_and_initialized, get_world_size
+from .builder import LOSSES
 
 
 @torch.no_grad()
@@ -92,6 +93,7 @@ class HungarianMatcher(torch.nn.Module):
 
 
 # The Hungarian loss for LSTR
+@LOSSES.register()
 class HungarianLoss(WeightedLoss):
     __constants__ = ['reduction']
 

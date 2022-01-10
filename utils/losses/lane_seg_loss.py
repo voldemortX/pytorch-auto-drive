@@ -2,10 +2,13 @@ import torch
 from torch import Tensor
 from typing import Optional
 from torch.nn import functional as F
+
 from ._utils import WeightedLoss
+from .builder import LOSSES
 
 
 # Typical lane detection loss by binary segmentation (e.g. SCNN)
+@LOSSES.register()
 class LaneLoss(WeightedLoss):
     __constants__ = ['ignore_index', 'reduction']
     ignore_index: int
@@ -32,6 +35,7 @@ class LaneLoss(WeightedLoss):
 
 
 # Loss function for SAD
+@LOSSES.register()
 class SADLoss(WeightedLoss):
     __constants__ = ['ignore_index', 'reduction']
     ignore_index: int

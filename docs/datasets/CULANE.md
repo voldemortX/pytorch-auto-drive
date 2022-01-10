@@ -4,7 +4,7 @@
 
 1. The CULane dataset can be downloaded in their [official website](https://xingangpan.github.io/projects/CULane.html).
 
-2. Change the `CULANE.BASE_DIR` in [configs.yaml](../../configs.yaml) to your dataset's location.
+2. Change the `CULANE_ROOT` in [configs/lane_detection/common/datasets/_utils.py](../../configs/lane_detection/common/datasets/_utils.py) to your dataset's location..
 
 3. Pre-processing:
 
@@ -15,6 +15,18 @@
   cd -
   python tools/culane_list_convertor.py
 ```
+
+4. Prepare official evaluation scripts:
+
+```
+cd tools/culane_evaluation
+make
+mkdir output
+chmod 777 eval*
+cd -
+```
+
+Then change `data_dir` to your CULane base directory in [eval.sh](../../tools/culane_evaluation/eval.sh) and [eval_validation.sh](../../tools/culane_evaluation/eval_validation.sh). *Mind that you need extra ../../ if relative path is used.*
 
 ## Description
 

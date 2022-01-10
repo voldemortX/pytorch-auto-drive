@@ -1,12 +1,11 @@
-import yaml
 import os
 from tqdm import tqdm
 from llamas_evaluation.llamas_official_scripts import get_horizontal_values_for_four_lanes
 
-with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
-    configs = yaml.load(f, Loader=yaml.Loader)
-base = configs['LLAMAS']['BASE_DIR']
-LLAMAS_H = configs['LLAMAS']['SIZES'][1][0]
+from importmagician import import_from
+with import_from('./'):
+    from configs.lane_detection.common.datasets._utils import LLAMAS_ROOT as base
+LLAMAS_H = 717
 
 #
 list_path = os.path.join(base, 'lists')

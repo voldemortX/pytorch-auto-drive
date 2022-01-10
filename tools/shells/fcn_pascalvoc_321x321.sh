@@ -1,3 +1,6 @@
 #!/bin/bash
 # Trained weights: fcn_pascalvoc_321x321_20201111.pt
-python main_semseg.py --epochs=30 --lr=0.002 --batch-size=8 --dataset=voc --model=fcn --workers=4 --mixed-precision --exp-name=fcn_pascalvoc_321x321
+python main_semseg.py --train --config=configs/semantic_segmentation/fcn/resnet101_pascalvoc_321x321.py --mixed-precision
+
+# Val
+python main_semseg.py --val --config=configs/semantic_segmentation/fcn/resnet101_pascalvoc_321x321.py --mixed-precision

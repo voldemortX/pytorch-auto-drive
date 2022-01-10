@@ -1,9 +1,8 @@
 #!/bin/bash
 # Trained weights: resnet18s_lstr_culane_20210722.pt
-exp_name=resnet18s_lstr_culane
 # Training
-python main_landec.py --epochs=150 --lr=0.00025 --batch-size=20 --workers=16 --dataset=culane --method=lstr --backbone=resnet18s --exp-name=${exp_name}
+python main_landet.py --train --config=configs/lane_detection/lstr/resnet18s_culane.py
 # Predicting lane points for testing
-python main_landec.py --state=2 --batch-size=80 --continue-from=${exp_name}.pt --dataset=culane --method=lstr --backbone=resnet18s --exp-name=${exp_name}
+python main_landet.py --test --config=configs/lane_detection/lstr/resnet18s_culane.py
 # Testing with official scripts
-./autotest_culane.sh ${exp_name} test
+./autotest_culane.sh resnet18s_lstr_culane test checkpoints

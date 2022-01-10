@@ -2,12 +2,10 @@
 # /clips/0313-1/6040/20.jpg /segGT6/0313-1/6040/20.png 1 1 1 1 1 1 =>
 # 0313-1/6040/20 1 1 1 1 1 1
 import os
-import yaml
 
-
-with open('configs.yaml', 'r') as f:  # Safer and cleaner than box/EasyDict
-    configs = yaml.load(f, Loader=yaml.Loader)
-base = configs['TUSIMPLE']['BASE_DIR']
+from importmagician import import_from
+with import_from('./'):
+    from configs.lane_detection.common.datasets._utils import TUSIMPLE_ROOT as base
 root = os.path.join(base, 'lists')
 old_file_names = ['list6_train.txt', 'list6_val.txt', 'list6_val.txt', 'list_test.txt']  # 6 lanes (actually <=5)
 # old_file_names = ['list_train.txt', 'list_val.txt', 'list_val.txt', 'list_test.txt']  # 4 lanes

@@ -1,4 +1,4 @@
-# Welcome to pytorch-auto-drive model zoo
+# Welcome to PytorchAutoDrive model zoo
 
 ## Lane detection performance:
 

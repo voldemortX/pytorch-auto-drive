@@ -2,57 +2,56 @@
 
 **Before diving into this, please make sure you followed the instructions to prepare datasets in [DATASET.md](./DATASET.md)**
 
+**Execution is based on [config files](../configs/README.md)**
+
 ## Training:
 
-If you are using ERFNet, first download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models) and put it in the main folder.
+Some models' ImageNet pre-trained weights need to be manually downloaded, refer to [this table](./IMAGENET_MODELS.md).
 
 ```
-python main_semseg.py --state=<state> \  # 0: normal; 2: decoder training
-                      --epochs=<number of epochs> \
-                      --lr=<learning rate> \
-                      --batch-size=<any batch size> \ 
-                      --dataset=<dataset> \
-                      --model=<the model used> \
-                      --exp-name=<whatever you like> \
-                      --mixed-precision \  # Enable mixed precision
-                      --encoder-only  # Pre-train encoder
+python main_semseg.py --train \
+                      --config=<config file path> \
+                      --mixed-precision  # Optional, enable mixed precision \
+                      --cfg-options=<overwrite cfg dict>  # Optional
 ```
 
-We provide directly executable shell scripts for each supported models in [MODEL_ZOO.md](MODEL_ZOO.md). You can run a shell script (e.g. `xxx.sh`) by:
+Your `<overwrite cfg dict>` is used to manually override config file options in commandline so you don't have to modify config file each time. It should look like this (**the quotation marks are necessary!**): `"train.batch_size=8 train.workers=4 model.classifier_cfg.num_classes=21"`
 
-```
-./tools/shells/xxx.sh
-```
-
-For detailed instructions, run:
+Some options can be used by shortcuts, such as `--batch-size` will set both `train.batch_size` and `test.batch_size`, for more info:
 
 ```
 python main_semseg.py --help
 ```
+
+Example shells are provided in [tools/shells](../tools/shells/).
 
 ## Distributed Training
 
 We support multi-GPU training with Distributed Data Parallel (DDP):
 
 ```
-python -m torch.distributed.launch --nproc_per_node=<number of GPU per-node> --use_env main_semseg.py --world-size=<total GPU> --dist-url=<socket url like tcp://localhost:23456> <your normal args>
+python -m torch.distributed.launch --nproc_per_node=<number of GPU per-node> --use_env main_semseg.py <your normal args>
 ```
 
-With DDP, `--batch-size` means batch size per-GPU, and more dataloader threads should be used with `--workers`.
+With DDP, batch size and number of workers are **per-GPU**.
 
 ## Testing:
 
-Training contains online evaluations and the best model is saved, you can check best *val* set performance at `log.txt`, for more details you can checkout tensorboard.
+Training contains online evaluations and the best model is saved.
 
-To evaluate a trained model, you can use either mixed-precision or fp32 for any model trained with/without mixed-precision:
+To evaluate a trained model:
 
 ```
-python main_semseg.py --state=1 \
-                      --continue-from=<trained model .pt filename> \
-                      --dataset=<dataset> \
-                      --model=<the model used> \ 
-                      --batch-size=<any batch size> \
-                      --mixed-precision  # Enable mixed precision
+python main_semseg.py --val \  # No test set labels available
+                      --config=<config file path> \
+                      --mixed-precision  # Optional, enable mixed precision \
+                      --cfg-options=<overwrite cfg dict>  # Optional
 ```
 
-Recommend `--workers=0 --batch-size=1` for high precision inference.
+To test a downloaded pt file, try add `--checkpoint=<pt file path>`.
+
+Detail results will be saved to `<save_dir>/<exp_name>/`.
+
+Overall result will be saved to `log.txt`.
+
+Recommend `workers=0 batch_size=1` for high precision inference.

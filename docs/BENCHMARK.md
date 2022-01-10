@@ -1,4 +1,4 @@
-# Welcome to pytorch-auto-drive benchmark
+# Welcome to PytorchAutoDrive benchmark
 
 *The current benchmark's FLOPs & Param count is entirely based on [thop](https://github.com/Lyken17/pytorch-OpCounter) to identify underlying basic ops, which might be inaccurate. But FLOPs count is an [estimate](https://discuss.pytorch.org/t/correct-way-to-calculate-flops-in-model/67198/6) to begin with. What we are doing here, is simply providing a relatively fair benchmark for comparing different methods.*
 
@@ -69,67 +69,27 @@
 
 *All results are the maximum value of 3 times on a RTX 2080Ti.*
 
-## Test examples
+## Profiling Models Yourself
 
 In the setting of `mode=simple`, we employ a random tensor to replace the real image. 
-Based on this operation, we can avoid using the DataLoader so as to obtain the best fps of models.
+Therefore, we can avoid using the DataLoader to obtain the best performance of models.
 
-For lane detection:
-
-```
-python profiling.py  --task=lane \           
-                     --times=3 \
-                     --dataset=<dataset name> \
-                     --method=<the method used> \
-                     --backbone=<the backbone used> \
-                     --mode=simple \
-                     --height=<the height of choosing dataset> \
-                     --width=<the width of choosing dataset>
-```
-
-For segmentation:
+**This is also the setting for the above benchmark.**
 
 ```
-python profiling.py  --task=seg \           
-                     --times=3 \
-                     --dataset=<dataset name> \
-                     --model=<the model used> \
-                     --mode=simple \
-                     --height=<the height of choosing dataset> \
-                     --width=<the width of choosing dataset>
+python tools/profiling.py --mode=simple \
+                          --config=<config file path> \           
+                          --times=3 \
+                          --height=<image height in pixels> \
+                          --width=<image width in pixels>
 ```
 
-In the setting of `mode=real`, so as to simulate that the real camera transmit frames to models, we set 'batch_size=1' and 'num_workers=0' in the DataLoader.
+Same config mechanism and commandline overwrite by `--cfg-options` as in training/testing.
 
-For lane detection:
+In the setting of `mode=real`, so as to simulate that the real camera transmit frames to models, we set 'batch_size=1' and 'num_workers=0' in the DataLoader. Just use `--mode=real` and probably provide an actual model by `--checkpoint`.
 
-```
-python profiling.py  --task=lane \           
-                     --times=3 \
-                     --dataset=<dataset name> \
-                     --method=<the method used> \
-                     --backbone=<the backbone used> \
-                     --mode=real \
-                     --height=<the height of choosing dataset> \
-                     --width=<the width of choosing dataset> \
-                     --continue-from=<pre-trained model>
-```
-
-For segmentation:
+For detailed instructions and commandline shortcuts available, run:
 
 ```
-python profiling.py  --task=seg \           
-                     --times=3 \
-                     --dataset=<dataset name> \
-                     --model=<the model used> \
-                     --mode=real \
-                     --height=<the height of choosing dataset> \
-                     --width=<the width of choosing dataset> \
-                     --continue-from=<pre-trained model>
-```
-
-For detailed instructions, run:
-
-```
-python profiling.py --help
+python tools/profiling.py --help
 ```

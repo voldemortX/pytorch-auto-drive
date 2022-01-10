@@ -183,6 +183,7 @@ def parse_args():
     parser.add_argument("--pred_dir", help="Path to directory containing the predicted lanes", required=True)
     parser.add_argument("--anno_dir", help="Path to directory containing the annotated lanes", required=True)
     parser.add_argument('--exp_name', type=str, default='', help='Name of experiment')
+    parser.add_argument('--save-dir', type=str, help='Path prefix to save full res.')
     parser.add_argument("--width", type=int, default=30, help="Width of the lane")
     parser.add_argument("--sequential", action='store_true', help="Run sequentially instead of in parallel")
     parser.add_argument("--unofficial", action='store_true', help="Use a faster but unofficial algorithm")
@@ -212,8 +213,19 @@ def main():
         fcntl.flock(f, fcntl.LOCK_UN)
     print('=' * len(header))
 
+    res = json.dumps(results)
     with open('./output/' + args.exp_name + '.json', 'w') as f:
-        f.write(json.dumps(results))
+        f.write(res)
+
+    if args.save_dir is not None:
+        import os
+        prefix = 'val'
+        if 'valid' not in args.anno_dir:
+            prefix = 'custom_anno_dir_' + args.anno_dir[args.anno_dir.rfind('/') + 1:]
+        save_dir = os.path.join('../../', args.save_dir, args.exp_name)
+        os.makedirs(save_dir, exist_ok=True)
+        with open(os.path.join(save_dir, prefix + '_result.json'), 'w') as f:
+            f.write(res)
 
 
 if __name__ == '__main__':
