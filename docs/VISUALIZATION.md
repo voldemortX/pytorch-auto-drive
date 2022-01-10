@@ -86,6 +86,8 @@ python tools/vis/lane_video.py --video-path=PAD_test_images/lane_test_images/tus
 
 ## Advanced Visualization
 
+You can set `--image-path` or `--target-path` to your dataset paths in order to visualize the dataset, but keep in mind about `--save-path`: **don't accidentally overwrite your dataset!**
+
 Use large `batch_size`, more `workers` or `--mixed-precision` to accelerate visualization same as training/testing.
 
 To generate videos from Cityscapes like our sample video, you can download the demo files from Cityscapes website, modify and run `tools/generate_cityscapes_demo.py`
