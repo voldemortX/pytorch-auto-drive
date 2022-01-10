@@ -4,7 +4,7 @@
 
 1. The LLAMAS dataset can be downloaded in their [official website](https://unsupervised-llamas.com/llamas/).
 
-2. Change the `LLAMAS.BASE_DIR` in [configs.yaml](../../configs.yaml) to your dataset's location.
+2. Change the `LLAMAS_ROOT` in [configs/lane_detection/common/datasets/_utils.py](../../configs/lane_detection/common/datasets/_utils.py) to your dataset's location..
 
 3. Pre-processing:
 
