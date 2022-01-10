@@ -126,6 +126,7 @@ class DLabV1AuxLane(nn.Module):
     def forward(self, input):
         out = OrderedDict()
         output = self.encoder(input)
+        out['feat_map'] = output
         if self.aux_head is not None:
             output = self.aux_head(output)
         if self.reducer is not None:
