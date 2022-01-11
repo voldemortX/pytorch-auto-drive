@@ -398,7 +398,9 @@ class LabelMap(object):
         self.label_id_map = torch.tensor(label_id_map)
         self.outlier = outlier
 
-    def __call__(self, image, target):
+    def __call__(self, image, target=None):
+        if target is None:
+            return image, target
         if self.outlier:
             target[target >= self.label_id_map.shape[0]] = 0  # Label 0 is usually ignored
         target = self.label_id_map[target]

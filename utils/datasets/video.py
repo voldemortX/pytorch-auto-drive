@@ -25,7 +25,7 @@ class VideoLoader(object):
 
         images_numpy = self.video[self.i * self.batch_size: (self.i + 1) * self.batch_size]
         images = torch.stack([torch.from_numpy(img) for img in images_numpy])
-        images = images.permute(0, 3, 1, 2) / 255.0  # BHWC-rgb uint8 -> BCHW-rgb float
+        images = images[..., [2, 1, 0]].permute(0, 3, 1, 2) / 255.0  # BHWC-rgb uint8 -> BCHW-rgb float
         original_images = images.clone()
 
         # Transforms

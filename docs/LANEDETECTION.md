@@ -6,27 +6,31 @@
 
 ## Training:
 
-If you are using ERFNet, first download the ImageNet pre-trained weights *erfnet_encoder_pretrained.pth.tar* from [here](https://github.com/Eromera/erfnet_pytorch/tree/master/trained_models).
+Some models' ImageNet pre-trained weights need to be manually downloaded, refer to [this table](./IMAGENET_MODELS.md).
 
 ```
-python main_landec.py --train \
+python main_landet.py --train \
                       --config=<config file path> \
-                      --mixed-precision  # Enable mixed precision
-
+                      --mixed-precision  # Optional, enable mixed precision \
+                      --cfg-options=<overwrite cfg dict>  # Optional
 ```
 
-For more instructions that you can override in commandline:
+Your `<overwrite cfg dict>` is used to manually override config file options in commandline so you don't have to modify config file each time. It should look like this (**the quotation marks are necessary!**): `"train.batch_size=8 train.workers=4 model.lane_classifier_cfg.dropout=0.1"`
+
+Some options can be used by shortcuts, such as `--batch-size` will set both `train.batch_size` and `test.batch_size`, for more info:
 
 ```
-python main_landec.py --help
+python main_landet.py --help
 ```
+
+Example shells are provided in [tools/shells](../tools/shells/).
 
 ## Distributed Training
 
 We support multi-GPU training with Distributed Data Parallel (DDP):
 
 ```
-python -m torch.distributed.launch --nproc_per_node=<number of GPU per-node> --use_env main_landec.py <your normal args>
+python -m torch.distributed.launch --nproc_per_node=<number of GPU per-node> --use_env main_landet.py <your normal args>
 ```
 
 With DDP, batch size and number of workers are **per-GPU**.
@@ -38,11 +42,13 @@ With DDP, batch size and number of workers are **per-GPU**.
 1. Predict lane lines:
 
 ```
-python main_landec.py --test \  # Or --val for validation
+python main_landet.py --test \  # Or --val for validation
                       --config=<config file path> \
-                      --checkpoint=<ckpt file path> \
-                      --mixed-precision  # Enable mixed precision
+                      --mixed-precision  # Optional, enable mixed precision \
+                      --cfg-options=<overwrite cfg dict>  # Optional
 ```
+
+To test a downloaded pt file, try add `--checkpoint=<pt file path>`.
 
 Note that LLAMAS doesn't have test set labels.
 
@@ -54,7 +60,7 @@ Note that LLAMAS doesn't have test set labels.
 
 `<mode>` includes `test` and `val`.
 
-`<save_dir>` and `<exp_name>` are recommended to set the same as in config file, so detail evaluation results will be saved to `<save_dir>/<exp_name>/`.
+`<save_dir>` and `<exp_name>` are recommended to set the same as in config file, so detail evaluation results will be saved to `<save_dir>/<exp_name>/`
 
 Overall result will be saved to `log.txt`.
 
@@ -65,8 +71,8 @@ Training contains online fast validations by using `val_num_steps` and the best 
 To validate a trained model on mean IoU, you can use either mixed-precision or fp32 for any model trained with/without mixed-precision:
 
 ```
-python main_landec.py --valfast \
+python main_landet.py --valfast \
                       --config=<config file path> \
-                      --checkpoint=<ckpt file path> \
-                      --mixed-precision  # Enable mixed precision
+                      --mixed-precision  # Optional, enable mixed precision \
+                      --cfg-options=<overwrite cfg dict>  # Optional
 ```

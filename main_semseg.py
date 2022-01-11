@@ -4,8 +4,6 @@ try:
     from utils.common import warnings
 except ImportError:
     import warnings
-if torch.backends.cudnn.version() < 8000:
-    torch.backends.cudnn.benchmark = True
 
 from utils.args import parse_arg_cfg, read_config, map_states, add_shortcuts, cmd_dict
 from utils.runners import SegTrainer, SegTester
@@ -41,7 +39,7 @@ if __name__ == '__main__':
     parser.add_argument('--mixed-precision', action='store_true',
                         help='Enable mixed precision training')
     parser.add_argument('--cfg-options', type=cmd_dict,
-                        help='Override config options with \"x1=y1 x2=y2 xn=yn\", tuple value not supported, try list')
+                        help='Override config options with \"x1=y1 x2=y2 xn=yn\"')
 
     states = ['train', 'val']
     retain_args = ['state', 'mixed_precision']

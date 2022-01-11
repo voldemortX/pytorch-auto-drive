@@ -8,8 +8,8 @@ from configs.semantic_segmentation.common.optims.celoss import loss
 from configs.semantic_segmentation.common.optims.sgd0002 import optimizer
 from configs.semantic_segmentation.common.optims.ep60 import lr_scheduler
 
-# Default args that can be overridden in commandline
-train_args_default = dict(
+
+train = dict(
     exp_name='resnet101_deeplabv2_cityscapes_512x1024',
     workers=8,
     batch_size=4,
@@ -20,21 +20,8 @@ train_args_default = dict(
     device='cuda',
 
     val_num_steps=1000,  # validation/checkpointing interval (steps)
-    save_dir='./checkpoints'
-)
-test_args_default = dict(
-    exp_name='resnet101_deeplabv2_cityscapes_512x1024',
-    workers=0,
-    batch_size=1,
-    checkpoint='./checkpoints/resnet101_deeplabv2_cityscapes_512x1024/model.pt',
-    # Device args
-    device='cuda',
+    save_dir='./checkpoints',
 
-    save_dir='./checkpoints'
-)
-
-# Configs
-train = dict(
     num_epochs=20,
     collate_fn=None,
     input_size=(512, 1024),
@@ -52,9 +39,17 @@ train = dict(
     # To avoid OOM
     val_batch_size=2
 )
-train.update(train_args_default)
 
 test = dict(
+    exp_name='resnet101_deeplabv2_cityscapes_512x1024',
+    workers=0,
+    batch_size=1,
+    checkpoint='./checkpoints/resnet101_deeplabv2_cityscapes_512x1024/model.pt',
+    # Device args
+    device='cuda',
+
+    save_dir='./checkpoints',
+
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     original_size=(1024, 2048),
     num_classes=19,
@@ -67,7 +62,6 @@ test = dict(
     encoder_only=False,
     encoder_size=None
 )
-test.update(test_args_default)
 
 model = dict(
     name='standard_segmentation_model',
