@@ -1,8 +1,8 @@
 #!/bin/bash
 # Trained weights: vgg16_scnn_culane_20210309.pt
 # Training
-python main_landec.py --epochs=12 --lr=0.3 --batch-size=20 --dataset=culane --method=scnn --backbone=vgg16 --mixed-precision --exp-name=vgg16_scnn_culane
+python main_landet.py --train --config=configs/lane_detection/scnn/vgg16_culane.py --mixed-precision
 # Predicting lane points for testing
-python main_landec.py --state=2 --batch-size=80 --continue-from=vgg16_scnn_culane.pt --dataset=culane --method=scnn --backbone=vgg16 --mixed-precision
+python main_landet.py --test --config=configs/lane_detection/scnn/vgg16_culane.py --mixed-precision
 # Testing with official scripts
-./autotest_culane.sh vgg16_scnn_culane test
+./autotest_culane.sh vgg16_scnn_culane test checkpoints

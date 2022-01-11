@@ -27,7 +27,7 @@ python tools/vis/seg_img_dir.py --image-path=PAD_test_images/seg_test_images/voc
 You should be able to see the result like this stored at `--save-path` with same image names as in `--image-path`:
 
 <div align="center">
-  <img src="vis_voc1.jpg"/>
+  <img src="assets/vis_voc1.jpg"/>
 </div>
 
 You can also do inference by `--pred`, in this case you'll need the correct `--config` and `--checkpoint`, for example:
@@ -67,7 +67,7 @@ python tools/vis/lane_img_dir.py --image-path=PAD_test_images/lane_test_images/0
 You should be able to see the result like this stored at `--save-path` with same image names as in `--image-path`:
 
 <div align="center">
-  <img src="vis_culane1.jpg"/>
+  <img src="assets/vis_culane1.jpg"/>
 </div>
 
 You can also do inference by `--pred`, in this case you'll need the correct `--config` and `--checkpoint`, for example:
@@ -85,6 +85,8 @@ python tools/vis/lane_video.py --video-path=PAD_test_images/lane_test_images/tus
 ```
 
 ## Advanced Visualization
+
+You can set `--image-path` or `--target-path` to your dataset paths in order to visualize the dataset, but keep in mind about `--save-path`: **don't accidentally overwrite your dataset!**
 
 Use large `batch_size`, more `workers` or `--mixed-precision` to accelerate visualization same as training/testing.
 

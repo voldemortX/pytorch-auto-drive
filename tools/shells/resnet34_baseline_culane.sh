@@ -1,8 +1,8 @@
 #!/bin/bash
 # Trained weights: resnet34_baseline_culane_20210219.pt
 # Training
-python main_landec.py --epochs=12 --lr=0.2 --batch-size=20 --dataset=culane --method=baseline --backbone=resnet34 --mixed-precision --exp-name=resnet34_baseline_culane
+python main_landet.py --train --config=configs/lane_detection/baseline/resnet34_culane.py --mixed-precision
 # Predicting lane points for testing
-python main_landec.py --state=2 --batch-size=80 --continue-from=resnet34_baseline_culane.pt --dataset=culane --method=baseline --backbone=resnet34 --mixed-precision
+python main_landet.py --test --config=configs/lane_detection/baseline/resnet34_culane.py --mixed-precision
 # Testing with official scripts
-./autotest_culane.sh resnet34_baseline_culane test
+./autotest_culane.sh resnet34_baseline_culane test checkpoints
