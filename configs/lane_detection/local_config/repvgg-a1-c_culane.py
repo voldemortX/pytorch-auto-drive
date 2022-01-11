@@ -4,13 +4,22 @@ from configs.lane_detection.common.datasets.train_level0_288 import train_augmen
 from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
-from configs.lane_detection.common.optims.segloss_5class import loss
-from configs.lane_detection.common.optims.sgd06 import optimizer
-from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
+#from configs.lane_detection.common.optims.segloss_center_7class import loss
+from configs.lane_detection.common.optims.sgd02 import optimizer
+from configs.lane_detection.common.optims.ep50_poly_warmup200 import lr_scheduler
+
+
+loss = dict(
+    name='CenterLaneLoss',
+    existence_weight=0.1,
+    center_weight=0.1,
+    ignore_index=255,
+    weight=[0.4, 1, 1, 1, 1]
+)
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='repvgg-a1-fpn_baseline_culane',
+    exp_name='repvgg-a1-c_baseline_culane',
     workers=5,
     batch_size=10,
     checkpoint=None,
@@ -22,10 +31,10 @@ train_args_default = dict(
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='repvgg-fpn-a1_baseline_culane_lr2',
+    exp_name='repvgg-a1-c_baseline_culane',
     workers=10,
     batch_size=80,
-    checkpoint='./checkpoints/repvgg-fpn-a1_baseline_culane_lr2/model.pt',
+    checkpoint='./checkpoints/repvgg-a1-c_culane/model.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints'
@@ -62,29 +71,22 @@ model = dict(
         backbone_name='RepVGG-A1',
         pretrained=True,
         deploy=False,
-        fpn=True
+        fpn=False
     ),
     reducer_cfg=dict(
         name='RESAReducer',
-        in_channels=256,
+        in_channels=1280,
         reduce=128
     ),
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',
         num_output=5 - 1,
-        flattened_size=18000,
+        flattened_size=4500,
     ),
     classifier_cfg=dict(
         name='DeepLabV1Head',
         in_channels=128,
         num_classes=5,
         dilation=1
-    ),
-    aux_head_cfg=dict(
-        name='FPNHead',
-        in_channels=[64, 128, 256, 1280],
-        channels=256,
-        input_induces=(1, 2, 3, 4),
-        align_corners=False
     )
 )

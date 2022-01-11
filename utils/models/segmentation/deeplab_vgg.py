@@ -105,14 +105,14 @@ class SegRepVGG(DeepLabV1Lane):
 
 
 @MODELS.register()
-class DLabV1AuxLane(nn.Module):
+class DLabV1AugLane(nn.Module):
     # General lane baseline
     def __init__(self,
                  backbone_cfg=None,
                  spatial_conv_cfg=None,
                  lane_classifier_cfg=None,
                  reducer_cfg=None,
-                 aux_head_cfg=None,
+                 aug_head_cfg=None,
                  classifier_cfg=None):
         super().__init__()
         self.encoder = MODELS.from_dict(backbone_cfg)
@@ -121,14 +121,13 @@ class DLabV1AuxLane(nn.Module):
         self.classifier = MODELS.from_dict(classifier_cfg)
         self.softmax = nn.Softmax(dim=1)
         self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
-        self.aux_head = MODELS.from_dict(aux_head_cfg)
+        self.aug_head = MODELS.from_dict(aug_head_cfg)
 
     def forward(self, input):
         out = OrderedDict()
         output = self.encoder(input)
-        out['feat_map'] = output
-        if self.aux_head is not None:
-            output = self.aux_head(output)
+        if self.aug_head is not None:
+            output = self.aug_head(output)
         if self.reducer is not None:
             output = self.reducer(output)
         if self.scnn is not None:

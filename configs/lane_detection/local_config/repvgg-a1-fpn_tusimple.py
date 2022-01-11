@@ -6,7 +6,7 @@ from configs.lane_detection.common.datasets.test_360 import test_augmentation
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_7class import loss
 from configs.lane_detection.common.optims.sgd02 import optimizer
-from configs.lane_detection.common.optims.ep50_poly_warmup200 import lr_scheduler
+# from configs.lane_detection.common.optims.ep50_poly_warmup200 import lr_scheduler
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
@@ -25,10 +25,17 @@ test_args_default = dict(
     exp_name='repvgg-a1-fpn_baseline_tusimple',
     workers=10,
     batch_size=80,
-    checkpoint='./checkpoints/repvgg-a1-fpn_tusimple_culane/model.pt',
+    checkpoint='./checkpoints/repvgg-a1-fpn_baseline_tusimple/model.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints'
+)
+
+lr_scheduler = dict(
+    name='poly_scheduler_with_warmup',
+    epochs=1,
+    power=0.9,
+    warmup_steps=200
 )
 
 # Configs
@@ -36,7 +43,7 @@ train = dict(
     input_size=(360, 640),
     original_size=(720, 1280),
     num_classes=7,
-    num_epochs=50,
+    num_epochs=1,
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     seg=True  # Seg-based method or not
 )
