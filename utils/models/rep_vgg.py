@@ -342,3 +342,4 @@ class RepVggEncoder(nn.Module):
             return tuple([x0, x1, x2, x3, x4])
         else:
             return x4
+

@@ -156,3 +156,4 @@ class DLabV1AugLane(nn.Module):
                 module.switch_to_deploy()
         print('Deploy!')
         return self.train(False)
+

@@ -65,3 +65,7 @@ For example,
 }
 ```
 *`-2` in `lanes` means on some h_sample, there is no exsiting lane marking. The first existing point in the first lane is (632, 280).*
+
+## Segmentation Label Generation \[Advanced\]
+
+There is no precise corresponding generation script for the provided segmentation labels, although they are in good quality. If you plan to generate segmentation labels yourself, or simply can't download from Google Drive, refer to [#40](https://github.com/voldemortX/pytorch-auto-drive/issues/40) for links to [Baidu Drive](https://github.com/voldemortX/pytorch-auto-drive/issues/40#issuecomment-978728543), [C++ scripts](https://github.com/XingangPan/seg_label_generate) and [Python scripts](https://github.com/ZJULearning/resa/blob/main/tools/generate_seg_tusimple.py).
