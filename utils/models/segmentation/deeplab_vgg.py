@@ -85,19 +85,6 @@ class DeepLabV1Lane(nn.Module):
 
 @MODELS.register()
 class SegRepVGG(DeepLabV1Lane):
-    def __init__(self,
-                 backbone_cfg=None,
-                 spatial_conv_cfg=None,
-                 lane_classifier_cfg=None,
-                 reducer_cfg=None,
-                 classifier_cfg=None):
-        super(SegRepVGG, self).__init__(backbone_cfg=backbone_cfg,
-                                        spatial_conv_cfg=spatial_conv_cfg,
-                                        lane_classifier_cfg=lane_classifier_cfg,
-                                        reducer_cfg=reducer_cfg,
-                                        classifier_cfg=classifier_cfg)
-        self.eval_flag = False
-
     def eval(self):
 
         r"""Sets the module in evaluation mode.
@@ -111,10 +98,9 @@ class SegRepVGG(DeepLabV1Lane):
         Returns:
             Module: self
         """
-        if self.eval_flag is False:
-            self.eval_flag = True
-            for module in self.encoder.modules():
-                if hasattr(module, 'switch_to_deploy'):
-                    module.switch_to_deploy()
-            print('Deploy!')
-            return self.train(False)
+
+        for module in self.encoder.modules():
+            if hasattr(module, 'switch_to_deploy'):
+                module.switch_to_deploy()
+        print('Deploy!')
+        return self.train(False)
