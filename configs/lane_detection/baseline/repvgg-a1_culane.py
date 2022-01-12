@@ -5,7 +5,7 @@ from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_5class import loss
-from configs.lane_detection.common.optims.sgd06 import optimizer
+from configs.lane_detection.common.optims.sgd02 import optimizer
 from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
 
 
