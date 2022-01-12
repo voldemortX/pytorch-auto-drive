@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('--times', type=int, default=1,
                         help='Select test times')
     parser.add_argument('--cfg-options', type=cmd_dict,
-                        help='Override config options with \"x1=y1 x2=y2 xn=yn\", tuple value not supported, try list')
+                        help='Override config options with \"x1=y1 x2=y2 xn=yn\"')
 
     group2 = parser.add_mutually_exclusive_group()
     group2.add_argument('--continue-from', type=str,

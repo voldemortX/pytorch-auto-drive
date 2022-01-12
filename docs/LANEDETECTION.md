@@ -6,10 +6,10 @@
 
 ## Training:
 
-Some models' ImageNet pre-trained weights need to be manually downloaded, refer to [this table](IMAGENET_MODELS.md).
+Some models' ImageNet pre-trained weights need to be manually downloaded, refer to [this table](./IMAGENET_MODELS.md).
 
 ```
-python main_landec.py --train \
+python main_landet.py --train \
                       --config=<config file path> \
                       --mixed-precision  # Optional, enable mixed precision \
                       --cfg-options=<overwrite cfg dict>  # Optional
@@ -30,7 +30,7 @@ Example shells are provided in [tools/shells](../tools/shells/).
 We support multi-GPU training with Distributed Data Parallel (DDP):
 
 ```
-python -m torch.distributed.launch --nproc_per_node=<number of GPU per-node> --use_env main_landec.py <your normal args>
+python -m torch.distributed.launch --nproc_per_node=<number of GPU per-node> --use_env main_landet.py <your normal args>
 ```
 
 With DDP, batch size and number of workers are **per-GPU**.

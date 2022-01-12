@@ -6,7 +6,7 @@
 
 ## Training:
 
-Some models' ImageNet pre-trained weights need to be manually downloaded, refer to [this table](IMAGENET_MODELS.md).
+Some models' ImageNet pre-trained weights need to be manually downloaded, refer to [this table](./IMAGENET_MODELS.md).
 
 ```
 python main_semseg.py --train \

@@ -4,7 +4,7 @@
 
 1. The dataset can be downloaded in their [official website](http://synthia-dataset.net/downloads/).
 
-2. Change the `SYNTHIA.BASE_DIR` in [configs.yaml](../../configs.yaml) to your dataset's location.
+2. Change the `SYNTHIA_ROOT` in [configs/semantic_segmentation/common/datasets/_utils.py](../../configs/semantic_segmentation/common/datasets/_utils.py) to your dataset's location.
 
 3. Pre-processing:
 
