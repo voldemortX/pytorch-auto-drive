@@ -18,9 +18,9 @@ lr_scheduler = dict(
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='swin-tiny_baseline_culane_e12',
-    workers=4,
-    batch_size=8,
+    exp_name='swin-tiny_baseline_culane',
+    workers=5,
+    batch_size=10,
     checkpoint=None,
     # Device args
     world_size=2,
@@ -30,10 +30,10 @@ train_args_default = dict(
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='swin-tiny_baseline_culane_e12',
+    exp_name='swin-tiny_baseline_culane',
     workers=4,
     batch_size=32,
-    checkpoint='./checkpoints/swin-tiny_baseline_culane_e12/model.pt',
+    checkpoint='./checkpoints/swin-tiny_baseline_culane/model.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints'
