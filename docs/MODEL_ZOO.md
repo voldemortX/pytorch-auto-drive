@@ -34,12 +34,18 @@
 | Baseline | ResNet101 | simple | 288 x 800 | *yes* | CULane | F measure | 71.29 | 71.37 | 20.0h |
 | Baseline | ERFNet | simple | 288 x 800 | *yes* | CULane | F measure | 73.40 | 73.49 | 6h |
 | Baseline | ENet<sup>#</sup> | simple | 288 x 800 | *yes* | CULane | F measure | 69.39 | 69.90 | 6.4h<sup>+</sup> |
+| Baseline | RepVGG-A0| simple | 288 x 800 | *yes* | CULane | F measure | 70.22 | 70.56 | 3.3h** |
+| Baseline | RepVGG-A1 | simple | 288 x 800 | *yes* | CULane | F measure | 70.73 | 70.85 | 4.1h** |
+| Baseline | RepVGG-B0 | simple | 288 x 800 | *yes* | CULane | F measure | 71.77 | 71.81 | 6.2h** |
+| Baseline | RepVGG-B1g2 | simple | 288 x 800 | *yes* | CULane | F measure | 72.08 | 72.20 | 10.0h** |
+| Baseline | RepVGG-B2 | simple | 288 x 800 | *yes* | CULane | F measure | 72.24 | 72.33 | 13.2h** |
 | SCNN | VGG16 | simple | 288 x 800 | *yes* | CULane | F measure | 74.02 | 74.29 | 12.8h |
 | SCNN | ResNet18 | simple | 288 x 800 | *yes* | CULane | F measure | 71.94 | 72.19 | 8.0h |
 | SCNN | ResNet34 | simple | 288 x 800 | *yes* | CULane | F measure | 72.44 | 72.70 | 10.7h |
 | SCNN | ResNet50 | simple | 288 x 800 | *yes* | CULane | F measure | 72.95 | 73.03 | 17.9h |
 | SCNN | ResNet101 | simple | 288 x 800 | *yes* | CULane | F measure | 73.29 | 73.58 | 25.7h |
 | SCNN | ERFNet | simple | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
+| SCNN | RepVGG-A1 | simple | 288 x 800 | *yes* | CULane | F measure | 72.88 | 72.89 | 5.7h** |
 | RESA | ResNet18 | simple | 288 x 800 | *no* | CULane | F measure | 72.76 | 72.90 | 8.0h* |
 | RESA | ResNet34 | simple | 288 x 800 | *no* | CULane | F measure | 73.29 | 73.66 | 10.7h* |
 | RESA | ResNet50 | simple | 288 x 800 | *no* | CULane | F measure | 73.99 | 74.19 | 17.9h* |
@@ -63,6 +69,8 @@
 *<sup>#</sup> No pre-training.*
 
 *\* Trained on a 1080 Ti cluster, with CUDA 9.0 PyTorch 1.3, training time is estimated as: single 2080 Ti, mixed precision.*
+
+*\** Trained on two 2080ti.*  
 
 ### TuSimple detailed performance (best):
 
@@ -103,12 +111,18 @@
 | Baseline | ResNet101 | simple | 90.11 | 67.89 | 67.01 | 43.10 | 70.56 | 85.09 | 61.77 | 65.47 | 1883 | 71.37 | [model](https://drive.google.com/file/d/1iubFjWetsKE2VI4BEIWLDd80gB7IQUaP/view?usp=sharing) \| [shell](../tools/shells/resnet101_baseline_culane.sh) |
 | Baseline | ERFNet | simple | 91.48 | 71.27 | 68.09 | 46.76 | 74.47 | 86.09 | 64.18 | 66.89 | 2102 | 73.49 | [model](https://drive.google.com/file/d/16-Q_jZYc9IIKUEHhClSTwZI4ClMeVvQS/view?usp=sharing) \| [shell](../tools/shells/erfnet_baseline_culane.sh) |
 | Baseline | ENet | simple | 89.26 | 68.15 | 62.99 | 42.43 | 68.59 | 83.10 | 58.49 | 63.23 | 2464 | 69.90 | [model](https://drive.google.com/file/d/1DNgOpAVq87GIPUeAdMP6fnS4LhUmqyRB/view?usp=sharing) \| [shell](../tools/shells/enet_baseline_culane.sh) |
+| Baseline | RepVGG-A0 | simple | 89.74 | 67.68 | 65.21 | 42.51 | 67.85 | 83.13 | 60.86 | 63.63 | 2011 | 70.56 | [model](https://drive.google.com/file/d/1IJtM5LT0GTsHHlO0USLpuZLA_KyuLRd_/view?usp=sharing) \| [shell](../tools/shells/repvgg-a0_baseline_culane.sh) |
+| Baseline | RepVGG-A1 | simple | 89.92 | 68.60 | 65.43 | 41.99 | 66.64 | 84.78 | 61.38 | 64.85 | 2127 | 70.85 | [model](https://drive.google.com/file/d/1cQMaXCww-a3mPssQK9iFzHJh6SinxcOo/view?usp=sharing) \| [shell](../tools/shells/repvgg-a1_baseline_culane.sh) |
+| Baseline | RepVGG-B0 | simple | 90.86 | 69.32 | 66.68 | 43.53 | 67.83 | 85.43 | 59.80 | 66.47 | 2189 | 71.81 | [model](https://drive.google.com/file/d/1NR4n7N7mK3yKvRAWZUbtRYQ0xHM2vL60/view?usp=sharing) \| [shell](../tools/shells/repvgg-b0_baseline_culane.sh) |
+| Baseline | RepVGG-B1g2 | simple | 90.85 | 69.31 | 67.94 | 43.81 | 68.45 | 85.85 | 60.64 | 67.69 | 2092 | 72.20 | [model](https://drive.google.com/file/d/1tKo69RroMYMn_v_C51BuHJQDSN0I7R-m/view?usp=sharing) \| [shell](../tools/shells/repvgg-b1g2_baseline_culane.sh) |
+| Baseline | RepVGG-B2 | simple | 90.82 | 69.84 | 67.65 | 43.02 | 72.08 | 85.76 | 61.75 | 67.67 | 2000 | 72.33 | [model]( https://drive.google.com/file/d/1_3sS5U20lTDIsq5jS4cev0kZaUER9NPH/view?usp=sharing) \| [shell](../tools/shells/repvgg-b2_baseline_culane.sh) |
 | SCNN | VGG16 | simple | 92.02 | 72.31 | 69.13 | 46.01 | 76.37 | 87.71 | 64.68 | 68.96 | 1924 | 74.29 | [model](https://drive.google.com/file/d/1vm8B1SSH0nlAIbz3aEGC1kqWP4YdFb3A/view?usp=sharing) \| [shell](../tools/shells/vgg16_scnn_culane.sh) |
 | SCNN | ResNet18 | simple | 90.98 | 70.17 | 66.54 | 43.12 | 66.31 | 85.62 | 62.20 | 65.58 | 1808 | 72.19 | [model](https://drive.google.com/file/d/1i08KOS3b0hOTuzn866j4oUWtw3TYcndn/view?usp=sharing) \| [shell](../tools/shells/resnet18_scnn_culane.sh) |
 | SCNN | ResNet34 | simple | 91.06 | 70.41 | 67.75 | 44.64 | 68.98 | 86.50 | 61.57 | 65.75 | 2017 | 72.70 | [model](https://drive.google.com/file/d/1JyPJQv8gpFZbr1sh7zRRiekUuDR4Aea8/view?usp=sharing) \| [shell](../tools/shells/resnet34_scnn_culane.sh) |
 | SCNN | ResNet50 | simple | 91.38 | 70.60 | 67.62 | 45.02 | 71.24 | 86.90 | 66.03 | 66.17 | 1958 | 73.03 | [model](https://drive.google.com/file/d/1DxqUONEpT47RvJlCg7kDWIsdkYH0Fv8E/view?usp=sharing) \| [shell](../tools/shells/resnet50_scnn_culane.sh) |
 | SCNN | ResNet101 | simple | 91.10 | 71.43 | 68.53 | 46.39 | 72.61 | 86.87 | 61.95 | 67.01 | 1720 | 73.58 | [model](https://drive.google.com/file/d/11O4ZDvNqQsKodnl9kJar6Mx1UKnB70L9/view?usp=sharing) \| [shell](../tools/shells/resnet101_scnn_culane.sh) |
 | SCNN | ERFNet | simple | 91.82 | 72.13 | 69.49 | 46.68 | 70.59 | 87.40 | 64.18 | 68.30 | 2236 | 74.03 | [model](https://drive.google.com/file/d/1YOAuIJqh0M1RsPN5zISY7kTx9xt29IS3/view?usp=sharing) \| [shell](../tools/shells/erfnet_scnn_culane.sh) |
+| SCNN | RepVGG-A0 | simple | 91.06 | 71.30 | 67.23 | 44.75 | 70.51 | 87.11 | 61.73 | 66.61 | 1963 | 72.89 | [model](https://drive.google.com/file/d/1ayyVr5lVW5HxnF5QZWJl0IKW1nO5Q_KJ/view?usp=sharing) \| [shell](../tools/shells/repvgg-a1_scnn_culane.sh) |
 | RESA | ResNet18 | simple | 91.23 | 70.57 | 67.16 | 45.24 | 68.01 | 86.56 | 64.32 | 66.19 | 1679 | 72.90 | [model](https://drive.google.com/file/d/1VkjZ1v-uMSy2VW8VdWPOOO1pFCXhfEDK/view?usp=sharing) \| [shell](../tools/shells/resnet18_resa_culane.sh) |
 | RESA | ResNet34 | simple | 91.31 | 71.80 | 67.54 | 46.57 | 72.74 | 86.94 | 64.46 | 67.31 | 1701 | 73.66 | [model](https://drive.google.com/file/d/1x9JWhW7AIbiADqkzmKgmBUQL-JXexABM/view?usp=sharing) \| [shell](../tools/shells/resnet34_resa_culane.sh) |
 | RESA | ResNet50 | simple | 91.52 | 72.49 | 68.44 | 47.02 | 72.56 | 87.34 | 63.11 | 68.21 | 1493 | 74.19 | [model](https://drive.google.com/file/d/1tmp5JO2CKWekbKVNX6nVKIj3AoQVCOkG/view?usp=sharing) \| [shell](../tools/shells/resnet50_resa_culane.sh) |

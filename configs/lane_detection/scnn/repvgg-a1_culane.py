@@ -5,12 +5,12 @@ from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_5class import loss
-from configs.lane_detection.common.optims.sgd02 import optimizer
+from configs.lane_detection.common.optims.sgd01 import optimizer
 from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
 
 
 train = dict(
-    exp_name='repvgg-a1_baseline_culane',
+    exp_name='repvgg-a1_scnn_culane',
     workers=5,
     batch_size=10,
     checkpoint=None,
@@ -30,10 +30,10 @@ train = dict(
 )
 
 test = dict(
-    exp_name='repvgg-a1_baseline_culane',
+    exp_name='repvgg-a1_scnn_culane',
     workers=10,
     batch_size=80,
-    checkpoint='./checkpoints/repvgg-a1_baseline_culane/model.pt',
+    checkpoint='./checkpoints/repvgg-a1_scnn_culane/model.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints',
@@ -51,8 +51,6 @@ test = dict(
 
 model = dict(
     name='SegRepVGG',
-    # num_classes=5,
-    # dropout_1=0.1,
     backbone_cfg=dict(
         name='RepVggEncoder',
         backbone_name='RepVGG-A1',
@@ -74,5 +72,9 @@ model = dict(
         in_channels=128,
         num_classes=5,
         dilation=1
-    )
+    ),
+    spatial_conv_cfg=dict(
+        name='SpatialConv',
+        num_channels=128
+    ),
 )

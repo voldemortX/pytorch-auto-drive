@@ -86,6 +86,7 @@ class DeepLabV1Lane(nn.Module):
 @MODELS.register()
 class SegRepVGG(DeepLabV1Lane):
     def eval(self):
+
         r"""Sets the module in evaluation mode.
         This has any effect only on certain modules. See documentations of
         particular modules for details of their behaviors in training/evaluation
@@ -97,6 +98,7 @@ class SegRepVGG(DeepLabV1Lane):
         Returns:
             Module: self
         """
+
         for module in self.encoder.modules():
             if hasattr(module, 'switch_to_deploy'):
                 module.switch_to_deploy()
