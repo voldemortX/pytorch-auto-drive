@@ -45,7 +45,7 @@
 | SCNN | ResNet50 | simple | 288 x 800 | *yes* | CULane | F measure | 72.95 | 73.03 | 17.9h |
 | SCNN | ResNet101 | simple | 288 x 800 | *yes* | CULane | F measure | 73.29 | 73.58 | 25.7h |
 | SCNN | ERFNet | simple | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
-| Baseline | RepVGG-A1 | simple | 288 x 800 | *yes* | CULane | F measure | 72.88 | 72.89 | 5.7h** |
+| SCNN | RepVGG-A1 | simple | 288 x 800 | *yes* | CULane | F measure | 72.88 | 72.89 | 5.7h** |
 | RESA | ResNet18 | simple | 288 x 800 | *no* | CULane | F measure | 72.76 | 72.90 | 8.0h* |
 | RESA | ResNet34 | simple | 288 x 800 | *no* | CULane | F measure | 73.29 | 73.66 | 10.7h* |
 | RESA | ResNet50 | simple | 288 x 800 | *no* | CULane | F measure | 73.99 | 74.19 | 17.9h* |
@@ -128,7 +128,7 @@
 | RESA | ResNet50 | simple | 91.52 | 72.49 | 68.44 | 47.02 | 72.56 | 87.34 | 63.11 | 68.21 | 1493 | 74.19 | [model](https://drive.google.com/file/d/1tmp5JO2CKWekbKVNX6nVKIj3AoQVCOkG/view?usp=sharing) \| [shell](../tools/shells/resnet50_resa_culane.sh) |
 | RESA | ResNet101 | simple | 91.45 | 71.51 | 69.01 | 46.54 | 75.52 | 87.75 | 63.90 | 68.24 | 1522 | 74.04 | [model](https://drive.google.com/file/d/1RLLo8MUZDl4wahTXbn49FlxBq5IUsWru/view?usp=sharing) \| [shell](../tools/shells/resnet101_resa_culane.sh) |
 | LSTR | ResNet18s-2X | simple | 55.95 | 38.66 | 22.52 | 25.34 | 25.87 | 51.90 | 40.34 | 29.74 | 2128 | 39.17 | [model](https://drive.google.com/file/d/1vdYwM0xDcQLjMAibjmls8hX-IsUe0xcq/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_culane.sh) |
-| LSTR | ResNet18s-2X | strong | 86.89 | 66.20 | 58.76 | 40.63 | 61.10 | 79.08 | 56.86 | 56.99 | 2455 | 6xl7.21 | [model](https://drive.google.com/file/d/11Tv_nowlWmQtTYQfhGsziDIzb20kPo8o/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_culane.sh) |
+| LSTR | ResNet18s-2X | strong | 86.89 | 66.20 | 58.76 | 40.63 | 61.10 | 79.08 | 56.86 | 56.99 | 2455 | 67.21 | [model](https://drive.google.com/file/d/11Tv_nowlWmQtTYQfhGsziDIzb20kPo8o/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_culane.sh) |
 | LSTR | ResNet34 | strong | 89.68 | 68.85 | 65.59 | 45.50 | 67.71 | 84.76 | 64.12 | 64.08 | 1776 | 71.52 | [model](https://drive.google.com/file/d/1KfmXubuAtUoE9MO8iViMyB_3XhTxWnwH/view?usp=sharing) \| [shell](../tools/shells/resnet34_lstr-aug_culane.sh) |
 
 ### LLAMAS detailed performance (best):
