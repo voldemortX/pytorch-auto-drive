@@ -1,26 +1,56 @@
 import math
 import torch
 import numpy as np
+from .imgaug_affine import get_affine_matrix
 
 
-def crop(points, top, left, height, width, ignore_x=-2):
-    # Crop a np.array (L x N x 2) of points (x, y), original axis start from top-left corner
-    # Essentially a translation with filtering, consider only crop area within the image
+def affine(points, angle, translate, scale, shear, height, width, ignore_x=-2):
+    # Y = (MX')' = XM' (saves transpose compute)
+
+    # image center
+    center = (width / 2, height / 2)
+
+    if sum(points.shape) == 0:
+        return points
+    if ignore_x is not None:
+        ignore_filter = (points[:, :, 0] == ignore_x)
+    matrix = get_affine_matrix(center, angle, translate, scale, shear)
+    homo_coords = np.concatenate([points, np.ones((*points.shape[:-1], 1), dtype=points.dtype)], axis=-1)
+    res = np.matmul(homo_coords, np.transpose(matrix))[:, :, :2]
+
+    if ignore_x is not None:
+        ignore_by_border = (res[:, :, 0] < 0) + (res[:, :, 0] > width) \
+                         + (res[:, :, 1] < 0) + (res[:, :, 1] > height)  # filtering
+        ignore_filter += ignore_by_border
+        res[:, :, 0] = res[:, :, 0] * ~ignore_filter + ignore_x * ignore_filter
+
+    return res
+
+
+def translate(points, t_x, t_y, height, width, ignore_x=-2):
+    # Translate a np.array (L x N x 2) of points (x, y), original axis start from top-left corner
     # Set ignore_x to None if you don't want to ignore out-of-image points
     if sum(points.shape) == 0:
         return points
     if ignore_x is not None:
         ignore_filter = (points[:, :, 0] == ignore_x)
 
-    points -= np.array([left, top], dtype=points.dtype)  # translation
+    points += np.array([t_x, t_y], dtype=points.dtype)  # translation
 
     if ignore_x is not None:
         ignore_by_crop = (points[:, :, 0] < 0) + (points[:, :, 0] > width) \
-            + (points[:, :, 1] < 0) + (points[:, :, 1] > height)  # filtering
+                         + (points[:, :, 1] < 0) + (points[:, :, 1] > height)  # filtering
         ignore_filter += ignore_by_crop
         points[:, :, 0] = points[:, :, 0] * ~ignore_filter + ignore_x * ignore_filter
 
     return points
+
+
+def crop(points, top, left, height, width, ignore_x=-2):
+    # Crop a np.array (L x N x 2) of points (x, y), original axis start from top-left corner
+    # Essentially a translation with filtering, consider only crop area within the image
+    # Set ignore_x to None if you don't want to ignore out-of-image points
+    return translate(points, -left, -top, height, width, ignore_x)
 
 
 def resize(points, in_size, out_size, ignore_x=-2):
