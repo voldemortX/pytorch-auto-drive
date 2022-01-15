@@ -1,6 +1,5 @@
 # Copied and modified from facebookresearch/detr and liuruijin17/LSTR
 # Refactored and added comments
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # Hungarian loss for LSTR
 import torch
 from torch import Tensor
