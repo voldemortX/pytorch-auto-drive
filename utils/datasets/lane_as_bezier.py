@@ -27,7 +27,7 @@ class _BezierLaneDataset(torchvision.datasets.VisionDataset):
         else:
             self.test = 0
 
-        self.init_dataset()
+        self.init_dataset(root)
 
         if image_set != 'valfast':
             self.bezier_labels = os.path.join(self.bezier_labels_dir, image_set + '_' + str(order) + '.json')

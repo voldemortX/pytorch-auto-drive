@@ -607,9 +607,10 @@ class RandomLighting(object):
         return F.adjust_lighting(image, alpha, self.eigen_value, self.eigen_vector), target
 
 
-# Before BC-Break of resample
+@TRANSFORMS.register()
 class RandomAffine(torch.nn.Module):
-    """Random affine transformation of the image keeping center invariant.
+    """Before BC-Break of resample.
+    Random affine transformation of the image keeping center invariant.
     The image can be a PIL Image or a Tensor, in which case it is expected
     to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions.
     Args:

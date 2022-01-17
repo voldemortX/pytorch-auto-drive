@@ -9,5 +9,6 @@ loss = dict(
     num_sample_points=100,
     bezier_order=3,
     k=9,  # for the local maximum prior
-    reduction='mean'
+    reduction='mean',
+    ignore_index=255
 )

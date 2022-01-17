@@ -1,7 +1,10 @@
 import torch
 import torch.nn as nn
 
+from ...builder import MODELS
 
+
+@MODELS.register()
 class DilatedBottleneck(nn.Module):
     # Refactored from https://github.com/chensnathan/YOLOF/blob/master/yolof/modeling/encoder.py
     # Diff from typical ResNetV1.5 BottleNeck:

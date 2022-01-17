@@ -21,15 +21,16 @@ class BezierLaneNet(BezierBaseNet):
                  aux_seg_head_cfg,
                  image_height=360,
                  num_regression_parameters=8,
-                 thresh=0.5):
-        super(BezierLaneNet, self).__init__(thresh)
+                 thresh=0.5,
+                 local_maximum_window_size=9):
+        super(BezierLaneNet, self).__init__(thresh, local_maximum_window_size)
         global_stride = 16
         branch_channels = 256
 
         self.backbone = MODELS.from_dict(backbone_cfg)
         self.reducer = MODELS.from_dict(reducer_cfg)
         self.dilated_blocks = MODELS.from_dict(dilated_blocks_cfg)
-        self.simple_flip = MODELS.from_dict(feature_fusion_cfg)  # Name kept for legacy weights
+        self.simple_flip_2d = MODELS.from_dict(feature_fusion_cfg)  # Name kept for legacy weights
         self.aggregator = nn.AvgPool2d(kernel_size=((image_height - 1) // global_stride + 1, 1), stride=1, padding=0)
         self.regression_head = MODELS.from_dict(head_cfg)  # Name kept for legacy weights
         self.proj_classification = nn.Conv1d(branch_channels, 1, kernel_size=1, bias=True, padding=0)
@@ -56,8 +57,8 @@ class BezierLaneNet(BezierBaseNet):
             x = self.dilated_blocks(x)
 
         with autocast(False):  # TODO: Support fp16 like mmcv
-            x = self.simple_flip(x.float())
-        x = self.aggregator(x)
+            x = self.simple_flip_2d(x.float())
+        x = self.aggregator(x)[:, :, 0, :]
 
         x = self.regression_head(x)
         logits = self.proj_classification(x).squeeze(1)

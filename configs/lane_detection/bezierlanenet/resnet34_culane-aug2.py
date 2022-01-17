@@ -11,7 +11,7 @@ from configs.lane_detection.common.optims.ep36_cosine import lr_scheduler
 
 train = dict(
     exp_name='resnet34_bezierlanenet_culane-aug2',
-    workers=16,
+    workers=10,
     batch_size=20,
     checkpoint=None,
     # Device args
@@ -53,9 +53,12 @@ test = dict(
 
 model = dict(
     name='BezierLaneNet',
-    thresh=0.95,
     image_height=288,
     num_regression_parameters=8,  # 3 x 2 + 2 = 8 (Cubic Bezier Curve)
+
+    # Inference parameters
+    thresh=0.95,
+    local_maximum_window_size=9,
 
     # Backbone (3-stage resnet (no dilation) + 2 extra dilated blocks)
     backbone_cfg=dict(
@@ -86,7 +89,7 @@ model = dict(
         k=3
     ),  # Just some transforms of feature, similar to FCOS heads, but shared between cls & reg branches
 
-    # Auxillary binary segmentation head (automatically discarded in eval() mode)
+    # Auxiliary binary segmentation head (automatically discarded in eval() mode)
     aux_seg_head_cfg=dict(
         name='SimpleSegHead',
         in_channels=256,

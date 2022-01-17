@@ -1,5 +1,6 @@
 from .segmentation import PASCAL_VOC_Segmentation, CityscapesSegmentation, SYNTHIA_Segmentation, GTAV_Segmentation
 from .lane_as_segmentation import TuSimpleAsSegmentation, CULaneAsSegmentation, LLAMAS_AsSegmentation
+from .lane_as_bezier import TuSimpleAsBezier, CULaneAsBezier, LLAMAS_AsBezier, Curvelanes_AsBezier
 from .tusimple import TuSimple
 from .culane import CULane
 from .llamas import LLAMAS

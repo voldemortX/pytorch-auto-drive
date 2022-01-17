@@ -10,6 +10,7 @@ from ..ddp_utils import is_dist_avail_and_initialized, get_world_size
 from ..curve_utils import BezierSampler, cubic_bezier_curve_segment, get_valid_points
 from ._utils import WeightedLoss
 from .hungarian_loss import HungarianLoss
+from .builder import LOSSES
 
 
 # TODO: Speed-up Hungarian on GPU with tensors
@@ -85,6 +86,7 @@ class _HungarianMatcher(torch.nn.Module):
         return [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
 
 
+@LOSSES.register()
 class HungarianBezierLoss(WeightedLoss):
     def __init__(self, curve_weight=1, label_weight=0.1, seg_weight=0.75, alpha=0.8,
                  num_sample_points=100, bezier_order=3, weight=None, size_average=None, reduce=None, reduction='mean',
@@ -134,12 +136,9 @@ class HungarianBezierLoss(WeightedLoss):
 
             target_labels[idx] = 1  # Any matched lane has the same label 1
 
-            # Point loss only used on endpoints
-            target_keypoints = target_keypoints[:, [0, -1], :]
         else:
             # For DDP
             target_sample_points = torch.tensor([], dtype=torch.float32, device=output_curves.device)
-            target_keypoints = torch.tensor([], dtype=torch.float32, device=output_curves.device)
 
         target_valid_points = get_valid_points(target_sample_points)
         # Loss
@@ -176,6 +175,14 @@ class HungarianBezierLoss(WeightedLoss):
             loss = loss.sum()
 
         return loss
+
+    def classification_loss(self, inputs, targets):
+        # Typical classification loss (cross entropy)
+        # No need for permutation, assume target is matched to inputs
+
+        # Negative weight as positive weight
+        return F.binary_cross_entropy_with_logits(inputs.unsqueeze(1), targets.unsqueeze(1), pos_weight=self.pos_weight,
+                                                  reduction=self.reduction) / self.pos_weight
 
     def binary_seg_loss(self, inputs, targets):
         # BCE segmentation loss with weighting and ignore index

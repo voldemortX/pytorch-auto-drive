@@ -6,9 +6,10 @@ from ...curve_utils import BezierCurve
 
 
 class BezierBaseNet(torch.nn.Module):
-    def __init__(self, thresh=0.5):
+    def __init__(self, thresh=0.5, local_maximum_window_size=9):
         super().__init__()
         self.thresh = thresh
+        self.local_maximum_window_size = local_maximum_window_size
 
     def forward(self, *args, **kwargs):
         raise NotImplementedError
@@ -50,16 +51,17 @@ class BezierBaseNet(torch.nn.Module):
         return coordinates
 
     @torch.no_grad()
-    def inference(self, inputs, input_sizes, gap, ppl, dataset, max_lane=0, forward=True, k=9, return_cps=False, n=50):
+    def inference(self, inputs, input_sizes, gap, ppl, dataset, max_lane=0, forward=True, return_cps=False, n=50):
         outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function
         existence_conf = outputs['logits'].sigmoid()
         existence = existence_conf > self.thresh
 
         # Test local maxima
-        if k > 0:
+        if self.local_maximum_window_size > 0:
             _, max_indices = torch.nn.functional.max_pool1d(existence_conf.unsqueeze(1),
-                                                            kernel_size=k, stride=1,
-                                                            padding=(k - 1) // 2, return_indices=True)
+                                                            kernel_size=self.local_maximum_window_size, stride=1,
+                                                            padding=(self.local_maximum_window_size - 1) // 2,
+                                                            return_indices=True)
             max_indices = max_indices.squeeze(1)  # B x Q
             indices = torch.arange(0, existence_conf.shape[1],
                                    dtype=existence_conf.dtype,
