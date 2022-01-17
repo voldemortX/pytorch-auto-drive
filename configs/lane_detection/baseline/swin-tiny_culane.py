@@ -10,7 +10,7 @@ from configs.lane_detection.common.optims.adamw00006_swin import optimizer
 
 lr_scheduler = dict(
     name='poly_scheduler_with_warmup',
-    epochs=24,
+    epochs=12,
     power=1,  # ? Kept for consistency with official repo
     warmup_steps=1500,
     start_lr_ratio=1e-6,
@@ -44,7 +44,7 @@ train = dict(
     input_size=(288, 800),
     original_size=(590, 1640),
     num_classes=5,
-    num_epochs=24,
+    num_epochs=12,
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     seg=True  # Seg-based method or not
 )
