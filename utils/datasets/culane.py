@@ -11,8 +11,9 @@ from .builder import DATASETS
 @DATASETS.register()
 class CULane(LaneKeypointDataset):
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None,
-                 ppl=31, gap=10, start=290, padding_mask=False):
-        super().__init__(root, transforms, transform, target_transform, ppl, gap, start, padding_mask, image_set)
+                 ppl=31, gap=10, start=290, padding_mask=False, is_process=True):
+        super().__init__(root, transforms, transform, target_transform, ppl, gap, start, padding_mask, image_set,
+                         is_process)
 
         self._check()
 
