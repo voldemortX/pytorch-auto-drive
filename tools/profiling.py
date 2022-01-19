@@ -47,11 +47,6 @@ if __name__ == '__main__':
 
     net.to(device)
 
-    macs, _ = model_profile(net, args.height, args.width, device)
-    params = sum(p.numel() for p in net.parameters())
-    print('FLOPs(G): {: .2f}'.format(2 * macs / 1e9))
-    print('Number of parameters: {: .2f}'.format(params / 1e6))
-    print('Profiling, please clear your GPU memory before doing this.')
     if args.mode == 'simple':
         dummy = torch.ones((1, 3, args.height, args.width))
         print(dummy.dtype)
@@ -73,3 +68,10 @@ if __name__ == '__main__':
         print('GPU FPS: {: .2f}'.format(max(gpu_fps)))
     else:
         raise ValueError
+
+    macs, _ = model_profile(net, args.height, args.width, device)
+    net.eval()
+    params = sum(p.numel() for p in net.parameters())
+    print('FLOPs(G): {: .2f}'.format(2 * macs / 1e9))
+    print('Number of parameters: {: .2f}'.format(params / 1e6))
+    print('Profiling, please clear your GPU memory before doing this.')
