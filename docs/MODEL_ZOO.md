@@ -39,6 +39,7 @@
 | Baseline | RepVGG-B0 | simple | 288 x 800 | *yes* | CULane | F measure | 71.77 | 71.81 | 6.2h** |
 | Baseline | RepVGG-B1g2 | simple | 288 x 800 | *yes* | CULane | F measure | 72.08 | 72.20 | 10.0h** |
 | Baseline | RepVGG-B2 | simple | 288 x 800 | *yes* | CULane | F measure | 72.24 | 72.33 | 13.2h** |
+| Baseline | Swin-Tiny | simple | 288 x 800 | *yes* | CULane | F measure | 69.75 | 69.90 | 12.1h** |
 | SCNN | VGG16 | simple | 288 x 800 | *yes* | CULane | F measure | 74.02 | 74.29 | 12.8h |
 | SCNN | ResNet18 | simple | 288 x 800 | *yes* | CULane | F measure | 71.94 | 72.19 | 8.0h |
 | SCNN | ResNet34 | simple | 288 x 800 | *yes* | CULane | F measure | 72.44 | 72.70 | 10.7h |
@@ -115,7 +116,8 @@
 | Baseline | RepVGG-A1 | simple | 89.92 | 68.60 | 65.43 | 41.99 | 66.64 | 84.78 | 61.38 | 64.85 | 2127 | 70.85 | [model](https://drive.google.com/file/d/1cQMaXCww-a3mPssQK9iFzHJh6SinxcOo/view?usp=sharing) \| [shell](../tools/shells/repvgg-a1_baseline_culane.sh) |
 | Baseline | RepVGG-B0 | simple | 90.86 | 69.32 | 66.68 | 43.53 | 67.83 | 85.43 | 59.80 | 66.47 | 2189 | 71.81 | [model](https://drive.google.com/file/d/1NR4n7N7mK3yKvRAWZUbtRYQ0xHM2vL60/view?usp=sharing) \| [shell](../tools/shells/repvgg-b0_baseline_culane.sh) |
 | Baseline | RepVGG-B1g2 | simple | 90.85 | 69.31 | 67.94 | 43.81 | 68.45 | 85.85 | 60.64 | 67.69 | 2092 | 72.20 | [model](https://drive.google.com/file/d/1tKo69RroMYMn_v_C51BuHJQDSN0I7R-m/view?usp=sharing) \| [shell](../tools/shells/repvgg-b1g2_baseline_culane.sh) |
-| Baseline | RepVGG-B2 | simple | 90.82 | 69.84 | 67.65 | 43.02 | 72.08 | 85.76 | 61.75 | 67.67 | 2000 | 72.33 | [model]( https://drive.google.com/file/d/1_3sS5U20lTDIsq5jS4cev0kZaUER9NPH/view?usp=sharing) \| [shell](../tools/shells/repvgg-b2_baseline_culane.sh) |
+| Baseline | RepVGG-B2 | simple | 90.82 | 69.84 | 67.65 | 43.02 | 72.08 | 85.76 | 61.75 | 67.67 | 2000 | 72.33 | [model](https://drive.google.com/file/d/1_3sS5U20lTDIsq5jS4cev0kZaUER9NPH/view?usp=sharing) \| [shell](../tools/shells/repvgg-b2_baseline_culane.sh) |
+| Baseline | Swin-Tiny | simple | 89.55 | 68.36 | 63.56 | 42.53 | 61.96 | 82.64 | 60.81 | 65.21 | 2813 | 69.90 | [model](https://drive.google.com/file/d/1YI_pHGVuuWYyTLeUgdZVDS14WoQjPon4/view?usp=sharing) \| [shell](../tools/shells/swin-tiny_baseline_culane.sh) |
 | SCNN | VGG16 | simple | 92.02 | 72.31 | 69.13 | 46.01 | 76.37 | 87.71 | 64.68 | 68.96 | 1924 | 74.29 | [model](https://drive.google.com/file/d/1vm8B1SSH0nlAIbz3aEGC1kqWP4YdFb3A/view?usp=sharing) \| [shell](../tools/shells/vgg16_scnn_culane.sh) |
 | SCNN | ResNet18 | simple | 90.98 | 70.17 | 66.54 | 43.12 | 66.31 | 85.62 | 62.20 | 65.58 | 1808 | 72.19 | [model](https://drive.google.com/file/d/1i08KOS3b0hOTuzn866j4oUWtw3TYcndn/view?usp=sharing) \| [shell](../tools/shells/resnet18_scnn_culane.sh) |
 | SCNN | ResNet34 | simple | 91.06 | 70.41 | 67.75 | 44.64 | 68.98 | 86.50 | 61.57 | 65.75 | 2017 | 72.70 | [model](https://drive.google.com/file/d/1JyPJQv8gpFZbr1sh7zRRiekUuDR4Aea8/view?usp=sharing) \| [shell](../tools/shells/resnet34_scnn_culane.sh) |
