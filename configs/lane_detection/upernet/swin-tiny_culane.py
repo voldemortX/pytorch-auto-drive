@@ -5,8 +5,8 @@ from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_5class import loss
-from configs.lane_detection.common.optims.adamw00006_swin import optimizer
-# from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
+from configs.lane_detection.common.optims.adamw0001_swin import optimizer
+
 
 lr_scheduler = dict(
     name='poly_scheduler_with_warmup',
@@ -18,9 +18,9 @@ lr_scheduler = dict(
 
 # Default args that can be overridden in commandline
 train_args_default = dict(
-    exp_name='swin-tiny_baseline_culane',
-    workers=4,
-    batch_size=8,
+    exp_name='swin-tiny_upernet_culane',
+    workers=5,
+    batch_size=10,
     checkpoint=None,
     # Device args
     world_size=2,
@@ -30,10 +30,10 @@ train_args_default = dict(
     save_dir='./checkpoints'
 )
 test_args_default = dict(
-    exp_name='swin-tiny_baseline_culane',
+    exp_name='swin-tiny_upernet_culane',
     workers=4,
     batch_size=32,
-    checkpoint='./checkpoints/swin-tiny_baseline_culane/model.pt',
+    checkpoint='./checkpoints/swin-tiny_upernet_culane/model.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints'
