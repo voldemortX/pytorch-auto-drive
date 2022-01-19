@@ -15,8 +15,7 @@ lr_scheduler = dict(
     start_lr_ratio=1e-6,
 )
 
-# Default args that can be overridden in commandline
-train_args_default = dict(
+train = dict(
     exp_name='swin-tiny_baseline_culane',
     workers=5,
     batch_size=10,
@@ -27,19 +26,7 @@ train_args_default = dict(
     device='cuda',
     val_num_steps=0,  # Seg IoU validation (mostly useless)
     save_dir='./checkpoints'
-)
-test_args_default = dict(
-    exp_name='swin-tiny_baseline_culane',
-    workers=4,
-    batch_size=32,
-    checkpoint='./checkpoints/swin-tiny_baseline_culane/model.pt',
-    # Device args
-    device='cuda',
-    save_dir='./checkpoints'
-)
 
-# Configs
-train = dict(
     input_size=(288, 800),
     original_size=(590, 1640),
     num_classes=5,
@@ -47,9 +34,16 @@ train = dict(
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     seg=True  # Seg-based method or not
 )
-train.update(train_args_default)
 
 test = dict(
+    exp_name='swin-tiny_baseline_culane',
+    workers=4,
+    batch_size=32,
+    checkpoint='./checkpoints/swin-tiny_baseline_culane/model.pt',
+    # Device args
+    device='cuda',
+    save_dir='./checkpoints'
+
     seg=True,
     gap=20,
     ppl=18,
@@ -60,7 +54,6 @@ test = dict(
     max_lane=4,
     dataset_name='culane'
 )
-test.update(test_args_default)
 
 model = dict(
     name='DeepLabV1Lane',

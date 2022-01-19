@@ -58,6 +58,7 @@ python tools/profiling.py --help
 ### Currently Unsupported Models:
 - ENet (segmentation)
 - ENet backbone (lane detection)
+- Swin backbone (supported if pytorch >= 1.10.0)
 
 ## ONNX -> TensorRT:
 
@@ -84,3 +85,4 @@ You'll then see the saved `ckpt.engine` file and a report on the conversion qual
 - ENet (segmentation)
 - ENet backbone (lane detection)
 - SCNN (lane detection)
+- Swin backbone (lane detection)
