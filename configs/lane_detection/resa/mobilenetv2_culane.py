@@ -5,8 +5,8 @@ from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_5class import loss
-from configs.lane_detection.common.optims.sgd009 import optimizer
-from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
+from configs.lane_detection.common.optims.sgd006 import optimizer
+from configs.lane_detection.common.optims.ep12_poly_warmup500 import lr_scheduler
 
 
 train = dict(
@@ -82,7 +82,7 @@ model = dict(
     lane_classifier_cfg=dict(
         name='EDLaneExist',
         num_output=5 - 1,
-        flattened_size=1100,
+        flattened_size=1125,
         dropout=0.1,
         pool='avg'
     )
