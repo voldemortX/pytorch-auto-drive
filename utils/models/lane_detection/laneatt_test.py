@@ -4,11 +4,12 @@ import torch.nn as nn
 
 from ..builder import MODELS
 from ...common import warnings
-try:
-    from ...csrc.apis import line_nms
-    print('Successfully complied line nms for LaneATT.')
-except:
-    warnings.warn('Can\'t complie line nms op for LaneATT.')
+# try:
+#     from ...csrc.apis import line_nms
+#     print('Successfully complied line nms for LaneATT.')
+# except:
+#     warnings.warn('Can\'t complie line nms op for LaneATT.')
+from ...csrc.apis import line_nms
 
 
 @MODELS.register()
