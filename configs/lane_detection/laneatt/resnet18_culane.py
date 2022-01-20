@@ -4,9 +4,14 @@
 from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
-from configs.lane_detection.common.optims.matchingloss_polynomial import loss
-from configs.lane_detection.common.optims.adam000025 import optimizer
-from configs.lane_detection.common.optims.ep150_step import lr_scheduler
+# from configs.lane_detection.common.optims.matchingloss_polynomial import loss
+# from configs.lane_detection.common.optims.adam000025 import optimizer
+# from configs.lane_detection.common.optims.ep150_step import lr_scheduler
+
+lr_scheduler = dict(
+    name='CosineAnnealingLRWrapper',
+    epochs=15,
+)
 
 
 dataset = dict(
@@ -15,6 +20,12 @@ dataset = dict(
     root='/home/guoshaohua/dataset/culane',
     padding_mask=False,
     is_process=False,
+)
+
+optimizer = dict(
+    name='torch_optimizer',
+    torch_optim_class='Adam',
+    lr=0.0003
 )
 
 
@@ -32,6 +43,11 @@ train_augmentation = dict(
             flip_prob=0.5
         ),
         dict(
+            name='Resize',
+            size_image=(360, 640),
+            size_label=(360, 640)
+        ),
+        dict(
             name='ToXOffset',
             num_points=72,
             image_size=(360, 640),
@@ -42,11 +58,30 @@ train_augmentation = dict(
         ),
     ]
 )
+
+loss = dict(
+    name='LaneAttLoss',
+    cls_weight=10.,
+    reg_weight=1.,
+    alpha=0.25,
+    gamma=2.,
+    num_offsets=72,
+    num_strips=72 - 1,
+    t_pos=15.,
+    t_neg=20.,
+    weight=None,
+    size_average=None,
+    ignore_index=-100,
+    reduce=None,
+    reduction='mean'
+)
+
+
 # ---- ignore ------
 train = dict(
-    exp_name='resnet18s_lstr_culane',
-    workers=2,
-    batch_size=4,
+    exp_name='resnet18_laneatt_culane',
+    workers=4,
+    batch_size=8,
     checkpoint=None,
     # Device args
     world_size=0,
@@ -56,56 +91,53 @@ train = dict(
     val_num_steps=0,  # Seg IoU validation (mostly useless)
     save_dir='./checkpoints',
 
-    input_size=(288, 800),
+    input_size=(360, 640),
     original_size=(590, 1640),
     num_classes=None,
-    num_epochs=12,
+    num_epochs=15,
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     seg=False,  # Seg-based method or not
 )
 
 test = dict(
-    exp_name='resnet18s_lstr_culane',
+    exp_name='resnet18_laneatt_culane',
     workers=10,
     batch_size=80,
-    checkpoint='./checkpoints/resnet18s_lstr_culane/model.pt',
+    checkpoint='./checkpoints/resnet18_laneatt_culane/model.pt',
     # Device args
     device='cuda',
-
     save_dir='./checkpoints',
-
     seg=False,
     gap=20,
     ppl=18,
     thresh=None,
-    collate_fn='dict_collate_fn',  # 'dict_collate_fn' for LSTR
-    input_size=(288, 800),
+    collate_fn=None,  # 'dict_collate_fn' for LSTR
+    input_size=(360, 640),
     original_size=(590, 1640),
     max_lane=4,
     dataset_name='culane'
 )
 
 model = dict(
-    name='LSTR',
-    expansion=2,
-    num_queries=7,
-    aux_loss=True,
-    pos_type='sine',
-    drop_out=0.1,
-    num_heads=2,
-    enc_layers=2,
-    dec_layers=2,
-    pre_norm=False,
-    return_intermediate=True,
-    lsp_dim=8,
-    mlp_layers=3,
-    thresh=0.5,
+    name='LaneAtt',
+    backbone_channels=512,
+    backbone_os=32,
+    num_points=72,
+    img_w=640,
+    img_h=360,
+    topk_anchors=1000,
+    anchor_freq_path='culane_anchors_freq.pt',
+    anchor_feat_channels=64,
+    # nms config
+    conf_thres=0.5,
+    nms_thres=15,
+    nms_topk=4,  # max # lanes of the dataset
+    # backbone config
     backbone_cfg=dict(
         name='predefined_resnet_backbone',
-        backbone_name='resnet18_reduced',
+        backbone_name='resnet18',
         return_layer='layer4',
-        pretrained=False,
-        replace_stride_with_dilation=[False, False, False],
-        expansion=2
+        pretrained=True,
+        replace_stride_with_dilation=[False, False, False]
     )
 )
