@@ -1,16 +1,16 @@
 # Data pipeline
-from configs.lane_detection.common.datasets.culane_bezier import dataset
-from configs.lane_detection.common.datasets.train_level2_288 import train_augmentation
-from configs.lane_detection.common.datasets.test_288 import test_augmentation
+from configs.lane_detection.common.datasets.llamas_bezier import dataset
+from configs.lane_detection.common.datasets.train_level2_360 import train_augmentation
+from configs.lane_detection.common.datasets.test_360 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.matchingloss_bezier import loss
 from configs.lane_detection.common.optims.adam00006_dcn import optimizer
-from configs.lane_detection.common.optims.ep36_cosine import lr_scheduler
+from configs.lane_detection.common.optims.ep20_cosine import lr_scheduler
 
 
 train = dict(
-    exp_name='resnet34_bezierlanenet_culane-aug2',
+    exp_name='resnet34_bezierlanenet_llamas-aug2',
     workers=10,
     batch_size=20,
     checkpoint=None,
@@ -22,33 +22,33 @@ train = dict(
     val_num_steps=0,  # Seg IoU validation (mostly useless)
     save_dir='./checkpoints',
 
-    input_size=(288, 800),
-    original_size=(590, 1640),
+    input_size=(360, 640),
+    original_size=(717, 1276),
     num_classes=None,
-    num_epochs=36,
+    num_epochs=20,
     collate_fn='dict_collate_fn',  # 'dict_collate_fn' for LSTR
     seg=False,  # Seg-based method or not
 )
 
 test = dict(
-    exp_name='resnet34_bezierlanenet_culane-aug2',
+    exp_name='resnet34_bezierlanenet_llamas-aug2',
     workers=0,
     batch_size=1,
-    checkpoint='./checkpoints/resnet34_bezierlanenet_culane-aug2/model.pt',
+    checkpoint='./checkpoints/resnet34_bezierlanenet_llamas-aug2/model.pt',
     # Device args
     device='cuda',
 
     save_dir='./checkpoints',
 
     seg=False,
-    gap=20,
-    ppl=18,
-    thresh=None,
+    gap=1,
+    ppl=417,
+    thresh=0.3,
     collate_fn='dict_collate_fn',  # 'dict_collate_fn' for LSTR
-    input_size=(288, 800),
-    original_size=(590, 1640),
+    input_size=(360, 640),
+    original_size=(717, 1276),
     max_lane=4,
-    dataset_name='culane'
+    dataset_name='llamas'
 )
 
 model = dict(
