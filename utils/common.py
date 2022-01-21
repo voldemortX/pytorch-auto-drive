@@ -42,7 +42,18 @@ def load_checkpoint(net, optimizer, lr_scheduler, filename, strict=True):
     # To keep BC while having a acceptable variable name for lane detection
     checkpoint['model'] = OrderedDict((k.replace('aux_head', 'lane_classifier') if 'aux_head' in k else k, v)
                                       for k, v in checkpoint['model'].items())
-    net.load_state_dict(checkpoint['model'], strict=strict)
+    state_dict = checkpoint['model']
+    self_state_dict = net.state_dict()
+    self_keys = list(self_state_dict.keys())
+    for i, (_, v) in enumerate(state_dict.items()):
+        if i > len(self_keys) - 1:
+            break
+        self_state_dict[self_keys[i]] = v
+
+    # for k, v in state_dict.items():
+    #     print(k)
+    # quit(0)
+    net.load_state_dict(self_state_dict, strict=strict)
 
     if optimizer is not None:
         try:  # Shouldn't be necessary, but just in case

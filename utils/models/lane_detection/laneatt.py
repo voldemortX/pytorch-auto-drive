@@ -4,7 +4,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 from collections import OrderedDict
-# from utils.nms import nms
+from ...csrc.apis import line_nms
 
 
 from ..builder import MODELS
@@ -19,6 +19,8 @@ class LaneAtt(nn.Module):
                  num_points=72,
                  img_w=640,
                  img_h=360,
+                 ori_img_w=1640,
+                 ori_img_h=590,
                  topk_anchors=None,
                  anchor_freq_path=None,
                  anchor_feat_channels=None,
@@ -33,6 +35,8 @@ class LaneAtt(nn.Module):
         self.num_offsets = num_points
         self.img_h = img_h
         self.img_w = img_w
+        self.ori_img_w = ori_img_w,
+        self.ori_img_h = ori_img_h,
         self.featmap_h = img_h // self.stride
         self.featmap_w = img_w // self.stride
         self.anchor_ys = torch.linspace(1, 0, steps=self.num_offsets, dtype=torch.float32)
@@ -149,8 +153,13 @@ class LaneAtt(nn.Module):
 
         # actual cutting
         for batch_idx, img_features in enumerate(features):
+
             rois = img_features[self.cut_zs, self.cut_ys, self.cut_xs].view(n_proposals, n_fmaps, self.featmap_h, 1)
+            # print(img_features.shape)
+            # print(rois.shape)
+            # quit(0)
             rois[self.invalid_mask] = 0
+
             batch_anchor_features[batch_idx] = rois
 
         return batch_anchor_features
@@ -231,40 +240,84 @@ class LaneAtt(nn.Module):
 
         return out
 
-    # @torch.no_grad()
-    # def inference(self, inputs, forward=True):
-    #     outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function
-    #     nms_outputs = self.nms(outputs['proposals_list'], outputs['attention_matrix'],
-    #                            nms_thres=self.nms_thres, nms_topk=self.nms_topk,
-    #                            conf_threshold=self.conf_thres)
-    #     # TODO: convert proposals to lanes
-    #     return 0
-    #
-    #
-    # def nms(self, batch_proposals, batch_attention_matrix, nms_thres, nms_topk, conf_threshold):
-    #     softmax = nn.Softmax(dim=1)
-    #     proposals_list = []
-    #     for proposals, attention_matrix in zip(batch_proposals, batch_attention_matrix):
-    #         anchor_inds = torch.arange(batch_proposals.shape[1], device=proposals.device)
-    #         # The gradients do not have to (and can't) be calculated for the NMS procedure
-    #         with torch.no_grad():
-    #             scores = softmax(proposals[:, :2])[:, 1]
-    #             if conf_threshold is not None:
-    #                 # apply confidence threshold
-    #                 above_threshold = scores > conf_threshold
-    #                 proposals = proposals[above_threshold]
-    #                 scores = scores[above_threshold]
-    #                 anchor_inds = anchor_inds[above_threshold]
-    #             if proposals.shape[0] == 0:
-    #                 proposals_list.append((proposals[[]], self.anchors[[]], attention_matrix[[]], None))
-    #                 continue
-    #             keep, num_to_keep, _ = nms(proposals, scores, overlap=nms_thres, top_k=nms_topk)
-    #             keep = keep[:num_to_keep]
-    #         proposals = proposals[keep]
-    #         anchor_inds = anchor_inds[keep]
-    #         attention_matrix = attention_matrix[anchor_inds]
-    #         proposals_list.append((proposals, self.anchors[keep], attention_matrix, anchor_inds))
-    #
-    #     return proposals_list
+    @torch.no_grad()
+    def inference(self, inputs, input_sizes, gap, ppl, dataset, max_lane=0, forward=True):
+        outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function
+        # print(outputs['proposals_list'][0, :, 2])
+
+        nms_outputs = self.nms(outputs['proposals_list'], outputs['attention_matrix'],
+                               nms_thres=self.nms_thres, nms_topk=self.nms_topk,
+                               conf_threshold=self.conf_thres)
+        # the number of lanes is 1 ???
+        softmax = nn.Softmax(dim=1)
+        decoded = []
+        for proposals, _, _, _ in nms_outputs:
+            proposals[:, :2] = softmax(proposals[:, :2])
+            proposals[:, 4] = torch.round(proposals[:, 4])
+            if proposals.shape[0] == 0:
+                decoded.append([])
+                continue
+            pred = self.proposals_to_pred(proposals)
+            decoded.append(pred)
+        return decoded
+
+
+    def nms(self, batch_proposals, batch_attention_matrix, nms_thres, nms_topk, conf_threshold):
+        softmax = nn.Softmax(dim=1)
+        proposals_list = []
+        for proposals, attention_matrix in zip(batch_proposals, batch_attention_matrix):
+            anchor_inds = torch.arange(batch_proposals.shape[1], device=proposals.device)
+            # The gradients do not have to (and can't) be calculated for the NMS procedure
+            with torch.no_grad():
+                scores = softmax(proposals[:, :2])[:, 1]
+                if conf_threshold is not None:
+                    # apply confidence threshold
+                    above_threshold = scores > conf_threshold
+                    proposals = proposals[above_threshold]
+                    scores = scores[above_threshold]
+                    anchor_inds = anchor_inds[above_threshold]
+                if proposals.shape[0] == 0:
+                    proposals_list.append((proposals[[]], self.anchors[[]], attention_matrix[[]], None))
+                    continue
+                keep, num_to_keep, _ = line_nms.forward(proposals, scores, nms_thres, nms_topk)
+                keep = keep[:num_to_keep]
+            proposals = proposals[keep]
+            anchor_inds = anchor_inds[keep]
+            attention_matrix = attention_matrix[anchor_inds]
+            proposals_list.append((proposals, self.anchors[keep], attention_matrix, anchor_inds))
+
+        return proposals_list
+
+    def proposals_to_pred(self, proposals):
+        self.anchor_ys = self.anchor_ys.to(proposals.device)
+        self.anchor_ys = self.anchor_ys.double()
+        lanes = []
+        for lane in proposals:
+            lane_xs = lane[5:] / self.img_w
+            start = int(round(lane[2].item() * self.num_strips))
+            length = int(round(lane[4].item()))
+            end = start + length - 1
+            end = min(end, len(self.anchor_ys) - 1)
+            # end = label_end
+            # if the proposal does not start at the bottom of the image,
+            # extend its proposal until the x is outside the image
+            mask = ~((((lane_xs[:start] >= 0.) &
+                       (lane_xs[:start] <= 1.)).cpu().numpy()[::-1].cumprod()[::-1]).astype(np.bool))
+            lane_xs[end + 1:] = -2
+            lane_xs[:start][mask] = -2
+            lane_ys = self.anchor_ys[lane_xs >= 0]
+            lane_xs = lane_xs[lane_xs >= 0]
+            lane_xs = lane_xs.flip(0).double()
+            lane_ys = lane_ys.flip(0)
+            if len(lane_xs) <= 1:
+                continue
+            points = torch.stack((lane_xs.reshape(-1, 1), lane_ys.reshape(-1, 1)), dim=1).squeeze(2)
+            points = points.cpu().numpy()
+            lane_coords = []
+            for i in range(points.shape[0]):
+                lane_coords.append([points[i, 0] * float(self.ori_img_w[0]), points[i, 1] * float(self.ori_img_h[0])])
+            # print(lane_coords)
+            lanes.append(lane_coords)
+        return lanes
 
 

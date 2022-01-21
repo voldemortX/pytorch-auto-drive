@@ -1,7 +1,7 @@
 # Data pipeline
 # from configs.lane_detection.common.datasets.culane import dataset
 # from configs.lane_detection.common.datasets.train_level0_288 import train_augmentation
-from configs.lane_detection.common.datasets.test_288 import test_augmentation
+# from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
 # from configs.lane_detection.common.optims.matchingloss_polynomial import loss
@@ -59,6 +59,22 @@ train_augmentation = dict(
     ]
 )
 
+
+test_augmentation = dict(
+    name='Compose',
+    transforms=[
+        dict(
+            name='Resize',
+            size_image=(360, 640),
+            size_label=(360, 640)
+        ),
+        dict(
+            name='ToTensor'
+        ),
+    ]
+)
+
+
 loss = dict(
     name='LaneAttLoss',
     cls_weight=10.,
@@ -101,9 +117,9 @@ train = dict(
 
 test = dict(
     exp_name='resnet18_laneatt_culane',
-    workers=10,
+    workers=4,
     batch_size=80,
-    checkpoint='./checkpoints/resnet18_laneatt_culane/model.pt',
+    checkpoint='./checkpoints/resnet18_laneatt_culane/model_0015.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints',
@@ -130,7 +146,7 @@ model = dict(
     anchor_feat_channels=64,
     # nms config
     conf_thres=0.5,
-    nms_thres=15,
+    nms_thres=50,
     nms_topk=4,  # max # lanes of the dataset
     # backbone config
     backbone_cfg=dict(
