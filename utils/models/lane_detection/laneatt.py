@@ -153,13 +153,8 @@ class LaneAtt(nn.Module):
 
         # actual cutting
         for batch_idx, img_features in enumerate(features):
-
             rois = img_features[self.cut_zs, self.cut_ys, self.cut_xs].view(n_proposals, n_fmaps, self.featmap_h, 1)
-            # print(img_features.shape)
-            # print(rois.shape)
-            # quit(0)
             rois[self.invalid_mask] = 0
-
             batch_anchor_features[batch_idx] = rois
 
         return batch_anchor_features
@@ -279,7 +274,7 @@ class LaneAtt(nn.Module):
                 if proposals.shape[0] == 0:
                     proposals_list.append((proposals[[]], self.anchors[[]], attention_matrix[[]], None))
                     continue
-                keep, num_to_keep, _ = line_nms.forward(proposals, scores, nms_thres, nms_topk)
+                keep, num_to_keep, _ = line_nms.forward(proposals, scores, overlap=nms_thres, top_k=nms_topk)
                 keep = keep[:num_to_keep]
             proposals = proposals[keep]
             anchor_inds = anchor_inds[keep]
