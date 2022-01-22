@@ -1,5 +1,5 @@
 #!/bin/bash
-# Trained weights: resnet34_bezierlanenet_culane_2021xxxx.pt
+# Trained weights: resnet34_bezierlanenet_culane-aug2_20211109.pt
 # Training
 python main_landet.py --train --config=configs/lane_detection/bezierlanenet/resnet34_culane-aug2.py --mixed-precision
 # Predicting lane points for testing
