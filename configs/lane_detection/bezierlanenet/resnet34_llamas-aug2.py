@@ -10,7 +10,7 @@ from configs.lane_detection.common.optims.ep20_cosine import lr_scheduler
 
 
 train = dict(
-    exp_name='resnet34_bezierlanenet_llamas-aug2',
+    exp_name='resnet34_bezierlanenet-aug2_llamas',
     workers=10,
     batch_size=20,
     checkpoint=None,
@@ -31,10 +31,10 @@ train = dict(
 )
 
 test = dict(
-    exp_name='resnet34_bezierlanenet_llamas-aug2',
+    exp_name='resnet34_bezierlanenet-aug2_llamas',
     workers=0,
     batch_size=1,
-    checkpoint='./checkpoints/resnet34_bezierlanenet_llamas-aug2/model.pt',
+    checkpoint='./checkpoints/resnet34_bezierlanenet-aug2_llamas/model.pt',
     # Device args
     device='cuda',
 
@@ -53,7 +53,7 @@ test = dict(
 
 model = dict(
     name='BezierLaneNet',
-    image_height=288,
+    image_height=360,
     num_regression_parameters=8,  # 3 x 2 + 2 = 8 (Cubic Bezier Curve)
 
     # Inference parameters

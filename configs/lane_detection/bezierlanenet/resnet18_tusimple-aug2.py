@@ -10,7 +10,7 @@ from configs.lane_detection.common.optims.ep400_cosine import lr_scheduler
 
 
 train = dict(
-    exp_name='resnet34_bezierlanenet_tusimple-aug2',
+    exp_name='resnet18_bezierlanenet_tusimple-aug2',
     workers=8,
     batch_size=20,
     checkpoint=None,
@@ -31,10 +31,10 @@ train = dict(
 )
 
 test = dict(
-    exp_name='resnet34_bezierlanenet_tusimple-aug2',
+    exp_name='resnet18_bezierlanenet_tusimple-aug2',
     workers=0,
     batch_size=1,
-    checkpoint='./checkpoints/resnet34_bezierlanenet_tusimple-aug2/model.pt',
+    checkpoint='./checkpoints/resnet18_bezierlanenet_tusimple-aug2/model.pt',
     # Device args
     device='cuda',
 
@@ -63,7 +63,7 @@ model = dict(
     # Backbone (3-stage resnet (no dilation) + 2 extra dilated blocks)
     backbone_cfg=dict(
         name='predefined_resnet_backbone',
-        backbone_name='resnet34',
+        backbone_name='resnet18',
         return_layer='layer3',
         pretrained=True,
         replace_stride_with_dilation=[False, False, False]
