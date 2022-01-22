@@ -59,7 +59,8 @@ class DeepLabV1Lane(nn.Module):
                  spatial_conv_cfg=None,
                  lane_classifier_cfg=None,
                  reducer_cfg=None,
-                 classifier_cfg=None):
+                 classifier_cfg=None,
+                 uper_cfg=None):
         super().__init__()
         self.encoder = MODELS.from_dict(backbone_cfg)
         self.reducer = MODELS.from_dict(reducer_cfg)
@@ -67,10 +68,13 @@ class DeepLabV1Lane(nn.Module):
         self.classifier = MODELS.from_dict(classifier_cfg)
         self.softmax = nn.Softmax(dim=1)
         self.lane_classifier = MODELS.from_dict(lane_classifier_cfg)
+        self.uper_decoder = MODELS.from_dict(uper_cfg)
 
     def forward(self, input):
         out = OrderedDict()
         output = self.encoder(input)
+        if self.uper_decoder is not None:
+            output = self.uper_decoder(output)
         if self.reducer is not None:
             output = self.reducer(output)
         if self.scnn is not None:
