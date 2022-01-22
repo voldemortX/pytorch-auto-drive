@@ -18,7 +18,7 @@ class Polynomial(object):
     def __init__(self, order):
         self.order = order
 
-    def poly_fit(self, x_list, y_list):
+    def poly_fit(self, x_list, y_list, interpolate=False):
         self.coeff = np.polyfit(y_list, x_list, self.order)
 
     def compute_x_based_y(self, y, image_size):
@@ -47,7 +47,7 @@ class Polynomial(object):
 
 
 class BezierCurve(object):
-    # Define Polynomials for curve fitting 
+    # Define Bezier curves for curve fitting
     def __init__(self, order, num_sample_points=50):
         self.num_point = order + 1
         self.control_points = []

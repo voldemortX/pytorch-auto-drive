@@ -23,6 +23,8 @@ mkdir output
 
 Then change `data_dir` to your LLAMAS base directory in [autotest_llamas.sh](../../autotest_llamas.sh). *Mind that you need extra ../../ if relative path is used.*
 
+5. If you use Bézier curve methods, download Bézier curve GT from [here](https://drive.google.com/file/d/1klugsr5lT9SxW0r5oyYjfo2qplt1TyxU/view?usp=sharing) and unzip them in `LLAMAS_ROOT/bezier_labels/`. More info on curves are in [CURVE.md](../CURVE.md).
+
 ## Description
 
 ### Directory Structure
@@ -30,15 +32,18 @@ Then change `data_dir` to your LLAMAS base directory in [autotest_llamas.sh](../
 ```
   <LLAMAS.BASE_DIR>
      ├─ color_images    
-        ├─ test
-        ├─ train
-        ├─ valid
+     │  ├─ test
+     │  ├─ train
+     │  └─ valid
      ├─ labels    
-        ├─ train
-        ├─ valid
+     │  ├─ train
+     │  └─ valid
      ├─ laneseg_labels
-        ├─ train
-        ├─ valid
+     │  ├─ train
+     │  └─ valid
+     ├─ bezier_labels
+     │  ├─ train_3.json
+     │  └─ ... 
      └─ lists
 ```
 

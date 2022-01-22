@@ -59,9 +59,9 @@
 | RESA | ResNet34 | level 0 | 288 x 800 | *no* | CULane | F measure | 73.29 | 73.66 | 10.7h* |
 | RESA | ResNet50 | level 0 | 288 x 800 | *no* | CULane | F measure | 73.99 | 74.19 | 17.9h* |
 | RESA | ResNet101 | level 0 | 288 x 800 | *no* | CULane | F measure | 73.96 | 74.04 | 25.7h* |
-| LSTR | ResNet18s-2X<sup>#</sup> | level 0 | 288 x 800 | *no* | CULane | F measure | 35.72 | 39.17 | 28.5h* |
-| LSTR | ResNet18s-2X<sup>#</sup> | level 1a | 288 x 800 | *no* | CULane | F measure | 66.85 | 67.21 | 31.5h* |
-| LSTR | ResNet34 | level 1a | 288 x 800 | *no* | CULane | F measure | 71.16 | 71.52 | 45.0h* |
+| LSTR | ResNet18s-2X<sup>#</sup> | level 0 | 288 x 800 | *no* | CULane | F measure | 36.27 | 39.77 | 28.5h* |
+| LSTR | ResNet18s-2X<sup>#</sup> | level 1a | 288 x 800 | *no* | CULane | F measure | 68.35 | 68.72 | 31.5h* |
+| LSTR | ResNet34 | level 1a | 288 x 800 | *no* | CULane | F measure | 72.17 | 72.48 | 45.0h* |
 | BezierLaneNet | ResNet18 | level 1b | 288 x 800 | *yes* | CULane | F measure | 73.36 | 73.67 | 9.9h |
 | BezierLaneNet | ResNet34 | level 1b | 288 x 800 | *yes* | CULane | F measure | 75.30 | 75.57 | 11.0h |
 | Baseline | ERFNet | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 95.94 | 96.13 | 10.9h<sup>+</sup> |
