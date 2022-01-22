@@ -1,6 +1,6 @@
 # Data pipeline
 from configs.lane_detection.common.datasets.culane_bezier import dataset
-from configs.lane_detection.common.datasets.train_level2_288 import train_augmentation
+from configs.lane_detection.common.datasets.train_level1b_288 import train_augmentation
 from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline

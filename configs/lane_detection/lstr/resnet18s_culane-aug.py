@@ -1,6 +1,6 @@
 # Data pipeline
 from configs.lane_detection.common.datasets.culane import dataset
-from configs.lane_detection.common.datasets.train_level1_288 import train_augmentation
+from configs.lane_detection.common.datasets.train_level1a_288 import train_augmentation
 from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
@@ -65,7 +65,7 @@ model = dict(
     return_intermediate=True,
     lsp_dim=8,
     mlp_layers=3,
-    thresh=0.5,
+    thresh=0.95,
     backbone_cfg=dict(
         name='predefined_resnet_backbone',
         backbone_name='resnet18_reduced',

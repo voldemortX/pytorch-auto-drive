@@ -1,22 +1,29 @@
 # Installation
 
+## Download the code:
+
+```
+git clone https://github.com/voldemortX/pytorch-auto-drive.git
+cd pytorch-auto-drive
+```
+
 ## Requirements
 
 - Python >= 3.6
 - CUDA >= 9.2 (for CUDA version < 9.2, the code is tested only with PyTorch 1.3 & CUDA 9.0 & CuDNN 7.6.0)
 - PyTorch >= 1.6
 - TorchVision >= 0.7.0
-- [mmcv-full](https://github.com/open-mmlab/mmcv) (according to PyTorch/CUDA version)
+- [mmcv-full](https://github.com/open-mmlab/mmcv) >= 1.3.5 (according to PyTorch/CUDA version)
+- Other pip dependencies: `pip install -r requirements.txt`
+
+The default Conda env (step-by-step):
 
 ```
+conda create -n pad python=3.6
+conda activate pad
+conda install pytorch==1.6.0 torchvision==0.7.0 cudatoolkit=10.2 -c pytorch
+pip install mmcv-full==1.3.5 -f https://download.openmmlab.com/mmcv/dist/cu102/torch1.6.0/index.html
 pip install -r requirements.txt
-```
-
-## Download the code:
-   
-```
-git clone https://github.com/voldemortX/pytorch-auto-drive.git
-cd pytorch-auto-drive
 ```
 
 ## Prepare the code:

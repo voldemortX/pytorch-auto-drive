@@ -5,6 +5,8 @@ from thop import profile
 
 from .datasets import DATASETS
 from .transforms import TRANSFORMS
+from .custom_op_flop_counters import hook_DCN_v2_Ref
+from .models.common_models import DCN_v2_Ref
 
 REPLACE_LIST = [
     'Resize',
@@ -109,7 +111,7 @@ def speed_evaluate_simple(net, device, dummy, num):
 
 def model_profile(net, height, width, device):
     temp = torch.randn(1, 3, height, width).to(device)
-    macs, params = profile(net, inputs=(temp,))
+    macs, params = profile(net, inputs=(temp,),
+                           custom_ops={DCN_v2_Ref: hook_DCN_v2_Ref})
 
     return macs, params
-

@@ -70,8 +70,9 @@ if __name__ == '__main__':
         raise ValueError
 
     macs, _ = model_profile(net, args.height, args.width, device)
+    flops = 2 * macs
     net.eval()
     params = sum(p.numel() for p in net.parameters())
-    print('FLOPs(G): {: .2f}'.format(2 * macs / 1e9))
+    print('FLOPs(G): {: .2f}'.format(flops / 1e9))
     print('Number of parameters: {: .2f}'.format(params / 1e6))
     print('Profiling, please clear your GPU memory before doing this.')
