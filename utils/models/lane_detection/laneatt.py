@@ -274,7 +274,7 @@ class LaneAtt(nn.Module):
                 if proposals.shape[0] == 0:
                     proposals_list.append((proposals[[]], self.anchors[[]], attention_matrix[[]], None))
                     continue
-                keep, num_to_keep, _ = line_nms.forward(proposals, scores, overlap=nms_thres, top_k=nms_topk)
+                keep, num_to_keep, _ = line_nms.forward(proposals, scores, nms_thres, nms_topk)
                 keep = keep[:num_to_keep]
             proposals = proposals[keep]
             anchor_inds = anchor_inds[keep]

@@ -724,7 +724,7 @@ class ToXOffset(torch.nn.Module):
     def __init__(self, num_points, image_size, max_lanes, ignore_x=-2):
         super().__init__()
         assert isinstance(image_size, tuple or list)
-        self.img_w, self.img_h = image_size
+        self.img_h, self.img_w = image_size
         self.num_points = num_points
         self.num_offsets = num_points
         self.num_strips = num_points - 1
@@ -829,5 +829,6 @@ class ToXOffset(torch.nn.Module):
         keypoints = target['keypoints']
         cilp_lanes = self.clip_out_of_image(keypoints)
         offsets = self.transform_annotation(cilp_lanes)
+        #image = np.asarray(image) / 255.
 
         return image, offsets

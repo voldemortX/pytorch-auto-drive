@@ -54,7 +54,7 @@ train_augmentation = dict(
             max_lanes=4
         ),
         dict(
-            name='ToTensor'
+            name='ToTensor'  # div 255 ???
         ),
     ]
 )
@@ -95,7 +95,7 @@ loss = dict(
 
 # ---- ignore ------
 train = dict(
-    exp_name='resnet18_laneatt_culane',
+    exp_name='resnet18_laneatt_culane_2',
     workers=4,
     batch_size=8,
     checkpoint=None,
@@ -116,10 +116,10 @@ train = dict(
 )
 
 test = dict(
-    exp_name='resnet18_laneatt_culane',
+    exp_name='resnet18_laneatt_culane_3',
     workers=4,
     batch_size=80,
-    checkpoint='./checkpoints/resnet18_laneatt_culane/model_0015.pt',
+    checkpoint='./checkpoints/resnet18_laneatt_culane_3/model.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints',
