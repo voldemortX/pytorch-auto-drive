@@ -1,9 +1,9 @@
-# pylint: disable-all
 from typing import Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 
 # Source: https://github.com/kornia/kornia/blob/f4f70fefb63287f72bc80cd96df9c061b1cb60dd/kornia/losses/focal.py
 def one_hot(labels: torch.Tensor,
@@ -50,11 +50,11 @@ def one_hot(labels: torch.Tensor,
 
 
 def _focal_loss(input: torch.Tensor,
-               target: torch.Tensor,
-               alpha: float,
-               gamma: float = 2.0,
-               reduction: str = 'none',
-               eps: float = 1e-8) -> torch.Tensor:
+                target: torch.Tensor,
+                alpha: float,
+                gamma: float = 2.0,
+                reduction: str = 'none',
+                eps: float = 1e-8) -> torch.Tensor:
     r"""Function that computes Focal loss.
 
     See :class:`~kornia.losses.FocalLoss` for details.

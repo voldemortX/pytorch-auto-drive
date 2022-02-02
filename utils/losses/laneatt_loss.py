@@ -1,11 +1,11 @@
 import torch
 from torch import Tensor
 from typing import Optional
-from .focal_loss import FocalLoss
 # from torch.nn import functional as F
 
 from ._utils import WeightedLoss
 from .builder import LOSSES
+from .focal_loss import FocalLoss
 
 INFINITY = 987654.
 
@@ -36,12 +36,13 @@ class LaneAttLoss(WeightedLoss):
         self.focal_loss = FocalLoss(alpha=alpha, gamma=gamma)
         self.smooth_l1_loss = torch.nn.SmoothL1Loss()
 
-    def forward(self, inputs: Tensor, targets: Tensor, net):
+    def forward(self, inputs, targets, net):
         # inputs: batchsize x 3 x img_h x img_w
-        # targets: batchsize x max_lanes x (2 + 2 + 1 + num_offsets)
+        # targets['offsets']: batchsize x max_lanes x (2 + 2 + 1 + num_offsets)
+        targets = torch.stack([i['offsets'] for i in targets], dim=0)
         batch_size = inputs.shape[0]
         outputs = net(inputs)
-        anchors_list = outputs['anchors']
+        anchors_list = net.anchors.clone()
         anchors_list = anchors_list.repeat(batch_size, 1, 1)
         proposals_list = outputs['proposals_list']
         cls_loss = 0
@@ -91,12 +92,12 @@ class LaneAttLoss(WeightedLoss):
             with torch.no_grad():
                 target = target[target_positives_indices]
                 positive_starts = (positives[:, 2] * self.num_strips).round().long()
-                # targets_starts = (target[:, 2] * self.num_strips).round().long()
-                targets_starts = (target[:, 2] * self.num_strips)
+                targets_starts = (target[:, 2] * self.num_strips).round().long()
+                # targets_starts = (target[:, 2] * self.num_strips)
                 target[:, 4] -= positive_starts - targets_starts
                 all_indices = torch.arange(num_positives, dtype=torch.long)
-                # ends = (positive_starts + target[:, 4] - 1).round().long()
-                ends = (positive_starts + target[:, 4] - 1)
+                ends = (positive_starts + target[:, 4] - 1).round().long()
+                # ends = (positive_starts + target[:, 4] - 1)
                 # length + num_offsets + pad (assignment trick ?)
                 invalid_offsets_mask = torch.zeros((num_positives, 1 + self.num_offsets + 1), dtype=torch.int)
                 invalid_offsets_mask[all_indices, 1 + positive_starts] = 1

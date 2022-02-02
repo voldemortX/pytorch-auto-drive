@@ -13,11 +13,11 @@ lr_scheduler = dict(
     epochs=15,
 )
 
-
+from configs.lane_detection.common.datasets._utils import CULANE_ROOT
 dataset = dict(
     name='CULane',
     image_set='train',  # Only set for training. Testing will override this value by --state.
-    root='/home/guoshaohua/dataset/culane',
+    root=CULANE_ROOT,
     padding_mask=False,
     is_process=False,
 )
@@ -95,7 +95,7 @@ loss = dict(
 
 # ---- ignore ------
 train = dict(
-    exp_name='resnet18_laneatt_culane_2',
+    exp_name='resnet18_laneatt_culane_test',
     workers=4,
     batch_size=8,
     checkpoint=None,
@@ -111,15 +111,15 @@ train = dict(
     original_size=(590, 1640),
     num_classes=None,
     num_epochs=15,
-    collate_fn=None,  # 'dict_collate_fn' for LSTR
+    collate_fn='dict_collate_fn',  # 'dict_collate_fn' for LSTR
     seg=False,  # Seg-based method or not
 )
 
 test = dict(
-    exp_name='resnet18_laneatt_culane_3',
+    exp_name='resnet18_laneatt_culane_test',
     workers=4,
     batch_size=80,
-    checkpoint='./checkpoints/resnet18_laneatt_culane_3/model.pt',
+    checkpoint='./checkpoints/resnet18_laneatt_culane_test/model.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints',

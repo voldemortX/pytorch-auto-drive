@@ -361,6 +361,8 @@ class ToTensor(object):
             if 'segmentation_mask' in pic:
                 pic['segmentation_mask'] = torch.as_tensor(np.asarray(pic['segmentation_mask']).copy(),
                                                            dtype=torch.uint8)
+            if 'offsets' in pic:  # temp
+                pic['offsets'] = torch.as_tensor(pic['offsets'].copy(), dtype=torch.float32)
             return pic
         else:
             return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)
@@ -771,7 +773,7 @@ class ToXOffset(torch.nn.Module):
         # normalize the annotation coordinates
         old_lanes = [[[x * self.img_w / float(img_w), y * self.img_h / float(img_h)] for x, y in lane]
                      for lane in old_lanes]
-        # create tranformed annotations
+        # create transformed annotations
         lanes = np.ones((self.max_lanes, 2 + 1 + 1 + 1 + self.num_offsets),
                         dtype=np.float32) * -1e5  # 2 scores, 1 start_y, 1 start_x, 1 length, S+1 coordinates
         # lanes are invalid by default
@@ -831,4 +833,4 @@ class ToXOffset(torch.nn.Module):
         offsets = self.transform_annotation(cilp_lanes)
         #image = np.asarray(image) / 255.
 
-        return image, offsets
+        return image, {'offsets': offsets}

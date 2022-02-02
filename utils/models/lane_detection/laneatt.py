@@ -76,14 +76,13 @@ class LaneAtt(nn.Module):
         self.initialize_layer(self.cls_layer)
         self.initialize_layer(self.reg_layer)
 
-
     def generate_anchors(self, lateral_n, bottom_n):
         left_anchors, left_cut = self.generate_side_anchors(self.left_angles, x=0., nb_origins=lateral_n)
         right_anchors, right_cut = self.generate_side_anchors(self.right_angles, x=1., nb_origins=lateral_n)
         bottom_anchors, bottom_cut = self.generate_side_anchors(self.bottom_angles, y=1., nb_origins=bottom_n)
 
         return torch.cat([left_anchors, bottom_anchors, right_anchors]), \
-               torch.cat([left_cut, bottom_cut, right_cut])
+            torch.cat([left_cut, bottom_cut, right_cut])
 
     def generate_side_anchors(self, angles, nb_origins, x=None, y=None):
         if x is None and y is not None:
@@ -225,28 +224,24 @@ class LaneAtt(nn.Module):
         reg_proposals += self.anchors
         reg_proposals[:, :, :2] = cls_logits
         reg_proposals[:, :, 4:] += reg
-        # # Apple nms
+        # # Apply nms
         # proposals_list = self.nms(reg_proposals, attention_matrix, nms_thres, nms_topk, conf_thres)
 
         out = OrderedDict()
         out['proposals_list'] = reg_proposals
-        out['attention_matrix'] = attention_matrix
-        out['anchors'] = self.anchors
 
         return out
 
     @torch.no_grad()
-    def inference(self, inputs, input_sizes, gap, ppl, dataset, max_lane=0, forward=True):
+    def inference(self, inputs, forward=True):
         outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function
         # print(outputs['proposals_list'][0, :, 2])
 
-        nms_outputs = self.nms(outputs['proposals_list'], outputs['attention_matrix'],
-                               nms_thres=self.nms_thres, nms_topk=self.nms_topk,
-                               conf_threshold=self.conf_thres)
+        nms_outputs = self.nms(outputs['proposals_list'])
         # the number of lanes is 1 ???
         softmax = nn.Softmax(dim=1)
         decoded = []
-        for proposals, _, _, _ in nms_outputs:
+        for proposals in nms_outputs:
             proposals[:, :2] = softmax(proposals[:, :2])
             proposals[:, 4] = torch.round(proposals[:, 4])
             if proposals.shape[0] == 0:
@@ -256,30 +251,25 @@ class LaneAtt(nn.Module):
             decoded.append(pred)
         return decoded
 
-
-    def nms(self, batch_proposals, batch_attention_matrix, nms_thres, nms_topk, conf_threshold):
+    @torch.no_grad()
+    def nms(self, batch_proposals):
         softmax = nn.Softmax(dim=1)
         proposals_list = []
-        for proposals, attention_matrix in zip(batch_proposals, batch_attention_matrix):
-            anchor_inds = torch.arange(batch_proposals.shape[1], device=proposals.device)
+        for proposals in batch_proposals:
             # The gradients do not have to (and can't) be calculated for the NMS procedure
-            with torch.no_grad():
-                scores = softmax(proposals[:, :2])[:, 1]
-                if conf_threshold is not None:
-                    # apply confidence threshold
-                    above_threshold = scores > conf_threshold
-                    proposals = proposals[above_threshold]
-                    scores = scores[above_threshold]
-                    anchor_inds = anchor_inds[above_threshold]
-                if proposals.shape[0] == 0:
-                    proposals_list.append((proposals[[]], self.anchors[[]], attention_matrix[[]], None))
-                    continue
-                keep, num_to_keep, _ = line_nms.forward(proposals, scores, nms_thres, nms_topk)
-                keep = keep[:num_to_keep]
+            scores = softmax(proposals[:, :2])[:, 1]
+            if self.conf_threshold is not None:
+                # apply confidence threshold
+                above_threshold = scores > self.conf_threshold
+                proposals = proposals[above_threshold]
+                scores = scores[above_threshold]
+            if proposals.shape[0] == 0:
+                proposals_list.append((proposals[[]], self.anchors[[]]))
+                continue
+            keep, num_to_keep, _ = line_nms.forward(proposals, scores, self.nms_thres, self.nms_topk)
+            keep = keep[:num_to_keep]
             proposals = proposals[keep]
-            anchor_inds = anchor_inds[keep]
-            attention_matrix = attention_matrix[anchor_inds]
-            proposals_list.append((proposals, self.anchors[keep], attention_matrix, anchor_inds))
+            proposals_list.append((proposals, self.anchors[keep]))
 
         return proposals_list
 
@@ -313,6 +303,5 @@ class LaneAtt(nn.Module):
                 lane_coords.append([points[i, 0] * float(self.ori_img_w[0]), points[i, 1] * float(self.ori_img_h[0])])
             # print(lane_coords)
             lanes.append(lane_coords)
+
         return lanes
-
-
