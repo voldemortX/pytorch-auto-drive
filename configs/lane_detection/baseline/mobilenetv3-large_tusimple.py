@@ -70,7 +70,7 @@ model = dict(
     classifier_cfg=dict(
         name='DeepLabV1Head',
         in_channels=128,
-        num_classes=5,
+        num_classes=7,
         dilation=1
     ),
     reducer_cfg=dict(
