@@ -118,7 +118,7 @@ train = dict(
 test = dict(
     exp_name='resnet18_laneatt_culane_test',
     workers=4,
-    batch_size=80,
+    batch_size=32,
     checkpoint='./checkpoints/resnet18_laneatt_culane_test/model.pt',
     # Device args
     device='cuda',

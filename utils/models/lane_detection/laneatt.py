@@ -233,7 +233,7 @@ class LaneAtt(nn.Module):
         return out
 
     @torch.no_grad()
-    def inference(self, inputs, forward=True):
+    def inference(self, inputs, forward=True, *args, **kwargs):
         outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function
         # print(outputs['proposals_list'][0, :, 2])
 
@@ -258,18 +258,18 @@ class LaneAtt(nn.Module):
         for proposals in batch_proposals:
             # The gradients do not have to (and can't) be calculated for the NMS procedure
             scores = softmax(proposals[:, :2])[:, 1]
-            if self.conf_threshold is not None:
+            if self.conf_thres is not None:
                 # apply confidence threshold
-                above_threshold = scores > self.conf_threshold
+                above_threshold = scores > self.conf_thres
                 proposals = proposals[above_threshold]
                 scores = scores[above_threshold]
             if proposals.shape[0] == 0:
-                proposals_list.append((proposals[[]], self.anchors[[]]))
+                proposals_list.append(proposals[[]])
                 continue
             keep, num_to_keep, _ = line_nms.forward(proposals, scores, self.nms_thres, self.nms_topk)
             keep = keep[:num_to_keep]
             proposals = proposals[keep]
-            proposals_list.append((proposals, self.anchors[keep]))
+            proposals_list.append(proposals)
 
         return proposals_list
 
