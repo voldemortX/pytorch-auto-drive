@@ -1,17 +1,30 @@
-import math
+# Refactored from lucastabelini/LaneATT
+# Diffs:
+# 1. we changed lane rep to 75 numbers (start, end, len, 72 offsets)
+# 2. we use a cleaner line nms dynamically loaded (input only 75 numbers, not 77)
+# 3. we removed unnecessary inputs & outputs in post-processing funcs
+# 4. we removed B-Spline interpolation post-processing to provide fair comparisons
+# 5. we changed the double precision output to typical float32
+# 6. after these simplifications & refactors, our testing procedure seems even better than the original
 
+import math
 import torch
 import numpy as np
 import torch.nn as nn
 from collections import OrderedDict
+from torch.nn import functional as F
+
 from ...csrc.apis import line_nms
-
-
 from ..builder import MODELS
 
 
 @MODELS.register()
 class LaneAtt(nn.Module):
+    # Anchor angles, same ones used in Line-CNN
+    left_angles = [72., 60., 49., 39., 30., 22.]
+    right_angles = [108., 120., 131., 141., 150., 158.]
+    bottom_angles = [165., 150., 141., 131., 120., 108., 100., 90., 80., 72., 60., 49., 39., 30., 15.]
+
     def __init__(self,
                  backbone_cfg,
                  backbone_channels,
@@ -46,11 +59,6 @@ class LaneAtt(nn.Module):
         self.conf_thres = conf_thres
         self.nms_thres = nms_thres
         self.nms_topk = nms_topk
-
-        # Anchor angles, same ones used in Line-CNN
-        self.left_angles = [72., 60., 49., 39., 30., 22.]
-        self.right_angles = [108., 120., 131., 141., 150., 158.]
-        self.bottom_angles = [165., 150., 141., 131., 120., 108., 100., 90., 80., 72., 60., 49., 39., 30., 15.]
 
         # generate anchors
         self.anchors, self.anchors_cut = self.generate_anchors(lateral_n=72, bottom_n=128)
@@ -97,8 +105,8 @@ class LaneAtt(nn.Module):
         # each row, first for x and second for y:
         # 2 scores, 1 start_y, start_x, 1 length, num_points coordinates
         # score[0] = negative prob, score[0] = positive prob
-        anchors = torch.zeros((n_anchors, 2 + 2 + 1 + self.num_offsets))
-        anchors_cut = torch.zeros((n_anchors, 2 + 2 + 1 + self.featmap_h))
+        anchors = torch.zeros((n_anchors, 2 + 1 + self.num_offsets))
+        anchors_cut = torch.zeros((n_anchors, 2 + 1 + self.featmap_h))
         for i, start in enumerate(starts):
             for j, angle in enumerate(angles):
                 k = i * len(angles) + j
@@ -110,15 +118,15 @@ class LaneAtt(nn.Module):
     def generate_anchor(self, start, angle, cut=False):
         if cut:
             anchor_ys = self.anchor_cut_ys
-            anchor = torch.zeros(2 + 2 + 1 + self.featmap_h)
+            anchor = torch.zeros(2 + 1 + self.featmap_h)
         else:
             anchor_ys = self.anchor_ys
-            anchor = torch.zeros(2 + 2 + 1 + self.num_offsets)
+            anchor = torch.zeros(2 + 1 + self.num_offsets)
         angle = angle * math.pi / 180.  # degrees to radians
         start_x, start_y = start
-        anchor[2] = 1 - start_y  # using left bottom as the (0, 0) of the axis ?
-        anchor[3] = start_x
-        anchor[5:] = (start_x + (1 - anchor_ys - 1 + start_y) / math.tan(angle)) * self.img_w
+        anchor[0] = 1 - start_y  # using left bottom as the (0, 0) of the axis ?
+        anchor[1] = start_x
+        anchor[3:] = (start_x + (1 - anchor_ys - 1 + start_y) / math.tan(angle)) * self.img_w
 
         return anchor
 
@@ -128,7 +136,7 @@ class LaneAtt(nn.Module):
 
         # indexing
         # num_anchors x feat_h
-        unclamped_xs = torch.flip((self.anchors_cut[:, 5:] / self.stride).round().long(), dims=(1, ))
+        unclamped_xs = torch.flip((self.anchors_cut[:, 3:] / self.stride).round().long(), dims=(1, ))
         unclamped_xs = unclamped_xs[..., None]
         # num_channels x num_anchors x feat_h --> num_channels * num_anchors * feat_h x 1
         unclamped_xs = torch.repeat_interleave(unclamped_xs, num_channels, dim=0).reshape(-1, 1)
@@ -218,69 +226,60 @@ class LaneAtt(nn.Module):
         reg = reg.reshape(x.shape[0], -1, reg.shape[1])
 
         # Add offset to anchors
-        # print('anchor shape {}'.format(self.anchors.shape))
-        reg_proposals = torch.zeros((*cls_logits.shape[:2], 5 + self.num_offsets), device=x.device)
-        # print('reg_proposal {}'.format(reg_proposals.shape))
+        reg_proposals = torch.zeros((*cls_logits.shape[:2], self.num_offsets + 2 + 1), device=x.device)
         reg_proposals += self.anchors
-        reg_proposals[:, :, :2] = cls_logits
-        reg_proposals[:, :, 4:] += reg
-        # # Apply nms
-        # proposals_list = self.nms(reg_proposals, attention_matrix, nms_thres, nms_topk, conf_thres)
+        reg_proposals[:, :, 2:] += reg
 
         out = OrderedDict()
-        out['proposals_list'] = reg_proposals
+        out['proposals_reg'] = reg_proposals
+        out['proposals_logits'] = cls_logits
 
         return out
 
     @torch.no_grad()
-    def inference(self, inputs, forward=True, *args, **kwargs):
+    def inference(self, inputs, input_sizes, forward=True, *args, **kwargs):
         outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function
-        # print(outputs['proposals_list'][0, :, 2])
 
-        nms_outputs = self.nms(outputs['proposals_list'])
+        batch_proposals = self.nms(outputs)
         # the number of lanes is 1 ???
-        softmax = nn.Softmax(dim=1)
         decoded = []
-        for proposals in nms_outputs:
-            proposals[:, :2] = softmax(proposals[:, :2])
-            proposals[:, 4] = torch.round(proposals[:, 4])
+        for proposals in batch_proposals:
+            proposals[:, 2] = torch.round(proposals[:, 2])  # length
             if proposals.shape[0] == 0:
                 decoded.append([])
                 continue
-            pred = self.proposals_to_pred(proposals)
+            pred = self.proposals_to_pred(proposals, input_sizes[1])
             decoded.append(pred)
         return decoded
 
     @torch.no_grad()
     def nms(self, batch_proposals):
-        softmax = nn.Softmax(dim=1)
         proposals_list = []
-        for proposals in batch_proposals:
+        for regs, logits in zip(batch_proposals['proposals_reg'], batch_proposals['proposals_logits']):
             # The gradients do not have to (and can't) be calculated for the NMS procedure
-            scores = softmax(proposals[:, :2])[:, 1]
+            scores = F.softmax(logits, dim=1)[:, 1]
             if self.conf_thres is not None:
                 # apply confidence threshold
                 above_threshold = scores > self.conf_thres
-                proposals = proposals[above_threshold]
+                regs = regs[above_threshold]
                 scores = scores[above_threshold]
-            if proposals.shape[0] == 0:
-                proposals_list.append(proposals[[]])
+            if regs.shape[0] == 0:
+                proposals_list.append(regs[[]])
                 continue
-            keep, num_to_keep, _ = line_nms.forward(proposals, scores, self.nms_thres, self.nms_topk)
+            keep, num_to_keep, _ = line_nms(regs, scores, self.nms_thres, self.nms_topk)
             keep = keep[:num_to_keep]
-            proposals = proposals[keep]
-            proposals_list.append(proposals)
+            regs = regs[keep]
+            proposals_list.append(regs)
 
         return proposals_list
 
-    def proposals_to_pred(self, proposals):
+    def proposals_to_pred(self, proposals, image_size):
         self.anchor_ys = self.anchor_ys.to(proposals.device)
-        self.anchor_ys = self.anchor_ys.double()
         lanes = []
         for lane in proposals:
-            lane_xs = lane[5:] / self.img_w
-            start = int(round(lane[2].item() * self.num_strips))
-            length = int(round(lane[4].item()))
+            lane_xs = lane[3:] / self.img_w
+            start = int(round(lane[0].item() * self.num_strips))
+            length = int(round(lane[2].item()))
             end = start + length - 1
             end = min(end, len(self.anchor_ys) - 1)
             # end = label_end
@@ -292,7 +291,7 @@ class LaneAtt(nn.Module):
             lane_xs[:start][mask] = -2
             lane_ys = self.anchor_ys[lane_xs >= 0]
             lane_xs = lane_xs[lane_xs >= 0]
-            lane_xs = lane_xs.flip(0).double()
+            lane_xs = lane_xs.flip(0)
             lane_ys = lane_ys.flip(0)
             if len(lane_xs) <= 1:
                 continue
@@ -300,8 +299,7 @@ class LaneAtt(nn.Module):
             points = points.cpu().numpy()
             lane_coords = []
             for i in range(points.shape[0]):
-                lane_coords.append([points[i, 0] * float(self.ori_img_w[0]), points[i, 1] * float(self.ori_img_h[0])])
-            # print(lane_coords)
+                lane_coords.append([points[i, 0] * float(image_size[1]), points[i, 1] * float(image_size[0])])
             lanes.append(lane_coords)
 
         return lanes

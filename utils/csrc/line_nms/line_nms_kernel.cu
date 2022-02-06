@@ -9,9 +9,9 @@
 // Hard-coded maximum. Increase if needed.
 #define MAX_COL_BLOCKS 1000
 #define STRIDE 4
-#define N_OFFSETS 72 // if you use more than 73 offsets you will have to adjust this value
+#define N_OFFSETS 72 // if you use more than 72 offsets you will have to adjust this value
 #define N_STRIPS (N_OFFSETS - 1)
-#define PROP_SIZE (5 + N_OFFSETS)
+#define PROP_SIZE (N_OFFSETS + 3)  // start, end, len, 72 offsets
 #define DATASET_OFFSET 0
 
 #define DIVUP(m,n) (((m)+(n)-1) / (n))
@@ -26,16 +26,16 @@ int64_t const threadsPerBlock = sizeof(unsigned long long) * 8;
 template <typename scalar_t>
 // __device__ inline scalar_t devIoU(scalar_t const * const a, scalar_t const * const b) {
 __device__ inline bool devIoU(scalar_t const * const a, scalar_t const * const b, const float threshold) {
-  const int start_a = (int) (a[2] * N_STRIPS - DATASET_OFFSET + 0.5); // 0.5 rounding trick
-  const int start_b = (int) (b[2] * N_STRIPS - DATASET_OFFSET + 0.5);
+  const int start_a = (int) (a[0] * N_STRIPS - DATASET_OFFSET + 0.5); // 0.5 rounding trick
+  const int start_b = (int) (b[0] * N_STRIPS - DATASET_OFFSET + 0.5);
   const int start = max(start_a, start_b);
-  const int end_a = start_a + a[4] - 1 + 0.5 - ((a[4] - 1) < 0); //  - (x<0) trick to adjust for negative numbers (in case length is 0)
-  const int end_b = start_b + b[4] - 1 + 0.5 - ((b[4] - 1) < 0);
+  const int end_a = start_a + a[2] - 1 + 0.5 - ((a[4] - 1) < 0); //  - (x<0) trick to adjust for negative numbers (in case length is 0)
+  const int end_b = start_b + b[2] - 1 + 0.5 - ((b[4] - 1) < 0);
   const int end = min(min(end_a, end_b), N_OFFSETS - 1);
   // if (end < start) return 1e9;
   if (end < start) return false;
   scalar_t dist = 0;
-  for(unsigned char i = 5 + start; i <= 5 + end; ++i) {
+  for(unsigned char i = 3 + start; i <= 3 + end; ++i) {
     if (a[i] < b[i]) {
       dist += b[i] - a[i];
     } else {
