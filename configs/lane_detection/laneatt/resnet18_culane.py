@@ -48,7 +48,7 @@ train_augmentation = dict(
             size_label=(360, 640)
         ),
         dict(
-            name='ToXOffset',
+            name='LaneATTLabelFormat',
             num_points=72,
             image_size=(360, 640),
             max_lanes=4
@@ -85,15 +85,9 @@ loss = dict(
     num_strips=72 - 1,
     t_pos=15.,
     t_neg=20.,
-    weight=None,
-    size_average=None,
-    ignore_index=-100,
-    reduce=None,
     reduction='mean'
 )
 
-
-# ---- ignore ------
 train = dict(
     exp_name='resnet18_laneatt_culane_test',
     workers=4,

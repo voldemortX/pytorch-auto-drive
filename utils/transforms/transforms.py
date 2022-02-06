@@ -38,7 +38,7 @@ __all__ = [
     'Resize',
     'ToTensor',
     'ZeroPad',
-    'ToXOffset'
+    'LaneATTLabelFormat'
 ]
 
 
@@ -354,15 +354,15 @@ class ToTensor(object):
         if pic is None or isinstance(pic, str):
             return pic
         elif isinstance(pic, dict):
-            if 'keypoints' in pic:
-                pic['keypoints'] = torch.as_tensor(pic['keypoints'].copy(), dtype=torch.float32)
-            if 'padding_mask' in pic:
-                pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']).copy(), dtype=torch.uint8)
-            if 'segmentation_mask' in pic:
-                pic['segmentation_mask'] = torch.as_tensor(np.asarray(pic['segmentation_mask']).copy(),
-                                                           dtype=torch.uint8)
-            if 'offsets' in pic:  # temp
-                pic['offsets'] = torch.as_tensor(pic['offsets'].copy(), dtype=torch.float32)
+            for k in pic.keys():
+                if k in ['keypoints', 'offsets']:
+                    pic[k] = torch.as_tensor(pic[k].copy(), dtype=torch.float32)
+                elif k == 'padding_mask':
+                    pic[k] = torch.as_tensor(np.asarray(pic[k]).copy(), dtype=torch.uint8)
+                elif k == 'segmentation_mask':
+                    pic[k] = torch.as_tensor(np.asarray(pic[k]).copy(), dtype=torch.uint8)
+                elif type(pic[k]) == np.ndarray:
+                    pic[k] = torch.from_numpy(pic[k].copy())
             return pic
         else:
             return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)
@@ -722,10 +722,10 @@ class RandomAffine(torch.nn.Module):
 
 
 @TRANSFORMS.register()
-class ToXOffset(torch.nn.Module):
+class LaneATTLabelFormat(torch.nn.Module):
     def __init__(self, num_points, image_size, max_lanes, ignore_x=-2):
         super().__init__()
-        assert isinstance(image_size, tuple or list)
+        assert isinstance(image_size, (tuple, list))
         self.img_h, self.img_w = image_size
         self.num_points = num_points
         self.num_offsets = num_points
@@ -743,9 +743,7 @@ class ToXOffset(torch.nn.Module):
             lane = x[i]
             lane_temp = [[point[0], point[1]] for point in lane if point[0] != self.ignore_x]
             lanes_.append(lane_temp)
-        # for isse in lanes_:
-        #     print(isse)
-        # quit(0)
+
         return lanes_
 
     def filter_lane(self, lane):
@@ -759,27 +757,22 @@ class ToXOffset(torch.nn.Module):
 
         return filtered_lane
 
-    def transform_annotation(self, lanes, img_wh=None):
-        img_w, img_h = self.img_w, self.img_h
-
-        old_lanes = lanes
+    def transform_annotation(self, offsets):
+        lanes_ = offsets
 
         # removing lanes with less than 2 points
-        old_lanes = filter(lambda x: len(x) > 1, old_lanes)
+        lanes_ = filter(lambda x: len(x) > 1, lanes_)
         # sort lane points by Y (bottom to top of the image)
-        old_lanes = [sorted(lane, key=lambda x: -x[1]) for lane in old_lanes]
+        lanes_ = [sorted(lane, key=lambda x: -x[1]) for lane in lanes_]
         # remove points with same Y (keep first occurrence)
-        old_lanes = [self.filter_lane(lane) for lane in old_lanes]
-        # normalize the annotation coordinates
-        old_lanes = [[[x * self.img_w / float(img_w), y * self.img_h / float(img_h)] for x, y in lane]
-                     for lane in old_lanes]
+        lanes_ = [self.filter_lane(lane) for lane in lanes_]
+        # Resize not required in our pipeline
         # create transformed annotations
-        lanes = np.ones((self.max_lanes, 2 + 1 + 1 + 1 + self.num_offsets),
-                        dtype=np.float32) * -1e5  # 2 scores, 1 start_y, 1 start_x, 1 length, S+1 coordinates
-        # lanes are invalid by default
-        lanes[:, 0] = 1
-        lanes[:, 1] = 0
-        for lane_idx, lane in enumerate(old_lanes):
+        offsets = np.ones((self.max_lanes, self.num_offsets), dtype=np.float32) * -1e5
+        starts = np.ones(self.max_lanes, dtype=np.float32) * -1e5
+        lengths = np.ones(self.max_lanes, dtype=np.float32) * -1e5
+        flags = np.zeros(self.max_lanes, dtype=np.bool)  # lanes are invalid by default
+        for i, lane in enumerate(lanes_):
             try:
                 xs_outside_image, xs_inside_image = self.sample_lane(lane, self.offsets_ys)
             except AssertionError:
@@ -787,15 +780,20 @@ class ToXOffset(torch.nn.Module):
             if len(xs_inside_image) == 0:
                 continue
             all_xs = np.hstack((xs_outside_image, xs_inside_image))
-            lanes[lane_idx, 0] = 0
-            lanes[lane_idx, 1] = 1
-            lanes[lane_idx, 2] = len(xs_outside_image) / self.num_strips
-            lanes[lane_idx, 3] = xs_inside_image[0]
-            lanes[lane_idx, 4] = len(xs_inside_image)
-            lanes[lane_idx, 5:5 + len(all_xs)] = all_xs
+            flags[i] = True
 
-        # new_anno = {'label': lanes, 'old_anno': anno}
-        return lanes
+            # a neat trick
+            starts[i] = len(xs_outside_image) / self.num_strips  # y starts in 0-1 (normalized by 72 sample points)
+            lengths[i] = len(xs_inside_image)  # length in number of points 0-72
+
+            offsets[i, :len(all_xs)] = all_xs
+
+        return {
+            'offsets': offsets,
+            'lengths': lengths,
+            'starts': starts,
+            'flags': flags
+        }
 
     def sample_lane(self, points, sample_ys):
         # this function expects the points to be sorted
@@ -830,7 +828,6 @@ class ToXOffset(torch.nn.Module):
     def forward(self, image, target):
         keypoints = target['keypoints']
         cilp_lanes = self.clip_out_of_image(keypoints)
-        offsets = self.transform_annotation(cilp_lanes)
-        #image = np.asarray(image) / 255.
+        labels = self.transform_annotation(cilp_lanes)
 
-        return image, {'offsets': offsets}
+        return image, labels

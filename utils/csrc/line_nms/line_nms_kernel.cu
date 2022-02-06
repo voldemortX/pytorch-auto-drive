@@ -11,7 +11,7 @@
 #define STRIDE 4
 #define N_OFFSETS 72 // if you use more than 72 offsets you will have to adjust this value
 #define N_STRIPS (N_OFFSETS - 1)
-#define PROP_SIZE (N_OFFSETS + 3)  // start, end, len, 72 offsets
+#define PROP_SIZE (N_OFFSETS + 2)  // start, len, 72 offsets
 #define DATASET_OFFSET 0
 
 #define DIVUP(m,n) (((m)+(n)-1) / (n))
@@ -29,13 +29,13 @@ __device__ inline bool devIoU(scalar_t const * const a, scalar_t const * const b
   const int start_a = (int) (a[0] * N_STRIPS - DATASET_OFFSET + 0.5); // 0.5 rounding trick
   const int start_b = (int) (b[0] * N_STRIPS - DATASET_OFFSET + 0.5);
   const int start = max(start_a, start_b);
-  const int end_a = start_a + a[2] - 1 + 0.5 - ((a[4] - 1) < 0); //  - (x<0) trick to adjust for negative numbers (in case length is 0)
-  const int end_b = start_b + b[2] - 1 + 0.5 - ((b[4] - 1) < 0);
+  const int end_a = start_a + a[1] - 1 + 0.5 - ((a[4] - 1) < 0); //  - (x<0) trick to adjust for negative numbers (in case length is 0)
+  const int end_b = start_b + b[1] - 1 + 0.5 - ((b[4] - 1) < 0);
   const int end = min(min(end_a, end_b), N_OFFSETS - 1);
   // if (end < start) return 1e9;
   if (end < start) return false;
   scalar_t dist = 0;
-  for(unsigned char i = 3 + start; i <= 3 + end; ++i) {
+  for(unsigned char i = 2 + start; i <= 2 + end; ++i) {
     if (a[i] < b[i]) {
       dist += b[i] - a[i];
     } else {
