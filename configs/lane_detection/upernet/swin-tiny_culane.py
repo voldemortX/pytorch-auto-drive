@@ -7,16 +7,18 @@ from configs.lane_detection.common.datasets.test_288 import test_augmentation
 from configs.lane_detection.common.optims.segloss_5class import loss
 from configs.lane_detection.common.optims.adamw0001_swin import optimizer
 
+
 lr_scheduler = dict(
     name='poly_scheduler_with_warmup',
-    epochs=12,
+    epochs=36,
     power=1,  # ? Kept for consistency with official repo
     warmup_steps=1500,
     start_lr_ratio=1e-6,
 )
 
-train = dict(
-    exp_name='swin-tiny_baseline_culane',
+# Default args that can be overridden in commandline
+train_args_default = dict(
+    exp_name='swin-tiny_upernet_culane',
     workers=5,
     batch_size=10,
     checkpoint=None,
@@ -25,25 +27,30 @@ train = dict(
     dist_url='tcp://localhost:12345',
     device='cuda',
     val_num_steps=0,  # Seg IoU validation (mostly useless)
-    save_dir='./checkpoints',
+    save_dir='./checkpoints'
+)
+test_args_default = dict(
+    exp_name='swin-tiny_upernet_culane',
+    workers=4,
+    batch_size=32,
+    checkpoint='./checkpoints/swin-tiny_upernet_culane/model.pt',
+    # Device args
+    device='cuda',
+    save_dir='./checkpoints'
+)
 
+# Configs
+train = dict(
     input_size=(288, 800),
     original_size=(590, 1640),
     num_classes=5,
-    num_epochs=12,
+    num_epochs=36,
     collate_fn=None,  # 'dict_collate_fn' for LSTR
     seg=True  # Seg-based method or not
 )
+train.update(train_args_default)
 
 test = dict(
-    exp_name='swin-tiny_baseline_culane',
-    workers=4,
-    batch_size=32,
-    checkpoint='./checkpoints/swin-tiny_baseline_culane/model.pt',
-    # Device args
-    device='cuda',
-    save_dir='./checkpoints',
-
     seg=True,
     gap=20,
     ppl=18,
@@ -54,6 +61,7 @@ test = dict(
     max_lane=4,
     dataset_name='culane'
 )
+test.update(test_args_default)
 
 model = dict(
     name='DeepLabV1Lane',
@@ -79,11 +87,11 @@ model = dict(
         frozen_stages=-1,
         use_checkpoint=False,
         pretrained='swin_tiny_patch4_window7_224.pth',
-        chosen_stages=2,
+        chosen_stages=-1,
     ),
     reducer_cfg=dict(
         name='RESAReducer',
-        in_channels=384,
+        in_channels=512,
         reduce=128
     ),
     classifier_cfg=dict(
@@ -95,6 +103,13 @@ model = dict(
     lane_classifier_cfg=dict(
         name='SimpleLaneExist',
         num_output=5 - 1,
-        flattened_size=1125,
+        flattened_size=18000,
+    ),
+    uper_cfg=dict(
+        name='UperHead',
+        in_channels=[96, 192, 384, 768],
+        channels=512,
+        align_corners=False,
+        pool_scales=(1, 2, 3, 6)
     )
 )

@@ -11,7 +11,8 @@ MINIMAL_OPSET_VERSIONS = {
     # Others use 9
     'LSTR': 10,
     'RESA': 11,
-    'SpatialConv': 11
+    'SpatialConv': 11,
+    'SwinTransformer': 11
 }
 TRACE_REQUIRE_PREPROCESSING = [
     'LSTR',
@@ -37,11 +38,12 @@ def get_minimal_opset_version(cfg, min_version):
 
 def append_trace_arg(cfg, trace_arg):
     # Do the above trick again
-    if isinstance(cfg, dict) and cfg.get('name') in TRACE_REQUIRE_PREPROCESSING:
-        cfg['trace_arg'] = trace_arg
-    else:
-        for k in cfg.keys():
-            cfg[k] = append_trace_arg(cfg[k], trace_arg)
+    if isinstance(cfg, dict):
+        if cfg.get('name') in TRACE_REQUIRE_PREPROCESSING:
+            cfg['trace_arg'] = trace_arg
+        else:
+            for k in cfg.keys():
+                cfg[k] = append_trace_arg(cfg[k], trace_arg)
 
     return cfg
 
