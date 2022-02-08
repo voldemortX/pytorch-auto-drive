@@ -6,7 +6,7 @@ csrc_path = 'utils/csrc'
 line_nms_ = load(name='line_nms',
                  sources=[os.path.join(csrc_path, 'line_nms', 'line_nms.cpp'),
                           os.path.join(csrc_path, 'line_nms', 'line_nms_kernel.cu')],
-                 verbose=True)
+                 verbose=False)
 
 
 # Wrap it to be like a normal Python func

@@ -3,7 +3,7 @@
 # 1. we changed lane rep to 74 numbers (start, len, 72 offsets)
 # 2. we use a cleaner line nms dynamically loaded (input only 74 numbers, not 77)
 # 3. we removed unnecessary inputs & outputs in post-processing funcs
-# 4. we removed B-Spline interpolation post-processing to provide fair comparisons
+# 4. we removed B-Spline interpolation post-processing to provide fair comparisons (test 74.88 for resnet18-CULane in official code)
 # After these simplifications & refactors, our testing procedure seems even better than the original
 
 import math
@@ -12,7 +12,12 @@ import numpy as np
 import torch.nn as nn
 from torch.nn import functional as F
 
-from ...csrc.apis import line_nms
+try:
+    from ...csrc.apis import line_nms
+    print('Successfully complied line nms for LaneATT.')
+except:
+    from ...common import warnings
+    warnings.warn('Can\'t complie line nms op for LaneATT. Set verbose=True for load in /utils/csrc/apis.py L9 for details.')
 from ..builder import MODELS
 
 
