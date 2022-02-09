@@ -38,8 +38,8 @@ Models from this repo are faster to train (**single card trainable**) and often 
 | semantic segmentation | ResNet-101 | [DeeplabV3](https://arxiv.org/abs/1706.05587) |
 | semantic segmentation | - | [ENet](https://arxiv.org/abs/1606.02147) |
 | semantic segmentation | - | [ERFNet](https://ieeexplore.ieee.org/abstract/document/8063438/) |
-| lane detection | ENet, ERFNet, VGG16, ResNets (18, 34, 50, 101) | Baseline |
-| lane detection | ERFNet, VGG16, ResNets (18, 34, 50, 101) | [SCNN](https://arxiv.org/abs/1712.06080) |
+| lane detection | ENet, ERFNet, VGG16, ResNets (18, 34, 50, 101), RepVGGs (A0, A1, B0, B1g2, B2), Swin (Tiny) | Baseline |
+| lane detection | ERFNet, VGG16, ResNets (18, 34, 50, 101), RepVGGs (A1) | [SCNN](https://arxiv.org/abs/1712.06080) |
 | lane detection | ResNets (18, 34, 50, 101) | [RESA](https://arxiv.org/abs/2008.13719) |
 | lane detection | ERFNet, ENet | [SAD](https://arxiv.org/abs/1908.00821) ([*Postponed*](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes)) |
 | lane detection | ERFNet | [PRNet](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) (*In progress*) |

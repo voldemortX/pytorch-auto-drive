@@ -21,9 +21,9 @@ def poly_scheduler(epochs, len_loader, optimizer, power=0.9):
 
 
 @LR_SCHEDULERS.register()
-def poly_scheduler_with_warmup(epochs, len_loader, optimizer, power=0.9, warmup_steps=0):
-    # Poly scheduler with warmup
+def poly_scheduler_with_warmup(epochs, len_loader, optimizer, power=0.9, warmup_steps=0, start_lr_ratio=0):
+    # Poly scheduler with warmup, start from start_lr_ratio / lr
     def f(t):  # PEP8-E731
-        return t / warmup_steps if t < warmup_steps \
+        return 1. - ((1. - t / warmup_steps) * (1. - start_lr_ratio)) if t < warmup_steps \
             else (1 - (t - warmup_steps) / (len_loader * epochs - warmup_steps)) ** power
     return lr_scheduler.LambdaLR(optimizer, f)
