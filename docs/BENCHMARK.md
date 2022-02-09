@@ -14,7 +14,7 @@
 | Baseline | ERFNet | 360 x 640 | 85.87 | 26.32 | 2.67 | 
 | Baseline | ENet | 360 x 640 | 56.63 | 4.26 | 0.95 |
 | Baseline | MobileNetV2 | 360 x 640 | 126.54 | 4.49 | 2.06 |
-| Baseline | MobileNetV3 | 360 x 640 | 104.34 | 3.63 | 3.30 |  
+| Baseline | MobileNetV3-Large | 360 x 640 | 104.34 | 3.63 | 3.30 |  
 | SCNN | VGG16 | 360 x 640 | 21.18 | 218.64 | 20.96 |
 | SCNN | ResNet18 | 360 x 640 | 21.12 | 89.38 | 12.63 | 
 | SCNN | ResNet34 | 360 x 640 | 20.77 | 163.74 | 22.74 | 
@@ -31,7 +31,7 @@
 | RESA | ResNet50 | 360 x 640 | 44.80 | 105.71 | 12.46 |
 | RESA | ResNet101 | 360 x 640 | 25.14 | 242.45 | 31.46 |
 | RESA | MobileNetV2 | 360 x 640 | 60.53 | 12.80 | 4.63 |
-| RESA | MobileNetV3 | 360 x 640 | 54.39 | 11.95 | 5.88 |
+| RESA | MobileNetV3-Large | 360 x 640 | 54.39 | 11.95 | 5.88 |
 | Baseline | VGG16 | 288 x 800 | 55.31 | 214.50 | 20.15 | 
 | Baseline | ResNet18 | 288 x 800 | 136.28 | 85.22 | 11.82 | 
 | Baseline | ResNet34 | 288 x 800 | 72.42 | 159.60 | 21.93 | 
@@ -40,7 +40,7 @@
 | Baseline | ERFNet | 288 x 800 | 88.76 | 26.26 | 2.68 | 
 | Baseline | ENet | 288 x 800 | 57.99 | 4.12 | 0.96 |
 | Baseline | MobileNetV2 | 288 x 800 | 129.24 | 4.41 | 2.00 |
-| Baseline | MobileNetV3 | 288 x 800 | 107.83 | 3.56 | 3.25 |
+| Baseline | MobileNetV3-Large | 288 x 800 | 107.83 | 3.56 | 3.25 |
 | Baseline | RepVGG-A0 | 288 x 800 | 162.61 | 207.81 | 9.06 |
 | Baseline | RepVGG-A1 | 288 x 800 | 117.30 | 339.83 | 13.54 |
 | Baseline | RepVGG-B0 | 288 x 800 | 103.68 | 390.83 | 15.09 |
@@ -59,7 +59,7 @@
 | RESA | ResNet50 | 288 x 800 | 46.75 | 105.70 | 12.48 |
 | RESA | ResNet101 | 288 x 800 | 26.08 | 242.44 | 31.47 |
 | RESA | MobileNetV2 | 288 x 800 | 59.49 | 12.55 | 4.63 |
-| RESA | MobileNetV3 | 288 x 800 | 53.85 | 11.70 | 5.88 |
+| RESA | MobileNetV3-Large | 288 x 800 | 53.85 | 11.70 | 5.88 |
 | LSTR | ResNet34 | 288 x 800 | 65.39 | 33.86 | 22.34 |
 
 ## Segmentation performance:
