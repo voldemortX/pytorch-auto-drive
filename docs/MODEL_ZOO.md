@@ -13,6 +13,8 @@
 | Baseline | ERFNet | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 96.02% | 96.04% | 0.8h |
 | Baseline | ERFNet | strong | 360 x 640 | *no* | TuSimple | Accuracy | 94.21% | 94.37% | 0.9h* |
 | Baseline | ENet<sup>#</sup> | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.55% | 95.61% | 1h<sup>+</sup> |
+| Baseline | MobileNetV2 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 93.98% | 94.07% | 0.5h |
+| Baseline | MobileNetV3-Large | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 92.09% | 92.18% | 0.5h |
 | SCNN | VGG16 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.01% | 95.17% | 2h |
 | SCNN | ResNet18 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 94.69% | 94.77% | 1.2h |
 | SCNN | ResNet34 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 95.19% | 95.25% | 1.6h |
@@ -25,6 +27,8 @@
 | RESA | ResNet34 | simple | 360 x 640 | *no* | TuSimple | Accuracy | 94.84% | 95.15% | 1.6h* |
 | RESA | ResNet50 | simple | 360 x 640 | *no* | TuSimple | Accuracy | 95.34% | 95.50% | 2.4h* |
 | RESA | ResNet101 | simple | 360 x 640 | *no* | TuSimple | Accuracy | 95.24% | 95.56% | 3.5h* |
+| RESA | MobileNetV2 | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 94.61% | 95.21% | 0.7h |
+| RESA | MobileNetV3-Large | simple | 360 x 640 | *yes* | TuSimple | Accuracy | 94.56% | 94.99% | 0.7h |
 | LSTR | ResNet18s<sup>#</sup> | simple | 360 x 640 | *no* | TuSimple | Accuracy | 91.91% | 92.40% | 14.2h |
 | LSTR | ResNet18s<sup>#</sup> | strong | 360 x 640 | *no* | TuSimple | Accuracy | 94.91% | 95.06% | 15.5h |
 | Baseline | VGG16 | simple | 288 x 800 | *yes* | CULane | F measure | 65.93 | 66.09 | 9.3h |
@@ -34,6 +38,8 @@
 | Baseline | ResNet101 | simple | 288 x 800 | *yes* | CULane | F measure | 71.29 | 71.37 | 20.0h |
 | Baseline | ERFNet | simple | 288 x 800 | *yes* | CULane | F measure | 73.40 | 73.49 | 6h |
 | Baseline | ENet<sup>#</sup> | simple | 288 x 800 | *yes* | CULane | F measure | 69.39 | 69.90 | 6.4h<sup>+</sup> |
+| Baseline | MobileNetV2 | simple | 288 x 800 | *yes* | CULane | F measure | 67.34 | 67.41 | 3.0h |
+| Baseline | MobileNetV3-Large | simple | 288 x 800 | *yes* | CULane | F measure | 68.27 | 68.42 | 3.0h |
 | Baseline | RepVGG-A0| simple | 288 x 800 | *yes* | CULane | F measure | 70.22 | 70.56 | 3.3h** |
 | Baseline | RepVGG-A1 | simple | 288 x 800 | *yes* | CULane | F measure | 70.73 | 70.85 | 4.1h** |
 | Baseline | RepVGG-B0 | simple | 288 x 800 | *yes* | CULane | F measure | 71.77 | 71.81 | 6.2h** |
@@ -51,6 +57,8 @@
 | RESA | ResNet34 | simple | 288 x 800 | *no* | CULane | F measure | 73.29 | 73.66 | 10.7h* |
 | RESA | ResNet50 | simple | 288 x 800 | *no* | CULane | F measure | 73.99 | 74.19 | 17.9h* |
 | RESA | ResNet101 | simple | 288 x 800 | *no* | CULane | F measure | 73.96 | 74.04 | 25.7h* |
+| RESA | MobileNetV2 | simple | 288 x 800 | *yes* | CULane | F measure | 72.28 | 72.36 | 4.6h |
+| RESA | MobileNetV3-Large | simple | 288 x 800 | *yes* | CULane | F measure | 70.23 | 70.61 | 4.6h |
 | LSTR | ResNet18s-2X<sup>#</sup> | simple | 288 x 800 | *no* | CULane | F measure | 35.72 | 39.17 | 28.5h* |
 | LSTR | ResNet18s-2X<sup>#</sup> | strong | 288 x 800 | *no* | CULane | F measure | 66.85 | 67.21 | 31.5h* |
 | LSTR | ResNet34 | strong | 288 x 800 | *no* | CULane | F measure | 71.16 | 71.52 | 45h* |
@@ -86,6 +94,8 @@
 | Baseline | ERFNet | simple | 96.04% | 0.0591 | 0.0365 | [model](https://drive.google.com/file/d/1rLWDP_dkIQ7sBsCEzJi8T7ET1EPghhJJ/view?usp=sharing) \| [shell](../tools/shells/erfnet_baseline_tusimple.sh) |
 | Baseline | ERFNet | strong | 94.37% | 0.0846 | 0.0770 | [model](https://drive.google.com/file/d/1LPmxT8rnyZL2M08lSLrlvrM0H_hMrFvq/view?usp=sharing) \| [shell](../tools/shells/erfnet_baseline-aug_tusimple.sh) |
 | Baseline | ENet | simple | 95.61% | 0.0655 | 0.0503 | [model](https://drive.google.com/file/d/1CNSox62ghs0ArDVJb9mTZ1NVvqSkUNYC/view?usp=sharing) \| [shell](../tools/shells/enet_baseline_tusimple.sh) |
+| Baseline | MobileNetV2 | simple | 94.07% | 0.0792 | 0.0866 | [model](https://drive.google.com/file/d/1SUqt3BDXSMhAv68F9VIKncY0lDUg9My8/view?usp=sharing) \| [shell](../tools/shells/mobilenetv2_baseline_tusimple.sh) |
+| Baseline | MobileNetV3-Large | simple | 92.18% | 0.1149 | 0.1322 | [model](https://drive.google.com/file/d/1I5SPlkmC8TnNeANoQGxzP3P1_iVxms3u/view?usp=sharing) \| [shell](../tools/shells/mobilenetv3-large_baseline_tusimple.sh) |
 | SCNN | VGG16 | simple | 95.17% | 0.0637 | 0.0622 | [model](https://drive.google.com/file/d/1Fd46-f_8q-fGcJEI_PhPyh7aBY1uqbIw/view?usp=sharing) \| [shell](../tools/shells/vgg16_scnn_tusimple.sh) |
 | SCNN | ResNet18 | simple | 94.77% | 0.0753 | 0.0737 | [model](https://drive.google.com/file/d/1cHp9gG2NgtC1iSp2LZMPF_UKiCb-fVkn/view?usp=sharing) \| [shell](../tools/shells/resnet18_scnn_tusimple.sh) |
 | SCNN | ResNet34 | simple | 95.25% | 0.0627 | 0.0634 | [model](https://drive.google.com/file/d/1M0ROpEHV8DGJT4xWq2eURcbqMzpea1q7/view?usp=sharing) \| [shell](../tools/shells/resnet34_scnn_tusimple.sh) |
@@ -98,6 +108,8 @@
 | RESA | ResNet34 | simple | 95.15% | 0.0690 | 0.0592 | [model](https://drive.google.com/file/d/1Spa1bCXoFyjCgOO-ordSPP5a3GMW6E0N/view?usp=sharing) \| [shell](../tools/shells/resnet34_resa_tusimple.sh) |
 | RESA | ResNet50 | simple | 95.50% | 0.0550 | 0.0507 | [model](https://drive.google.com/file/d/1Mmb_4AFzSpZBcB7UxKr3Vlhwi27exqp0/view?usp=sharing) \| [shell](../tools/shells/resnet50_resa_tusimple.sh) |
 | RESA | ResNet101 | simple | 95.56% | 0.0580 | 0.0513 | [model](https://drive.google.com/file/d/1i--g7uzt3dTeMlNnAXbBCSJ8RXVjIljR/view?usp=sharing) \| [shell](../tools/shells/resnet101_resa_tusimple.sh) |
+| RESA | MobileNetV2 | simple | 95.21% | 0.0642 | 0.0552 | [model](https://drive.google.com/file/d/1XuQ-jak8qViNK9NXeeVmya2EQ-Z3XxZW/view?usp=sharing) \| [shell](../tools/shells/mobilenetv2_resa_tusimple.sh) |
+| RESA | MobileNetV3-Large | simple | 94.99% | 0.0841 | 0.0597 | [model](https://drive.google.com/file/d/1ax7YTH6r8o9PIKSLT4fh7GVdaKgdujMO/view?usp=sharing) \| [shell](../tools/shells/mobilenetv3-large_resa_tusimple.sh) |
 | LSTR | ResNet18s | strong | 95.06% | 0.0486 | 0.0418 | [model](https://drive.google.com/file/d/1z1ikrcgboyLFO3ysJUIf8qlBv7zEUvjK/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_tusimple.sh) |
 | LSTR | ResNet18s | simple | 92.40% | 0.1289 | 0.1127 | [model](https://drive.google.com/file/d/1iHArGHnOlSbS01RPFlLYI1mPJSX7o4sR/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_tusimple.sh) |
 
@@ -112,6 +124,8 @@
 | Baseline | ResNet101 | simple | 90.11 | 67.89 | 67.01 | 43.10 | 70.56 | 85.09 | 61.77 | 65.47 | 1883 | 71.37 | [model](https://drive.google.com/file/d/1iubFjWetsKE2VI4BEIWLDd80gB7IQUaP/view?usp=sharing) \| [shell](../tools/shells/resnet101_baseline_culane.sh) |
 | Baseline | ERFNet | simple | 91.48 | 71.27 | 68.09 | 46.76 | 74.47 | 86.09 | 64.18 | 66.89 | 2102 | 73.49 | [model](https://drive.google.com/file/d/16-Q_jZYc9IIKUEHhClSTwZI4ClMeVvQS/view?usp=sharing) \| [shell](../tools/shells/erfnet_baseline_culane.sh) |
 | Baseline | ENet | simple | 89.26 | 68.15 | 62.99 | 42.43 | 68.59 | 83.10 | 58.49 | 63.23 | 2464 | 69.90 | [model](https://drive.google.com/file/d/1DNgOpAVq87GIPUeAdMP6fnS4LhUmqyRB/view?usp=sharing) \| [shell](../tools/shells/enet_baseline_culane.sh) |
+| Baseline | MobileNetV2 | simple | 87.82 | 65.09 | 61.46 | 38.15 | 57.34 | 79.29 | 55.89 | 60.29 | 2114 | 67.41 | [model](https://drive.google.com/file/d/1xTW24b0bW_tzeXQc0znHrMrkBK4BL7_t/view?usp=sharing) \| [shell](../tools/shells/mobilenetv2_baseline_culane.sh) |
+| Baseline | MobileNetV3-Large | simple | 88.20 | 66.33 | 63.08 | 40.41 | 56.15 | 79.81 | 59.15 | 61.96 | 2304 | 68.42 | [model](https://drive.google.com/file/d/1JJ6gGcH6fAwR3UcGAnmdels5Vm8Bz48Q/view?usp=sharing) \| [shell](../tools/shells/mobilenetv3-large_baseline_culane.sh) |
 | Baseline | RepVGG-A0 | simple | 89.74 | 67.68 | 65.21 | 42.51 | 67.85 | 83.13 | 60.86 | 63.63 | 2011 | 70.56 | [model](https://drive.google.com/file/d/1IJtM5LT0GTsHHlO0USLpuZLA_KyuLRd_/view?usp=sharing) \| [shell](../tools/shells/repvgg-a0_baseline_culane.sh) |
 | Baseline | RepVGG-A1 | simple | 89.92 | 68.60 | 65.43 | 41.99 | 66.64 | 84.78 | 61.38 | 64.85 | 2127 | 70.85 | [model](https://drive.google.com/file/d/1cQMaXCww-a3mPssQK9iFzHJh6SinxcOo/view?usp=sharing) \| [shell](../tools/shells/repvgg-a1_baseline_culane.sh) |
 | Baseline | RepVGG-B0 | simple | 90.86 | 69.32 | 66.68 | 43.53 | 67.83 | 85.43 | 59.80 | 66.47 | 2189 | 71.81 | [model](https://drive.google.com/file/d/1NR4n7N7mK3yKvRAWZUbtRYQ0xHM2vL60/view?usp=sharing) \| [shell](../tools/shells/repvgg-b0_baseline_culane.sh) |
@@ -129,6 +143,8 @@
 | RESA | ResNet34 | simple | 91.31 | 71.80 | 67.54 | 46.57 | 72.74 | 86.94 | 64.46 | 67.31 | 1701 | 73.66 | [model](https://drive.google.com/file/d/1x9JWhW7AIbiADqkzmKgmBUQL-JXexABM/view?usp=sharing) \| [shell](../tools/shells/resnet34_resa_culane.sh) |
 | RESA | ResNet50 | simple | 91.52 | 72.49 | 68.44 | 47.02 | 72.56 | 87.34 | 63.11 | 68.21 | 1493 | 74.19 | [model](https://drive.google.com/file/d/1tmp5JO2CKWekbKVNX6nVKIj3AoQVCOkG/view?usp=sharing) \| [shell](../tools/shells/resnet50_resa_culane.sh) |
 | RESA | ResNet101 | simple | 91.45 | 71.51 | 69.01 | 46.54 | 75.52 | 87.75 | 63.90 | 68.24 | 1522 | 74.04 | [model](https://drive.google.com/file/d/1RLLo8MUZDl4wahTXbn49FlxBq5IUsWru/view?usp=sharing) \| [shell](../tools/shells/resnet101_resa_culane.sh) |
+| RESA | MobileNetV2 | simple | 90.58 | 70.42 | 67.19 | 45.29 | 62.80 | 85.52 | 66.00 | 65.19 | 1945 | 72.36 | [model](https://drive.google.com/file/d/1Dh9Laid33aMGFBQuTqasKgqluWKTU5Si/view?usp=sharing) \| [shell](../tools/shells/mobilenetv2_resa_culane.sh) |
+| RESA | MobileNetV3-Large | simple | 89.53 | 67.63 | 65.74 | 43.08 | 66.07 | 84.61 | 60.10 | 63.14 | 2218 | 70.61 | [model](https://drive.google.com/file/d/1mgqkDgss9nDQgAOQnNIoHuprxofod1V4/view?usp=sharing) \| [shell](../tools/shells/mobilenetv3-large_resa_culane.sh) |
 | LSTR | ResNet18s-2X | simple | 55.95 | 38.66 | 22.52 | 25.34 | 25.87 | 51.90 | 40.34 | 29.74 | 2128 | 39.17 | [model](https://drive.google.com/file/d/1vdYwM0xDcQLjMAibjmls8hX-IsUe0xcq/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_culane.sh) |
 | LSTR | ResNet18s-2X | strong | 86.89 | 66.20 | 58.76 | 40.63 | 61.10 | 79.08 | 56.86 | 56.99 | 2455 | 67.21 | [model](https://drive.google.com/file/d/11Tv_nowlWmQtTYQfhGsziDIzb20kPo8o/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_culane.sh) |
 | LSTR | ResNet34 | strong | 89.68 | 68.85 | 65.59 | 45.50 | 67.71 | 84.76 | 64.12 | 64.08 | 1776 | 71.52 | [model](https://drive.google.com/file/d/1KfmXubuAtUoE9MO8iViMyB_3XhTxWnwH/view?usp=sharing) \| [shell](../tools/shells/resnet34_lstr-aug_culane.sh) |

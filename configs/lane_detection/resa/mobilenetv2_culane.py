@@ -5,12 +5,12 @@ from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
 # Optimization pipeline
 from configs.lane_detection.common.optims.segloss_5class import loss
-from configs.lane_detection.common.optims.sgd009 import optimizer
-from configs.lane_detection.common.optims.ep12_poly_warmup200 import lr_scheduler
+from configs.lane_detection.common.optims.sgd006 import optimizer
+from configs.lane_detection.common.optims.ep12_poly_warmup500 import lr_scheduler
 
 
 train = dict(
-    exp_name='mobilenetv2_baseline_culane',
+    exp_name='mobilenetv2_resa_culane',
     workers=10,
     batch_size=20,
     checkpoint=None,
@@ -31,10 +31,10 @@ train = dict(
 )
 
 test = dict(
-    exp_name='mobilenetv2_baseline_culane',
+    exp_name='mobilenetv2_resa_culane',
     workers=10,
     batch_size=80,
-    checkpoint='./checkpoints/mobilenetv2_baseline_culane/model.pt',
+    checkpoint='./checkpoints/mobilenetv2_resa_culane/model.pt',
     # Device args
     device='cuda',
 
@@ -52,7 +52,7 @@ test = dict(
 )
 
 model = dict(
-    name='DeepLabV1Lane',
+    name='RESA_Net',
     backbone_cfg=dict(
         name='MobileNetV2Encoder',
         pretrained='https://download.pytorch.org/models/mobilenet_v2-b0353104.pth',
@@ -68,15 +68,22 @@ model = dict(
         in_channels=320,
         reduce=128
     ),
+    spatial_conv_cfg=dict(
+        name='RESA',
+        num_channels=128,
+        iteration=4,
+        alpha=2.0
+    ),
     classifier_cfg=dict(
-        name='DeepLabV1Head',
+        name='BUSD',
         in_channels=128,
-        num_classes=5,
-        dilation=1
+        num_classes=5
     ),
     lane_classifier_cfg=dict(
-        name='SimpleLaneExist',
+        name='EDLaneExist',
         num_output=5 - 1,
         flattened_size=1125,
+        dropout=0.1,
+        pool='avg'
     )
 )
