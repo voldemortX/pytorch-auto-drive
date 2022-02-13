@@ -6,6 +6,7 @@ from typing import Optional
 from ._utils import WeightedLoss
 from .builder import LOSSES
 from .focal_loss import FocalLoss
+from ..ddp_utils import get_world_size
 
 INFINITY = 987654.
 
@@ -47,7 +48,6 @@ class LaneAttLoss(WeightedLoss):
         batch_size = inputs.shape[0]
 
         outputs = net(inputs)
-
         cls_loss = torch.tensor(0, dtype=torch.float32, device=inputs.device)
         reg_loss = torch.tensor(0, dtype=torch.float32, device=inputs.device)
         total_positives = 0
@@ -66,8 +66,8 @@ class LaneAttLoss(WeightedLoss):
 
             # Match GT
             positives_mask, invalid_offsets_mask, negatives_mask, target_positives_indices = \
-                self.match_proposals_with_targets(net.anchors.clone(), target)
-
+                self.match_proposals_with_targets(net.module.anchors.clone() if get_world_size() >= 2
+                                                  else net.anchors.clone(), target)
             # Get positives & negatives
             positives = {k: v[i][positives_mask] for k, v in outputs.items()}
             num_positives = positives['logits'].shape[0]
@@ -120,10 +120,11 @@ class LaneAttLoss(WeightedLoss):
 
         total_loss = self.cls_weight * cls_loss + self.reg_weight * reg_loss
 
+        # print(torch.tensor(total_positives))
         return total_loss, {'total loss': total_loss,
                             'cls loss': cls_loss,
                             'reg loss': reg_loss,
-                            'all positives': total_positives}
+                            'all positives': torch.tensor(total_positives).to(reg_loss.device)}
 
     @torch.no_grad()
     def match_proposals_with_targets(self, proposals, labels):
