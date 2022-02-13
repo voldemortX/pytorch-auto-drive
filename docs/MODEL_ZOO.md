@@ -79,7 +79,7 @@
 
 *\* Trained on a 1080 Ti cluster, with CUDA 9.0 PyTorch 1.3, training time is estimated as: single 2080 Ti, mixed precision.*
 
-*\** Trained on two 2080ti.*  
+*\*\* Trained on two 2080ti.*  
 
 ### TuSimple detailed performance (best):
 
