@@ -11,6 +11,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 from torch.nn import functional as F
+from scipy.interpolate import splprep, splev
 
 try:
     from ...csrc.apis import line_nms
@@ -239,7 +240,7 @@ class LaneAtt(nn.Module):
     @torch.no_grad()
     def inference(self, inputs, input_sizes, forward=True, *args, **kwargs):
         outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function
-
+        to_tusimple = True if args[1] == "tusimple" else False
         batch_regs = self.nms(outputs)
         # the number of lanes is 1 ???
         decoded = []
@@ -248,7 +249,7 @@ class LaneAtt(nn.Module):
             if regs.shape[0] == 0:
                 decoded.append([])
                 continue
-            pred = self.proposals_to_pred(regs, input_sizes[1])
+            pred = self.proposals_to_pred(regs, input_sizes[1], to_tusimple)
             decoded.append(pred)
         return decoded
 
@@ -275,7 +276,7 @@ class LaneAtt(nn.Module):
 
         return proposals_list
 
-    def proposals_to_pred(self, proposals, image_size):
+    def proposals_to_pred(self, proposals, image_size, to_tusimple=False):
         self.anchor_ys = self.anchor_ys.to(proposals.device)
         lanes = []
         for lane in proposals:
@@ -305,6 +306,27 @@ class LaneAtt(nn.Module):
             lane_coords = []
             for i in range(points.shape[0]):
                 lane_coords.append([points[i, 0] * float(image_size[1]), points[i, 1] * float(image_size[0])])
-            lanes.append(lane_coords)
+            if to_tusimple:
+                lanes.append(self.convert_to_tusimple(lane_coords))
+            else:
+                lanes.append(lane_coords)
 
         return lanes
+
+    def convert_to_tusimple(self, points, n=200, bezier_threshold=5):
+        """Spline interpolation of a lane. Used on the predictions"""
+        x = [x for x, _ in points]
+        y = [y for _, y in points]
+        tck, _ = splprep([x, y], s=0, t=n, k=min(3, len(points) - 1))
+        u = np.linspace(0., 1., n)
+        rep_points = np.array(splev(u, tck)).T
+        h_samples = [(160 + y * 10) for y in range(56)]
+        temp = []
+        for h_sample in h_samples:
+            dis = np.abs(h_sample - rep_points[:, 1])
+            idx = np.argmin(dis)
+            if dis[idx] > bezier_threshold:
+                temp.append([-2, h_sample])
+            else:
+                temp.append([round(rep_points[:, 0][idx], 3), h_sample])
+        return temp
