@@ -1,6 +1,5 @@
 import os
 import json
-import yaml
 import argparse
 import numpy as np
 from tqdm import tqdm
