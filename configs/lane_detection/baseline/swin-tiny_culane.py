@@ -25,7 +25,7 @@ train = dict(
     dist_url='tcp://localhost:12345',
     device='cuda',
     val_num_steps=0,  # Seg IoU validation (mostly useless)
-    save_dir='./checkpoints'
+    save_dir='./checkpoints',
 
     input_size=(288, 800),
     original_size=(590, 1640),
@@ -42,7 +42,7 @@ test = dict(
     checkpoint='./checkpoints/swin-tiny_baseline_culane/model.pt',
     # Device args
     device='cuda',
-    save_dir='./checkpoints'
+    save_dir='./checkpoints',
 
     seg=True,
     gap=20,

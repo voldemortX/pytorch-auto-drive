@@ -18,4 +18,4 @@
 | ResNet-34 | resnet34-333f7ec4.pth | [TorchVision Weight](https://download.pytorch.org/models/resnet34-333f7ec4.pth) |
 | ResNet-50 | resnet50-19c8e357.pth | [TorchVision Weight](https://download.pytorch.org/models/resnet50-19c8e357.pth) |
 | ResNet-101 | resnet101-5d3b4d8f.pth | [TorchVision Weight](https://download.pytorch.org/models/resnet101-5d3b4d8f.pth) |
-| Swin-Tiny | swin_tiny_patch4_window7_224.pth | [Official Repo Weight](https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth) |
+| Swin-Tiny** | swin_tiny_patch4_window7_224.pth | [Official Repo Weight](https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth) |
