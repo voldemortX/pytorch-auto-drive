@@ -85,17 +85,19 @@ loss = dict(
     num_strips=72 - 1,
     t_pos=15.,
     t_neg=20.,
-    reduction='mean'
+    reduction='mean',
 )
 
 train = dict(
-    exp_name='resnet18_laneatt_culane_test',
+    exp_name='resnet18_laneatt_culane',
     workers=4,
     batch_size=8,
     checkpoint=None,
     # Device args
-    world_size=0,
-    dist_url='env://',
+    # world_size=0,
+    # dist_url='env://',
+    world_size=2,
+    dist_url='tcp://localhost:12345',
     device='cuda',
 
     val_num_steps=0,  # Seg IoU validation (mostly useless)
@@ -110,10 +112,10 @@ train = dict(
 )
 
 test = dict(
-    exp_name='resnet18_laneatt_culane_test',
+    exp_name='resnet18_laneatt_culane',
     workers=4,
-    batch_size=32,
-    checkpoint='./checkpoints/resnet18_laneatt_culane_test/model.pt',
+    batch_size=80,
+    checkpoint='./checkpoints/resnet18_laneatt_culane/model.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints',

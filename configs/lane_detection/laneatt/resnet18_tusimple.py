@@ -69,7 +69,8 @@ test_augmentation = dict(
             size_label=(360, 640)
         ),
         dict(
-            name='ToTensor'
+            name='ToTensor',
+            reverse_channels=True,
         ),
     ]
 )
@@ -113,7 +114,7 @@ test = dict(
     exp_name='resnet18_laneatt_tusimple_1',
     workers=4,
     batch_size=32,
-    checkpoint='./checkpoints/resnet18_laneatt_tusimple_1/model.pt',
+    checkpoint='./checkpoints/resnet18_laneatt_tusimple_1/model_0100.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints',

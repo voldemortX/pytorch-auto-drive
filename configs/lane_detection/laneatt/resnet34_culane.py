@@ -94,10 +94,10 @@ train = dict(
     batch_size=8,
     checkpoint=None,
     # Device args
-    world_size=0,
-    dist_url='env://',
-    # world_size=2,
-    # dist_url='tcp://localhost:12345',
+    # world_size=0,
+    # dist_url='env://',
+    world_size=2,
+    dist_url='tcp://localhost:12345',
     device='cuda',
 
     val_num_steps=0,  # Seg IoU validation (mostly useless)
@@ -114,8 +114,8 @@ train = dict(
 test = dict(
     exp_name='resnet34_laneatt_culane_test',
     workers=4,
-    batch_size=32,
-    checkpoint='./checkpoints/resnet34_laneatt_culane_test/model.pt',
+    batch_size=80,
+    checkpoint='./checkpoints/resnet34_laneatt_culane_test/model_0015.pt',
     # Device args
     device='cuda',
     save_dir='./checkpoints',
