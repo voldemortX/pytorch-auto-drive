@@ -22,10 +22,10 @@ Generation script:
 All labels are saved in a json file, named `<image-set>_<order>.json`.
 
 ```
-   {"raw_file":filename1, "Bézier_control_points": [[...],[...], ..., [...]}
-   {"raw_file":filename2, "Bézier_control_points": [[...],[...], ..., [...]}
+   {"raw_file":filename1, "Bezier_control_points": [[...],[...], ..., [...]}
+   {"raw_file":filename2, "Bezier_control_points": [[...],[...], ..., [...]}
    ...
-   {"raw_file":filenamen, "Bézier_control_points": [[...],[...], ..., [...]}
+   {"raw_file":filenamen, "Bezier_control_points": [[...],[...], ..., [...]}
 ```
 
 ## Upper-bound test script
@@ -36,7 +36,7 @@ This script is used to obtain prediction results from fitted curves.
    python ./tools/curve_fitting_tools/upperbound.py 
           --dataset=<dataset name>
           --state=<1: test set/2: val test>
-          --fit-function=<Bézier/poly>
+          --fit-function=<bezier/poly>
           --num-points=<the number of generating key points>
           --order=<the order of generating curves>
 ```
