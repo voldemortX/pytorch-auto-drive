@@ -44,6 +44,7 @@ Models from this repo are faster to train (**single card trainable**) and often 
 | lane detection | ERFNet, ENet | [SAD](https://arxiv.org/abs/1908.00821) ([*Postponed*](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes)) |
 | lane detection | ERFNet | [PRNet](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) (*In progress*) |
 | lane detection | ResNets (18, 34, 50, 101), ResNet18-reduced | [LSTR](https://arxiv.org/abs/2011.04233) |
+| lane detection | ResNets (18, 34) | [BézierLaneNet]() |
 
 *The VGG16 backbone corresponds to DeepLab-LargeFOV in SCNN.*
 
@@ -104,6 +105,10 @@ This repository implements (or plan to implement) the following interesting pape
 [Polynomial Regression Network for Variable-Number Lane Detection](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) ECCV 2020
 
 [End-to-end Lane Shape Prediction with Transformers](https://arxiv.org/abs/2011.04233) WACV 2021
+
+[Keep Your Eyes on The Lane: Real-Time Attention-Guided Lane Detection](https://arxiv.org/abs/2010.12035) CVPR 2021
+
+[Rethinking Efficient Lane Detection via Curve Modeling]() CVPR 2022
 
 You are also welcomed to make additions on this paper list, or open-source your related works here.
 
