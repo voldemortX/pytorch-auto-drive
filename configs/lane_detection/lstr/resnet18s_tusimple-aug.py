@@ -1,6 +1,6 @@
 # Data pipeline
 from configs.lane_detection.common.datasets.tusimple import dataset
-from configs.lane_detection.common.datasets.train_level1_360 import train_augmentation
+from configs.lane_detection.common.datasets.train_level1a_360 import train_augmentation
 from configs.lane_detection.common.datasets.test_360 import test_augmentation
 
 # Optimization pipeline

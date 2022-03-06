@@ -24,6 +24,7 @@ __all__ = [
     'LabelMap',
     'MatchSize',
     'Normalize',
+    'RandomAffine',
     'RandomApply',
     'RandomCrop',
     'RandomHorizontalFlip',
@@ -104,6 +105,9 @@ class Resize(object):
                 target['keypoints'] = F_kp.resize(target['keypoints'], ori_size, size_label, ignore_x)
             # if 'padding_mask' in target.keys():
             #     target['padding_mask'] = F.resize(target['padding_mask'], size_label, interpolation=Image.NEAREST)
+            if 'segmentation_mask' in target.keys():
+                target['segmentation_mask'] = F.resize(target['segmentation_mask'],
+                                                       size_label, interpolation=Image.NEAREST)
         else:
             target = F.resize(target, size_label, interpolation=Image.NEAREST)
 
@@ -133,6 +137,8 @@ class Crop(object):
                 target['keypoints'] = F_kp.crop(target['keypoints'], top, left, height, width, ignore_x)
             # if 'padding_mask' in target.keys():
             #     target['padding_mask'] = F.crop(target['padding_mask'], top, left, height, width)
+            if 'segmentation_mask' in target.keys():
+                target['segmentation_mask'] = F.crop(target['segmentation_mask'], top, left, height, width)
         else:
             target = F.crop(target, top, left, height, width)
 
@@ -161,6 +167,8 @@ class ZeroPad(object):
             # Conveniently, since padding is on right & bottom, nothing needs to be done for keypoints
             if 'padding_mask' in target.keys():
                 target['padding_mask'] = F.pad(target['padding_mask'], [0, 0, pad_w, pad_h], fill=1)
+            if 'segmentation_mask' in target.keys():
+                target['segmentation_mask'] = F.pad(target['segmentation_mask'], [0, 0, pad_w, pad_h], fill=255)
         else:
             target = F.pad(target, [0, 0, pad_w, pad_h], fill=255)
 
@@ -174,17 +182,30 @@ class ZeroPad(object):
 # Random translation = Zero pad + Random crop
 @TRANSFORMS.register()
 class RandomTranslation(object):
-    def __init__(self, trans_h, trans_w):
+    def __init__(self, trans_h, trans_w, ignore_x):
         self.trans_h = trans_h
         self.trans_w = trans_w
+        self.ignore_x = ignore_x
 
     def __call__(self, image, target):
         tw, th = F._get_image_size(image)
         image = F.pad(image, [self.trans_w, self.trans_h, self.trans_w, self.trans_h], fill=0)
-        target = F.pad(target, [self.trans_w, self.trans_h, self.trans_w, self.trans_h], fill=255)
         i, j, h, w = RandomCrop.get_params(image, (th, tw))
         image = F.crop(image, i, j, h, w)
-        target = F.crop(target, i, j, h, w)
+        if target is None or isinstance(target, str):
+            return image, target
+        elif isinstance(target, dict):  # To keep BC
+            if 'keypoints' in target.keys():
+                target['keypoints'] = F_kp.translate(target['keypoints'], tw - j, th - i, th, tw, self.ignore_x)
+            # if 'padding_mask' in target.keys():
+            #     pass
+            if 'segmentation_mask' in target.keys():
+                target['segmentation_mask'] = F.pad(target['segmentation_mask'],
+                                                    [self.trans_w, self.trans_h, self.trans_w, self.trans_h], fill=255)
+                target['segmentation_mask'] = F.crop(target['segmentation_mask'], i, j, h, w)
+        else:
+            target = F.pad(target, [self.trans_w, self.trans_h, self.trans_w, self.trans_h], fill=255)
+            target = F.crop(target, i, j, h, w)
 
         return image, target
 
@@ -300,6 +321,8 @@ class RandomHorizontalFlip(object):
                                                      F._get_image_size(image)[0] / 2, self.ignore_x)
                 # if 'padding_mask' in target.keys():
                 #     target['padding_mask'] = F.hflip(target['padding_mask'])
+                if 'segmentation_mask' in target.keys():
+                    target['segmentation_mask'] = F.hflip(target['segmentation_mask'])
             else:
                 target = F.hflip(target)
         else:
@@ -333,6 +356,9 @@ class ToTensor(object):
                 pic['keypoints'] = torch.as_tensor(pic['keypoints'].copy(), dtype=torch.float32)
             if 'padding_mask' in pic:
                 pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']).copy(), dtype=torch.uint8)
+            if 'segmentation_mask' in pic:
+                pic['segmentation_mask'] = torch.as_tensor(np.asarray(pic['segmentation_mask']).copy(),
+                                                           dtype=torch.uint8)
             return pic
         else:
             return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)
@@ -458,6 +484,9 @@ class RandomRotation(object):
             # if 'padding_mask' in target.keys():
             #     target['padding_mask'] = F.rotate(target['padding_mask'], angle, resample=Image.NEAREST,
             #                                       expand=self.expand, center=self.center, fill=1)
+            if 'segmentation_mask' in target.keys():
+                target['segmentation_mask'] = F.rotate(target['segmentation_mask'], angle, resample=Image.NEAREST,
+                                                       expand=self.expand, center=self.center, fill=255)
         else:
             target = F.rotate(target, angle, resample=Image.NEAREST, expand=self.expand, center=self.center, fill=255)
 
@@ -576,3 +605,113 @@ class RandomLighting(object):
         alpha = torch.normal(self.mean, self.std, (3, ), dtype=torch.float32)
 
         return F.adjust_lighting(image, alpha, self.eigen_value, self.eigen_vector), target
+
+
+@TRANSFORMS.register()
+class RandomAffine(torch.nn.Module):
+    """Before BC-Break of resample.
+    Random affine transformation of the image keeping center invariant.
+    The image can be a PIL Image or a Tensor, in which case it is expected
+    to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions.
+    Args:
+        degrees (sequence or float or int): Range of degrees to select from.
+            If degrees is a number instead of sequence like (min, max), the range of degrees
+            will be (-degrees, +degrees). Set to 0 to deactivate rotations.
+        translate (tuple, optional): tuple of maximum absolute pixels for horizontal
+            and vertical translations. For example translate=(a, b), then horizontal shift
+            is randomly sampled in the range a < dx < a and vertical shift is
+            randomly sampled in the range b < dy < b. Will not translate by default.
+        scale (tuple, optional): scaling factor interval, e.g (a, b), then scale is
+            randomly sampled from the range a <= scale <= b. Will keep original scale by default.
+        shear (sequence or float or int, optional): Range of degrees to select from.
+            If shear is a number, a shear parallel to the x axis in the range (-shear, +shear)
+            will be applied. Else if shear is a tuple or list of 2 values a shear parallel to the x axis in the
+            range (shear[0], shear[1]) will be applied. Else if shear is a tuple or list of 4 values,
+            a x-axis shear in (shear[0], shear[1]) and y-axis shear in (shear[2], shear[3]) will be applied.
+            Will not apply shear by default.
+        resample (int, optional): An optional resampling filter. See `filters`_ for more information.
+            If omitted, or if the image has mode "1" or "P", it is set to ``PIL.Image.NEAREST``.
+            If input is Tensor, only ``PIL.Image.NEAREST`` and ``PIL.Image.BILINEAR`` are supported.
+        fillcolor (tuple or int): Optional fill color (Tuple for RGB Image and int for grayscale) for the area
+            outside the transform in the output image (Pillow>=5.0.0). This option is not supported for Tensor
+            input. Fill value for the area outside the transform in the output image is always 0.
+    .. _filters: https://pillow.readthedocs.io/en/latest/handbook/concepts.html#filters
+    """
+
+    def __init__(self, degrees, translate=None, scale=None, shear=None, ignore_x=-2):
+        super().__init__()
+        self.ignore_x = ignore_x
+        self.degrees = _setup_angle(degrees, name="degrees", req_sizes=(2, ))
+
+        if translate is not None:
+            _check_sequence_input(translate, "translate", req_sizes=(2, ))
+        self.translate = translate
+
+        if scale is not None:
+            _check_sequence_input(scale, "scale", req_sizes=(2, ))
+            for s in scale:
+                if s <= 0:
+                    raise ValueError("scale values should be positive")
+        self.scale = scale
+
+        if shear is not None:
+            self.shear = _setup_angle(shear, name="shear", req_sizes=(2, 4))
+        else:
+            self.shear = shear
+
+    @staticmethod
+    def get_params(
+        degrees,
+        translate,
+        scale_ranges,
+        shears
+    ):
+        """Get parameters for affine transformation
+        Returns:
+            params to be passed to the affine transformation
+        """
+        angle = float(torch.empty(1).uniform_(float(degrees[0]), float(degrees[1])).item())
+        if translate is not None:
+            max_dx = float(translate[0])
+            max_dy = float(translate[1])
+            tx = int(round(torch.empty(1).uniform_(-max_dx, max_dx).item()))
+            ty = int(round(torch.empty(1).uniform_(-max_dy, max_dy).item()))
+            translations = (tx, ty)
+        else:
+            translations = (0, 0)
+
+        if scale_ranges is not None:
+            scale = float(torch.empty(1).uniform_(scale_ranges[0], scale_ranges[1]).item())
+        else:
+            scale = 1.0
+
+        shear_x = shear_y = 0.0
+        if shears is not None:
+            shear_x = float(torch.empty(1).uniform_(shears[0], shears[1]).item())
+            if len(shears) == 4:
+                shear_y = float(torch.empty(1).uniform_(shears[2], shears[3]).item())
+
+        shear = (shear_x, shear_y)
+
+        return angle, translations, scale, shear
+
+    def forward(self, image, target):
+        img_size = F._get_image_size(image)
+        ret = self.get_params(self.degrees, self.translate, self.scale, self.shear)
+        image = F.affine(image, *ret, resample=Image.LINEAR, fillcolor=0)
+
+        if target is None or isinstance(target, str):
+            return image, target
+        elif isinstance(target, dict):  # To keep BC
+            if 'keypoints' in target.keys():
+                target['keypoints'] = F_kp.affine(target['keypoints'], *ret,
+                                                  height=img_size[1], width=img_size[0], ignore_x=self.ignore_x)
+            # if 'padding_mask' in target.keys():
+            #     pass
+            if 'segmentation_mask' in target.keys():
+                target['segmentation_mask'] = F.affine(target['segmentation_mask'], *ret,
+                                                       resample=Image.NEAREST, fillcolor=255)
+        else:
+            target = F.affine(target, *ret, resample=Image.NEAREST, fillcolor=255)
+
+        return image, target
