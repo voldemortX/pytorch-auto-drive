@@ -1,6 +1,6 @@
-# Codebase for deep self-driving perception
+# PytorchAutoDrive: Framework for self-driving perception
 
-*PytorchAutoDrive* is a **pure Python** codebase includes semantic segmentation models, lane detection models based on **PyTorch**. Here we provide full stack supports from research (model training, testing, fair benchmarking by simply writing configs) to application (visualization, model deployment). Poster at PyTorch Developer Day: [PytorchAutoDrive: Toolkit & Fair Benchmark for Autonomous Driving Research](https://drive.google.com/file/d/14EgcwPnKvAZJ1aWqBv6W9Msm666Wqi5a/view?usp=sharing).
+*PytorchAutoDrive* is a **pure Python** framework includes semantic segmentation models, lane detection models based on **PyTorch**. Here we provide full stack supports from research (model training, testing, fair benchmarking by simply writing configs) to application (visualization, model deployment). Poster at PyTorch Developer Day: [PytorchAutoDrive: Toolkit & Fair Benchmark for Autonomous Driving Research](https://drive.google.com/file/d/14EgcwPnKvAZJ1aWqBv6W9Msm666Wqi5a/view?usp=sharing).
 
 *This repository is under active development, results with models uploaded are stable. For legacy code users, please check [deprecations](https://github.com/voldemortX/pytorch-auto-drive/issues/14) for changes.*
 
@@ -44,7 +44,7 @@ Models from this repo are faster to train (**single card trainable**) and often 
 | lane detection | ERFNet, ENet | [SAD](https://arxiv.org/abs/1908.00821) ([*Postponed*](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes)) |
 | lane detection | ERFNet | [PRNet](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) (*In progress*) |
 | lane detection | ResNets (18, 34, 50, 101), ResNet18-reduced | [LSTR](https://arxiv.org/abs/2011.04233) |
-| lane detection | ResNets (18, 34) | [BézierLaneNet]() |
+| lane detection | ResNets (18, 34) | [BézierLaneNet](https://arxiv.org/abs/2203.02431) |
 
 *The VGG16 backbone corresponds to DeepLab-LargeFOV in SCNN.*
 
@@ -80,13 +80,26 @@ Refer to [DEPLOY.md](docs/DEPLOY.md) for ONNX and TensorRT deployment supports.
 
 ## Advanced Tutorial
 
-Checkout [ADVANCED_TUTORIAL.md](docs/ADVANCED_TUTORIAL.md) for advanced use cases and how to code in PytorchAutoDrive. 
+Checkout [ADVANCED_TUTORIAL.md](docs/ADVANCED_TUTORIAL.md) for advanced use cases and how to code in PytorchAutoDrive.
+
+## Citation
+
+If you feel this framework substantially helped your research or you want a reference when using our results, please cite the following paper that made the official release of PytorchAutoDrive:
+
+```
+@inproceedings{feng2022rethinking,
+  title={Rethinking efficient lane detection via curve modeling},
+  author={Feng, Zhengyang and Guo, Shaohua and Tan, Xin and Xu, Ke and Wang, Min and Ma, Lizhuang},
+  booktitle={Computer Vision and Pattern Recognition},
+  year={2022}
+}
+```
 
 ## Contributing
 
 We welcome **Pull Requests** to fix bugs, update docs or implement new features etc. We also welcome **Issues** to report problems and needs, or ask questions (since your question might be more common and helpful to the community than you presume). Interested folks should checkout our [roadmap](https://github.com/voldemortX/pytorch-auto-drive/issues/4).
 
-This repository implements (or plan to implement) the following interesting papers in a unified PyTorch codebase:
+This repository implements (or plan to implement) the following interesting papers in a unified PyTorch framework:
 
 [Fully Convolutional Networks for Semantic Segmentation](https://arxiv.org/abs/1605.06211) CVPR 2015
 
@@ -108,7 +121,7 @@ This repository implements (or plan to implement) the following interesting pape
 
 [Keep Your Eyes on The Lane: Real-Time Attention-Guided Lane Detection](https://arxiv.org/abs/2010.12035) CVPR 2021
 
-[Rethinking Efficient Lane Detection via Curve Modeling]() CVPR 2022
+[Rethinking Efficient Lane Detection via Curve Modeling](https://arxiv.org/abs/2203.02431) CVPR 2022
 
 You are also welcomed to make additions on this paper list, or open-source your related works here.
 
