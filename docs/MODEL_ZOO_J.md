@@ -1,4 +1,4 @@
-The whole [MODEL_ZOO](./MODEL_ZOO.md).
+The whole [MODEL_ZOO](./MODEL_ZOO.md) with specifications.
 
 ## Lane Detection
 

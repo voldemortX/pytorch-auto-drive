@@ -54,7 +54,7 @@ Models from this repo are faster to train (**single card trainable**) and often 
 
 ## Model Zoo
 
-We provide solid results (average/best/detailed), training time, shell scripts and trained models available for download in [MODEL_ZOO.md](docs/MODEL_ZOO.md).
+We provide solid results (average/best/detailed), training time, shell scripts and trained models available for download in [MODEL_ZOO.md](docs/MODEL_ZOO_J.md).
 
 ## Installation
 
