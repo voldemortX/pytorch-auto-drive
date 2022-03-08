@@ -32,8 +32,8 @@
 | RESA | ResNet101 | 360 x 640 | 25.14 | 242.45 | 31.46 |
 | RESA | MobileNetV2 | 360 x 640 | 60.53 | 12.80 | 4.63 |
 | RESA | MobileNetV3-Large | 360 x 640 | 54.39 | 11.95 | 5.88 |
-| BezierLaneNet | ResNet18 | 360 x 640 | 212.83 | 14.77 | 4.10 |
-| BezierLaneNet | ResNet34 | 360 x 640 | 149.52 | 29.85 | 9.49 |
+| BézierLaneNet | ResNet18 | 360 x 640 | 212.83 | 14.77 | 4.10 |
+| BézierLaneNet | ResNet34 | 360 x 640 | 149.52 | 29.85 | 9.49 |
 | Baseline | VGG16 | 288 x 800 | 55.31 | 214.50 | 20.15 | 
 | Baseline | ResNet18 | 288 x 800 | 136.28 | 85.22 | 11.82 | 
 | Baseline | ResNet34 | 288 x 800 | 72.42 | 159.60 | 21.93 | 
@@ -63,8 +63,8 @@
 | RESA | MobileNetV2 | 288 x 800 | 59.49 | 12.55 | 4.63 |
 | RESA | MobileNetV3-Large | 288 x 800 | 53.85 | 11.70 | 5.88 |
 | LSTR | ResNet34 | 288 x 800 | 65.39 | 33.86 | 22.34 |
-| BezierLaneNet | ResNet18 | 288 x 800 | 210.79 | 14.66 | 4.10 |
-| BezierLaneNet | ResNet34 | 288 x 800 | 144.65 | 29.54 | 9.49 |
+| BézierLaneNet | ResNet18 | 288 x 800 | 210.79 | 14.66 | 4.10 |
+| BézierLaneNet | ResNet34 | 288 x 800 | 144.65 | 29.54 | 9.49 |
 
 ## Segmentation performance:
 
