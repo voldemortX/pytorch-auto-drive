@@ -6,6 +6,10 @@
 
 State-of-the-art lane detectors are typically based on semantic segmentation (SCNN, RESA) or point detection (LaneATT). However, semantic segmentation requires customized post-processing & cannot deal with a variable number of lanes. Point detection methods are currently anchor-based, with NMS as post-processing. The more natural way would be getting a curve representation directly. Methods like LSTR made the first steps in this direction, but didn't really achieved comparable performance against SOTA methods. BézierLaneNet use a fully convolutional network to predict cubic Bézier curves, the ease of optimization of Bézier control points made it possible for direct curve methods to compete with SOTAs. A fusion of flipped feature maps is also employed to exploit symmetry in the car's front-view. BézierLaneNet (ResNet-34) achieves 75.6 F-1 on CULane, and attained the 1st place (of all published methods) in the LLAMAS leaderboard at its time, while running at 150 FPS in our benchmark.
 
+<div align=center>
+<img src="https://user-images.githubusercontent.com/32259501/157155447-81f28ec6-3ebe-42e0-8864-c739d8c44155.png"/>
+</div>
+
 ## Results
 
 *Training time estimated with single 2080 Ti.*
