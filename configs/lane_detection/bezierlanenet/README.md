@@ -49,3 +49,14 @@ Their test performance can be found at the [LLAMAS leaderboard](https://unsuperv
 | ResNet34 | 360 x 640 | 149.52 | 29.85 | 9.49 |
 | ResNet18 | 288 x 800 | 210.79 | 14.66 | 4.10 |
 | ResNet34 | 288 x 800 | 144.65 | 29.54 | 9.49 |
+
+## Citation
+
+```
+@inproceedings{feng2022rethinking,
+  title={Rethinking efficient lane detection via curve modeling},
+  author={Feng, Zhengyang and Guo, Shaohua and Tan, Xin and Xu, Ke and Wang, Min and Ma, Lizhuang},
+  booktitle={Computer Vision and Pattern Recognition},
+  year={2022}
+}
+```
