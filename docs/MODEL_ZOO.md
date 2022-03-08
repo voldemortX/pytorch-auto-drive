@@ -6,7 +6,7 @@
 
  - **level 0**: only small rotation and resize
  - **level 1a**: the LSTR augmentations
- - **level 1b**: the BezierLaneNet augmentations
+ - **level 1b**: the BézierLaneNet augmentations
 
 | method | backbone | data<br>augmentation | resolution | mixed precision? | dataset | metric | average | best | training time <br> *(2080 Ti)* |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -37,8 +37,8 @@
 | RESA | MobileNetV3-Large | level 0 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.56% | 94.99% | 0.7h |
 | LSTR | ResNet18s<sup>#</sup> | level 0 | 360 x 640 | *no* | TuSimple | Accuracy | 91.91% | 92.40% | 14.2h |
 | LSTR | ResNet18s<sup>#</sup> | level 1a | 360 x 640 | *no* | TuSimple | Accuracy | 94.91% | 95.06% | 15.5h |
-| BezierLaneNet | ResNet18 | level 1b | 360 x 640 | *no* | TuSimple | Accuracy | 95.01% | 95.41% | 5.5h |
-| BezierLaneNet | ResNet34 | level 1b | 360 x 640 | *no* | TuSimple | Accuracy | 95.17% | 95.65% | 6.5h |
+| BézierLaneNet | ResNet18 | level 1b | 360 x 640 | *no* | TuSimple | Accuracy | 95.01% | 95.41% | 5.5h |
+| BézierLaneNet | ResNet34 | level 1b | 360 x 640 | *no* | TuSimple | Accuracy | 95.17% | 95.65% | 6.5h |
 | Baseline | VGG16 | level 0 | 288 x 800 | *yes* | CULane | F measure | 65.93 | 66.09 | 9.3h |
 | Baseline | ResNet18 | level 0 | 288 x 800 | *yes* | CULane | F measure | 65.19 | 65.30 | 5.3h |
 | Baseline | ResNet34 | level 0 | 288 x 800 | *yes* | CULane | F measure | 69.82 | 69.92 | 7.3h |
@@ -70,16 +70,16 @@
 | LSTR | ResNet18s-2X<sup>#</sup> | level 0 | 288 x 800 | *no* | CULane | F measure | 36.27 | 39.77 | 28.5h* |
 | LSTR | ResNet18s-2X<sup>#</sup> | level 1a | 288 x 800 | *no* | CULane | F measure | 68.35 | 68.72 | 31.5h* |
 | LSTR | ResNet34 | level 1a | 288 x 800 | *no* | CULane | F measure | 72.17 | 72.48 | 45.0h* |
-| BezierLaneNet | ResNet18 | level 1b | 288 x 800 | *yes* | CULane | F measure | 73.36 | 73.67 | 9.9h |
-| BezierLaneNet | ResNet34 | level 1b | 288 x 800 | *yes* | CULane | F measure | 75.30 | 75.57 | 11.0h |
+| BézierLaneNet | ResNet18 | level 1b | 288 x 800 | *yes* | CULane | F measure | 73.36 | 73.67 | 9.9h |
+| BézierLaneNet | ResNet34 | level 1b | 288 x 800 | *yes* | CULane | F measure | 75.30 | 75.57 | 11.0h |
 | Baseline | ERFNet | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 95.94 | 96.13 | 10.9h<sup>+</sup> |
 | Baseline | VGG16 | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 95.05 | 95.11 | 9.3h |
 | Baseline | ResNet34 | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 95.90 | 95.91 | 7.0h |
 | SCNN | ERFNet | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 95.89 | 95.94 | 14.2h<sup>+</sup> |
 | SCNN | VGG16 | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 96.39 | 96.42 | 12.5h |
 | SCNN | ResNet34 | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 96.17 | 96.19 | 10.1h |
-| BezierLaneNet | ResNet18 | level 1b | 360 x 640 | *yes* | LLAMAS | F measure | 95.42 | 95.52 | 5.5h |
-| BezierLaneNet | ResNet34 | level 1b | 360 x 640 | *yes* | LLAMAS | F measure | 96.04 | 96.11 | 6.1h |
+| BézierLaneNet | ResNet18 | level 1b | 360 x 640 | *yes* | LLAMAS | F measure | 95.42 | 95.52 | 5.5h |
+| BézierLaneNet | ResNet34 | level 1b | 360 x 640 | *yes* | LLAMAS | F measure | 96.04 | 96.11 | 6.1h |
 
 *All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
 
@@ -124,8 +124,8 @@
 | RESA | MobileNetV3-Large | level 0 | 94.99% | 0.0841 | 0.0597 | [model](https://drive.google.com/file/d/1ax7YTH6r8o9PIKSLT4fh7GVdaKgdujMO/view?usp=sharing) \| [shell](../tools/shells/mobilenetv3-large_resa_tusimple.sh) |
 | LSTR | ResNet18s | level 1a | 95.06% | 0.0486 | 0.0418 | [model](https://drive.google.com/file/d/1z1ikrcgboyLFO3ysJUIf8qlBv7zEUvjK/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_tusimple.sh) |
 | LSTR | ResNet18s | level 0 | 92.40% | 0.1289 | 0.1127 | [model](https://drive.google.com/file/d/1iHArGHnOlSbS01RPFlLYI1mPJSX7o4sR/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_tusimple.sh) |
-| BezierLaneNet | ResNet18 | level 1b | 95.41% | 0.0531 | 0.0458 | [model](https://drive.google.com/file/d/10qMdvPBnZP4P88EQXYZxsXZgj7sz6LvS/view?usp=sharing) \| [shell](../tools/shells/resnet18_bezierlanenet_tusimple-aug1b.sh) |
-| BezierLaneNet | ResNet34 | level 1b | 95.65% | 0.0513 | 0.0386 | [model](https://drive.google.com/file/d/1FFn8j2BoUsyj8UbBcfeGWKvCQj9Qg-44/view?usp=sharing) \| [shell](../tools/shells/resnet34_bezierlanenet_tusimple-aug1b.sh) |
+| BézierLaneNet | ResNet18 | level 1b | 95.41% | 0.0531 | 0.0458 | [model](https://drive.google.com/file/d/10qMdvPBnZP4P88EQXYZxsXZgj7sz6LvS/view?usp=sharing) \| [shell](../tools/shells/resnet18_bezierlanenet_tusimple-aug1b.sh) |
+| BézierLaneNet | ResNet34 | level 1b | 95.65% | 0.0513 | 0.0386 | [model](https://drive.google.com/file/d/1FFn8j2BoUsyj8UbBcfeGWKvCQj9Qg-44/view?usp=sharing) \| [shell](../tools/shells/resnet34_bezierlanenet_tusimple-aug1b.sh) |
 
 ### CULane detailed performance (best):
 
@@ -162,8 +162,8 @@
 | LSTR | ResNet18s-2X | level 0 | 56.17 | 39.10 | 22.90 | 25.62 | 25.49 | 52.09 | 40.21 | 30.33 | 1690 | 39.77 | [model](https://drive.google.com/file/d/1vdYwM0xDcQLjMAibjmls8hX-IsUe0xcq/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_culane.sh) |
 | LSTR | ResNet18s-2X | level 1a | 86.78 | 67.34 | 59.92 | 40.10 | 59.82 | 78.66 | 56.63 | 56.64 | 1166 | 68.72 | [model](https://drive.google.com/file/d/11Tv_nowlWmQtTYQfhGsziDIzb20kPo8o/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_culane.sh) |
 | LSTR | ResNet34 | level 1a | 89.73 | 69.77 | 66.72 | 45.32 | 68.16 | 85.03 | 64.34 | 64.13 | 1247 | 72.48 | [model](https://drive.google.com/file/d/1KfmXubuAtUoE9MO8iViMyB_3XhTxWnwH/view?usp=sharing) \| [shell](../tools/shells/resnet34_lstr-aug_culane.sh) |
-| BezierLaneNet | ResNet18 | level 1b | 90.22 | 71.55 | 68.70 | 45.30 | 70.91 | 84.09 | 62.49 | 58.98 | 996 | 73.67 | [model](https://drive.google.com/file/d/1IpfusHvFeMEGe8wv0fer6KF3pH4X2Tj3/view?usp=sharing) \| [shell](../tools/shells/resnet18_bezierlanenet_culane-aug1b.sh) |
-| BezierLaneNet | ResNet34 | level 1b | 91.59 | 73.20 | 69.90 | 48.05 | 76.74 | 87.16 | 69.20 | 62.45 | 888 | 75.57 | [model](https://drive.google.com/file/d/1342FQeDQKRHMo283jW2T1WDgfgsYbR5q/view?usp=sharing) \| [shell](../tools/shells/resnet34_bezierlanenet_culane-aug1b.sh) |
+| BézierLaneNet | ResNet18 | level 1b | 90.22 | 71.55 | 68.70 | 45.30 | 70.91 | 84.09 | 62.49 | 58.98 | 996 | 73.67 | [model](https://drive.google.com/file/d/1IpfusHvFeMEGe8wv0fer6KF3pH4X2Tj3/view?usp=sharing) \| [shell](../tools/shells/resnet18_bezierlanenet_culane-aug1b.sh) |
+| BézierLaneNet | ResNet34 | level 1b | 91.59 | 73.20 | 69.90 | 48.05 | 76.74 | 87.16 | 69.20 | 62.45 | 888 | 75.57 | [model](https://drive.google.com/file/d/1342FQeDQKRHMo283jW2T1WDgfgsYbR5q/view?usp=sharing) \| [shell](../tools/shells/resnet34_bezierlanenet_culane-aug1b.sh) |
 
 ### LLAMAS detailed performance (best):
 
@@ -175,8 +175,8 @@
 | SCNN | VGG16 | level 0 | 96.42 | 71274 | 2526 | 2761 | 96.27 | 96.42 | val | [model](https://drive.google.com/file/d/1qE-euGGMZTxcHED_VDUW6eR-SKPkUDD-/view?usp=sharing) \| [shell](../tools/shells/vgg16_scnn_llamas.sh) |
 | SCNN | ERFNet | level 0 | 95.94 | 71036 | 3019 | 2999 | 95.92 | 95.95 | val | [model](https://drive.google.com/file/d/1oTdmP_tsguqa1-6bBIikT4gPThUVdXCr/view?usp=sharing) \| [shell](../tools/shells/erfnet_scnn_llamas.sh) |
 | SCNN | ResNet34 | level 0 | 96.19 | 71109 | 2705 | 2926 | 96.34 | 96.05 | val | [model](https://drive.google.com/file/d/1-vribu32iXViBqYumApmKQK4mjQd6BEp/view?usp=sharing) \| [shell](../tools/shells/resnet34_scnn_llamas.sh) |
-| BezierLaneNet | ResNet18 | level 1b | 95.52 | 70515 | 3102 | 3520 | 95.79 | 95.25 | val | [model](https://drive.google.com/file/d/1fTQEZnr2wVQ20P3B2AyM3c_dFp5BHKwQ/view?usp=sharing) \| [shell](../tools/shells/resnet18_bezierlanenet_llamas-aug1b.sh) |
-| BezierLaneNet | ResNet34 | level 1b | 96.11 | 70959 | 2667 | 3076 | 96.38 | 95.85 | val | [model](https://drive.google.com/file/d/1RhYTJB_VlHL9hFYuwAX_T4Nev9ZIlmHt/view?usp=sharing) \| [shell](../tools/shells/resnet34_bezierlanenet_llamas-aug1b.sh) |
+| BézierLaneNet | ResNet18 | level 1b | 95.52 | 70515 | 3102 | 3520 | 95.79 | 95.25 | val | [model](https://drive.google.com/file/d/1fTQEZnr2wVQ20P3B2AyM3c_dFp5BHKwQ/view?usp=sharing) \| [shell](../tools/shells/resnet18_bezierlanenet_llamas-aug1b.sh) |
+| BézierLaneNet | ResNet34 | level 1b | 96.11 | 70959 | 2667 | 3076 | 96.38 | 95.85 | val | [model](https://drive.google.com/file/d/1RhYTJB_VlHL9hFYuwAX_T4Nev9ZIlmHt/view?usp=sharing) \| [shell](../tools/shells/resnet34_bezierlanenet_llamas-aug1b.sh) |
 
 Their test performance can be found at the [LLAMAS leaderboard](https://unsupervised-llamas.com/llamas/benchmark_splines).
 

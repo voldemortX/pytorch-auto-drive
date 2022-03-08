@@ -44,7 +44,7 @@ Models from this repo are faster to train (**single card trainable**) and often 
 | lane detection | ERFNet, ENet | [SAD](https://arxiv.org/abs/1908.00821) ([*Postponed*](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes)) |
 | lane detection | ERFNet | [PRNet](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) (*In progress*) |
 | lane detection | ResNets (18, 34, 50, 101), ResNet18-reduced | [LSTR](https://arxiv.org/abs/2011.04233) |
-| lane detection | ResNets (18, 34) | [BézierLaneNet](https://arxiv.org/abs/2203.02431) |
+| lane detection | ResNets (18, 34) | [BézierLaneNet](/configs/lane_detection/bezierlanenet) |
 
 *The VGG16 backbone corresponds to DeepLab-LargeFOV in SCNN.*
 
@@ -54,7 +54,7 @@ Models from this repo are faster to train (**single card trainable**) and often 
 
 ## Model Zoo
 
-We provide solid results (average/best/detailed), training time, shell scripts and trained models available for download in [MODEL_ZOO.md](docs/MODEL_ZOO.md).
+We provide solid results (average/best/detailed), training time, shell scripts and trained models available for download in [MODEL_ZOO.md](docs/MODEL_ZOO_J.md).
 
 ## Installation
 
