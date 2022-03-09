@@ -2,7 +2,7 @@ The whole [MODEL_ZOO](./MODEL_ZOO.md) with specifications.
 
 ## Lane Detection
 
-- Baseline
+- [Baseline](/configs/lane_detection/baseline)
 - SCNN
 - RESA
 - LSTR
