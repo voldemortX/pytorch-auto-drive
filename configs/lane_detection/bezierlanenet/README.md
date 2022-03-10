@@ -25,14 +25,14 @@ State-of-the-art lane detectors are typically based on semantic segmentation (SC
 
 ### CULane (test)
 
-| backbone | aug | resolution | training time | precision | F measure (avg) | F measure | normal | crowded | night | no line | shadow | arrow | dazzle<br>light | curve | crossroad | |
+| backbone | aug | resolution | training time | precision | F1 (avg) | F1 | normal | crowded | night | no line | shadow | arrow | dazzle<br>light | curve | crossroad | |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | ResNet18 | level 1b | 288 x 800 | 9.9h | mix | 73.36 | 73.67 | 90.22 | 71.55 | 68.70 | 45.30 | 70.91 | 84.09 | 62.49 | 58.98 | 996 | [model](https://drive.google.com/file/d/1IpfusHvFeMEGe8wv0fer6KF3pH4X2Tj3/view?usp=sharing) \| [shell](/tools/shells/resnet18_bezierlanenet_culane-aug1b.sh) |
 | ResNet34 | level 1b | 288 x 800 | 11.0h | mix | 75.30 | 75.57 | 91.59 | 73.20 | 69.90 | 48.05 | 76.74 | 87.16 | 69.20 | 62.45 | 888 | [model](https://drive.google.com/file/d/1342FQeDQKRHMo283jW2T1WDgfgsYbR5q/view?usp=sharing) \| [shell](/tools/shells/resnet34_bezierlanenet_culane-aug1b.sh) |
 
 ### LLAMAS (val)
 
-| backbone | aug | resolution | training time | precision | F1 | F1 | TP | FP | FN | Precision | Recall | |
+| backbone | aug | resolution | training time | precision | F1 (avg) | F1 | TP | FP | FN | Precision | Recall | |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | ResNet18 | level 1b | 360 x 640 | 5.5h | mix | 95.42 | 95.52 | 70515 | 3102 | 3520 | 95.79 | 95.25 | [model](https://drive.google.com/file/d/1fTQEZnr2wVQ20P3B2AyM3c_dFp5BHKwQ/view?usp=sharing) \| [shell](/tools/shells/resnet18_bezierlanenet_llamas-aug1b.sh) |
 | ResNet34 | level 1b | 360 x 640 | 6.1h | mix | 96.04 | 96.11 | 70959 | 2667 | 3076 | 96.38 | 95.85 | [model](https://drive.google.com/file/d/1RhYTJB_VlHL9hFYuwAX_T4Nev9ZIlmHt/view?usp=sharing) \| [shell](/tools/shells/resnet34_bezierlanenet_llamas-aug1b.sh) |

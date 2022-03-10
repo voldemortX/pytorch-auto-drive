@@ -38,7 +38,7 @@ The segmentation baseline takes semantic segmentation networks and appends a lan
 
 ### CULane (test)
 
-| backbone | aug | resolution | training time | precision | F measure (avg) | F measure | normal | crowded | night | no line | shadow | arrow | dazzle<br>light | curve | crossroad | |
+| backbone | aug | resolution | training time | precision | F1 (avg) | F1 | normal | crowded | night | no line | shadow | arrow | dazzle<br>light | curve | crossroad | |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | VGG16 | level 0 | 288 x 800 | 9.3h | mix | 65.93 | 66.09 | 85.51 | 64.05 | 61.14 | 35.96 | 59.76 | 78.43 | 53.25 | 62.16 | 2224 | [model](https://drive.google.com/file/d/1wVz1a7S1e5Dgy7ERk7E8dqQ8gyK-dWLG/view?usp=sharing) \| [shell](/tools/shells/vgg16_baseline_culane.sh) |
 | ResNet18 | level 0 | 288 x 800 | 5.3h | mix | 65.19 | 65.30 | 85.45 | 62.63 | 61.04 | 33.88 | 51.72 | 78.15 | 53.05 | 59.70 | 1915 | [model](https://drive.google.com/file/d/1wkaTp8v1ceXrd6AjRccqpNxxxkd_qg1U/view?usp=sharing) \| [shell](/tools/shells/resnet18_baseline_culane.sh) |
@@ -58,7 +58,7 @@ The segmentation baseline takes semantic segmentation networks and appends a lan
 
 ### LLAMAS (val)
 
-| backbone | aug | resolution | training time | precision | F1 | F1 | TP | FP | FN | Precision | Recall | |
+| backbone | aug | resolution | training time | precision | F1 (avg) | F1 | TP | FP | FN | Precision | Recall | |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | VGG16 | level 0 | 360 x 640 | 9.3h | mix | 95.05 | 95.11 | 70263 | 3460 | 3772 | 95.31 | 94.91 | [model](https://drive.google.com/file/d/1k2b7iRw3_YMJDMUsKVjtdOXRdZsXNXnO/view?usp=sharing) \| [shell](/tools/shells/vgg16_baseline_llamas.sh) |
 | ResNet34 | level 0 | 360 x 640 | 7.0h | mix | 95.90 | 95.91 | 70841 | 2847 | 3194 | 96.14 | 95.69 | [model](https://drive.google.com/file/d/1YXNgwhQqwxoMkHDbRqAdnuAXIe1IdLSm/view?usp=sharing) \| [shell](/tools/shells/resnet34_baseline_llamas.sh) |

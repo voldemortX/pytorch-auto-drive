@@ -39,47 +39,47 @@
 | LSTR | ResNet18s<sup>#</sup> | level 1a | 360 x 640 | *no* | TuSimple | Accuracy | 94.91% | 95.06% | 15.5h |
 | BézierLaneNet | ResNet18 | level 1b | 360 x 640 | *no* | TuSimple | Accuracy | 95.01% | 95.41% | 5.5h |
 | BézierLaneNet | ResNet34 | level 1b | 360 x 640 | *no* | TuSimple | Accuracy | 95.17% | 95.65% | 6.5h |
-| Baseline | VGG16 | level 0 | 288 x 800 | *yes* | CULane | F measure | 65.93 | 66.09 | 9.3h |
-| Baseline | ResNet18 | level 0 | 288 x 800 | *yes* | CULane | F measure | 65.19 | 65.30 | 5.3h |
-| Baseline | ResNet34 | level 0 | 288 x 800 | *yes* | CULane | F measure | 69.82 | 69.92 | 7.3h |
-| Baseline | ResNet50 | level 0 | 288 x 800 | *yes* | CULane | F measure | 68.31 | 68.48 | 12.4h |
-| Baseline | ResNet101 | level 0 | 288 x 800 | *yes* | CULane | F measure | 71.29 | 71.37 | 20.0h |
-| Baseline | ERFNet | level 0 | 288 x 800 | *yes* | CULane | F measure | 73.40 | 73.49 | 6h |
-| Baseline | ENet<sup>#</sup> | level 0 | 288 x 800 | *yes* | CULane | F measure | 69.39 | 69.90 | 6.4h<sup>+</sup> |
-| Baseline | MobileNetV2 | level 0 | 288 x 800 | *yes* | CULane | F measure | 67.34 | 67.41 | 3.0h |
-| Baseline | MobileNetV3-Large | level 0 | 288 x 800 | *yes* | CULane | F measure | 68.27 | 68.42 | 3.0h |
-| Baseline | RepVGG-A0| level 0 | 288 x 800 | *yes* | CULane | F measure | 70.22 | 70.56 | 3.3h** |
-| Baseline | RepVGG-A1 | level 0 | 288 x 800 | *yes* | CULane | F measure | 70.73 | 70.85 | 4.1h** |
-| Baseline | RepVGG-B0 | level 0 | 288 x 800 | *yes* | CULane | F measure | 71.77 | 71.81 | 6.2h** |
-| Baseline | RepVGG-B1g2 | level 0 | 288 x 800 | *yes* | CULane | F measure | 72.08 | 72.20 | 10.0h** |
-| Baseline | RepVGG-B2 | level 0 | 288 x 800 | *yes* | CULane | F measure | 72.24 | 72.33 | 13.2h** |
-| Baseline | Swin-Tiny | level 0 | 288 x 800 | *yes* | CULane | F measure | 69.75 | 69.90 | 12.1h** |
-| SCNN | VGG16 | level 0 | 288 x 800 | *yes* | CULane | F measure | 74.02 | 74.29 | 12.8h |
-| SCNN | ResNet18 | level 0 | 288 x 800 | *yes* | CULane | F measure | 71.94 | 72.19 | 8.0h |
-| SCNN | ResNet34 | level 0 | 288 x 800 | *yes* | CULane | F measure | 72.44 | 72.70 | 10.7h |
-| SCNN | ResNet50 | level 0 | 288 x 800 | *yes* | CULane | F measure | 72.95 | 73.03 | 17.9h |
-| SCNN | ResNet101 | level 0 | 288 x 800 | *yes* | CULane | F measure | 73.29 | 73.58 | 25.7h |
-| SCNN | ERFNet | level 0 | 288 x 800 | *yes* | CULane | F measure | 73.85 | 74.03 | 11.3h |
-| SCNN | RepVGG-A1 | level 0 | 288 x 800 | *yes* | CULane | F measure | 72.88 | 72.89 | 5.7h** |
-| RESA | ResNet18 | level 0 | 288 x 800 | *no* | CULane | F measure | 72.76 | 72.90 | 8.0h* |
-| RESA | ResNet34 | level 0 | 288 x 800 | *no* | CULane | F measure | 73.29 | 73.66 | 10.7h* |
-| RESA | ResNet50 | level 0 | 288 x 800 | *no* | CULane | F measure | 73.99 | 74.19 | 17.9h* |
-| RESA | ResNet101 | level 0 | 288 x 800 | *no* | CULane | F measure | 73.96 | 74.04 | 25.7h* |
-| RESA | MobileNetV2 | level 0 | 288 x 800 | *yes* | CULane | F measure | 72.28 | 72.36 | 4.6h |
-| RESA | MobileNetV3-Large | level 0 | 288 x 800 | *yes* | CULane | F measure | 70.23 | 70.61 | 4.6h |
-| LSTR | ResNet18s-2X<sup>#</sup> | level 0 | 288 x 800 | *no* | CULane | F measure | 36.27 | 39.77 | 28.5h* |
-| LSTR | ResNet18s-2X<sup>#</sup> | level 1a | 288 x 800 | *no* | CULane | F measure | 68.35 | 68.72 | 31.5h* |
-| LSTR | ResNet34 | level 1a | 288 x 800 | *no* | CULane | F measure | 72.17 | 72.48 | 45.0h* |
-| BézierLaneNet | ResNet18 | level 1b | 288 x 800 | *yes* | CULane | F measure | 73.36 | 73.67 | 9.9h |
-| BézierLaneNet | ResNet34 | level 1b | 288 x 800 | *yes* | CULane | F measure | 75.30 | 75.57 | 11.0h |
-| Baseline | ERFNet | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 95.94 | 96.13 | 10.9h<sup>+</sup> |
-| Baseline | VGG16 | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 95.05 | 95.11 | 9.3h |
-| Baseline | ResNet34 | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 95.90 | 95.91 | 7.0h |
-| SCNN | ERFNet | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 95.89 | 95.94 | 14.2h<sup>+</sup> |
-| SCNN | VGG16 | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 96.39 | 96.42 | 12.5h |
-| SCNN | ResNet34 | level 0 | 360 x 640 | *yes* | LLAMAS | F measure | 96.17 | 96.19 | 10.1h |
-| BézierLaneNet | ResNet18 | level 1b | 360 x 640 | *yes* | LLAMAS | F measure | 95.42 | 95.52 | 5.5h |
-| BézierLaneNet | ResNet34 | level 1b | 360 x 640 | *yes* | LLAMAS | F measure | 96.04 | 96.11 | 6.1h |
+| Baseline | VGG16 | level 0 | 288 x 800 | *yes* | CULane | F1 | 65.93 | 66.09 | 9.3h |
+| Baseline | ResNet18 | level 0 | 288 x 800 | *yes* | CULane | F1 | 65.19 | 65.30 | 5.3h |
+| Baseline | ResNet34 | level 0 | 288 x 800 | *yes* | CULane | F1 | 69.82 | 69.92 | 7.3h |
+| Baseline | ResNet50 | level 0 | 288 x 800 | *yes* | CULane | F1 | 68.31 | 68.48 | 12.4h |
+| Baseline | ResNet101 | level 0 | 288 x 800 | *yes* | CULane | F1 | 71.29 | 71.37 | 20.0h |
+| Baseline | ERFNet | level 0 | 288 x 800 | *yes* | CULane | F1 | 73.40 | 73.49 | 6h |
+| Baseline | ENet<sup>#</sup> | level 0 | 288 x 800 | *yes* | CULane | F1 | 69.39 | 69.90 | 6.4h<sup>+</sup> |
+| Baseline | MobileNetV2 | level 0 | 288 x 800 | *yes* | CULane | F1 | 67.34 | 67.41 | 3.0h |
+| Baseline | MobileNetV3-Large | level 0 | 288 x 800 | *yes* | CULane | F1 | 68.27 | 68.42 | 3.0h |
+| Baseline | RepVGG-A0| level 0 | 288 x 800 | *yes* | CULane | F1 | 70.22 | 70.56 | 3.3h** |
+| Baseline | RepVGG-A1 | level 0 | 288 x 800 | *yes* | CULane | F1 | 70.73 | 70.85 | 4.1h** |
+| Baseline | RepVGG-B0 | level 0 | 288 x 800 | *yes* | CULane | F1 | 71.77 | 71.81 | 6.2h** |
+| Baseline | RepVGG-B1g2 | level 0 | 288 x 800 | *yes* | CULane | F1 | 72.08 | 72.20 | 10.0h** |
+| Baseline | RepVGG-B2 | level 0 | 288 x 800 | *yes* | CULane | F1 | 72.24 | 72.33 | 13.2h** |
+| Baseline | Swin-Tiny | level 0 | 288 x 800 | *yes* | CULane | F1 | 69.75 | 69.90 | 12.1h** |
+| SCNN | VGG16 | level 0 | 288 x 800 | *yes* | CULane | F1 | 74.02 | 74.29 | 12.8h |
+| SCNN | ResNet18 | level 0 | 288 x 800 | *yes* | CULane | F1 | 71.94 | 72.19 | 8.0h |
+| SCNN | ResNet34 | level 0 | 288 x 800 | *yes* | CULane | F1 | 72.44 | 72.70 | 10.7h |
+| SCNN | ResNet50 | level 0 | 288 x 800 | *yes* | CULane | F1 | 72.95 | 73.03 | 17.9h |
+| SCNN | ResNet101 | level 0 | 288 x 800 | *yes* | CULane | F1 | 73.29 | 73.58 | 25.7h |
+| SCNN | ERFNet | level 0 | 288 x 800 | *yes* | CULane | F1 | 73.85 | 74.03 | 11.3h |
+| SCNN | RepVGG-A1 | level 0 | 288 x 800 | *yes* | CULane | F1 | 72.88 | 72.89 | 5.7h** |
+| RESA | ResNet18 | level 0 | 288 x 800 | *no* | CULane | F1 | 72.76 | 72.90 | 8.0h* |
+| RESA | ResNet34 | level 0 | 288 x 800 | *no* | CULane | F1 | 73.29 | 73.66 | 10.7h* |
+| RESA | ResNet50 | level 0 | 288 x 800 | *no* | CULane | F1 | 73.99 | 74.19 | 17.9h* |
+| RESA | ResNet101 | level 0 | 288 x 800 | *no* | CULane | F1 | 73.96 | 74.04 | 25.7h* |
+| RESA | MobileNetV2 | level 0 | 288 x 800 | *yes* | CULane | F1 | 72.28 | 72.36 | 4.6h |
+| RESA | MobileNetV3-Large | level 0 | 288 x 800 | *yes* | CULane | F1 | 70.23 | 70.61 | 4.6h |
+| LSTR | ResNet18s-2X<sup>#</sup> | level 0 | 288 x 800 | *no* | CULane | F1 | 36.27 | 39.77 | 28.5h* |
+| LSTR | ResNet18s-2X<sup>#</sup> | level 1a | 288 x 800 | *no* | CULane | F1 | 68.35 | 68.72 | 31.5h* |
+| LSTR | ResNet34 | level 1a | 288 x 800 | *no* | CULane | F1 | 72.17 | 72.48 | 45.0h* |
+| BézierLaneNet | ResNet18 | level 1b | 288 x 800 | *yes* | CULane | F1 | 73.36 | 73.67 | 9.9h |
+| BézierLaneNet | ResNet34 | level 1b | 288 x 800 | *yes* | CULane | F1 | 75.30 | 75.57 | 11.0h |
+| Baseline | ERFNet | level 0 | 360 x 640 | *yes* | LLAMAS | F1 | 95.94 | 96.13 | 10.9h<sup>+</sup> |
+| Baseline | VGG16 | level 0 | 360 x 640 | *yes* | LLAMAS | F1 | 95.05 | 95.11 | 9.3h |
+| Baseline | ResNet34 | level 0 | 360 x 640 | *yes* | LLAMAS | F1 | 95.90 | 95.91 | 7.0h |
+| SCNN | ERFNet | level 0 | 360 x 640 | *yes* | LLAMAS | F1 | 95.89 | 95.94 | 14.2h<sup>+</sup> |
+| SCNN | VGG16 | level 0 | 360 x 640 | *yes* | LLAMAS | F1 | 96.39 | 96.42 | 12.5h |
+| SCNN | ResNet34 | level 0 | 360 x 640 | *yes* | LLAMAS | F1 | 96.17 | 96.19 | 10.1h |
+| BézierLaneNet | ResNet18 | level 1b | 360 x 640 | *yes* | LLAMAS | F1 | 95.42 | 95.52 | 5.5h |
+| BézierLaneNet | ResNet34 | level 1b | 360 x 640 | *yes* | LLAMAS | F1 | 96.04 | 96.11 | 6.1h |
 
 *All performance is measured with ImageNet pre-training and reported as 3 times average/best on test set.*
 
