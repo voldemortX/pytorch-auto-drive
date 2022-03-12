@@ -37,7 +37,7 @@ Models from this repo are faster to train (**single card trainable**) and often 
 
 | Task | Backbone | Model/Method |
 | :---: | :---: | :---: |
-| semantic segmentation | ResNet-101 | [FCN](https://arxiv.org/abs/1605.06211) |
+| semantic segmentation | ResNet-101 | [FCN](/configs/semantic_segmentation/fcn) |
 | semantic segmentation | ResNet-101 | [DeeplabV2](https://arxiv.org/abs/1606.00915) |
 | semantic segmentation | ResNet-101 | [DeeplabV3](https://arxiv.org/abs/1706.05587) |
 | semantic segmentation | - | [ENet](https://arxiv.org/abs/1606.02147) |
