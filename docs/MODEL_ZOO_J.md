@@ -10,7 +10,7 @@ The whole [MODEL_ZOO](./MODEL_ZOO.md) with specifications.
 
 ## Semantic Segmentation
 
-- FCN
+- [FCN](/configs/semantic_segmentation/fcn)
 - DeeplabV2
 - DeeplabV3
 - ENet
