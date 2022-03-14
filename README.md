@@ -80,6 +80,10 @@ Refer to [DEPLOY.md](docs/DEPLOY.md) for ONNX and TensorRT deployment supports.
 
 Checkout [ADVANCED_TUTORIAL.md](docs/ADVANCED_TUTORIAL.md) for advanced use cases and how to code in PytorchAutoDrive.
 
+## Contributing
+
+Refer to [CONTRIBUTING.md](/docs/CONTRIBUTING.md) for contribution guides.
+
 ## Citation
 
 If you feel this framework substantially helped your research or you want a reference when using our results, please cite the following paper that made the official release of PytorchAutoDrive:
@@ -92,44 +96,6 @@ If you feel this framework substantially helped your research or you want a refe
   year={2022}
 }
 ```
-
-## Contributing
-
-We welcome **Pull Requests** to fix bugs, update docs or implement new features etc. We also welcome **Issues** to report problems and needs, or ask questions (since your question might be more common and helpful to the community than you presume). Interested folks should checkout our [roadmap](https://github.com/voldemortX/pytorch-auto-drive/issues/4).
-
-This repository implements (or plan to implement) the following interesting papers in a unified PyTorch framework:
-
-[Fully Convolutional Networks for Semantic Segmentation](https://arxiv.org/abs/1605.06211) CVPR 2015
-
-[DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs](https://arxiv.org/abs/1606.00915) TPAMI 2017
-
-[Rethinking Atrous Convolution for Semantic Image Segmentation](https://arxiv.org/abs/1706.05587) ArXiv preprint 2017
-
-[ENet: A Deep Neural Network Architecture for Real-Time Semantic Segmentation](https://arxiv.org/abs/1606.02147) ArXiv preprint 2016 
-
-[ERFNet: Efficient Residual Factorized ConvNet for Real-Time Semantic Segmentation](https://ieeexplore.ieee.org/abstract/document/8063438/) ITS 2017
-
-[Spatial As Deep: Spatial CNN for Traffic Scene Understanding](https://arxiv.org/abs/1712.06080) AAAI 2018
-
-[RESA: Recurrent Feature-Shift Aggregator for Lane Detection](https://arxiv.org/abs/2008.13719) AAAI 2021
-
-[Polynomial Regression Network for Variable-Number Lane Detection](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) ECCV 2020
-
-[End-to-end Lane Shape Prediction with Transformers](https://arxiv.org/abs/2011.04233) WACV 2021
-
-[Keep Your Eyes on The Lane: Real-Time Attention-Guided Lane Detection](https://arxiv.org/abs/2010.12035) CVPR 2021
-
-[Rethinking Efficient Lane Detection via Curve Modeling](https://arxiv.org/abs/2203.02431) CVPR 2022
-
-You are also welcomed to make additions on this paper list, or open-source your related works here.
-
-## Notes:
-
-1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in config files if needed.
-
-2. Training times are measured on **a single RTX 2080Ti**, including online validation time for segmentation, test time for lane detection.
-
-3. All segmentation results reported are from single model without CRF and without multi-scale testing.
 
 ## Credits:
 

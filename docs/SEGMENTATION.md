@@ -55,3 +55,9 @@ Detail results will be saved to `<save_dir>/<exp_name>/`.
 Overall result will be saved to `log.txt`.
 
 Recommend `workers=0 batch_size=1` for high precision inference.
+
+## Notes:
+
+1. Cityscapes dataset is down-sampled by 2 when training at 256 x 512, to specify different sizes, modify them in config files if needed.
+
+2. All segmentation results reported are from single model without CRF and without multi-scale testing.
