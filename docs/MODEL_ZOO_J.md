@@ -14,4 +14,4 @@ The whole [MODEL_ZOO](./MODEL_ZOO.md) with specifications.
 - DeeplabV2
 - DeeplabV3
 - ENet
-- ERFNet
+- [ERFNet](/configs/semantic_segmentation/erfnet)
