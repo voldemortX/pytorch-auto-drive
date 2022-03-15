@@ -45,14 +45,14 @@ Fully Convolutional Network (FCN) was the most classic semantic segmentation net
 @inproceedings{long2015fully,
   title={Fully convolutional networks for semantic segmentation},
   author={Long, Jonathan and Shelhamer, Evan and Darrell, Trevor},
-  booktitle={CVPR},
+  booktitle={Computer Vision and Pattern Recognition},
   year={2015}
 }
 
 @article{shelhamer2016fully,
   title={Fully convolutional networks for semantic segmentation},
   author={Shelhamer, Evan and Long, Jonathan and Darrell, Trevor},
-  journal={TPAMI},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
   volume={39},
   number={4},
   pages={640--651},

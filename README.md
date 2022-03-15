@@ -41,7 +41,7 @@ Models from this repo are faster to train (**single card trainable**) and often 
 | semantic segmentation | ResNet-101 | [DeeplabV2](https://arxiv.org/abs/1606.00915) |
 | semantic segmentation | ResNet-101 | [DeeplabV3](https://arxiv.org/abs/1706.05587) |
 | semantic segmentation | - | [ENet](https://arxiv.org/abs/1606.02147) |
-| semantic segmentation | - | [ERFNet](https://ieeexplore.ieee.org/abstract/document/8063438/) |
+| semantic segmentation | - | [ERFNet](/configs/semantic_segmentation/erfnet) |
 | lane detection | ENet, ERFNet, VGG16, ResNets (18, 34, 50, 101), MobileNets (V2, V3-Large), RepVGGs (A0, A1, B0, B1g2, B2), Swin (Tiny) | [Baseline](/configs/lane_detection/baseline) |
 | lane detection | ERFNet, VGG16, ResNets (18, 34, 50, 101), RepVGGs (A1) | [SCNN](https://arxiv.org/abs/1712.06080) |
 | lane detection | ResNets (18, 34, 50, 101), MobileNets (V2, V3-Large) | [RESA](https://arxiv.org/abs/2008.13719) |
