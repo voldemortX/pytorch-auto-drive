@@ -123,6 +123,12 @@ class _BezierLaneDataset(torchvision.datasets.VisionDataset):
 # TuSimple
 @DATASETS.register()
 class TuSimpleAsBezier(_BezierLaneDataset):
+    colors = [
+        [0, 0, 0],  # background
+        [255, 0, 255], [0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 0], [0, 255, 255],
+        [0, 0, 0]  # ignore
+    ]
+
     def init_dataset(self, root):
         self.image_dir = os.path.join(root, 'clips')
         self.bezier_labels_dir = os.path.join(root, 'bezier_labels')
@@ -135,6 +141,12 @@ class TuSimpleAsBezier(_BezierLaneDataset):
 # CULane
 @DATASETS.register()
 class CULaneAsBezier(_BezierLaneDataset):
+    colors = [
+        [0, 0, 0],  # background
+        [0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 0],
+        [0, 0, 0]  # ignore
+    ]
+
     def init_dataset(self, root):
         self.image_dir = root
         self.bezier_labels_dir = os.path.join(root, 'bezier_labels')
@@ -149,6 +161,12 @@ class CULaneAsBezier(_BezierLaneDataset):
 # LLAMAS
 @DATASETS.register()
 class LLAMAS_AsBezier(_BezierLaneDataset):
+    colors = [
+        [0, 0, 0],  # background
+        [0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 0],
+        [0, 0, 0]  # ignore
+    ]
+
     def init_dataset(self, root):
         self.image_dir = os.path.join(root, 'color_images')
         self.bezier_labels_dir = os.path.join(root, 'bezier_labels')
@@ -164,6 +182,8 @@ class LLAMAS_AsBezier(_BezierLaneDataset):
 @DATASETS.register()
 class Curvelanes_AsBezier(CULaneAsBezier):
     # TODO: Match formats
+    colors = []
+
     def _init_all(self):
         # Got the lists from 4 datasets to be in the same format
         data_list = 'train.txt' if self.image_set == 'val_train' else self.image_set + '.txt'

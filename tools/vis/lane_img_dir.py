@@ -28,12 +28,21 @@ if __name__ == '__main__':
     parser.add_argument('--keypoint-path', type=str,
                         help='Keypoint input path (expect json/txt file in CULane format, [x, y]),'
                              'if both mask & keypoint are None, inference will be performed')
+    parser.add_argument('--gt-keypoint-path', type=str,
+                        help='Ground truth keypoint input path (expect json/txt file in CULane format, [x, y]),'
+                             'if both mask & keypoint are None, inference will be performed')
     parser.add_argument('--image-suffix', type=str, default='.jpg',
                         help='Image file suffix')
     parser.add_argument('--keypoint-suffix', type=str, default='.lines.txt',
                         help='Keypoint file suffix')
+    parser.add_argument('--gt-keypoint-suffix', type=str, default='.lines.txt',
+                        help='Ground truth keypoint file suffix')
     parser.add_argument('--mask-suffix', type=str, default='.png',
                         help='Segmentation mask file suffix')
+    parser.add_argument('--style', type=str, default='point',
+                        help='Lane visualization style: point/line/bezier')
+    parser.add_argument('--metric', type=str, default='culane',
+                        help='Lane eval metric when comparing with GT')
     parser.add_argument('--pred', action='store_true',
                         help='Whether to predict from a model')
     parser.add_argument('--mixed-precision', action='store_true',
@@ -49,9 +58,9 @@ if __name__ == '__main__':
     group2.add_argument('--checkpoint', type=str,
                         help='Continue/Load from a previous checkpoint')
 
-    retain_args = ['mixed_precision', 'pred',
-                   'image_path', 'save_path', 'mask_path', 'keypoint_path',
-                   'image_suffix', 'keypoint_suffix', 'mask_suffix', 'use_color_pool']
+    retain_args = ['mixed_precision', 'pred', 'metric',
+                   'image_path', 'save_path', 'mask_path', 'keypoint_path', 'gt_keypoint_path',
+                   'image_suffix', 'keypoint_suffix', 'gt_keypoint_suffix', 'mask_suffix', 'use_color_pool', 'style']
 
     args = parser.parse_args()
 

@@ -10,6 +10,12 @@ from .builder import DATASETS
 # LLAMAS direct loading (similar with culane)
 @DATASETS.register()
 class LLAMAS(LaneKeypointDataset):
+    colors = [
+        [0, 0, 0],  # background
+        [0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 0],
+        [0, 0, 0]  # ignore
+    ]
+
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None,
                  ppl=417, gap=1, start=300, padding_mask=False):
         super().__init__(root, transforms, transform, target_transform, ppl, gap, start, padding_mask, image_set)

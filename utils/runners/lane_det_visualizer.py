@@ -40,6 +40,7 @@ class LaneDetVisualizer(BaseVisualizer):
 
     @torch.no_grad()
     def lane_inference(self, images, original_size=None):
+        cps = None  # Bézier control points
         if original_size is None:
             original_size = self._cfg['original_size']
         with autocast(self._cfg['mixed_precision']):
@@ -52,14 +53,20 @@ class LaneDetVisualizer(BaseVisualizer):
                                                            self._cfg['dataset_name'],
                                                            self._cfg['max_lane'])
             else:
-                keypoints = self.model.inference(images,
-                                                 [self._cfg['input_size'], original_size],
-                                                 self._cfg['gap'],
-                                                 self._cfg['ppl'],
-                                                 self._cfg['dataset_name'],
-                                                 self._cfg['max_lane'])
+                return_cps = self._cfg['style'] == 'bezier'
+                res = self.model.inference(images,
+                                           [self._cfg['input_size'], original_size],
+                                           self._cfg['gap'],
+                                           self._cfg['ppl'],
+                                           self._cfg['dataset_name'],
+                                           self._cfg['max_lane'],
+                                           return_cps=return_cps)
+                if return_cps:
+                    cps, keypoints = res
+                else:
+                    keypoints = res
 
-        return [[np.array(lane) for lane in image] for image in keypoints]
+        return cps, [[np.array(lane) for lane in image] for image in keypoints]
 
     @abstractmethod
     def run(self, *args, **kwargs):
@@ -89,10 +96,12 @@ class LaneDetDir(LaneDetVisualizer):
                 name='ImageFolderLaneDataset',
                 root_image=self._cfg['image_path'],
                 root_keypoint=self._cfg['keypoint_path'],
+                root_gt_keypoint=self._cfg['gt_keypoint_path'],
                 root_mask=self._cfg['mask_path'],
                 root_output=self._cfg['save_path'],
                 image_suffix=self._cfg['image_suffix'],
                 keypoint_suffix=self._cfg['keypoint_suffix'],
+                gt_keypoint_suffix=self._cfg['gt_keypoint_suffix'],
                 mask_suffix=self._cfg['mask_suffix']
             )
         dataset = DATASETS.from_dict(dataset_cfg,
@@ -111,9 +120,13 @@ class LaneDetDir(LaneDetVisualizer):
         for imgs, original_imgs, targets in tqdm(self.dataloader):
             filenames = [i['filename'] for i in targets]
             keypoints = [i['keypoint'] for i in targets]
+            gt_keypoints = [i['gt_keypoint'] for i in targets]
             masks = [i['mask'] for i in targets]
+            cps = None
             if keypoints.count(None) == len(keypoints):
                 keypoints = None
+            if gt_keypoints.count(None) == len(gt_keypoints):
+                gt_keypoints = None
             if masks.count(None) == len(masks):
                 masks = None
             else:
@@ -123,13 +136,16 @@ class LaneDetDir(LaneDetVisualizer):
                     masks = masks.to(self.device)
                 imgs = imgs.to(self.device)
                 original_imgs = original_imgs.to(self.device)
-                keypoints = self.lane_inference(imgs, original_imgs.shape[2:])
+                cps, keypoints = self.lane_inference(imgs, original_imgs.shape[2:])
             results = lane_detection_visualize_batched(original_imgs,
                                                        masks=masks,
                                                        keypoints=keypoints,
+                                                       control_points=cps,
+                                                       gt_keypoints=gt_keypoints,
                                                        mask_colors=self._cfg['colors'],
                                                        keypoint_color=self._cfg['keypoint_color'],
-                                                       std=None, mean=None)
+                                                       std=None, mean=None, style=self._cfg['style'],
+                                                       compare_gt_metric=self._cfg['metric'])
             save_images(results, filenames=filenames)
 
 
@@ -141,16 +157,18 @@ class LaneDetVideo(BaseVideoVisualizer, LaneDetVisualizer):
         # Must do inference
         for imgs, original_imgs in tqdm(self.dataloader):
             keypoints = None
+            cps = None
             if self._cfg['pred']:
                 imgs = imgs.to(self.device)
                 original_imgs = original_imgs.to(self.device)
-                keypoints = self.lane_inference(imgs, original_imgs.shape[2:])
+                cps, keypoints = self.lane_inference(imgs, original_imgs.shape[2:])
             results = lane_detection_visualize_batched(original_imgs,
                                                        masks=None,
                                                        keypoints=keypoints,
+                                                       control_points=cps,
                                                        mask_colors=None,
                                                        keypoint_color=self._cfg['keypoint_color'],
-                                                       std=None, mean=None)
+                                                       std=None, mean=None, style=self._cfg['style'])
             results = results[..., [2, 1, 0]]
             for j in range(results.shape[0]):
                 self.writer.write(results[j])

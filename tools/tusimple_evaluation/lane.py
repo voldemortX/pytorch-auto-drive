@@ -93,6 +93,38 @@ class LaneEval(object):
             {'name': 'FN', 'value': fn / num, 'order': 'asc'}
         ])
 
+    @staticmethod
+    def bench_with_matches(pred, gt, y_samples):
+        # Adapted from lucastabelini/LaneATT, for visualization use only
+        if any(len(p) != len(y_samples) for p in pred):
+            raise Exception('Format of lanes error.')
+        angles = [LaneEval.get_angle(np.array(x_gts), np.array(y_samples)) for x_gts in gt]
+        threshs = [LaneEval.pixel_thresh / np.cos(angle) for angle in angles]
+        line_accs = []
+        fp, fn = 0., 0.
+        matched = 0.
+        my_matches = [False] * len(pred)
+        my_accs = [0] * len(pred)
+        for x_gts, thresh in zip(gt, threshs):
+            accs = [LaneEval.line_accuracy(np.array(x_preds), np.array(x_gts), thresh) for x_preds in pred]
+            my_accs = np.maximum(my_accs, accs)
+            max_acc = np.max(accs) if len(accs) > 0 else 0.
+
+            if max_acc < LaneEval.pt_thresh:
+                fn += 1
+            else:
+                my_matches[np.argmax(accs)] = True
+                matched += 1
+            line_accs.append(max_acc)
+        fp = len(pred) - matched
+        if len(gt) > 4 and fn > 0:
+            fn -= 1
+        s = sum(line_accs)
+        if len(gt) > 4:
+            s -= min(line_accs)
+        return s / max(min(4.0, len(gt)), 1.), fp / len(pred) if len(pred) > 0 else 0., fn / max(
+            min(len(gt), 4.), 1.), my_matches, my_accs
+
 
 if __name__ == '__main__':
     # args: pred filename, gt filename, experiment name, save dir

@@ -53,13 +53,15 @@ class ImageFolderDataset(torchvision.datasets.VisionDataset):
 # Load a directory of images for inference
 @DATASETS.register()
 class ImageFolderLaneDataset(torchvision.datasets.VisionDataset):
-    def __init__(self, root_image, root_output, root_keypoint=None, root_mask=None, transforms=None,
-                 keypoint_process_fn=None, image_suffix='', keypoint_suffix='.txt', mask_suffix=''):
+    def __init__(self, root_image, root_output, root_keypoint=None, root_gt_keypoint=None, root_mask=None,
+                 transforms=None, keypoint_process_fn=None,
+                 image_suffix='', keypoint_suffix='.txt', gt_keypoint_suffix='.txt', mask_suffix=''):
         super().__init__(root_image, transforms, None, None)
         self.output_dir = root_output
         self.filenames = []
         self.images = []
         self.keypoints = None if root_keypoint is None else []
+        self.gt_keypoints = None if root_gt_keypoint is None else []
         self.masks = None if root_mask is None else []
         self.keypoint_process_fn = keypoint_process_fn
         for filename in sorted(os.listdir(root_image)):
@@ -70,6 +72,8 @@ class ImageFolderLaneDataset(torchvision.datasets.VisionDataset):
                 self.images.append(os.path.join(root_image, filename))
                 if self.keypoints is not None:
                     self.keypoints.append(os.path.join(root_keypoint, middle_name + keypoint_suffix))
+                if self.gt_keypoints is not None:
+                    self.gt_keypoints.append(os.path.join(root_gt_keypoint, middle_name + gt_keypoint_suffix))
                 if self.masks is not None:
                     self.masks.append(os.path.join(root_mask, middle_name + mask_suffix))
 
@@ -91,12 +95,16 @@ class ImageFolderLaneDataset(torchvision.datasets.VisionDataset):
 
         # Process potential target
         keypoint = None
+        gt_keypoint = None
         if self.keypoints is not None:
             keypoint = self.keypoint_process_fn(self.keypoints[index])
+        if self.gt_keypoints is not None:
+            gt_keypoint = self.keypoint_process_fn(self.gt_keypoints[index])
 
         return img, original_img, {
             'filename': filename,
             'keypoint': keypoint,
+            'gt_keypoint': gt_keypoint,
             'mask': mask
         }
 
