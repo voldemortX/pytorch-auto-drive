@@ -16,9 +16,9 @@ if __name__ == '__main__':
     add_shortcuts(parser)
 
     parser.add_argument('--config', type=str, help='Path to config file', required=True)
-    parser.add_argument('--image-path', type=str, required=True,
+    parser.add_argument('--image-path', type=str,
                         help='Image input path')
-    parser.add_argument('--save-path', type=str, required=True,
+    parser.add_argument('--save-path', type=str,
                         help='Result output path')
 
     # Optional args/to overwrite configs
@@ -67,7 +67,8 @@ if __name__ == '__main__':
     # Parse configs and build model
     if args.mixed_precision and torch.__version__ < '1.6.0':
         warnings.warn('PyTorch version too low, mixed precision training is not available.')
-    assert args.image_path != args.save_path, "Try not to overwrite your dataset!"
+    if args.image_path is not None and args.save_path is not None:
+        assert args.image_path != args.save_path, "Try not to overwrite your dataset!"
     cfg = read_config(args.config)
     args, cfg = parse_arg_cfg(args, cfg)
 
@@ -75,6 +76,7 @@ if __name__ == '__main__':
     for k in retain_args:
         cfg[cfg_runner_key][k] = vars(args)[k]
     if not cfg[cfg_runner_key]['pred']:
+        assert cfg[cfg_runner_key]['style'] != 'bezier', 'Must use --pred for style bezier!'
         cfg['model'] = None
     runner = LaneDetDir(cfg=cfg)
     runner.run()

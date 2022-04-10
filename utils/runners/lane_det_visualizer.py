@@ -82,7 +82,8 @@ class LaneDetDir(LaneDetVisualizer):
 
     def __init__(self, cfg):
         super().__init__(cfg)
-        os.makedirs(self._cfg['save_path'], exist_ok=True)
+        if self._cfg['save_path'] is not None:
+            os.makedirs(self._cfg['save_path'], exist_ok=True)
         if self._cfg['use_color_pool']:
             self._cfg['colors'] = torch.tensor(self.color_pool,
                                                dtype=self._cfg['colors'].dtype,
