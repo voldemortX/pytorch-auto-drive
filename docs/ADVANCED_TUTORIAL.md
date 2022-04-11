@@ -85,14 +85,9 @@ You can search for the Class/function named `ERFNet` here for its implementation
 
 `utils/runners/` implements Runners. A Runner parses config file and constructs the execution process for training/testing/visualization. It defines the behavior of the entire logical process, do read them carefully (best start from `base.py`) if you want to get some deeper customizations from coding.
 
-## Code a model
+## Examples
 
-Checkout `utils/models/`, more details is coming...
-
-## Code a dataset
-
-Checkout `utils/datasets/`, more details is coming...
-
-## Code a runner for advanced visualization
-
-Checkout `utils/runners/*visualizer.py`, more details is coming...
+1. [Code a dataset to visualize lane lines and compare with dataset GT](./advanced/VISUALIZE_LANE_DATASETS.md)
+2. Code a model: Checkout `utils/models/`, more details is coming...
+3. Code a dataset: Checkout `utils/datasets/`, more details is coming...
+4. Code a runner for advanced visualization: Checkout `utils/runners/*visualizer.py`, more details is coming...

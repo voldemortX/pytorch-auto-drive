@@ -10,6 +10,12 @@ from .builder import DATASETS
 # CULane direct loading (work with the segmentation style lists)
 @DATASETS.register()
 class CULane(LaneKeypointDataset):
+    colors = [
+        [0, 0, 0],  # background
+        [0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 0],
+        [0, 0, 0]  # ignore
+    ]
+
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None,
                  ppl=31, gap=10, start=290, padding_mask=False):
         super().__init__(root, transforms, transform, target_transform, ppl, gap, start, padding_mask, image_set)
