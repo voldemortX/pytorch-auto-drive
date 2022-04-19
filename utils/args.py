@@ -35,7 +35,7 @@ def cmd_dict(x):
         kv = o.split('=', maxsplit=1)
         try:
             v = eval(kv[1])
-        except NameError:
+        except:
             v = kv[1]
         res[kv[0]] = v
 
