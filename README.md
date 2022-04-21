@@ -99,8 +99,8 @@ If you feel this framework substantially helped your research or you want a refe
 
 ## Credits:
 
-PytorchAutoDrive is maintained by Zhengyang Feng ([VoldemortX](https://github.com/voldemortX)) and Shaohua Guo ([cedricgsh](https://github.com/cedricgsh)).
+PytorchAutoDrive is maintained by Zhengyang Feng ([voldemortX](https://github.com/voldemortX)) and Shaohua Guo ([cedricgsh](https://github.com/cedricgsh)).
 
 Community contributors (GitHub ID): [kalkun](https://github.com/kalkun)
 
-People who sponsored us with hardware: Junshu Tang ([junshutang](https://github.com/junshutang))
+People who sponsored us with hardware: Junshu Tang ([junshutang](https://github.com/junshutang)), Fengqi Liu ([FengqiLiu1221](https://github.com/FengqiLiu1221))
