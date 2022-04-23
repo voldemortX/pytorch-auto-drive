@@ -33,6 +33,7 @@
 | RESA | ResNet34 | level 0 | 360 x 640 | *no* | TuSimple | Accuracy | 94.84% | 95.15% | 1.6h* |
 | RESA | ResNet50 | level 0 | 360 x 640 | *no* | TuSimple | Accuracy | 95.34% | 95.50% | 2.4h* |
 | RESA | ResNet101 | level 0 | 360 x 640 | *no* | TuSimple | Accuracy | 95.24% | 95.56% | 3.5h* |
+| RESA | ERFNet | level 0 | 360 x 640 | *no* | TuSimple | Accuracy | 95.73% | 95.76% | 1.7h |
 | RESA | MobileNetV2 | level 0 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.61% | 95.21% | 0.7h |
 | RESA | MobileNetV3-Large | level 0 | 360 x 640 | *yes* | TuSimple | Accuracy | 94.56% | 94.99% | 0.7h |
 | LSTR | ResNet18s<sup>#</sup> | level 0 | 360 x 640 | *no* | TuSimple | Accuracy | 91.91% | 92.40% | 14.2h |
@@ -65,6 +66,7 @@
 | RESA | ResNet34 | level 0 | 288 x 800 | *no* | CULane | F1 | 73.29 | 73.66 | 10.7h* |
 | RESA | ResNet50 | level 0 | 288 x 800 | *no* | CULane | F1 | 73.99 | 74.19 | 17.9h* |
 | RESA | ResNet101 | level 0 | 288 x 800 | *no* | CULane | F1 | 73.96 | 74.04 | 25.7h* |
+| RESA | ERFNet | level 0 | 288 x 800 | *no* | CULane | F1 | 73.28 | 73.32 | 9.1h |
 | RESA | MobileNetV2 | level 0 | 288 x 800 | *yes* | CULane | F1 | 72.28 | 72.36 | 4.6h |
 | RESA | MobileNetV3-Large | level 0 | 288 x 800 | *yes* | CULane | F1 | 70.23 | 70.61 | 4.6h |
 | LSTR | ResNet18s-2X<sup>#</sup> | level 0 | 288 x 800 | *no* | CULane | F1 | 36.27 | 39.77 | 28.5h* |
@@ -120,6 +122,7 @@
 | RESA | ResNet34 | level 0 | 95.15% | 0.0690 | 0.0592 | [model](https://drive.google.com/file/d/1Spa1bCXoFyjCgOO-ordSPP5a3GMW6E0N/view?usp=sharing) \| [shell](../tools/shells/resnet34_resa_tusimple.sh) |
 | RESA | ResNet50 | level 0 | 95.50% | 0.0550 | 0.0507 | [model](https://drive.google.com/file/d/1Mmb_4AFzSpZBcB7UxKr3Vlhwi27exqp0/view?usp=sharing) \| [shell](../tools/shells/resnet50_resa_tusimple.sh) |
 | RESA | ResNet101 | level 0 | 95.56% | 0.0580 | 0.0513 | [model](https://drive.google.com/file/d/1i--g7uzt3dTeMlNnAXbBCSJ8RXVjIljR/view?usp=sharing) \| [shell](../tools/shells/resnet101_resa_tusimple.sh) |
+| RESA | ERFNet | level 0 | 95.76% | 0.0648 | 0.0439 | [model](https://drive.google.com/file/d/1bbq28A7Gt9cWdrhAp_V4ENzDkde2sNXh/view?usp=sharing) \| [shell](../tools/shells/erfnet_resa_tusimple.sh) |
 | RESA | MobileNetV2 | level 0 | 95.21% | 0.0642 | 0.0552 | [model](https://drive.google.com/file/d/1XuQ-jak8qViNK9NXeeVmya2EQ-Z3XxZW/view?usp=sharing) \| [shell](../tools/shells/mobilenetv2_resa_tusimple.sh) |
 | RESA | MobileNetV3-Large | level 0 | 94.99% | 0.0841 | 0.0597 | [model](https://drive.google.com/file/d/1ax7YTH6r8o9PIKSLT4fh7GVdaKgdujMO/view?usp=sharing) \| [shell](../tools/shells/mobilenetv3-large_resa_tusimple.sh) |
 | LSTR | ResNet18s | level 1a | 95.06% | 0.0486 | 0.0418 | [model](https://drive.google.com/file/d/1z1ikrcgboyLFO3ysJUIf8qlBv7zEUvjK/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_tusimple.sh) |
@@ -157,6 +160,7 @@
 | RESA | ResNet34 | level 0 | 91.31 | 71.80 | 67.54 | 46.57 | 72.74 | 86.94 | 64.46 | 67.31 | 1701 | 73.66 | [model](https://drive.google.com/file/d/1x9JWhW7AIbiADqkzmKgmBUQL-JXexABM/view?usp=sharing) \| [shell](../tools/shells/resnet34_resa_culane.sh) |
 | RESA | ResNet50 | level 0 | 91.52 | 72.49 | 68.44 | 47.02 | 72.56 | 87.34 | 63.11 | 68.21 | 1493 | 74.19 | [model](https://drive.google.com/file/d/1tmp5JO2CKWekbKVNX6nVKIj3AoQVCOkG/view?usp=sharing) \| [shell](../tools/shells/resnet50_resa_culane.sh) |
 | RESA | ResNet101 | level 0 | 91.45 | 71.51 | 69.01 | 46.54 | 75.52 | 87.75 | 63.90 | 68.24 | 1522 | 74.04 | [model](https://drive.google.com/file/d/1RLLo8MUZDl4wahTXbn49FlxBq5IUsWru/view?usp=sharing) \| [shell](../tools/shells/resnet101_resa_culane.sh) |
+| RESA | ERFNet | level 0 | 91.18 | 71.07 | 68.50 | 45.49 | 69.53 | 87.68 | 64.52 | 65.56 | 1777 | 73.32 | [model](https://drive.google.com/file/d/175jDY6gBm1VT_CQvKCtax9fq3YubKDTA/view?usp=sharing) \| [shell](../tools/shells/erfnet_resa_culane.sh) |
 | RESA | MobileNetV2 | level 0 | 90.58 | 70.42 | 67.19 | 45.29 | 62.80 | 85.52 | 66.00 | 65.19 | 1945 | 72.36 | [model](https://drive.google.com/file/d/1Dh9Laid33aMGFBQuTqasKgqluWKTU5Si/view?usp=sharing) \| [shell](../tools/shells/mobilenetv2_resa_culane.sh) |
 | RESA | MobileNetV3-Large | level 0 | 89.53 | 67.63 | 65.74 | 43.08 | 66.07 | 84.61 | 60.10 | 63.14 | 2218 | 70.61 | [model](https://drive.google.com/file/d/1mgqkDgss9nDQgAOQnNIoHuprxofod1V4/view?usp=sharing) \| [shell](../tools/shells/mobilenetv3-large_resa_culane.sh) |
 | LSTR | ResNet18s-2X | level 0 | 56.17 | 39.10 | 22.90 | 25.62 | 25.49 | 52.09 | 40.21 | 30.33 | 1690 | 39.77 | [model](https://drive.google.com/file/d/1vdYwM0xDcQLjMAibjmls8hX-IsUe0xcq/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_culane.sh) |
