@@ -25,7 +25,7 @@ train = dict(
     input_size=(288, 800),
     original_size=(590, 1640),
     num_classes=None,
-    num_epochs=12,
+    num_epochs=150,
     collate_fn='dict_collate_fn',  # 'dict_collate_fn' for LSTR
     seg=False,  # Seg-based method or not
 )
