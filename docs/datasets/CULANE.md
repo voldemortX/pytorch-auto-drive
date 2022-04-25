@@ -18,6 +18,8 @@
 
 4. Prepare official evaluation scripts:
 
+*comment Line 21 in Makefile if using opencv2.*
+
 ```
 cd tools/culane_evaluation
 make
