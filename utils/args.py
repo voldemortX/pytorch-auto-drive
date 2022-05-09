@@ -1,4 +1,3 @@
-from msilib.schema import Class
 import os
 from importlib.machinery import SourceFileLoader
 
