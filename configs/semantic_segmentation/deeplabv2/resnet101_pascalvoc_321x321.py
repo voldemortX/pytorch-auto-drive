@@ -1,12 +1,14 @@
-# Data pipeline
-from configs.semantic_segmentation.common.datasets.pascal_voc import dataset
-from configs.semantic_segmentation.common.datasets.voc_train_321 import train_augmentation
-from configs.semantic_segmentation.common.datasets.voc_test_505 import test_augmentation
+from importmagician import import_from
+with import_from('./'):
+    # Data pipeline
+    from configs.semantic_segmentation.common.datasets.pascal_voc import dataset
+    from configs.semantic_segmentation.common.datasets.voc_train_321 import train_augmentation
+    from configs.semantic_segmentation.common.datasets.voc_test_505 import test_augmentation
 
-# Optimization pipeline
-from configs.semantic_segmentation.common.optims.celoss import loss
-from configs.semantic_segmentation.common.optims.sgd0002 import optimizer
-from configs.semantic_segmentation.common.optims.ep30 import lr_scheduler
+    # Optimization pipeline
+    from configs.semantic_segmentation.common.optims.celoss import loss
+    from configs.semantic_segmentation.common.optims.sgd0002 import optimizer
+    from configs.semantic_segmentation.common.optims.ep30 import lr_scheduler
 
 
 train = dict(

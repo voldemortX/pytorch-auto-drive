@@ -1,12 +1,14 @@
-# Data pipeline
-from configs.lane_detection.common.datasets.tusimple_bezier import dataset
-from configs.lane_detection.common.datasets.train_level1b_360 import train_augmentation
-from configs.lane_detection.common.datasets.test_360 import test_augmentation
+from importmagician import import_from
+with import_from('./'):
+    # Data pipeline
+    from configs.lane_detection.common.datasets.tusimple_bezier import dataset
+    from configs.lane_detection.common.datasets.train_level1b_360 import train_augmentation
+    from configs.lane_detection.common.datasets.test_360 import test_augmentation
 
-# Optimization pipeline
-from configs.lane_detection.common.optims.matchingloss_bezier import loss
-from configs.lane_detection.common.optims.adam00006_dcn import optimizer
-from configs.lane_detection.common.optims.ep400_cosine import lr_scheduler
+    # Optimization pipeline
+    from configs.lane_detection.common.optims.matchingloss_bezier import loss
+    from configs.lane_detection.common.optims.adam00006_dcn import optimizer
+    from configs.lane_detection.common.optims.ep400_cosine import lr_scheduler
 
 
 train = dict(
