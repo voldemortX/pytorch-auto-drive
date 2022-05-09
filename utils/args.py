@@ -55,7 +55,7 @@ def read_config(config_path):
     assert module_name[-3:] == '.py'
     module_name = module_name[:-3]
     module = SourceFileLoader(module_name, config_path).load_module()
-    res = {k: v for k, v in module.__dict__.items() if ((not k.startswith('__')) and (not callable(k)))}
+    res = {k: v for k, v in module.__dict__.items() if ((not k.startswith('__')) and (not callable(v)))}
 
     return res
 
