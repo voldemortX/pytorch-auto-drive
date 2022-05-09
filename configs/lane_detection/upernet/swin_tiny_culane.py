@@ -1,11 +1,13 @@
-# Data pipeline
-from configs.lane_detection.common.datasets.culane_seg import dataset
-from configs.lane_detection.common.datasets.train_level0_288 import train_augmentation
-from configs.lane_detection.common.datasets.test_288 import test_augmentation
+from importmagician import import_from
+with import_from('./'):
+    # Data pipeline
+    from configs.lane_detection.common.datasets.culane_seg import dataset
+    from configs.lane_detection.common.datasets.train_level0_288 import train_augmentation
+    from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
-# Optimization pipeline
-from configs.lane_detection.common.optims.segloss_5class import loss
-from configs.lane_detection.common.optims.adamw0001_swin import optimizer
+    # Optimization pipeline
+    from configs.lane_detection.common.optims.segloss_5class import loss
+    from configs.lane_detection.common.optims.adamw0001_swin import optimizer
 
 
 lr_scheduler = dict(

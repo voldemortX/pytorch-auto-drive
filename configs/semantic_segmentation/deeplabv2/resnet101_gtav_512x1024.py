@@ -1,15 +1,17 @@
-# Data pipeline
-from configs.semantic_segmentation.common.datasets.gtav import dataset
-from configs.semantic_segmentation.common.datasets.gtav_train_hd_512 import train_augmentation
-from configs.semantic_segmentation.common.datasets.city_test_hd import test_augmentation
+from importmagician import import_from
+with import_from('./'):
+    # Data pipeline
+    from configs.semantic_segmentation.common.datasets.gtav import dataset
+    from configs.semantic_segmentation.common.datasets.gtav_train_hd_512 import train_augmentation
+    from configs.semantic_segmentation.common.datasets.city_test_hd import test_augmentation
 
 # For UDA baseline setting (train on GTAV, test on Cityscapes)
-from configs.semantic_segmentation.common.datasets.cityscapes import dataset as test_dataset
+    from configs.semantic_segmentation.common.datasets.cityscapes import dataset as test_dataset
 
-# Optimization pipeline
-from configs.semantic_segmentation.common.optims.celoss import loss
-from configs.semantic_segmentation.common.optims.sgd0002 import optimizer
-from configs.semantic_segmentation.common.optims.ep10 import lr_scheduler
+    # Optimization pipeline
+    from configs.semantic_segmentation.common.optims.celoss import loss
+    from configs.semantic_segmentation.common.optims.sgd0002 import optimizer
+    from configs.semantic_segmentation.common.optims.ep10 import lr_scheduler
 
 
 train = dict(

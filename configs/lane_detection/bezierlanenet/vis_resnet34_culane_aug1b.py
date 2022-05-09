@@ -1,9 +1,11 @@
-# 1. Import from the corresponding config
-# Or you can just copy-paste (if your config filename includes - or something)
-from configs.lane_detection.bezierlanenet.resnet34_culane_aug1b import *
+from importmagician import import_from
+with import_from('./'):
+    # 1. Import from the corresponding config
+    # Or you can just copy-paste (if your config filename includes - or something)
+    from configs.lane_detection.bezierlanenet.resnet34_culane_aug1b import *
 
-# 2. Define vis_dataset
-from configs.lane_detection.common.datasets._utils import CULANE_ROOT
+    # 2. Define vis_dataset
+    from configs.lane_detection.common.datasets._utils import CULANE_ROOT
 
 vis_dataset = dict(
     name='CULaneVis',

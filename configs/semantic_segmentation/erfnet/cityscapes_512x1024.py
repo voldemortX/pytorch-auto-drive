@@ -1,12 +1,14 @@
-# Data pipeline
-from configs.semantic_segmentation.common.datasets.cityscapes import dataset
-from configs.semantic_segmentation.common.datasets.city_train_half_512_wo_norm import train_augmentation
-from configs.semantic_segmentation.common.datasets.city_test_half_wo_norm import test_augmentation
+from importmagician import import_from
+with import_from('./'):
+    # Data pipeline
+    from configs.semantic_segmentation.common.datasets.cityscapes import dataset
+    from configs.semantic_segmentation.common.datasets.city_train_half_512_wo_norm import train_augmentation
+    from configs.semantic_segmentation.common.datasets.city_test_half_wo_norm import test_augmentation
 
-# Optimization pipeline
-from configs.semantic_segmentation.common.optims.celoss_cityscapes_balanced import loss
-from configs.semantic_segmentation.common.optims.adam00007 import optimizer
-from configs.semantic_segmentation.common.optims.ep150_epoch import lr_scheduler
+    # Optimization pipeline
+    from configs.semantic_segmentation.common.optims.celoss_cityscapes_balanced import loss
+    from configs.semantic_segmentation.common.optims.adam00007 import optimizer
+    from configs.semantic_segmentation.common.optims.ep150_epoch import lr_scheduler
 
 
 train = dict(
