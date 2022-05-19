@@ -20,6 +20,8 @@ if __name__ == '__main__':
                         help='Video input path')
     parser.add_argument('--save-path', type=str, required=True,
                         help='Result output path')
+    parser.add_argument('--style', type=str, default='point',
+                        help='Lane visualization style: point/line/bezier')
 
     # Optional args/to overwrite configs
     parser.add_argument('--mixed-precision', action='store_true',
@@ -34,7 +36,7 @@ if __name__ == '__main__':
                         help='Continue/Load from a previous checkpoint')
 
     retain_args = ['mixed_precision',
-                   'video_path', 'save_path']
+                   'video_path', 'save_path', 'style']
 
     args = parser.parse_args()
 

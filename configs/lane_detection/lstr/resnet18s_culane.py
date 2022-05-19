@@ -1,12 +1,14 @@
-# Data pipeline
-from configs.lane_detection.common.datasets.culane import dataset
-from configs.lane_detection.common.datasets.train_level0_288 import train_augmentation
-from configs.lane_detection.common.datasets.test_288 import test_augmentation
+from importmagician import import_from
+with import_from('./'):
+    # Data pipeline
+    from configs.lane_detection.common.datasets.culane import dataset
+    from configs.lane_detection.common.datasets.train_level0_288 import train_augmentation
+    from configs.lane_detection.common.datasets.test_288 import test_augmentation
 
-# Optimization pipeline
-from configs.lane_detection.common.optims.matchingloss_polynomial import loss
-from configs.lane_detection.common.optims.adam000025 import optimizer
-from configs.lane_detection.common.optims.ep150_step import lr_scheduler
+    # Optimization pipeline
+    from configs.lane_detection.common.optims.matchingloss_polynomial import loss
+    from configs.lane_detection.common.optims.adam000025 import optimizer
+    from configs.lane_detection.common.optims.ep150_step import lr_scheduler
 
 
 train = dict(
@@ -25,7 +27,7 @@ train = dict(
     input_size=(288, 800),
     original_size=(590, 1640),
     num_classes=None,
-    num_epochs=12,
+    num_epochs=150,
     collate_fn='dict_collate_fn',  # 'dict_collate_fn' for LSTR
     seg=False,  # Seg-based method or not
 )
@@ -65,7 +67,7 @@ model = dict(
     return_intermediate=True,
     lsp_dim=8,
     mlp_layers=3,
-    thresh=0.5,
+    thresh=0.95,
     backbone_cfg=dict(
         name='predefined_resnet_backbone',
         backbone_name='resnet18_reduced',

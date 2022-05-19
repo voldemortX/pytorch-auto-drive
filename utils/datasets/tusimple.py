@@ -13,6 +13,12 @@ from .builder import DATASETS
 # TuSimple direct loading
 @DATASETS.register()
 class TuSimple(LaneKeypointDataset):
+    colors = [
+        [0, 0, 0],  # background
+        [0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 0],
+        [0, 0, 0]  # ignore
+    ]
+
     def __init__(self, root, image_set, transforms=None, transform=None, target_transform=None,
                  ppl=56, gap=10, start=160, padding_mask=False, is_process=True):
         super().__init__(root, transforms, transform, target_transform, ppl, gap, start, padding_mask, image_set,

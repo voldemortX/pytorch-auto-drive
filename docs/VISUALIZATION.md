@@ -52,11 +52,17 @@ python tools/vis/seg_video.py --video-path=PAD_test_images/seg_test_images/stutt
 
 ## Lane points (Image Folder)
 
-Use [tools/vis/lane_img_dir.py](../tools/vis/lane_img_dir.py) to visualize segmentation results, by providing the image folder with `--image-path`, keypoint file (**CULane format**) with `--keypoint-path` and optional segmentation mask (**not the colored ones**) with `--mask-path`. For detailed instructions, run:
+Use [tools/vis/lane_img_dir.py](../tools/vis/lane_img_dir.py) to visualize arbitrary lane detection results, by providing the image folder with `--image-path`, keypoint file folder (**CULane format**) with `--keypoint-path` and optional segmentation mask (**not the colored ones**) with `--mask-path`. For detailed instructions, run:
 
 ```
 python tools/vis/lane_img_dir.py --help
 ```
+
+Try `--style` for different lane line styles (currently supports `point`, `line` & `bezier`):
+
+- `--style=point`: Sample points will be drawn directly
+- `--style=line`: Sample points will be connected with semi-transparent lines (you can get a neat visual on curve-based methods, but possible unpleasant zigzag lines for segmentation-based methods)
+- `--style=bezier`: Same as `--style=line`, additionally adds Bézier control points for Bézier curve-based methods
 
 For example, visualize on CULane:
 
@@ -84,9 +90,27 @@ Since there are no video labels available from all supported datasets, inference
 python tools/vis/lane_video.py --video-path=PAD_test_images/lane_test_images/tusimple_val_1min.avi --save-path=PAD_test_images/lane_test_images/tusimple_val_1min_pred.avi --config=configs/lane_detection/baseline/erfnet_tusimple.py --checkpoint=erfnet_baseline_tusimple_20210424.pt
 ```
 
+## Lane points (compare with GT)
+
+In **Lane points (Image Folder)**, you literally visualized one set of text files on one set of images. While with two sets of text files, you can additionally compare with Ground Truth (typical use case when analyzing or worse: writing a paper). Provide GT keypoints by `--gt-keypoint-path` and set the evaluation metric by `--metric`, currently only `culane` and `tusimple` are supported (note that the `culane` metric here is the Python version, which slightly differs from the official C++ implementation). You may also use `--pred` to predict from a model instead of `--keypoint-path` to provide predictions.
+
+For example, compare against GT with BézierLaneNet:
+
+```
+python tools/vis/lane_img_dir.py --image-path=PAD_test_images/lane_test_images/05171008_0748.MP4 --gt-keypoint-path=PAD_test_images/lane_test_images/05171008_0748.MP4  --image-suffix=.jpg --gt-keypoint-suffix=.lines.txt --save-path=PAD_test_images/lane_test_images/culane_gt_compare --config=configs/lane_detection/bezierlanenet/resnet34_culane-aug1b.py --style=bezier --checkpoint=resnet34_bezierlanenet_culane_aug1b_20211109.pt --mixed-precision --pred
+```
+
+You can get red **False Positive**, green **True Positive** and blue **Ground Truth**, like this:
+
+<div align="center">
+  <img src="assets/vis_culane_gt.jpg"/>
+</div>
+
+The extra takeaway here is: you can visualize prediction results from implementations other than PytorchAutoDrive, which makes things easier when comparing a wide range of methods. Refer to [ADVANCED_TUTORIAL.md](./ADVANCED_TUTORIAL.md) for visualizing on specific dataset file structures (e.g., TuSimple selectively use images from different sub folders, and use one json file for all annotations).
+
 ## Advanced Visualization
 
-You can set `--image-path` or `--target-path` to your dataset paths in order to visualize the dataset, but keep in mind about `--save-path`: **don't accidentally overwrite your dataset!**
+You can set `--image-path` or `--target-path` to your dataset paths in order to visualize a customized dataset, but keep in mind about `--save-path`: **don't accidentally overwrite your dataset!**
 
 Use large `batch_size`, more `workers` or `--mixed-precision` to accelerate visualization same as training/testing.
 

@@ -23,6 +23,8 @@ mkdir output
 
 Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh](../../autotest_tusimple.sh). *Mind that you need extra ../../ if relative path is used.*
 
+5. If you use Bézier curve methods, download Bézier curve GT from [here](https://drive.google.com/file/d/1aV1e5MAReIvtgW8RCoOMnvCnAK6uYtwn/view?usp=sharing) and unzip them in `TUSIMPLE_ROOT/bezier_labels/`. More info on curves are in [CURVE.md](../CURVE.md).
+
 ## Description
 
 ### Directory Structure
@@ -35,6 +37,9 @@ Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh]
       ├─ label_data_0313.json
       ├─ label_data_0531.json
       ├─ label_data_0601.json
+      ├─ bezier_labels
+      │  ├─ train_3.json
+      │  └─ ... 
       └─ test_label.json
 ```
 

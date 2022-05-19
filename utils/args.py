@@ -35,7 +35,7 @@ def cmd_dict(x):
         kv = o.split('=', maxsplit=1)
         try:
             v = eval(kv[1])
-        except NameError:
+        except:
             v = kv[1]
         res[kv[0]] = v
 
@@ -55,7 +55,7 @@ def read_config(config_path):
     assert module_name[-3:] == '.py'
     module_name = module_name[:-3]
     module = SourceFileLoader(module_name, config_path).load_module()
-    res = {k: v for k, v in module.__dict__.items() if not k.startswith('__')}
+    res = {k: v for k, v in module.__dict__.items() if ((not k.startswith('__')) and (not callable(v)))}
 
     return res
 

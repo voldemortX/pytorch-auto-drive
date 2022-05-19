@@ -354,15 +354,13 @@ class ToTensor(object):
         if pic is None or isinstance(pic, str):
             return pic
         elif isinstance(pic, dict):
-            for k in pic.keys():
-                if k in ['keypoints', 'offsets']:
-                    pic[k] = torch.as_tensor(pic[k].copy(), dtype=torch.float32)
-                elif k == 'padding_mask':
-                    pic[k] = torch.as_tensor(np.asarray(pic[k]).copy(), dtype=torch.uint8)
-                elif k == 'segmentation_mask':
-                    pic[k] = torch.as_tensor(np.asarray(pic[k]).copy(), dtype=torch.uint8)
-                elif type(pic[k]) == np.ndarray:
-                    pic[k] = torch.from_numpy(pic[k].copy())
+            if 'keypoints' in pic:
+                pic['keypoints'] = torch.as_tensor(pic['keypoints'].copy(), dtype=torch.float32)
+            if 'padding_mask' in pic:
+                pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']).copy(), dtype=torch.uint8)
+            if 'segmentation_mask' in pic:
+                pic['segmentation_mask'] = torch.as_tensor(np.asarray(pic['segmentation_mask']).copy(),
+                                                           dtype=torch.uint8)
             return pic
         else:
             return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)
@@ -645,14 +643,14 @@ class RandomAffine(torch.nn.Module):
     def __init__(self, degrees, translate=None, scale=None, shear=None, ignore_x=-2):
         super().__init__()
         self.ignore_x = ignore_x
-        self.degrees = _setup_angle(degrees, name="degrees", req_sizes=(2,))
+        self.degrees = _setup_angle(degrees, name="degrees", req_sizes=(2, ))
 
         if translate is not None:
-            _check_sequence_input(translate, "translate", req_sizes=(2,))
+            _check_sequence_input(translate, "translate", req_sizes=(2, ))
         self.translate = translate
 
         if scale is not None:
-            _check_sequence_input(scale, "scale", req_sizes=(2,))
+            _check_sequence_input(scale, "scale", req_sizes=(2, ))
             for s in scale:
                 if s <= 0:
                     raise ValueError("scale values should be positive")
@@ -665,10 +663,10 @@ class RandomAffine(torch.nn.Module):
 
     @staticmethod
     def get_params(
-            degrees,
-            translate,
-            scale_ranges,
-            shears
+        degrees,
+        translate,
+        scale_ranges,
+        shears
     ):
         """Get parameters for affine transformation
         Returns:
@@ -719,6 +717,7 @@ class RandomAffine(torch.nn.Module):
             target = F.affine(target, *ret, resample=Image.NEAREST, fillcolor=255)
 
         return image, target
+
 
 
 @TRANSFORMS.register()

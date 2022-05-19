@@ -39,6 +39,8 @@ With DDP, batch size and number of workers are **per-GPU**.
 
 ### Evaluation:
 
+**Important Notice: Do not simoutanously run multiple evaluation on CULane, since the eval use the same pytorch-auto-drive/output cache directory, the results could be overwritten! Same goes for LLAMAS!**
+
 1. Predict lane lines:
 
 ```

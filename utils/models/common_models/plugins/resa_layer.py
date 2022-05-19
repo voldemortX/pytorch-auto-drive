@@ -11,7 +11,7 @@ from ..._utils import is_tracing
 class RESA(nn.Module):
     # REcurrent Feature-Shift Aggregator in RESA paper
 
-    def __init__(self, num_channels=128, iteration=5, alpha=2.0, trace_arg=None):
+    def __init__(self, num_channels=128, iteration=5, alpha=2.0, trace_arg=None, os=8):
         super(RESA, self).__init__()
         # Different from SCNN, RESA uses bias=False & different convolution layers for each stride,
         # i.e. 4 * iteration layers vs. 4 layers in SCNN, maybe special init is not needed anymore:
@@ -28,8 +28,8 @@ class RESA(nn.Module):
                                     for _ in range(iteration))
         self._adjust_initializations(num_channels=num_channels)
         if trace_arg is not None:  # Pre-compute offsets for a TensorRT supported implementation
-            h = (trace_arg['h'] - 1) // 8 + 1
-            w = (trace_arg['w'] - 1) // 8 + 1
+            h = (trace_arg['h'] - 1) // os + 1
+            w = (trace_arg['w'] - 1) // os + 1
             self.offset_h = []
             self.offset_w = []
             for i in range(self.iteration):
@@ -51,7 +51,7 @@ class RESA(nn.Module):
     def forward(self, x):
         y = x
         h, w = y.shape[-2:]
-        if 2 ** self.iteration > max(h, w):
+        if 2 ** self.iteration > min(h, w):
             print('Too many iterations for RESA, your image size may be too small.')
 
         # We do indexing here to avoid extra input parameters at __init__(), with almost none computation overhead.

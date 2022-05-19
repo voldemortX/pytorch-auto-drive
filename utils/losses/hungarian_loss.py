@@ -1,6 +1,5 @@
 # Copied and modified from facebookresearch/detr and liuruijin17/LSTR
 # Refactored and added comments
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # Hungarian loss for LSTR
 import torch
 from torch import Tensor
@@ -107,7 +106,7 @@ class HungarianLoss(WeightedLoss):
         self.matcher = HungarianMatcher(upper_weight, lower_weight, curve_weight, label_weight)
 
     @staticmethod
-    def _get_src_permutation_idx(indices):
+    def get_src_permutation_idx(indices):
         # Permute predictions following indices
         # 2-dim indices: (dim0 indices, dim1 indices)
         batch_idx = torch.cat([torch.full_like(src, i) for i, (src, _) in enumerate(indices)])
@@ -135,7 +134,7 @@ class HungarianLoss(WeightedLoss):
     def calc_full_loss(self, outputs, targets):
         # Match
         indices = self.matcher(outputs=outputs, targets=targets)
-        idx = self._get_src_permutation_idx(indices)
+        idx = self.get_src_permutation_idx(indices)
 
         # Targets (rearrange each lane in the whole batch)
         # B x N x ... -> BN x ...

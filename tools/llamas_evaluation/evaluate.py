@@ -85,8 +85,23 @@ def continuous_cross_iou(xs, ys, width=30):
     return ious
 
 
+def remove_con_dup(x):
+    """Customize a set op to remove consecutive duplications"""
+    y = []
+    for t in x:
+        if len(y) > 0 and y[-1] == t:
+            continue
+        y.append(t)
+    return y
+
+
 def interpolate_lane(points, n=50):
     """Spline interpolation of a lane. Used on the predictions"""
+    # Consecutive duplications cause internal error for scipy's splprep:
+    # https://stackoverflow.com/a/47949170/15449902
+    points = remove_con_dup(points)
+
+    # B-Spline interpolate
     x = [x for x, _ in points]
     y = [y for _, y in points]
     tck, _ = splprep([x, y], s=0, t=n, k=min(3, len(points) - 1))

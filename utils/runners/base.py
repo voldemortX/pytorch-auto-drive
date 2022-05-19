@@ -145,7 +145,6 @@ class BaseTrainer(BaseRunner):
                                                                  shuffle=False,
                                                                  collate_fn=self.collate_fn)
 
-
         # Optimizer, LR scheduler, etc.
         self.optimizer = self.get_optimizer(cfg['optimizer'], net_without_ddp)
         self.lr_scheduler = LR_SCHEDULERS.from_dict(cfg['lr_scheduler'],

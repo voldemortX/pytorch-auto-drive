@@ -112,7 +112,7 @@ class LSTR(nn.Module):
         self.transformer.decoder.return_intermediate = False
 
     @torch.no_grad()
-    def inference(self, inputs, input_sizes, gap, ppl, dataset, max_lane=0, forward=True):
+    def inference(self, inputs, input_sizes, gap, ppl, dataset, max_lane=0, forward=True, **kwargs):
         outputs = self.forward(inputs) if forward else inputs  # Support no forwarding inside this function
         existence_conf = outputs['logits'].softmax(dim=-1)[..., 1]
         existence = existence_conf > self.thresh

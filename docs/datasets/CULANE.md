@@ -18,6 +18,8 @@
 
 4. Prepare official evaluation scripts:
 
+*comment Line 21 in Makefile if using opencv2.*
+
 ```
 cd tools/culane_evaluation
 make
@@ -27,6 +29,8 @@ cd -
 ```
 
 Then change `data_dir` to your CULane base directory in [eval.sh](../../tools/culane_evaluation/eval.sh) and [eval_validation.sh](../../tools/culane_evaluation/eval_validation.sh). *Mind that you need extra ../../ if relative path is used.*
+
+If you use Bézier curve methods, download Bézier curve GT from [here](https://drive.google.com/file/d/1s7N45IjUWxZEUIuyDUCIqtDfhzxRjmfL/view?usp=sharing) and unzip them in `CULANE_ROOT/bezier_labels/`. More info on curves are in [CURVE.md](../CURVE.md).
 
 ## Description
 
@@ -41,6 +45,9 @@ Then change `data_dir` to your CULane base directory in [eval.sh](../../tools/cu
      ├─ driver_23_30frame
      ├─ driver_37_30frame
      ├─ laneseg_label_w16
+     ├─ bezier_labels
+     │  ├─ train_3.json
+     │  └─ ... 
      ├─ list
      └─ lists
 ```
