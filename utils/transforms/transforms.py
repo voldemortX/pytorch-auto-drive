@@ -354,13 +354,15 @@ class ToTensor(object):
         if pic is None or isinstance(pic, str):
             return pic
         elif isinstance(pic, dict):
-            if 'keypoints' in pic:
-                pic['keypoints'] = torch.as_tensor(pic['keypoints'].copy(), dtype=torch.float32)
-            if 'padding_mask' in pic:
-                pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']).copy(), dtype=torch.uint8)
-            if 'segmentation_mask' in pic:
-                pic['segmentation_mask'] = torch.as_tensor(np.asarray(pic['segmentation_mask']).copy(),
-                                                           dtype=torch.uint8)
+            for k in pic.keys():
+                if k in ['keypoints', 'offsets']:
+                    pic[k] = torch.as_tensor(pic[k].copy(), dtype=torch.float32)
+                elif k == 'padding_mask':
+                    pic[k] = torch.as_tensor(np.asarray(pic[k]).copy(), dtype=torch.uint8)
+                elif k == 'segmentation_mask':
+                    pic[k] = torch.as_tensor(np.asarray(pic[k]).copy(), dtype=torch.uint8)
+                elif type(pic[k]) == np.ndarray:
+                    pic[k] = torch.from_numpy(pic[k].copy())
             return pic
         else:
             return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)
