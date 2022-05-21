@@ -1,5 +1,6 @@
 # PytorchAutoDrive: Framework for self-driving perception
 
+
 *PytorchAutoDrive* is a **pure Python** framework includes semantic segmentation models, lane detection models based on **PyTorch**. Here we provide full stack supports from research (model training, testing, fair benchmarking by simply writing configs) to application (visualization, model deployment).
 
 **Paper:** [Rethinking Efficient Lane Detection via Curve Modeling](https://arxiv.org/abs/2203.02431) (CVPR 2022)

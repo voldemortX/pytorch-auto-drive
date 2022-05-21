@@ -88,13 +88,14 @@ class LaneKeypointDataset(torchvision.datasets.VisionDataset):
     keypoint_color = [0, 0, 0]
 
     def __init__(self, root, transforms, transform, target_transform,
-                 ppl, gap, start, padding_mask, image_set):
+                 ppl, gap, start, padding_mask, image_set, is_process):
         super().__init__(root, transforms, transform, target_transform)
         self.ppl = ppl  # Sampled points-per-lane
         self.gap = gap  # y gap between sample points
         self.start = start  # y coordinate to start annotation
         self.padding_mask = padding_mask  # Padding mask for transformer
         self.process_points = image_set == 'train'  # Add lowest & highest y coordinates, lane class labels
+        self.is_process = is_process
         self.images = []  # placeholder
         self.targets = []  # placeholder
         self.image_set = image_set
@@ -129,8 +130,7 @@ class LaneKeypointDataset(torchvision.datasets.VisionDataset):
         if self.transforms is not None:
             img, target = self.transforms(img, target)
 
-        # Post-process
-        if self.process_points:
+        if self.process_points and self.is_process:
             target = generate_lane_label_dict(target)
 
         return img, target

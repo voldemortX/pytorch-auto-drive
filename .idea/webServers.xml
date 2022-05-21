@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="4c32301d-de9e-473a-b75e-171379b3b525" name="hct-pad">
+        <fileTransfer rootFolder="/all/hct-disk2/guoshaohua_home" accessType="SFTP" host="202.120.38.4" port="20801" sshConfigId="9dd78eba-2eca-4401-8a32-05224b2b12b3" sshConfig="guoshaohua@202.120.38.4:20801 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="bb2d4f0e-eace-411b-94f0-aa108ba464a4" name="refactor">
+        <fileTransfer rootFolder="/all/hct-disk2/guoshaohua_home" accessType="SFTP" host="202.120.38.4" port="20801" sshConfigId="9dd78eba-2eca-4401-8a32-05224b2b12b3" sshConfig="guoshaohua@202.120.38.4:20801 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="6630ce29-50f5-4fca-97bf-5ac898baa151" name="tyche">
+        <fileTransfer rootFolder="/home/guoshaohua" accessType="SFTP" host="202.120.38.4" port="21901" sshConfigId="ec4eef2e-6f6a-4eee-8468-55735829c8cd" sshConfig="guoshaohua@202.120.38.4:21901 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="0024d506-083c-4cde-aa4e-4a9b5f785fd6" name="tjs">
+        <fileTransfer rootFolder="/all/themachine-disk1/tangjunshu_home/shaohua" accessType="SFTP" host="202.120.38.4" port="21301" sshConfigId="27bd91c4-fa94-4457-ae66-8ec846026283" sshConfig="tangjunshu@202.120.38.4:21301 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
