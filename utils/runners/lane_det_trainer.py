@@ -39,7 +39,10 @@ class LaneDetTrainer(BaseTrainer):
                 else:
                     inputs, labels = data
                     inputs = inputs.to(self.device)
-                    labels = [{k: v.to(self.device) for k, v in label.items()} for label in labels]  # Seems slow
+                    if self._cfg['collate_fn'] is None:
+                        labels = labels.to(self.device)
+                    else:
+                        labels = [{k: v.to(self.device) for k, v in label.items()} for label in labels]  # Seems slow
                 self.optimizer.zero_grad()
 
                 with autocast(self._cfg['mixed_precision']):

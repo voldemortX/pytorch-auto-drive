@@ -1,5 +1,6 @@
 # PytorchAutoDrive: Framework for self-driving perception
 
+
 *PytorchAutoDrive* is a **pure Python** framework includes semantic segmentation models, lane detection models based on **PyTorch**. Here we provide full stack supports from research (model training, testing, fair benchmarking by simply writing configs) to application (visualization, model deployment).
 
 **Paper:** [Rethinking Efficient Lane Detection via Curve Modeling](https://arxiv.org/abs/2203.02431) (CVPR 2022)
@@ -48,6 +49,7 @@ Models from this repo are faster to train (**single card trainable**) and often 
 | lane detection | ERFNet, ENet | [SAD](https://arxiv.org/abs/1908.00821) ([*Postponed*](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes)) |
 | lane detection | ERFNet | [PRNet](http://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123630698.pdf) (*In progress*) |
 | lane detection | ResNets (18, 34, 50, 101), ResNet18-reduced | [LSTR](https://arxiv.org/abs/2011.04233) |
+| lane detection | ResNets (18, 34) | [LaneAtt](https://arxiv.org/abs/2010.12035) |
 | lane detection | ResNets (18, 34) | [BézierLaneNet](/configs/lane_detection/bezierlanenet) |
 
 ## Model Zoo
