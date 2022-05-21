@@ -12,7 +12,6 @@ import random
 import torch
 from collections.abc import Sequence
 from PIL import Image
-from scipy.interpolate import InterpolatedUnivariateSpline
 
 from . import functional as F
 from . import functional_keypoints as F_kp
@@ -37,8 +36,7 @@ __all__ = [
     'RandomZeroPad',
     'Resize',
     'ToTensor',
-    'ZeroPad',
-    'LaneATTLabelFormat'
+    'ZeroPad'
 ]
 
 
@@ -50,7 +48,7 @@ def _check_sequence_input(x, name, req_sizes):
         raise ValueError("{} should be sequence of length {}.".format(name, msg))
 
 
-def _setup_angle(x, name, req_sizes=(2,)):
+def _setup_angle(x, name, req_sizes=(2, )):
     if isinstance(x, numbers.Number):
         if x < 0:
             raise ValueError("If {} is a single number, it must be positive.".format(name))
@@ -354,15 +352,13 @@ class ToTensor(object):
         if pic is None or isinstance(pic, str):
             return pic
         elif isinstance(pic, dict):
-            for k in pic.keys():
-                if k in ['keypoints', 'offsets']:
-                    pic[k] = torch.as_tensor(pic[k].copy(), dtype=torch.float32)
-                elif k == 'padding_mask':
-                    pic[k] = torch.as_tensor(np.asarray(pic[k]).copy(), dtype=torch.uint8)
-                elif k == 'segmentation_mask':
-                    pic[k] = torch.as_tensor(np.asarray(pic[k]).copy(), dtype=torch.uint8)
-                elif type(pic[k]) == np.ndarray:
-                    pic[k] = torch.from_numpy(pic[k].copy())
+            if 'keypoints' in pic:
+                pic['keypoints'] = torch.as_tensor(pic['keypoints'].copy(), dtype=torch.float32)
+            if 'padding_mask' in pic:
+                pic['padding_mask'] = torch.as_tensor(np.asarray(pic['padding_mask']).copy(), dtype=torch.uint8)
+            if 'segmentation_mask' in pic:
+                pic['segmentation_mask'] = torch.as_tensor(np.asarray(pic['segmentation_mask']).copy(),
+                                                           dtype=torch.uint8)
             return pic
         else:
             return torch.as_tensor(np.asarray(pic).copy(), dtype=torch.int64)
@@ -463,10 +459,10 @@ class MatchSize(object):
 @TRANSFORMS.register()
 class RandomRotation(object):
     def __init__(self, degrees, expand=False, center=None, fill=None, ignore_x=-2):
-        self.degrees = _setup_angle(degrees, name="degrees", req_sizes=(2,))
+        self.degrees = _setup_angle(degrees, name="degrees", req_sizes=(2, ))
 
         if center is not None:
-            _check_sequence_input(center, "center", req_sizes=(2,))
+            _check_sequence_input(center, "center", req_sizes=(2, ))
 
         self.center = center
         self.expand = expand
@@ -606,7 +602,7 @@ class RandomLighting(object):
         self.eigen_vector = torch.tensor(eigen_vector, dtype=torch.float32)
 
     def __call__(self, image, target):
-        alpha = torch.normal(self.mean, self.std, (3,), dtype=torch.float32)
+        alpha = torch.normal(self.mean, self.std, (3, ), dtype=torch.float32)
 
         return F.adjust_lighting(image, alpha, self.eigen_value, self.eigen_vector), target
 
@@ -719,116 +715,3 @@ class RandomAffine(torch.nn.Module):
             target = F.affine(target, *ret, resample=Image.NEAREST, fillcolor=255)
 
         return image, target
-
-
-
-@TRANSFORMS.register()
-class LaneATTLabelFormat(torch.nn.Module):
-    def __init__(self, num_points, image_size, max_lanes, ignore_x=-2):
-        super().__init__()
-        assert isinstance(image_size, (tuple, list))
-        self.img_h, self.img_w = image_size
-        self.num_points = num_points
-        self.num_offsets = num_points
-        self.num_strips = num_points - 1
-        self.strip_size = self.img_h / self.num_strips
-        self.max_lanes = max_lanes
-        self.ignore_x = ignore_x
-        self.offsets_ys = np.arange(self.img_h, -1, -self.strip_size)
-
-    def clip_out_of_image(self, x):
-        # TODO: len(x) is 0
-        num_lanes = x.shape[0]
-        lanes_ = []
-        for i in range(num_lanes):
-            lane = x[i]
-            lane_temp = [[point[0], point[1]] for point in lane if point[0] != self.ignore_x]
-            lanes_.append(lane_temp)
-
-        return lanes_
-
-    def filter_lane(self, lane):
-        assert lane[-1][1] <= lane[0][1]
-        filtered_lane = []
-        used = set()
-        for p in lane:
-            if p[1] not in used:
-                filtered_lane.append(p)
-                used.add(p[1])
-
-        return filtered_lane
-
-    def transform_annotation(self, offsets):
-        lanes_ = offsets
-
-        # removing lanes with less than 2 points
-        lanes_ = filter(lambda x: len(x) > 1, lanes_)
-        # sort lane points by Y (bottom to top of the image)
-        lanes_ = [sorted(lane, key=lambda x: -x[1]) for lane in lanes_]
-        # remove points with same Y (keep first occurrence)
-        lanes_ = [self.filter_lane(lane) for lane in lanes_]
-        # Resize not required in our pipeline
-        # create transformed annotations
-        offsets = np.ones((self.max_lanes, self.num_offsets), dtype=np.float32) * -1e5
-        starts = np.ones(self.max_lanes, dtype=np.float32) * -1e5
-        lengths = np.ones(self.max_lanes, dtype=np.float32) * -1e5
-        flags = np.zeros(self.max_lanes, dtype=np.bool)  # lanes are invalid by default
-        for i, lane in enumerate(lanes_):
-            try:
-                xs_outside_image, xs_inside_image = self.sample_lane(lane, self.offsets_ys)
-            except AssertionError:
-                continue
-            if len(xs_inside_image) == 0:
-                continue
-            all_xs = np.hstack((xs_outside_image, xs_inside_image))
-            flags[i] = True
-
-            # a neat trick
-            starts[i] = len(xs_outside_image) / self.num_strips  # y starts in 0-1 (normalized by 72 sample points)
-            lengths[i] = len(xs_inside_image)  # length in number of points 0-72
-
-            offsets[i, :len(all_xs)] = all_xs
-
-        return {
-            'offsets': offsets,
-            'lengths': lengths,
-            'starts': starts,
-            'flags': flags
-        }
-
-    def sample_lane(self, points, sample_ys):
-        # this function expects the points to be sorted
-        points = np.array(points)
-        if not np.all(points[1:, 1] < points[:-1, 1]):
-            raise Exception('Annotaion points have to be sorted')
-        x, y = points[:, 0], points[:, 1]
-
-        # interpolate points inside domain
-        assert len(points) > 1
-        interp = InterpolatedUnivariateSpline(y[::-1], x[::-1], k=min(3, len(points) - 1))
-        domain_min_y = y.min()
-        domain_max_y = y.max()
-        sample_ys_inside_domain = sample_ys[(sample_ys >= domain_min_y) & (sample_ys <= domain_max_y)]
-        assert len(sample_ys_inside_domain) > 0
-        interp_xs = interp(sample_ys_inside_domain)
-
-        # extrapolate lane to the bottom of the image with a straight line using the 2 points closest to the bottom
-        two_closest_points = points[:2]
-        extrap = np.polyfit(two_closest_points[:, 1], two_closest_points[:, 0], deg=1)
-        extrap_ys = sample_ys[sample_ys > domain_max_y]
-        extrap_xs = np.polyval(extrap, extrap_ys)
-        all_xs = np.hstack((extrap_xs, interp_xs))
-
-        # separate between inside and outside points
-        inside_mask = (all_xs >= 0) & (all_xs < self.img_w)
-        xs_inside_image = all_xs[inside_mask]
-        xs_outside_image = all_xs[~inside_mask]
-
-        return xs_outside_image, xs_inside_image
-
-    def forward(self, image, target):
-        keypoints = target['keypoints']
-        cilp_lanes = self.clip_out_of_image(keypoints)
-        labels = self.transform_annotation(cilp_lanes)
-
-        return image, labels
