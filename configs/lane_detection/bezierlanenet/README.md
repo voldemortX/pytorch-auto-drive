@@ -10,6 +10,8 @@ State-of-the-art lane detectors are typically based on semantic segmentation (SC
 <img src="https://user-images.githubusercontent.com/32259501/157155447-81f28ec6-3ebe-42e0-8864-c739d8c44155.png"/>
 </div>
 
+For another earlier attempt on learning Bézier curves for lane detection with (almost) the same name BezierLaneNet, please refer to [wiki](https://github.com/voldemortX/pytorch-auto-drive/wiki/Notes) **9. BézierLaneNet disclaimer** and [this repo](https://github.com/mo-vic/BezierLaneNet).
+
 ## Results
 
 *Training time estimated with single 2080 Ti.*
