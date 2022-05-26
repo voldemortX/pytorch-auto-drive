@@ -16,7 +16,8 @@ MINIMAL_OPSET_VERSIONS = {
 }
 TRACE_REQUIRE_PREPROCESSING = [
     'LSTR',
-    'RESA'
+    'RESA',
+    'RESA_Net'
 ]
 
 
