@@ -103,6 +103,6 @@ If you feel this framework substantially helped your research or you want a refe
 
 PytorchAutoDrive is maintained by Zhengyang Feng ([voldemortX](https://github.com/voldemortX)) and Shaohua Guo ([cedricgsh](https://github.com/cedricgsh)).
 
-Community contributors (GitHub ID): [kalkun](https://github.com/kalkun)
+Contributors (GitHub ID): [kalkun](https://github.com/kalkun), [LittleJohnKhan](https://github.com/LittleJohnKhan), [francis0407](https://github.com/francis0407)
 
 People who sponsored us with hardware: Junshu Tang ([junshutang](https://github.com/junshutang)), Fengqi Liu ([FengqiLiu1221](https://github.com/FengqiLiu1221))
