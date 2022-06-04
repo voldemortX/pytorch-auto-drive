@@ -1050,6 +1050,44 @@ def gaussian_blur(img: Tensor, kernel_size: List[int], sigma: Optional[List[floa
     return output
 
 
+def motion_blur(img: Tensor, kernel_size: List[int]) -> Tensor:
+    """Performs motion blurring on the img by given kernel.
+    The image can be a PIL Image or a Tensor, in which case it is expected
+    to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions
+
+    Args:
+        img (PIL Image or Tensor): Image to be blurred
+        kernel_size (sequence of ints or int): motion kernel size. Can be a sequence of integers
+            like ``(kx, ky)`` or a single integer for square kernels.
+            In torchscript mode kernel_size as single int is not supported, use a tuple or
+            list of length 1: ``[ksize, ]``.
+
+    Returns:
+        PIL Image or Tensor: Motion Blurred version of the image.
+    """
+    if not isinstance(kernel_size, (int, list, tuple)):
+        raise TypeError('kernel_size should be int or a sequence of integers. Got {}'.format(type(kernel_size)))
+    if isinstance(kernel_size, int):
+        kernel_size = [kernel_size, kernel_size]
+    if len(kernel_size) != 2:
+        raise ValueError('If kernel_size is a sequence its length should be 2. Got {}'.format(len(kernel_size)))
+    for ksize in kernel_size:
+        if ksize % 2 == 0 or ksize < 0:
+            raise ValueError('kernel_size should have odd and positive integers. Got {}'.format(kernel_size))
+
+    t_img = img
+    if not isinstance(img, torch.Tensor):
+        if not F_pil._is_pil_image(img):
+            raise TypeError('img should be PIL Image or Tensor. Got {}'.format(type(img)))
+
+        t_img = to_tensor(img)
+
+    output = F_t.motion_blur(t_img, kernel_size)
+
+    if not isinstance(img, torch.Tensor):
+        output = to_pil_image(output)
+    return output
+
 def adjust_lighting(img: Tensor, lighting_factor: Tensor, eigen_value: Tensor, eigen_vector: Tensor) -> Tensor:
     """Adjust lighting of an RGB image.
     https://github.com/liuruijin17/LSTR/blob/6044f7b2c5892dba7201c273ee632b4962350223/utils/image.py#L12
@@ -1069,3 +1107,5 @@ def adjust_lighting(img: Tensor, lighting_factor: Tensor, eigen_value: Tensor, e
         raise TypeError('img should be Tensor Image. Got {}'.format(type(img)))
 
     return F_t.adjust_lighting(img, lighting_factor, eigen_value, eigen_vector)
+
+

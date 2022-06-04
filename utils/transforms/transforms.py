@@ -38,7 +38,8 @@ __all__ = [
     'Resize',
     'ToTensor',
     'ZeroPad',
-    'LaneATTLabelFormat'
+    'LaneATTLabelFormat',
+    'MotionBlur'
 ]
 
 
@@ -609,6 +610,19 @@ class RandomLighting(object):
         alpha = torch.normal(self.mean, self.std, (3,), dtype=torch.float32)
 
         return F.adjust_lighting(image, alpha, self.eigen_value, self.eigen_vector), target
+
+
+@TRANSFORMS.register()
+class MotionBlur(object):
+    def __init__(self, kernel_size, prob):
+        self.kernel_size = kernel_size
+        self.prob = prob
+
+    def __call__(self, image, target):
+        t = random.random()
+        if t < self.prob:
+            image = F.motion_blur(image, self.kernel_size)
+        return image, target
 
 
 @TRANSFORMS.register()

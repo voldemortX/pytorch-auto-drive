@@ -5,6 +5,10 @@ from torch import Tensor
 from torch.nn.functional import grid_sample, conv2d, interpolate, pad as torch_pad
 from torch.jit.annotations import List, BroadcastingList2
 
+import random
+import numpy as np
+import cv2
+
 try:
     from ..common import warnings
 except ImportError:
@@ -1171,6 +1175,56 @@ def gaussian_blur(img: Tensor, kernel_size: List[int], sigma: List[float]) -> Te
     kernel = _get_gaussian_kernel2d(kernel_size, sigma, dtype=dtype, device=img.device)
     kernel = kernel.expand(img.shape[-3], 1, kernel.shape[0], kernel.shape[1])
 
+    img, need_cast, need_squeeze, out_dtype = _cast_squeeze_in(img, kernel.dtype)
+
+    # padding = (left, right, top, bottom)
+    padding = [kernel_size[0] // 2, kernel_size[0] // 2, kernel_size[1] // 2, kernel_size[1] // 2]
+    img = torch_pad(img, padding, mode="reflect")
+    img = conv2d(img, kernel, groups=img.shape[-3])
+
+    img = _cast_squeeze_out(img, need_cast, need_squeeze, out_dtype)
+    return img
+
+
+def _get_motion_kernel2d(kernel_size: Tensor, dtype: torch.dtype, device: torch.device) -> Tensor:
+    ksize = random.choice(np.arange(kernel_size[0], kernel_size[1] + 1, 2))
+    if ksize <= 2:
+        raise ValueError("ksize must be > 2. Got: {}".format(ksize))
+    kernel = np.zeros((ksize, ksize), dtype=np.uint8)
+    xs, xe = random.randint(0, ksize - 1), random.randint(0, ksize - 1)
+    if xs == xe:
+        ys, ye = random.sample(range(ksize), 2)
+    else:
+        ys, ye = random.randint(0, ksize - 1), random.randint(0, ksize - 1)
+    cv2.line(kernel, (xs, ys), (xe, ye), 1, thickness=1)
+
+    # Normalize kernel
+    kernel = kernel.astype(np.float32) / np.sum(kernel)
+    kernel = torch.from_numpy(kernel).to(device, dtype=dtype)
+    return kernel
+
+
+def motion_blur(img: Tensor, kernel_size: List[int]) -> Tensor:
+    """PRIVATE METHOD. Performs motion blurring on the img by given kernel.
+
+    .. warning::
+
+        Module ``transforms.functional_tensor`` is private and should not be used in user application.
+        Please, consider instead using methods from `transforms.functional` module.
+
+    Args:
+        img (Tensor): Image to be blurred
+        kernel_size (sequence of int or int): Kernel size range of the motion kernel ``(kx, ky)``.
+
+    Returns:
+        Tensor: An image that is blurred using gaussian kernel of given parameters
+    """
+    if not (isinstance(img, torch.Tensor) or _is_tensor_a_torch_image(img)):
+        raise TypeError('img should be Tensor Image. Got {}'.format(type(img)))
+
+    dtype = img.dtype if torch.is_floating_point(img) else torch.float32
+    kernel = _get_motion_kernel2d(kernel_size, dtype=dtype, device=img.device)
+    kernel = kernel.expand(img.shape[-3], 1, kernel.shape[0], kernel.shape[1])
     img, need_cast, need_squeeze, out_dtype = _cast_squeeze_in(img, kernel.dtype)
 
     # padding = (left, right, top, bottom)

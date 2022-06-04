@@ -39,6 +39,11 @@ train_augmentation = dict(
             scale=(0.85, 1.15),
         ),
         dict(
+            name='MotionBlur',
+            kernel_size=(3, 5),
+            prob=0.2
+        ),
+        dict(
             name='RandomHorizontalFlip',
             flip_prob=0.5
         ),
