@@ -73,7 +73,7 @@
 | LSTR | ResNet18s-2X<sup>#</sup> | level 0 | 288 x 800 | *no* | CULane | F1 | 36.27 | 39.77 | 28.5h* |
 | LSTR | ResNet18s-2X<sup>#</sup> | level 1a | 288 x 800 | *no* | CULane | F1 | 68.35 | 68.72 | 31.5h* |
 | LSTR | ResNet34 | level 1a | 288 x 800 | *no* | CULane | F1 | 72.17 | 72.48 | 45.0h* |
-| LaneAtt | ResNet18 | level 1c | 360 x 640 | *no* | CULane | F1 | 74.87 | 74.71 | 3.6h** |
+| LaneAtt | ResNet18 | level 1c | 360 x 640 | *no* | CULane | F1 | 74.71 | 74.87 | 3.6h** |
 | LaneAtt | ResNet34 | level 1c | 360 x 640 | *no* | CULane | F1 | 75.76 | 75.82 | 4.0h** |
 | BézierLaneNet | ResNet18 | level 1b | 288 x 800 | *yes* | CULane | F1 | 73.36 | 73.67 | 9.9h |
 | BézierLaneNet | ResNet34 | level 1b | 288 x 800 | *yes* | CULane | F1 | 75.30 | 75.57 | 11.0h |
