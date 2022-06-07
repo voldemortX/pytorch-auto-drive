@@ -1,4 +1,5 @@
 import numbers
+import random
 from typing import Any, List, Sequence
 
 import numpy as np
@@ -182,7 +183,7 @@ def adjust_hue(img, hue_factor):
     Returns:
         PIL Image: Hue adjusted image.
     """
-    if not(-0.5 <= hue_factor <= 0.5):
+    if not (-0.5 <= hue_factor <= 0.5):
         raise ValueError('hue_factor ({}) is not in [-0.5, 0.5].'.format(hue_factor))
 
     if not _is_pil_image(img):
@@ -603,3 +604,17 @@ def to_grayscale(img, num_output_channels):
         raise ValueError('num_output_channels should be either 1 or 3')
 
     return img
+
+
+@torch.jit.unused
+def median_blur(img, blur_limit):
+    """
+    Args:
+        img(PIL Image): Image to be median blur
+        blur_limit(Tuple): the kernel size sampled from [blur_limit[0], blur_limit[1])
+    Returns:
+        PIL Image: Resized image.
+    """
+    kernel_size = int(random.choice(np.arange(blur_limit[0], blur_limit[1] + 1, 2)))
+    blur_img = img.filter(ImageFilter.MedianFilter(size=kernel_size))
+    return blur_img

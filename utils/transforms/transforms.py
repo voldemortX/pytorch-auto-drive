@@ -39,7 +39,9 @@ __all__ = [
     'ToTensor',
     'ZeroPad',
     'LaneATTLabelFormat',
-    'MotionBlur'
+    'MotionBlur',
+    'MedianBlur',
+    'ChannelShuffle',
 ]
 
 
@@ -614,14 +616,39 @@ class RandomLighting(object):
 
 @TRANSFORMS.register()
 class MotionBlur(object):
-    def __init__(self, kernel_size, prob):
-        self.kernel_size = kernel_size
+    def __init__(self, blur_limit, prob=1.):
+        self.blur_limit = blur_limit
         self.prob = prob
 
     def __call__(self, image, target):
         t = random.random()
         if t < self.prob:
-            image = F.motion_blur(image, self.kernel_size)
+            image = F.motion_blur(image, self.blur_limit)
+        return image, target
+
+
+@TRANSFORMS.register()
+class MedianBlur(object):
+    def __init__(self, blur_limit, prob=1.):
+        self.blur_limit = blur_limit
+        self.prob = prob
+
+    def __call__(self, image, target):
+        t = random.random()
+        if t < self.prob:
+            image = F.median_blur(image, self.blur_limit)
+        return image, target
+
+
+@TRANSFORMS.register()
+class ChannelShuffle(object):
+    def __init__(self, prob=1.):
+        self.prob = prob
+
+    def __call__(self, image, target):
+        t = random.random()
+        if t < self.prob:
+            image = F.channel_shuffle(image)
         return image, target
 
 
@@ -659,14 +686,14 @@ class RandomAffine(torch.nn.Module):
     def __init__(self, degrees, translate=None, scale=None, shear=None, ignore_x=-2):
         super().__init__()
         self.ignore_x = ignore_x
-        self.degrees = _setup_angle(degrees, name="degrees", req_sizes=(2, ))
+        self.degrees = _setup_angle(degrees, name="degrees", req_sizes=(2,))
 
         if translate is not None:
-            _check_sequence_input(translate, "translate", req_sizes=(2, ))
+            _check_sequence_input(translate, "translate", req_sizes=(2,))
         self.translate = translate
 
         if scale is not None:
-            _check_sequence_input(scale, "scale", req_sizes=(2, ))
+            _check_sequence_input(scale, "scale", req_sizes=(2,))
             for s in scale:
                 if s <= 0:
                     raise ValueError("scale values should be positive")
@@ -679,10 +706,10 @@ class RandomAffine(torch.nn.Module):
 
     @staticmethod
     def get_params(
-        degrees,
-        translate,
-        scale_ranges,
-        shears
+            degrees,
+            translate,
+            scale_ranges,
+            shears
     ):
         """Get parameters for affine transformation
         Returns:
@@ -733,7 +760,6 @@ class RandomAffine(torch.nn.Module):
             target = F.affine(target, *ret, resample=Image.NEAREST, fillcolor=255)
 
         return image, target
-
 
 
 @TRANSFORMS.register()

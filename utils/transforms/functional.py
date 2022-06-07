@@ -1,8 +1,11 @@
 import math
 import numbers
 import warnings
+import random
 from typing import Any, Optional
+from functools import wraps
 
+import cv2
 import numpy as np
 from PIL import Image
 
@@ -17,7 +20,6 @@ except ImportError:
 
 from . import functional_pil as F_pil
 from . import functional_tensor as F_t
-
 
 _is_pil_image = F_pil._is_pil_image
 _parse_fill = F_pil._parse_fill
@@ -60,7 +62,7 @@ def to_tensor(pic):
     Returns:
         Tensor: Converted image.
     """
-    if not(F_pil._is_pil_image(pic) or _is_numpy(pic)):
+    if not (F_pil._is_pil_image(pic) or _is_numpy(pic)):
         raise TypeError('pic should be PIL Image or ndarray. Got {}'.format(type(pic)))
 
     if _is_numpy(pic) and not _is_numpy_image(pic):
@@ -172,7 +174,7 @@ def to_pil_image(pic, mode=None):
     Returns:
         PIL Image: Image converted to PIL Image.
     """
-    if not(isinstance(pic, torch.Tensor) or isinstance(pic, np.ndarray)):
+    if not (isinstance(pic, torch.Tensor) or isinstance(pic, np.ndarray)):
         raise TypeError('pic should be Tensor or ndarray. Got {}.'.format(type(pic)))
 
     elif isinstance(pic, torch.Tensor):
@@ -1050,30 +1052,11 @@ def gaussian_blur(img: Tensor, kernel_size: List[int], sigma: Optional[List[floa
     return output
 
 
-def motion_blur(img: Tensor, kernel_size: List[int]) -> Tensor:
-    """Performs motion blurring on the img by given kernel.
-    The image can be a PIL Image or a Tensor, in which case it is expected
-    to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions
-
-    Args:
-        img (PIL Image or Tensor): Image to be blurred
-        kernel_size (sequence of ints or int): motion kernel size. Can be a sequence of integers
-            like ``(kx, ky)`` or a single integer for square kernels.
-            In torchscript mode kernel_size as single int is not supported, use a tuple or
-            list of length 1: ``[ksize, ]``.
-
-    Returns:
-        PIL Image or Tensor: Motion Blurred version of the image.
-    """
-    if not isinstance(kernel_size, (int, list, tuple)):
-        raise TypeError('kernel_size should be int or a sequence of integers. Got {}'.format(type(kernel_size)))
-    if isinstance(kernel_size, int):
-        kernel_size = [kernel_size, kernel_size]
-    if len(kernel_size) != 2:
-        raise ValueError('If kernel_size is a sequence its length should be 2. Got {}'.format(len(kernel_size)))
-    for ksize in kernel_size:
-        if ksize % 2 == 0 or ksize < 0:
-            raise ValueError('kernel_size should have odd and positive integers. Got {}'.format(kernel_size))
+def motion_blur(img: Tensor, blur_limit: List[int]) -> Tensor:
+    if not isinstance(blur_limit, (int, list, tuple)):
+        raise TypeError('blur_limit should be int or a sequence of integers. Got {}'.format(type(blur_limit)))
+    if len(blur_limit) != 2:
+        raise ValueError('If blur_limit is a sequence its length should be 2. Got {}'.format(len(blur_limit)))
 
     t_img = img
     if not isinstance(img, torch.Tensor):
@@ -1082,11 +1065,12 @@ def motion_blur(img: Tensor, kernel_size: List[int]) -> Tensor:
 
         t_img = to_tensor(img)
 
-    output = F_t.motion_blur(t_img, kernel_size)
+    output = F_t.motion_blur(t_img, blur_limit)
 
     if not isinstance(img, torch.Tensor):
         output = to_pil_image(output)
     return output
+
 
 def adjust_lighting(img: Tensor, lighting_factor: Tensor, eigen_value: Tensor, eigen_vector: Tensor) -> Tensor:
     """Adjust lighting of an RGB image.
@@ -1109,3 +1093,26 @@ def adjust_lighting(img: Tensor, lighting_factor: Tensor, eigen_value: Tensor, e
     return F_t.adjust_lighting(img, lighting_factor, eigen_value, eigen_vector)
 
 
+def median_blur(img, blur_limit: List[int]):
+    # the input image should be PIL image
+    pil_img = img
+    if not F_pil._is_pil_image(pil_img):
+        if not isinstance(pil_img, torch.Tensor):
+            raise TypeError('img should be Tensor Image or PIL Image, but got {}'.format(type(pil_img)))
+        pil_img = to_pil_image(pil_img)
+    output = F_pil.median_blur(pil_img, blur_limit)
+    if not F_pil._is_pil_image(img):
+        output = pil_to_tensor(output)
+    return output
+
+
+def channel_shuffle(img: Tensor) -> Tensor:
+    t_img = img
+    if not isinstance(t_img, torch.Tensor):
+        if not F_pil._is_pil_image(t_img):
+            raise TypeError('img should be PIL Image or Tensor. Got {}'.format(type(t_img)))
+        t_img = to_tensor(t_img)
+    output = F_t.channel_shuffle(t_img)
+    if not isinstance(img, torch.Tensor):
+        output = to_pil_image(output)
+    return output

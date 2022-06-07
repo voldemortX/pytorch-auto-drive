@@ -40,8 +40,17 @@ train_augmentation = dict(
         ),
         dict(
             name='MotionBlur',
-            kernel_size=(3, 5),
+            blur_limit=(3, 5),
             prob=0.2
+        ),
+        dict(
+            name='MedianBlur',
+            blur_limit=(3, 5),
+            prob=0.2
+        ),
+        dict(
+            name='ChannelShuffle',
+            prob=1.
         ),
         dict(
             name='RandomHorizontalFlip',
