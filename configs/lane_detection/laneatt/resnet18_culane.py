@@ -49,7 +49,7 @@ train_augmentation = dict(
             prob=0.2
         ),
         dict(
-            name='ChannelShuffle',
+            name='RandomChannelShuffle',
             prob=1.
         ),
         dict(

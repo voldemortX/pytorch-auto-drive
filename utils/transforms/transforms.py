@@ -41,7 +41,7 @@ __all__ = [
     'LaneATTLabelFormat',
     'MotionBlur',
     'MedianBlur',
-    'ChannelShuffle',
+    'RandomChannelShuffle',
 ]
 
 
@@ -641,14 +641,17 @@ class MedianBlur(object):
 
 
 @TRANSFORMS.register()
-class ChannelShuffle(object):
+class RandomChannelShuffle(object):
     def __init__(self, prob=1.):
         self.prob = prob
 
     def __call__(self, image, target):
         t = random.random()
         if t < self.prob:
-            image = F.channel_shuffle(image)
+            num_channels = F._get_image_num_channels(image)
+            shuffled_array = list(range(num_channels))
+            random.shuffle(shuffled_array)
+            image = F.channel_shuffle(image, shuffled_array)
         return image, target
 
 

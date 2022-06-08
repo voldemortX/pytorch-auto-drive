@@ -1257,14 +1257,13 @@ def adjust_lighting(img: Tensor, lighting_factor: Tensor, eigen_value: Tensor, e
     return img + (eigen_vector * (eigen_value * lighting_factor)).sum(-1)[:, None, None]
 
 
-def channel_shuffle(img: Tensor) -> Tensor:
+def channel_shuffle(img: Tensor, shuffle_list: List[int]) -> Tensor:
     """
     Args:
         img (Tensor): Image(CHW) to be channel shuffled
+        shuffle_list (List[int]): random shuffle list
     Returns:
         Tensor: channel shuffled image
     """
-    shuffled_array = list(range(img.shape[0]))
-    random.shuffle(shuffled_array)
-    img = img[shuffled_array, ...]
+    img = img[shuffle_list, ...]
     return img

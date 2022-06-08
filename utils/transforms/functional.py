@@ -1106,13 +1106,13 @@ def median_blur(img, blur_limit: List[int]):
     return output
 
 
-def channel_shuffle(img: Tensor) -> Tensor:
+def channel_shuffle(img: Tensor, shuffle_list: List[int]) -> Tensor:
     t_img = img
     if not isinstance(t_img, torch.Tensor):
         if not F_pil._is_pil_image(t_img):
             raise TypeError('img should be PIL Image or Tensor. Got {}'.format(type(t_img)))
         t_img = to_tensor(t_img)
-    output = F_t.channel_shuffle(t_img)
+    output = F_t.channel_shuffle(t_img, shuffle_list)
     if not isinstance(img, torch.Tensor):
         output = to_pil_image(output)
     return output
