@@ -58,7 +58,7 @@ Same config mechanism and commandline overwrite by `--cfg-options` as in trainin
 For detailed instructions and commandline shortcuts available, run:
 
 ```
-python tools/profiling.py --help
+python tools/to_onnx.py --help
 ```
 
 ### Currently Unsupported Models:
