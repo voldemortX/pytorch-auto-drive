@@ -17,7 +17,7 @@ Install all deployment packages (our tested conda version) by:
 conda install cudatoolkit=10.2 -c pytorch
 conda install cudnn==8.0.4 -c nvidia
 pip install onnx==1.10.2 onnxruntime-gpu==1.6.0
-python3 -m pip install --upgrade nvidia-tensorrt==8.2.1.8
+python3 -m pip install --upgrade nvidia-tensorrt==8.2.1.8  // you may need to add --extra-index-url https://pypi.ngc.nvidia.com
 ```
 
 In this version, TensorRT may use CUDA runtime >= 11, you might avoid using conda if you have sudo access on your device.
