@@ -7,7 +7,7 @@
  - **level 0**: only small rotation and resize
  - **level 1a**: the LSTR augmentations
  - **level 1b**: the BézierLaneNet augmentations
- - **level 1c**: the LaneAtt augmentations
+ - **level 1c**: the LaneATT augmentations
 
 | method | backbone | data<br>augmentation | resolution | mixed precision? | dataset | metric | average | best | training time <br> *(2080 Ti)* |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -73,8 +73,8 @@
 | LSTR | ResNet18s-2X<sup>#</sup> | level 0 | 288 x 800 | *no* | CULane | F1 | 36.27 | 39.77 | 28.5h* |
 | LSTR | ResNet18s-2X<sup>#</sup> | level 1a | 288 x 800 | *no* | CULane | F1 | 68.35 | 68.72 | 31.5h* |
 | LSTR | ResNet34 | level 1a | 288 x 800 | *no* | CULane | F1 | 72.17 | 72.48 | 45.0h* |
-| LaneAtt | ResNet18 | level 1c | 360 x 640 | *no* | CULane | F1 | 74.71 | 74.87 | 3.6h** |
-| LaneAtt | ResNet34 | level 1c | 360 x 640 | *no* | CULane | F1 | 75.76 | 75.82 | 4.0h** |
+| LaneATT | ResNet18 | level 1c | 360 x 640 | *no* | CULane | F1 | 74.71 | 74.87 | 3.6h** |
+| LaneATT | ResNet34 | level 1c | 360 x 640 | *no* | CULane | F1 | 75.76 | 75.82 | 4.0h** |
 | BézierLaneNet | ResNet18 | level 1b | 288 x 800 | *yes* | CULane | F1 | 73.36 | 73.67 | 9.9h |
 | BézierLaneNet | ResNet34 | level 1b | 288 x 800 | *yes* | CULane | F1 | 75.30 | 75.57 | 11.0h |
 | Baseline | ERFNet | level 0 | 360 x 640 | *yes* | LLAMAS | F1 | 95.94 | 96.13 | 10.9h<sup>+</sup> |
@@ -169,8 +169,8 @@
 | LSTR | ResNet18s-2X | level 0 | 56.17 | 39.10 | 22.90 | 25.62 | 25.49 | 52.09 | 40.21 | 30.33 | 1690 | 39.77 | [model](https://drive.google.com/file/d/1vdYwM0xDcQLjMAibjmls8hX-IsUe0xcq/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr_culane.sh) |
 | LSTR | ResNet18s-2X | level 1a | 86.78 | 67.34 | 59.92 | 40.10 | 59.82 | 78.66 | 56.63 | 56.64 | 1166 | 68.72 | [model](https://drive.google.com/file/d/11Tv_nowlWmQtTYQfhGsziDIzb20kPo8o/view?usp=sharing) \| [shell](../tools/shells/resnet18s_lstr-aug_culane.sh) |
 | LSTR | ResNet34 | level 1a | 89.73 | 69.77 | 66.72 | 45.32 | 68.16 | 85.03 | 64.34 | 64.13 | 1247 | 72.48 | [model](https://drive.google.com/file/d/1KfmXubuAtUoE9MO8iViMyB_3XhTxWnwH/view?usp=sharing) \| [shell](../tools/shells/resnet34_lstr-aug_culane.sh) |
-| LaneAtt | ResNet18 | level 1c | 90.74 | 72.63 | 69.53 | 47.71 | 70.38 | 86.55 | 65.02 | 65.73 | 1036 | 74.87 | [model](https://drive.google.com/file/d/17Ve7RiqxHK4aEXOt7MJzycj6mvvrieZ1/view?usp=sharing) \| [shell](../tools/shells/resnet18_laneatt_culane.sh) |
-| LaneAtt | ResNet34 | level 1c | 91.36 | 73.72 | 70.71 | 48.40 | 73.69 | 86.86 | 68.95 | 66.00 | 965 | 75.82 | [model](https://drive.google.com/file/d/1AEyNZFAskPg2MKcD3KCaL95JsBeJG_48/view?usp=sharing) \| [shell](../tools/shells/resnet34_laneatt_culane.sh) |
+| LaneATT | ResNet18 | level 1c | 90.74 | 72.63 | 69.53 | 47.71 | 70.38 | 86.55 | 65.02 | 65.73 | 1036 | 74.87 | [model](https://drive.google.com/file/d/17Ve7RiqxHK4aEXOt7MJzycj6mvvrieZ1/view?usp=sharing) \| [shell](../tools/shells/resnet18_laneatt_culane.sh) |
+| LaneATT | ResNet34 | level 1c | 91.36 | 73.72 | 70.71 | 48.40 | 73.69 | 86.86 | 68.95 | 66.00 | 965 | 75.82 | [model](https://drive.google.com/file/d/1AEyNZFAskPg2MKcD3KCaL95JsBeJG_48/view?usp=sharing) \| [shell](../tools/shells/resnet34_laneatt_culane.sh) |
 | BézierLaneNet | ResNet18 | level 1b | 90.22 | 71.55 | 68.70 | 45.30 | 70.91 | 84.09 | 62.49 | 58.98 | 996 | 73.67 | [model](https://drive.google.com/file/d/1IpfusHvFeMEGe8wv0fer6KF3pH4X2Tj3/view?usp=sharing) \| [shell](../tools/shells/resnet18_bezierlanenet_culane-aug1b.sh) |
 | BézierLaneNet | ResNet34 | level 1b | 91.59 | 73.20 | 69.90 | 48.05 | 76.74 | 87.16 | 69.20 | 62.45 | 888 | 75.57 | [model](https://drive.google.com/file/d/1342FQeDQKRHMo283jW2T1WDgfgsYbR5q/view?usp=sharing) \| [shell](../tools/shells/resnet34_bezierlanenet_culane-aug1b.sh) |
 
