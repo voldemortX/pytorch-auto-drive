@@ -137,6 +137,7 @@ model = dict(
     img_w=640,
     img_h=360,
     topk_anchors=1000,
+    # https://github.com/lucastabelini/LaneATT/raw/main/data/tusimple_anchors_freq.pt
     anchor_freq_path='tusimple_anchors_freq.pt',
     anchor_feat_channels=64,
     # nms config
