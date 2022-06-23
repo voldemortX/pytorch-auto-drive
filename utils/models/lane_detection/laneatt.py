@@ -42,7 +42,8 @@ class LaneAtt(nn.Module):
                  anchor_feat_channels=None,
                  conf_thres=None,
                  nms_thres=0,
-                 nms_topk=3000):
+                 nms_topk=3000,
+                 trace_arg=None):
         super().__init__()
         self.backbone = MODELS.from_dict(backbone_cfg)
         self.backbone_channels = backbone_channels
@@ -60,6 +61,10 @@ class LaneAtt(nn.Module):
         self.conf_thres = conf_thres
         self.nms_thres = nms_thres
         self.nms_topk = nms_topk
+
+        if trace_arg is not None:  # Pre-compute
+            attention_matrix = torch.eye(topk_anchors).repeat(trace_arg['bs'], 1, 1)
+            self.pre_non_diag_inds = torch.nonzero(attention_matrix == 0., as_tuple=False)
 
         # generate anchors
         self.anchors, self.anchors_cut = self.generate_anchors(lateral_n=72, bottom_n=128)
@@ -209,18 +214,12 @@ class LaneAtt(nn.Module):
         attention = softmax(scores).reshape(x.shape[0], len(self.anchors), -1)
         attention_matrix = torch.eye(attention.shape[1], device=x.device).repeat(x.shape[0], 1, 1)
         if is_tracing():
-            # TODO: this also triggers nonzero, and where can't be used
-            mask = attention_matrix < 1
-            attention_matrix[mask] = attention.flatten()
-            attention_matrix *= mask
-            # 3 0 1 2
-            # 0 3 1 2
-            # 0 1 3 2
-            # 0 1 2 3
+            # Use pre-computed nonzero results
+            non_diag_inds = self.pre_non_diag_inds.to(attention_matrix.device)
         else:
             non_diag_inds = torch.nonzero(attention_matrix == 0., as_tuple=False)
-            attention_matrix[:] = 0
-            attention_matrix[non_diag_inds[:, 0], non_diag_inds[:, 1], non_diag_inds[:, 2]] = attention.flatten()
+        attention_matrix[:] = 0
+        attention_matrix[non_diag_inds[:, 0], non_diag_inds[:, 1], non_diag_inds[:, 2]] = attention.flatten()
         batch_anchor_features = batch_anchor_features.reshape(x.shape[0], len(self.anchors), -1)
         attention_features = torch.bmm(torch.transpose(batch_anchor_features, 1, 2),
                                        torch.transpose(attention_matrix, 1, 2)).transpose(1, 2)
