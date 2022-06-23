@@ -60,6 +60,7 @@ python tools/profiling.py --help
 - ENet backbone (lane detection)
 - DCNv2 in BézierLaneNet (lane detection)
 - Swin backbone (supported if pytorch >= 1.10.0)
+- LaneATT (supported if pytorch >= 1.8.0)
 
 ## ONNX -> TensorRT:
 
@@ -88,3 +89,4 @@ You'll then see the saved `ckpt.engine` file and a report on the conversion qual
 - SCNN (lane detection)
 - Swin backbone (lane detection)
 - DCNv2 in BézierLaneNet (lane detection, could support if built custom op from mmcv and directly convert from PyTorch to TensorRT)
+- LaneATT (lane detection)

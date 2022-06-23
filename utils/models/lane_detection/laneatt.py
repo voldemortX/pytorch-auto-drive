@@ -12,6 +12,7 @@ import numpy as np
 import torch.nn as nn
 from torch.nn import functional as F
 from scipy.interpolate import splprep, splev
+from .._utils import is_tracing
 
 try:
     from ...csrc.apis import line_nms
@@ -207,9 +208,19 @@ class LaneAtt(nn.Module):
         scores = self.attention_layer(batch_anchor_features)
         attention = softmax(scores).reshape(x.shape[0], len(self.anchors), -1)
         attention_matrix = torch.eye(attention.shape[1], device=x.device).repeat(x.shape[0], 1, 1)
-        non_diag_inds = torch.nonzero(attention_matrix == 0., as_tuple=False)
-        attention_matrix[:] = 0
-        attention_matrix[non_diag_inds[:, 0], non_diag_inds[:, 1], non_diag_inds[:, 2]] = attention.flatten()
+        if is_tracing():
+            # TODO: this also triggers nonzero, and where can't be used
+            mask = attention_matrix < 1
+            attention_matrix[mask] = attention.flatten()
+            attention_matrix *= mask
+            # 3 0 1 2
+            # 0 3 1 2
+            # 0 1 3 2
+            # 0 1 2 3
+        else:
+            non_diag_inds = torch.nonzero(attention_matrix == 0., as_tuple=False)
+            attention_matrix[:] = 0
+            attention_matrix[non_diag_inds[:, 0], non_diag_inds[:, 1], non_diag_inds[:, 2]] = attention.flatten()
         batch_anchor_features = batch_anchor_features.reshape(x.shape[0], len(self.anchors), -1)
         attention_features = torch.bmm(torch.transpose(batch_anchor_features, 1, 2),
                                        torch.transpose(attention_matrix, 1, 2)).transpose(1, 2)

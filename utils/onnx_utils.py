@@ -12,7 +12,8 @@ MINIMAL_OPSET_VERSIONS = {
     'LSTR': 10,
     'RESA': 11,
     'SpatialConv': 11,
-    'SwinTransformer': 11
+    'SwinTransformer': 11,
+    'LaneAtt': 11
 }
 TRACE_REQUIRE_PREPROCESSING = [
     'LSTR',
