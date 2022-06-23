@@ -6,7 +6,7 @@ The whole [MODEL_ZOO](./MODEL_ZOO.md) with specifications.
 - SCNN
 - RESA
 - LSTR
-- LaneAtt  
+- LaneATT  
 - [BézierLaneNet](/configs/lane_detection/bezierlanenet)
 
 ## Semantic Segmentation

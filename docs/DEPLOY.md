@@ -24,6 +24,12 @@ In this version, TensorRT may use CUDA runtime >= 11, you might avoid using cond
 
 Or you can incrementally install **Extra Dependencies** through the tutorial.
 
+## Important Note
+
+Note that we only convert the model `forward()` function,
+post-processing (i.e., `inference()`) is not included. Typical post-processing includes: segmentation map interpolation,
+line NMS for anchor-based lane detection, sigmoid/softmax activations, etc.
+
 ## PyTorch -> ONNX:
 
 **PyTorch version >= 1.6.0 is recommended for this feature.**
@@ -89,4 +95,4 @@ You'll then see the saved `ckpt.engine` file and a report on the conversion qual
 - SCNN (lane detection)
 - Swin backbone (lane detection)
 - DCNv2 in BézierLaneNet (lane detection, could support if built custom op from mmcv and directly convert from PyTorch to TensorRT)
-- LaneATT (lane detection)
+- LaneATT (supported if TensorRT >= 8.4.1.5)
