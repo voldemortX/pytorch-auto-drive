@@ -3,7 +3,7 @@
 Generation script:
 
 ```
-    python ./tools/curve_fitting_tools/gen_Bézier_annotations.py 
+    python ./tools/curve_fitting_tools/gen_bezier_annotations.py 
             --dataset=<dataset name> 
             --image-set=<image set name: train\test\val> 
             --order=<the order of Bézier curves>
