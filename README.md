@@ -105,4 +105,4 @@ PytorchAutoDrive is maintained by Zhengyang Feng ([voldemortX](https://github.co
 
 Contributors (GitHub ID): [kalkun](https://github.com/kalkun), [LittleJohnKhan](https://github.com/LittleJohnKhan), [francis0407](https://github.com/francis0407)
 
-People who sponsored us with hardware: Junshu Tang ([junshutang](https://github.com/junshutang)), Fengqi Liu ([FengqiLiu1221](https://github.com/FengqiLiu1221))
+People who sponsored us (e.g., with hardware): [Lizhuang Ma](https://dmcv.sjtu.edu.cn/people/), [Xin Tan](https://tanxincs.github.io/TAN-Xin.github.io/), Junshu Tang ([junshutang](https://github.com/junshutang)), Fengqi Liu ([FengqiLiu1221](https://github.com/FengqiLiu1221)) 
