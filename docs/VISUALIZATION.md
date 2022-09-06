@@ -2,7 +2,7 @@
 
 Trained models used for inference can be found at [MODEL_ZOO.md](../docs/MODEL_ZOO.md).
 
-To quickly get some results, download [PAD_test_images](https://drive.google.com/file/d/1XQvBS1uoHeIgUv7oDQ4Vp1tWYi0oAGhU/view?usp=sharing) (129MB). It includes sample images and videos from TuSimple, CULane, Cityscapes and PASCAL VOC 2012.
+To quickly get some results, download [PAD_test_images](https://drive.google.com/file/d/1XQvBS1uoHeIgUv7oDQ4Vp1tWYi0oAGhU/view?usp=sharing) (129MB). It includes sample images and videos from TuSimple, CULane, Cityscapes and PASCAL VOC 2012. [\[Alternate Baidu Yun download link\]](https://pan.baidu.com/s/1KjHJJdBzx0pa50jsJfHtaw?pwd=uoeg)
 
 After download, unzip it as:
 
