@@ -16,7 +16,7 @@
   python tools/culane_list_convertor.py
 ```
 
-4. Prepare official evaluation scripts:
+4. Prepare official evaluation scripts (**require CP++ OpenCV**):
 
 *comment Line 21 in Makefile if using opencv2.*
 
@@ -26,6 +26,17 @@ make
 mkdir output
 chmod 777 eval*
 cd -
+```
+
+Check [this issue](https://github.com/voldemortX/pytorch-auto-drive/issues/80) if you have OpenCV >= 4.0.
+
+5. Prepare python evaluation scripts (**If you have difficulty compiling in 4.**):
+
+```
+cd tools/culane_evaluation_py
+mkdir output
+chmod 777 *.sh
+# change $backend from cpp to python in autotest_culane.sh
 ```
 
 Then change `data_dir` to your CULane base directory in [eval.sh](../../tools/culane_evaluation/eval.sh) and [eval_validation.sh](../../tools/culane_evaluation/eval_validation.sh). *Mind that you need extra ../../ if relative path is used.*
