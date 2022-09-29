@@ -1,11 +1,11 @@
 import torch
-import resource
 import argparse
 try:
     from utils.common import warnings
 except ImportError:
     import warnings
 
+# Beware of memory leaks! https://pytorch.org/docs/1.6.0/multiprocessing.html#sharing-strategies
 # torch.multiprocessing.set_sharing_strategy('file_system')
 
 from utils.args import parse_arg_cfg, read_config, map_states, add_shortcuts, cmd_dict
@@ -14,8 +14,19 @@ from utils.runners import LaneDetTrainer, LaneDetTester
 
 if __name__ == '__main__':
     # ulimit
-    rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
-    resource.setrlimit(resource.RLIMIT_NOFILE, (8192, rlimit[1]))
+    try:
+        import resource
+        rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
+        dest = 8192
+        try:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (dest, rlimit[1]))
+        except ValueError:
+            warnings.warn(
+                'Unable to set a high enough file descriptor limit {} (your system may has a low hard limit {}). ' \
+                'If you encounter related problems in training, try reduce the number of workers by --workers, ' \
+                'or switch into file_system mode at Line 8.'.format(dest, rlimit[1]))
+    except ModuleNotFoundError:
+        warnings.warn('Are you using Windows? Linux is recommended.')
 
     # Settings (user input > config > argparse defaults)
     parser = argparse.ArgumentParser(description='PytorchAutoDrive Lane Detection', conflict_handler='resolve')
