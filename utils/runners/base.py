@@ -254,7 +254,10 @@ class BaseVisualizer(BaseRunner):
             self.load_checkpoint(self._cfg['checkpoint'])
             for k in self.dataset_tensor_statistics:
                 self._cfg[k] = self._cfg[k].to(self.device)
-            self.model.eval()
+            try:
+                self.model.eval(profiling=True)
+            except TypeError:
+                self.model.eval()
 
     @abstractmethod
     def run(self, *args, **kwargs):
