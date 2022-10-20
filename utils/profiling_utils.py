@@ -45,7 +45,7 @@ def init_dataset(dataset_cfg, transforms_cfg, input_sizes):
 
 
 def speed_evaluate_real(net, device, loader, num):
-    net.eval()
+    net.eval(profiling=True)
     iterable = iter(loader)
 
     # Warm-up hardware
@@ -85,7 +85,7 @@ def speed_evaluate_real(net, device, loader, num):
 
 
 def speed_evaluate_simple(net, device, dummy, num):
-    net.eval()
+    net.eval(profiling=True)
     dummy = dummy.to(device)
     output_size = dummy.shape[-2:]
 

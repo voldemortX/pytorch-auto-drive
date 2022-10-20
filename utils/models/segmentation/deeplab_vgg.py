@@ -89,22 +89,15 @@ class DeepLabV1Lane(nn.Module):
 
 @MODELS.register()
 class SegRepVGG(DeepLabV1Lane):
-    def eval(self):
-
-        r"""Sets the module in evaluation mode.
-        This has any effect only on certain modules. See documentations of
-        particular modules for details of their behaviors in training/evaluation
-        mode, if they are affected, e.g. :class:`Dropout`, :class:`BatchNorm`,
-        etc.
-        This is equivalent with :meth:`self.train(False) <torch.nn.Module.train>`.
-        See :ref:`locally-disable-grad-doc` for a comparison between
-        `.eval()` and several similar mechanisms that may be confused with it.
-        Returns:
-            Module: self
+    def eval(self, profiling=False):
+        """A secure copy of eval()
         """
 
-        for module in self.encoder.modules():
-            if hasattr(module, 'switch_to_deploy'):
-                module.switch_to_deploy()
-        print('Deploy!')
-        return self.train(False)
+        if profiling:
+            for module in self.encoder.modules():
+                if hasattr(module, 'switch_to_deploy'):
+                    module.switch_to_deploy()
+            print('Deploy!')
+            return self.train(False)
+        else:
+            return self.train(False)

@@ -68,6 +68,7 @@ class BezierLaneNet(BezierBaseNet):
                 'curves': curves.permute(0, 2, 1).reshape(curves.shape[0], -1, curves.shape[-2] // 2, 2).contiguous(),
                 'segmentations': segmentations}
 
-    def eval(self):
-        self.segmentation_head = None
+    def eval(self, profiling=False):
         super().eval()
+        if profiling:
+            self.segmentation_head = None

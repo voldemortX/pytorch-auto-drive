@@ -52,7 +52,7 @@ def append_trace_arg(cfg, trace_arg):
 
 
 def pt_to_onnx(net, dummy, filename, opset_version=9):
-    net.eval()
+    net.eval(profiling=True)
     temp = net(dummy)
     torch.onnx.export(net, dummy, filename, verbose=True, input_names=['input1'], output_names=temp.keys(),
                       opset_version=opset_version)
@@ -60,7 +60,7 @@ def pt_to_onnx(net, dummy, filename, opset_version=9):
 
 @torch.no_grad()
 def test_conversion(pt_net, onnx_filename, dummy):
-    pt_net.eval()
+    pt_net.eval(profiling=True)
     pt_out = pt_net(dummy)
     dummy = dummy.cpu()
     onnx_out = inference_onnx(dummy, onnx_filename)
