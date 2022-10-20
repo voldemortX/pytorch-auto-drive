@@ -71,7 +71,10 @@ if __name__ == '__main__':
 
     macs, _ = model_profile(net, args.height, args.width, device)
     flops = 2 * macs
-    net.eval(profiling=True)
+    try:
+        net.eval(profiling=True)
+    except TypeError:
+        net.eval()
     params = sum(p.numel() for p in net.parameters())
     print('FLOPs(G): {: .2f}'.format(flops / 1e9))
     print('Number of parameters: {: .2f}'.format(params / 1e6))
