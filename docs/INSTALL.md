@@ -9,6 +9,7 @@ cd pytorch-auto-drive
 
 ## Requirements
 
+- Linux (recommended) or Windows (not fully tested, could have problems)
 - Python >= 3.6
 - CUDA >= 9.2 (for CUDA version < 9.2, the code is tested only with PyTorch 1.3 & CUDA 9.0 & CuDNN 7.6.0)
 - PyTorch >= 1.6
