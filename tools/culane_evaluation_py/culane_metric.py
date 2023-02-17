@@ -5,6 +5,10 @@ import numpy as np
 from scipy.interpolate import splprep, splev
 from scipy.optimize import linear_sum_assignment
 from shapely.geometry import LineString, Polygon
+try:
+    from utils.common import warnings
+except ImportError:
+    import warnings
 
 
 def draw_lane(lane, img=None, img_shape=None, width=30):
@@ -42,9 +46,26 @@ def continuous_cross_iou(xs, ys, width=30, img_shape=(590, 1640, 3)):
     return ious
 
 
+def remove_consecutive_duplicates(x):
+    """Remove consecutive duplicates"""
+    y = []
+    for t in x:
+        if len(y) > 0 and y[-1] == t:
+            warnings.warn('Removed consecutive duplicate point ({}, {})!'.format(t[0], t[1]))
+            continue
+        y.append(t)
+    return y
+
+
 def interp(points, n=50):
     if len(points) == 2:
         return np.array(points)
+    
+    # Consecutive duplicates (can happen with parametric curves)
+    # cause internal error for scipy's splprep:
+    # https://stackoverflow.com/a/47949170/15449902
+    points = remove_consecutive_duplicates(points)
+
     x = [x for x, _ in points]
     y = [y for _, y in points]
     tck, u = splprep([x, y], s=0, t=n, k=min(3, len(points) - 1))
