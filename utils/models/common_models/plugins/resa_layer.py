@@ -64,7 +64,7 @@ class RESA(nn.Module):
                 y = y.add(self.alpha * F.relu(self.conv_d[i](temp)))
             else:
                 idx = (torch.arange(h) + h // 2 ** (self.iteration - i)) % h
-                y.add_(self.alpha * F.relu(self.conv_d[i](y[:, :, idx, :])))
+                y = y + (self.alpha * F.relu(self.conv_d[i](y[:, :, idx, :])))
         # Up
         for i in range(self.iteration):
             if is_tracing():
@@ -72,7 +72,7 @@ class RESA(nn.Module):
                 y = y.add(self.alpha * F.relu(self.conv_u[i](temp)))
             else:
                 idx = (torch.arange(h) - h // 2 ** (self.iteration - i)) % h
-                y.add_(self.alpha * F.relu(self.conv_u[i](y[:, :, idx, :])))
+                y = y + (self.alpha * F.relu(self.conv_u[i](y[:, :, idx, :])))
         # Right
         for i in range(self.iteration):
             if is_tracing():
@@ -80,7 +80,7 @@ class RESA(nn.Module):
                 y = y.add(self.alpha * F.relu(self.conv_r[i](temp)))
             else:
                 idx = (torch.arange(w) + w // 2 ** (self.iteration - i)) % w
-                y.add_(self.alpha * F.relu(self.conv_r[i](y[:, :, :, idx])))
+                y = y + (self.alpha * F.relu(self.conv_r[i](y[:, :, :, idx])))
         # Left
         for i in range(self.iteration):
             if is_tracing():
@@ -88,6 +88,6 @@ class RESA(nn.Module):
                 y = y.add(self.alpha * F.relu(self.conv_l[i](temp)))
             else:
                 idx = (torch.arange(w) - w // 2 ** (self.iteration - i)) % w
-                y.add_(self.alpha * F.relu(self.conv_l[i](y[:, :, :, idx])))
+                y = y + (self.alpha * F.relu(self.conv_l[i](y[:, :, :, idx])))
 
         return y
