@@ -33,7 +33,7 @@ We support multi-GPU training with Distributed Data Parallel (DDP):
 python -m torch.distributed.launch --nproc_per_node=<number of GPU per-node> --use_env main_semseg.py <your normal args>
 ```
 
-With DDP, batch size and number of workers are **per-GPU**.
+With DDP, batch size and number of workers are **per-GPU**.  Do not forget to set device args like `world_size` in your config.
 
 ## Testing:
 
