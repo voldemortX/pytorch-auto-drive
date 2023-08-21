@@ -1,13 +1,13 @@
+Do not overwrite folders with the same name, as the content of the training and testing sets is different
+
 # Tusimple
 
 ## Prepare the dataset
 
 1. The TuSimple dataset can be downloaded at their [github repo](https://github.com/TuSimple/tusimple-benchmark/issues/3). However, you'll also need [segmentation labels](https://drive.google.com/open?id=1LZDCnr79zuNH73NstZ8oIPDud0INCwb9), [list6_train.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list6/list6_train.txt), [list6_val.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list6/list6_val.txt) and [list_test.txt](https://github.com/cardwing/Codes-for-Lane-Detection/blob/master/ENet-TuSimple-Torch/list/list_test.txt) provided by [@cardwing](https://github.com/cardwing), thanks for their efforts.
-
 2. Change the `TUSIMPLE_ROOT` in [configs/lane_detection/common/datasets/_utils.py](../../configs/lane_detection/common/datasets/_utils.py) to your dataset's location.
-
 3. Pre-processing:
-   
+
 First put the data lists you downloaded before in `TUSIMPLE.BASE_DIR/lists`. Then:
 
 ```
@@ -28,6 +28,8 @@ Then change `data_dir` to your TuSimple base directory in [autotest_tusimple.sh]
 ## Description
 
 ### Directory Structure
+
+Note that the structure of Tusimple dataset downloaded from kaggle is different from the original structure. It contains `train_set` folder, `test_set` folder. You need to move the clips in the `test_set` folder to the `train_set` folder. **Do not overwrite folders with the same name**, as the content of the training and testing sets is different.
 
 ```
     <TUSIMPLE.BASE_DIR>
@@ -69,6 +71,7 @@ For example,
   "raw_file": "path_to_clip"
 }
 ```
+
 *`-2` in `lanes` means on some h_sample, there is no exsiting lane marking. The first existing point in the first lane is (632, 280).*
 
 ## Segmentation Label Generation \[Advanced\]
